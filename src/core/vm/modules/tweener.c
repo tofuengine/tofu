@@ -29,6 +29,7 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
+#include "utils/map.h"
 #include "udt.h"
 
 #define LOG_CONTEXT "tweener"
@@ -62,6 +63,74 @@ int tweener_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
+static const Map_Entry_t _easings[Easing_Types_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "back-in", EASING_TYPE_BACK_IN },
+    { "back-in-out", EASING_TYPE_BACK_IN_OUT },
+    { "back-out", EASING_TYPE_BACK_OUT },
+    { "bounce-in", EASING_TYPE_BOUNCE_IN },
+    { "bounce-in-out", EASING_TYPE_BOUNCE_IN_OUT },
+    { "bounce-out", EASING_TYPE_BOUNCE_OUT },
+    { "circular-in", EASING_TYPE_CIRCULAR_IN },
+    { "circular-in-out", EASING_TYPE_CIRCULAR_IN_OUT },
+    { "circular-out", EASING_TYPE_CIRCULAR_OUT },
+    { "cubic-in", EASING_TYPE_CUBIC_IN },
+    { "cubic-in-out", EASING_TYPE_CUBIC_IN_OUT },
+    { "cubic-out", EASING_TYPE_CUBIC_OUT },
+    { "elastic-in", EASING_TYPE_ELASTIC_IN },
+    { "elastic-in-out", EASING_TYPE_ELASTIC_IN_OUT },
+    { "elastic-out", EASING_TYPE_ELASTIC_OUT },
+    { "exponential-in", EASING_TYPE_EXPONENTIAL_IN },
+    { "exponential-in-out", EASING_TYPE_EXPONENTIAL_IN_OUT },
+    { "exponential-out", EASING_TYPE_EXPONENTIAL_OUT },
+    { "linear", EASING_TYPE_LINEAR },
+    { "quadratic-in", EASING_TYPE_QUADRATIC_IN },
+    { "quadratic-in-out", EASING_TYPE_QUADRATIC_IN_OUT },
+    { "quadratic-out", EASING_TYPE_QUADRATIC_OUT },
+    { "quartic-in", EASING_TYPE_QUARTIC_IN },
+    { "quartic-in-out", EASING_TYPE_QUARTIC_IN_OUT },
+    { "quartic-out", EASING_TYPE_QUARTIC_OUT },
+    { "quintic-in", EASING_TYPE_QUINTIC_IN },
+    { "quintic-in-out", EASING_TYPE_QUINTIC_IN_OUT },
+    { "quintic-out", EASING_TYPE_QUINTIC_OUT },
+    { "sine-in", EASING_TYPE_SINE_IN },
+    { "sine-in-out", EASING_TYPE_SINE_IN_OUT },
+    { "sine-out", EASING_TYPE_SINE_OUT }
+};
+
+static Easing_Function_t _functions[Easing_Types_t_CountOf] = {
+    easing_linear,
+    easing_quadratic_in,
+    easing_quadratic_out,
+    easing_quadratic_in_out,
+    easing_cubic_in,
+    easing_cubic_out,
+    easing_cubic_in_out,
+    easing_quartic_in,
+    easing_quartic_out,
+    easing_quartic_in_out,
+    easing_quintic_in,
+    easing_quintic_out,
+    easing_quintic_in_out,
+    easing_sine_in,
+    easing_sine_out,
+    easing_sine_in_out,
+    easing_circular_in,
+    easing_circular_out,
+    easing_circular_in_out,
+    easing_exponential_in,
+    easing_exponential_out,
+    easing_exponential_in_out,
+    easing_elastic_in,
+    easing_elastic_out,
+    easing_elastic_in_out,
+    easing_back_in,
+    easing_back_out,
+    easing_back_in_out,
+    easing_bounce_out,
+    easing_bounce_in,
+    easing_bounce_in_out
+};
+
 static int tweener_new_4sNNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -70,18 +139,15 @@ static int tweener_new_4sNNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_STRING(L, 1);
+    const char *easing = LUAX_STRING(L, 1);
     float duration = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
 
-    const Easing_t *easing = easing_from_id(id);
-    if (!easing) {
-        return luaL_error(L, "can't find easing w/ id `%s`", id);
-    }
-
+    const Map_Entry_t *entry = map_find_key(L, easing, _easings, Easing_Types_t_CountOf);
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
-            .function = easing->function,
+            .easing = (Easing_Types_t)entry->value,
+            .function = _functions[entry->value],
             .duration = duration,
             .from = from,
             .to = to
@@ -112,11 +178,10 @@ static int tweener_easing_1o_1s(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    //const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
+    const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
-    // FIXME: move to `map_find_XXX()` usage.
-
-    lua_pushstring(L, "<undefined>");
+    const Map_Entry_t *entry = map_find_value(L, self->easing, _easings, Easing_Types_t_CountOf);
+    lua_pushstring(L, entry->key);
 
     return 1;
 }
@@ -128,14 +193,11 @@ static int tweener_easing_2os_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    const char *id = LUAX_STRING(L, 2);
+    const char *easing = LUAX_STRING(L, 2);
 
-    const Easing_t *easing = easing_from_id(id);
-    if (!easing) {
-        return luaL_error(L, "can't find easing w/ id `%s`", id);
-    }
-
-    self->function = easing->function;
+    const Map_Entry_t *entry = map_find_key(L, easing, _easings, Easing_Types_t_CountOf);
+    self->easing = (Easing_Types_t)entry->value;
+    self->function = _functions[entry->value];
 
     return 0;
 }

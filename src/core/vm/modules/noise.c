@@ -82,9 +82,8 @@ static int noise_new_1S_1o(lua_State *L)
     LUAX_SIGNATURE_END
     const char *type = LUAX_OPTIONAL_STRING(L, 1, "perlin");
 
-    const Map_Entry_t *entry = map_find_key(L, type, _types, 6);
-
     fnl_state state = fnlCreateState();
+    const Map_Entry_t *entry = map_find_key(L, type, _types, 6);
     state.noise_type = (fnl_noise_type)entry->value;
 
     Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
@@ -202,7 +201,7 @@ static int noise_rotation_1o_1s(lua_State *L)
 
     const fnl_state *state = &self->state;
     const fnl_rotation_type_3d rotation = state->rotation_type_3d;
-    const Map_Entry_t *entry = map_find_value(L, rotation, _rotations, 3);
+    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)rotation, _rotations, 3);
 
     lua_pushstring(L, entry->key);
 
@@ -252,7 +251,7 @@ static int noise_fractal_1o_1s(lua_State *L)
 
     const fnl_state *state = &self->state;
     const fnl_fractal_type fractal = state->fractal_type;
-    const Map_Entry_t *entry = map_find_value(L, fractal, _fractals, 6);
+    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)fractal, _fractals, 6);
 
     lua_pushstring(L, entry->key);
 

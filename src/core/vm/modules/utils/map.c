@@ -41,13 +41,6 @@ static int _entry_compare_by_key(const void *lhs, const void *rhs)
     }
 }
 
-static int _entry_compare_by_value(const void *lhs, const void *rhs)
-{
-    const Map_Entry_t *l = (const Map_Entry_t *)lhs;
-    const Map_Entry_t *r = (const Map_Entry_t *)rhs;
-    return l->value - r->value;
-}
-
 const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size)
 {
     const Map_Entry_t needle = { .key = key };
@@ -59,13 +52,16 @@ const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t
     return entry;
 }
 
-const Map_Entry_t *map_find_value(lua_State *L, int value, const Map_Entry_t *table, size_t size)
+const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size)
 {
-    const Map_Entry_t needle = { .value = value };
-    const Map_Entry_t *entry = bsearch((const void *)&needle, table, size, sizeof(Map_Entry_t), _entry_compare_by_value);
-    if (!entry) {
-        luaL_error(L, "unknown key for value %d", value);
-        return NULL;
+    // We can't use `bsearch()` here, unless the array is sorted by values.
+    for (size_t i = 0; i < size; ++i) {
+        const Map_Entry_t *entry = &table[i];
+        if (memcmp(&entry->value, &value, sizeof(Map_Entry_Value_t)) == 0) {
+            return entry;
+        }
     }
-    return entry;
+
+    luaL_error(L, "unknown key for value %d", value);
+    return NULL;
 }

@@ -151,7 +151,43 @@ typedef struct Body_Object_s {
 //    cpFloat *momentum;
 } Body_Object_t;
 
+typedef enum Easing_Types_e {
+    EASING_TYPE_LINEAR,
+    EASING_TYPE_QUADRATIC_IN,
+    EASING_TYPE_QUADRATIC_OUT,
+    EASING_TYPE_QUADRATIC_IN_OUT,
+    EASING_TYPE_CUBIC_IN,
+    EASING_TYPE_CUBIC_OUT,
+    EASING_TYPE_CUBIC_IN_OUT,
+    EASING_TYPE_QUARTIC_IN,
+    EASING_TYPE_QUARTIC_OUT,
+    EASING_TYPE_QUARTIC_IN_OUT,
+    EASING_TYPE_QUINTIC_IN,
+    EASING_TYPE_QUINTIC_OUT,
+    EASING_TYPE_QUINTIC_IN_OUT,
+    EASING_TYPE_SINE_IN,
+    EASING_TYPE_SINE_OUT,
+    EASING_TYPE_SINE_IN_OUT,
+    EASING_TYPE_CIRCULAR_IN,
+    EASING_TYPE_CIRCULAR_OUT,
+    EASING_TYPE_CIRCULAR_IN_OUT,
+    EASING_TYPE_EXPONENTIAL_IN,
+    EASING_TYPE_EXPONENTIAL_OUT,
+    EASING_TYPE_EXPONENTIAL_IN_OUT,
+    EASING_TYPE_ELASTIC_IN,
+    EASING_TYPE_ELASTIC_OUT,
+    EASING_TYPE_ELASTIC_IN_OUT,
+    EASING_TYPE_BACK_IN,
+    EASING_TYPE_BACK_OUT,
+    EASING_TYPE_BACK_IN_OUT,
+    EASING_TYPE_BOUNCE_OUT,
+    EASING_TYPE_BOUNCE_IN,
+    EASING_TYPE_BOUNCE_IN_OUT,
+    Easing_Types_t_CountOf
+} Easing_Types_t;
+
 typedef struct Tweener_Object_s {
+    Easing_Types_t easing;
     Easing_Function_t function;
     float duration;
     float from;
@@ -162,7 +198,16 @@ typedef struct Noise_Object_s {
     fnl_state state;
 } Noise_Object_t;
 
-typedef struct Wave_Object_s { // TODO: rename to oscillator?
+typedef enum Wave_Types_e {
+    WAVE_TYPE_SINE,
+    WAVE_TYPE_SQUARE,
+    WAVE_TYPE_TRIANGLE,
+    WAVE_TYPE_SAWTOOTH,
+    Wave_Types_t_CountOf
+} Wave_Types_t;
+
+typedef struct Wave_Object_s {
+    Wave_Types_t form;
     Wave_Function_t function;
     float period;
     float amplitude;

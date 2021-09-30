@@ -27,12 +27,14 @@
 
 #include <libs/luax.h>
 
+typedef int Map_Entry_Value_t;
+
 typedef struct Map_Entry_s {
     const char *key;
-    int value;
+    Map_Entry_Value_t value;
 } Map_Entry_t;
 
 extern const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size);
-extern const Map_Entry_t *map_find_value(lua_State *L, int value, const Map_Entry_t *table, size_t size);
+extern const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size);
 
 #endif  /* __LIBS_MAP_H__ */

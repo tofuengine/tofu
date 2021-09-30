@@ -28,6 +28,7 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
+#include "utils/map.h"
 #include "udt.h"
 
 #define LOG_CONTEXT "wave"
@@ -59,6 +60,20 @@ int wave_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
+static const Map_Entry_t _forms[Wave_Types_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "sawtooth", WAVE_TYPE_SAWTOOTH },
+    { "sine", WAVE_TYPE_SINE },
+    { "square", WAVE_TYPE_SQUARE },
+    { "triangle", WAVE_TYPE_TRIANGLE }
+};
+
+static const Wave_Function_t _functions[Wave_Types_t_CountOf] = {
+    wave_sine,
+    wave_square,
+    wave_triangle,
+    wave_sawtooth
+};
+
 static int wave_new_3sNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -66,17 +81,13 @@ static int wave_new_3sNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
+    const char *form = LUAX_STRING(L, 1);
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    const Wave_t *wave = wave_from_name(name);
-    if (!wave) {
-        return luaL_error(L, "can't find wave w/ name `%s`", wave);
-    }
-
+    const Map_Entry_t *entry = map_find_key(L, form, _forms, Wave_Types_t_CountOf);
     Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
-            .function = wave->function,
+            .function = _functions[entry->value],
             .period = period,
             .amplitude = amplitude
         }, OBJECT_TYPE_WAVE, META_TABLE);
@@ -106,11 +117,10 @@ static int wave_form_1o_1s(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    //const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+    const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
 
-    // FIXME: move to `map_find_XXX()` usage.
-
-    lua_pushstring(L, "<undefined>");
+    const Map_Entry_t *entry = map_find_value(L, self->form, _forms, Wave_Types_t_CountOf);
+    lua_pushstring(L, entry->key);
 
     return 1;
 }
@@ -122,14 +132,10 @@ static int wave_form_2os_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
-    const char *name = LUAX_STRING(L, 2);
+    const char *form = LUAX_STRING(L, 2);
 
-    const Wave_t *wave = wave_from_name(name);
-    if (!wave) {
-        return luaL_error(L, "can't find wave w/ name `%s`", name);
-    }
-
-    self->function = wave->function;
+    const Map_Entry_t *entry = map_find_key(L, form, _forms, Wave_Types_t_CountOf);
+    self->function = _functions[entry->value];
 
     return 0;
 }

@@ -285,7 +285,7 @@ static int body_type_1o_1s(lua_State *L)
 
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
-    const Map_Entry_t *entry = map_find_value(L, type, _types, 3);
+    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)type, _types, 3);
 
     lua_pushstring(L, entry->key);
 
