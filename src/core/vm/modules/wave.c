@@ -60,11 +60,11 @@ int wave_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _forms[Wave_Types_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "sawtooth", WAVE_TYPE_SAWTOOTH },
+static const Map_Entry_t _forms[Wave_Types_t_CountOf] = {
     { "sine", WAVE_TYPE_SINE },
     { "square", WAVE_TYPE_SQUARE },
-    { "triangle", WAVE_TYPE_TRIANGLE }
+    { "triangle", WAVE_TYPE_TRIANGLE },
+    { "sawtooth", WAVE_TYPE_SAWTOOTH }
 };
 
 static const Wave_Function_t _functions[Wave_Types_t_CountOf] = {
