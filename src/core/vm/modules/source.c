@@ -108,10 +108,10 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const Map_Entry_t _types[Source_Type_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "module", SOURCE_TYPE_MODULE },
+static const Map_Entry_t _types[Source_Type_t_CountOf] = {
     { "music", SOURCE_TYPE_MUSIC },
     { "sample", SOURCE_TYPE_SAMPLE },
+    { "module", SOURCE_TYPE_MODULE },
 };
 
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {

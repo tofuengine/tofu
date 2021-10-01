@@ -65,14 +65,14 @@ int noise_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _types[6] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _types[6] = {
     // TODO: add a "default" case?
-    { "cellular", FNL_NOISE_CELLULAR },
     { "open-simplex-2", FNL_NOISE_OPENSIMPLEX2 },
     { "open-simplex-2s", FNL_NOISE_OPENSIMPLEX2S },
+    { "cellular", FNL_NOISE_CELLULAR },
     { "perlin", FNL_NOISE_PERLIN },
-    { "value", FNL_NOISE_VALUE },
-    { "value-cubic", FNL_NOISE_VALUE_CUBIC }
+    { "value-cubic", FNL_NOISE_VALUE_CUBIC },
+    { "value", FNL_NOISE_VALUE }
 };
 
 static int noise_new_1S_1o(lua_State *L)
@@ -185,11 +185,11 @@ static int noise_frequency_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _rotations[3] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _rotations[3] = {
     // TODO: add a "default" case?
+    { "none", FNL_ROTATION_NONE },
     { "improve-xy", FNL_ROTATION_IMPROVE_XY_PLANES },
-    { "improve-xz", FNL_ROTATION_IMPROVE_XZ_PLANES },
-    { "none", FNL_ROTATION_NONE }
+    { "improve-xz", FNL_ROTATION_IMPROVE_XZ_PLANES }
 };
 
 static int noise_rotation_1o_1s(lua_State *L)
@@ -232,14 +232,14 @@ static int noise_rotation_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _fractals[6] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _fractals[6] = {
     // TODO: add a "default" case?
-    { "domain-warp-independent", FNL_FRACTAL_DOMAIN_WARP_INDEPENDENT },
-    { "domain-warp-progressive", FNL_FRACTAL_DOMAIN_WARP_PROGRESSIVE },
-    { "fbm", FNL_FRACTAL_FBM },
     { "none", FNL_FRACTAL_NONE },
+    { "fbm", FNL_FRACTAL_FBM },
+    { "ridged", FNL_FRACTAL_RIDGED },
     { "ping-pong", FNL_FRACTAL_PINGPONG },
-    { "ridged", FNL_FRACTAL_RIDGED }
+    { "domain-warp-progressive", FNL_FRACTAL_DOMAIN_WARP_PROGRESSIVE },
+    { "domain-warp-independent", FNL_FRACTAL_DOMAIN_WARP_INDEPENDENT }
 };
 
 static int noise_fractal_1o_1s(lua_State *L)

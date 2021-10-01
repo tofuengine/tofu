@@ -1328,15 +1328,15 @@ static int canvas_tile_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "always", GL_COMPARATOR_ALWAYS },
-    { "equal", GL_COMPARATOR_EQUAL },
-    { "greater", GL_COMPARATOR_GREATER },
-    { "greater-or-equal", GL_COMPARATOR_GREATER_OR_EQUAL },
+static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = {
+    { "never", GL_COMPARATOR_NEVER },
     { "less", GL_COMPARATOR_LESS },
     { "less-or-equal", GL_COMPARATOR_LESS_OR_EQUAL },
-    { "never", GL_COMPARATOR_NEVER },
-    { "not-equal", GL_COMPARATOR_NOT_EQUAL }
+    { "greater", GL_COMPARATOR_GREATER },
+    { "greater-or-equal", GL_COMPARATOR_GREATER_OR_EQUAL },
+    { "equal", GL_COMPARATOR_EQUAL },
+    { "not-equal", GL_COMPARATOR_NOT_EQUAL },
+    { "always", GL_COMPARATOR_ALWAYS }
 };
 
 static int canvas_stencil_5ooosn_0(lua_State *L)
@@ -1442,18 +1442,18 @@ static int canvas_stencil_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _functions[GL_Functions_t_CountOf] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _functions[GL_Functions_t_CountOf] = {
+    { "replace", GL_FUNCTIONS_REPLACE },
     { "add", GL_FUNCTIONS_ADD },
     { "add-clamped", GL_FUNCTIONS_ADD_CLAMPED },
-    { "max", GL_FUNCTIONS_MAX },
-    { "min", GL_FUNCTIONS_MIN },
-    { "multiply", GL_FUNCTIONS_MULTIPLY },
-    { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
-    { "replace", GL_FUNCTIONS_REPLACE },
+    { "subtract", GL_FUNCTIONS_SUBTRACT },
+    { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED },
     { "reverse-subtract", GL_FUNCTIONS_REVERSE_SUBTRACT },
     { "reverse-subtract-clamped", GL_FUNCTIONS_REVERSE_SUBTRACT_CLAMPED },
-    { "subtract", GL_FUNCTIONS_SUBTRACT },
-    { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED }
+    { "multiply", GL_FUNCTIONS_MULTIPLY },
+    { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
+    { "min", GL_FUNCTIONS_MIN },
+    { "max", GL_FUNCTIONS_MAX }
 };
 
 static int canvas_blend_3oos_0(lua_State *L)

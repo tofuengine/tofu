@@ -271,13 +271,13 @@ static int xform_table_1o_0(lua_State *L)
     return 0;
 }
 
-static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = {
+    { "h", GL_XFORM_REGISTER_H },
+    { "v", GL_XFORM_REGISTER_V },
     { "a", GL_XFORM_REGISTER_A },
     { "b", GL_XFORM_REGISTER_B },
     { "c", GL_XFORM_REGISTER_C },
     { "d", GL_XFORM_REGISTER_D },
-    { "h", GL_XFORM_REGISTER_H },
-    { "v", GL_XFORM_REGISTER_V },
     { "x", GL_XFORM_REGISTER_X },
     { "y", GL_XFORM_REGISTER_Y }
 };

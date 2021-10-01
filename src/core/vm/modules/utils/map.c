@@ -27,37 +27,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int _entry_compare_by_key(const void *lhs, const void *rhs)
-{
-    const Map_Entry_t *l = (const Map_Entry_t *)lhs;
-    const Map_Entry_t *r = (const Map_Entry_t *)rhs;
-    if (!l->key) {
-        return 1;
-    } else 
-    if (!r->key) {
-        return -1;
-    } else {
-        return strcasecmp(l->key, r->key);
-    }
-}
-
 const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size)
 {
-    const Map_Entry_t needle = { .key = key };
-    const Map_Entry_t *entry = bsearch((const void *)&needle, table, size, sizeof(Map_Entry_t), _entry_compare_by_key);
-    if (!entry) {
-        luaL_error(L, "unknown value for key `%s`", key);
-        return NULL;
+    for (size_t i = 0; i < size; ++i) {
+        const Map_Entry_t *entry = &table[i];
+        if (!entry->key) {
+            continue;
+        }
+        if (strcasecmp(entry->key, key) == 0) {
+            return entry;
+        }
     }
-    return entry;
+
+    luaL_error(L, "unknown value for key `%s`", key);
+    return NULL;
 }
 
 const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size)
 {
-    // We can't use `bsearch()` here, unless the array is sorted by values.
     for (size_t i = 0; i < size; ++i) {
         const Map_Entry_t *entry = &table[i];
-        if (memcmp(&entry->value, &value, sizeof(Map_Entry_Value_t)) == 0) {
+        if ((Map_Entry_Value_t)entry->value == value) {
             return entry;
         }
     }

@@ -71,12 +71,12 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = {
     { "box", BODY_KIND_BOX },
     { "circle", BODY_KIND_CIRCLE }
 };
 
-static const Map_Entry_t _types[3] = { // Ditto.
+static const Map_Entry_t _types[3] = {
     { "dynamic", CP_BODY_TYPE_DYNAMIC },
     { "kinematic", CP_BODY_TYPE_KINEMATIC },
     { "static", CP_BODY_TYPE_STATIC }

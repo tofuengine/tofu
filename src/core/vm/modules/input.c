@@ -65,37 +65,37 @@ int input_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "a", INPUT_BUTTON_A },
-    { "b", INPUT_BUTTON_B },
+static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = {
+    { "up", INPUT_BUTTON_UP },
     { "down", INPUT_BUTTON_DOWN },
-    { "lb", INPUT_BUTTON_LB },
     { "left", INPUT_BUTTON_LEFT },
-    { "lt", INPUT_BUTTON_LT },
-    { "quit", INPUT_BUTTON_QUIT },
-    { "rb", INPUT_BUTTON_RB },
     { "right", INPUT_BUTTON_RIGHT },
+    { "lb", INPUT_BUTTON_LB },
+    { "rb", INPUT_BUTTON_RB },
+    { "lt", INPUT_BUTTON_LT },
     { "rt", INPUT_BUTTON_RT },
+    { "y", INPUT_BUTTON_Y },
+    { "x", INPUT_BUTTON_X },
+    { "b", INPUT_BUTTON_B },
+    { "a", INPUT_BUTTON_A },
     { "select", INPUT_BUTTON_SELECT },
     { "start", INPUT_BUTTON_START },
-    { "up", INPUT_BUTTON_UP },
-    { "x", INPUT_BUTTON_X },
-    { "y", INPUT_BUTTON_Y },
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    { NULL, 0 },
-    { NULL, 0 }
+    { NULL, -1 },
+    { NULL, -1 },
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+    { "quit", INPUT_BUTTON_QUIT }
 };
 
-static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.
+static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = {
     { "left", INPUT_STICK_LEFT },
     { "right", INPUT_STICK_RIGHT }
 };
 
-static const Map_Entry_t _modes[INPUT_MODES_COUNT] = { // Ditto.
-    { "gamepad", INPUT_MODE_GAMEPAD },
+static const Map_Entry_t _modes[INPUT_MODES_COUNT] = {
     { "keyboard", INPUT_MODE_KEYBOARD },
-    { "mouse", INPUT_MODE_MOUSE }
+    { "mouse", INPUT_MODE_MOUSE },
+    { "gamepad", INPUT_MODE_GAMEPAD }
 };
 
 static int input_is_down_1s_1b(lua_State *L)
