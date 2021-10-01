@@ -25,7 +25,6 @@
 #include "wave.h"
 
 #include <math.h>
-#include <string.h>
 
 #ifndef M_PI
   #define M_PI      3.14159265358979323846264f
@@ -33,27 +32,6 @@
 #ifndef M_PI_2
   #define M_PI_2    1.57079632679489661923132f
 #endif
-
-// TODO: we should also add oscillators.
-// https://blog.demofox.org/2012/05/19/diy-synthesizer-chapter-2-common-wave-forms/
-
-static const Wave_t _entries[] = {
-    { "sine", wave_sine },
-    { "square", wave_square },
-    { "triangle", wave_triangle },
-    { "sawtooth", wave_sawtooth },
-    { NULL, NULL }
-};
-
-const Wave_t *wave_from_name(const char *name)
-{
-    for (const Wave_t *entry = _entries; entry->name; ++entry) {
-        if (strcasecmp(entry->name, name) == 0) {
-            return entry;
-        }
-    }
-    return NULL;
-}
 
 float wave_sine(float t)
 {

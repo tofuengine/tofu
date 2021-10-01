@@ -28,7 +28,10 @@
 #include <chipmunk/chipmunk.h>
 
 #include <core/io/display.h>
+#include <libs/easing.h>
+#include <libs/fnl.h>
 #include <libs/luax.h>
+#include <libs/wave.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
@@ -45,6 +48,7 @@ typedef enum UserData_e { // TODO: move to a separate file.
 } UserData_t;
 
 typedef enum Object_Types_e {
+    // Graphics
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_BODY,
@@ -53,8 +57,13 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_GRID,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
+    OBJECT_TYPE_XFORM,
+    // Sound
     OBJECT_TYPE_SOURCE,
-    OBJECT_TYPE_XFORM
+    // Math
+    OBJECT_TYPE_NOISE,
+    OBJECT_TYPE_TWEENER,
+    OBJECT_TYPE_WAVE
 } Object_Types_t;
 
 typedef struct Canvas_Object_s {
@@ -141,5 +150,67 @@ typedef struct Body_Object_s {
     } size;
 //    cpFloat *momentum;
 } Body_Object_t;
+
+typedef enum Easing_Types_e {
+    EASING_TYPE_LINEAR,
+    EASING_TYPE_QUADRATIC_IN,
+    EASING_TYPE_QUADRATIC_OUT,
+    EASING_TYPE_QUADRATIC_IN_OUT,
+    EASING_TYPE_CUBIC_IN,
+    EASING_TYPE_CUBIC_OUT,
+    EASING_TYPE_CUBIC_IN_OUT,
+    EASING_TYPE_QUARTIC_IN,
+    EASING_TYPE_QUARTIC_OUT,
+    EASING_TYPE_QUARTIC_IN_OUT,
+    EASING_TYPE_QUINTIC_IN,
+    EASING_TYPE_QUINTIC_OUT,
+    EASING_TYPE_QUINTIC_IN_OUT,
+    EASING_TYPE_SINE_IN,
+    EASING_TYPE_SINE_OUT,
+    EASING_TYPE_SINE_IN_OUT,
+    EASING_TYPE_CIRCULAR_IN,
+    EASING_TYPE_CIRCULAR_OUT,
+    EASING_TYPE_CIRCULAR_IN_OUT,
+    EASING_TYPE_EXPONENTIAL_IN,
+    EASING_TYPE_EXPONENTIAL_OUT,
+    EASING_TYPE_EXPONENTIAL_IN_OUT,
+    EASING_TYPE_ELASTIC_IN,
+    EASING_TYPE_ELASTIC_OUT,
+    EASING_TYPE_ELASTIC_IN_OUT,
+    EASING_TYPE_BACK_IN,
+    EASING_TYPE_BACK_OUT,
+    EASING_TYPE_BACK_IN_OUT,
+    EASING_TYPE_BOUNCE_OUT,
+    EASING_TYPE_BOUNCE_IN,
+    EASING_TYPE_BOUNCE_IN_OUT,
+    Easing_Types_t_CountOf
+} Easing_Types_t;
+
+typedef struct Tweener_Object_s {
+    Easing_Types_t easing;
+    Easing_Function_t function;
+    float duration;
+    float from;
+    float to;
+} Tweener_Object_t;
+
+typedef struct Noise_Object_s {
+    fnl_state state;
+} Noise_Object_t;
+
+typedef enum Wave_Types_e {
+    WAVE_TYPE_SINE,
+    WAVE_TYPE_SQUARE,
+    WAVE_TYPE_TRIANGLE,
+    WAVE_TYPE_SAWTOOTH,
+    Wave_Types_t_CountOf
+} Wave_Types_t;
+
+typedef struct Wave_Object_s {
+    Wave_Types_t form;
+    Wave_Function_t function;
+    float period;
+    float amplitude;
+} Wave_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

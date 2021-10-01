@@ -471,14 +471,14 @@ static bool _resource_decode(Storage_Resource_t *resource, const char *name, Sto
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
 #ifdef __STORAGE_CHECK_ABSOLUTE_PATHS__
-    if (path_is_absolute(name) || path_is_unsafe(name)) {
+    if (path_is_absolute(name) || !path_is_normalized(name)) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
         return NULL;
     }
 #endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
 
-    const Storage_Resource_t *key = &(Storage_Resource_t){ .name = (char *)name };
-    Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
+    const Storage_Resource_t *needle = &(Storage_Resource_t){ .name = (char *)name };
+    Storage_Resource_t **entry = bsearch((const void *)&needle, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
     if (entry) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
         Storage_Resource_t *resource = *entry;

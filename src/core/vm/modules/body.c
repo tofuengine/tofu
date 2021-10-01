@@ -71,12 +71,12 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = { // Ditto.
+static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = {
     { "box", BODY_KIND_BOX },
     { "circle", BODY_KIND_CIRCLE }
 };
 
-static const Map_Entry_t _types[3] = { // Ditto.
+static const Map_Entry_t _types[3] = {
     { "dynamic", CP_BODY_TYPE_DYNAMIC },
     { "kinematic", CP_BODY_TYPE_KINEMATIC },
     { "static", CP_BODY_TYPE_STATIC }
@@ -203,7 +203,7 @@ static int body_shape_5osnNN_0(lua_State *L)
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    const Map_Entry_t *entry = map_find(L, kind, _kinds, Body_Kinds_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, kind, _kinds, Body_Kinds_t_CountOf);
     if ((Body_Kinds_t)entry->value == BODY_KIND_BOX) {
         self->kind = BODY_KIND_BOX;
         self->size.box.width = (cpFloat)LUAX_NUMBER(L, 3);
@@ -285,8 +285,9 @@ static int body_type_1o_1s(lua_State *L)
 
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
+    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)type, _types, 3);
 
-    lua_pushstring(L, _types[type].key);
+    lua_pushstring(L, entry->key);
 
     return 1;
 }
@@ -301,7 +302,7 @@ static int body_type_2os_0(lua_State *L)
     const char *type = LUAX_STRING(L, 2);
 
     cpBody *body = self->body;
-    const Map_Entry_t *entry = map_find(L, type, _types, 3);
+    const Map_Entry_t *entry = map_find_key(L, type, _types, 3);
     cpBodySetType(body, (cpBodyType)entry->value);
 
     return 0;

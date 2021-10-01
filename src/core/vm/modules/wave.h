@@ -22,19 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_MAP_H__
-#define __LIBS_MAP_H__
+#ifndef __MODULES_WAVE_H__
+#define __MODULES_WAVE_H__
 
-#include <libs/luax.h>
+#include <lua/lua.h>
 
-typedef int Map_Entry_Value_t;
+extern int wave_loader(lua_State *L);
 
-typedef struct Map_Entry_s {
-    const char *key;
-    Map_Entry_Value_t value;
-} Map_Entry_t;
-
-extern const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size);
-extern const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size);
-
-#endif  /* __LIBS_MAP_H__ */
+#endif  /* __MODULES_WAVE_H__ */

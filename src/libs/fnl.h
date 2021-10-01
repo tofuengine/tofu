@@ -22,35 +22,9 @@
  * SOFTWARE.
  */
 
-#include "noise.h"
+#ifndef __LIBS_FNL_H__
+#define __LIBS_FNL_H__
 
-#include <perlin-noise/noise1234.h>
-#include <perlin-noise/simplexnoise1234.h>
+#include <FastNoiseLite/FastNoiseLite.h>
 
-#include <string.h>
-
-static float _perlin(float x, float y, float z)
-{
-    return noise3(x, y, z);
-}
-
-static float _simplex(float x, float y, float z)
-{
-    return snoise3(x, y, z);
-}
-
-static const Noise_t _entries[] = {
-    { "perlin", _perlin },
-    { "simplex", _simplex },
-    { NULL, NULL }
-};
-
-const Noise_t *noise_from_type(const char *type)
-{
-    for (const Noise_t *entry = _entries; entry->type; ++entry) {
-        if (strcasecmp(entry->type, type) == 0) {
-            return entry;
-        }
-    }
-    return NULL;
-}
+#endif  /* __LIBS_FNL_H__ */

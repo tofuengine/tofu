@@ -1328,15 +1328,15 @@ static int canvas_tile_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "always", GL_COMPARATOR_ALWAYS },
-    { "equal", GL_COMPARATOR_EQUAL },
-    { "greater", GL_COMPARATOR_GREATER },
-    { "greater-or-equal", GL_COMPARATOR_GREATER_OR_EQUAL },
+static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = {
+    { "never", GL_COMPARATOR_NEVER },
     { "less", GL_COMPARATOR_LESS },
     { "less-or-equal", GL_COMPARATOR_LESS_OR_EQUAL },
-    { "never", GL_COMPARATOR_NEVER },
-    { "not-equal", GL_COMPARATOR_NOT_EQUAL }
+    { "greater", GL_COMPARATOR_GREATER },
+    { "greater-or-equal", GL_COMPARATOR_GREATER_OR_EQUAL },
+    { "equal", GL_COMPARATOR_EQUAL },
+    { "not-equal", GL_COMPARATOR_NOT_EQUAL },
+    { "always", GL_COMPARATOR_ALWAYS }
 };
 
 static int canvas_stencil_5ooosn_0(lua_State *L)
@@ -1357,7 +1357,7 @@ static int canvas_stencil_5ooosn_0(lua_State *L)
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_surface_stencil(surface, (GL_Point_t){ .x = 0, .y = 0 },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         mask_surface, (GL_Comparators_t)entry->value, threshold);
@@ -1387,7 +1387,7 @@ static int canvas_stencil_7onnoosn_0(lua_State *L)
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_surface_stencil(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         mask_surface, (GL_Comparators_t)entry->value, threshold);
@@ -1425,7 +1425,7 @@ static int canvas_stencil_11onnonnnnosn_0(lua_State *L)
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_surface_stencil(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
         mask_surface, (GL_Comparators_t)entry->value, threshold);
@@ -1442,18 +1442,18 @@ static int canvas_stencil_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _functions[GL_Functions_t_CountOf] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _functions[GL_Functions_t_CountOf] = {
+    { "replace", GL_FUNCTIONS_REPLACE },
     { "add", GL_FUNCTIONS_ADD },
     { "add-clamped", GL_FUNCTIONS_ADD_CLAMPED },
-    { "max", GL_FUNCTIONS_MAX },
-    { "min", GL_FUNCTIONS_MIN },
-    { "multiply", GL_FUNCTIONS_MULTIPLY },
-    { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
-    { "replace", GL_FUNCTIONS_REPLACE },
+    { "subtract", GL_FUNCTIONS_SUBTRACT },
+    { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED },
     { "reverse-subtract", GL_FUNCTIONS_REVERSE_SUBTRACT },
     { "reverse-subtract-clamped", GL_FUNCTIONS_REVERSE_SUBTRACT_CLAMPED },
-    { "subtract", GL_FUNCTIONS_SUBTRACT },
-    { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED }
+    { "multiply", GL_FUNCTIONS_MULTIPLY },
+    { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
+    { "min", GL_FUNCTIONS_MIN },
+    { "max", GL_FUNCTIONS_MAX }
 };
 
 static int canvas_blend_3oos_0(lua_State *L)
@@ -1469,7 +1469,7 @@ static int canvas_blend_3oos_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
-    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_surface_blend(surface, (GL_Point_t){ .x = 0, .y = 0 },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         (GL_Functions_t)entry->value);
@@ -1494,7 +1494,7 @@ static int canvas_blend_5onnos_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
-    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_surface_blend(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         (GL_Functions_t)entry->value);
@@ -1527,7 +1527,7 @@ static int canvas_blend_9onnonnnns_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
-    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_surface_blend(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         (GL_Functions_t)entry->value);
