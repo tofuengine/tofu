@@ -39,8 +39,7 @@ static int tweener_new_4sNNN_1o(lua_State *L);
 static int tweener_gc_1o_0(lua_State *L);
 static int tweener_easing_v_v(lua_State *L);
 static int tweener_duration_v_v(lua_State *L);
-static int tweener_from_v_v(lua_State *L);
-static int tweener_to_v_v(lua_State *L);
+static int tweener_range_v_v(lua_State *L);
 static int tweener_evaluate_2on_1n(lua_State *L);
 
 int tweener_loader(lua_State *L)
@@ -53,8 +52,7 @@ int tweener_loader(lua_State *L)
             { "__call", tweener_evaluate_2on_1n }, // Call meta-method, mapped to `at(...)`.
             { "easing", tweener_easing_v_v },
             { "duration", tweener_duration_v_v },
-            { "from", tweener_from_v_v },
-            { "to", tweener_to_v_v },
+            { "range", tweener_range_v_v },
             { "evaluate", tweener_evaluate_2on_1n },
             { NULL, NULL }
         },
@@ -246,7 +244,7 @@ static int tweener_duration_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int tweener_from_1o_1n(lua_State *L)
+static int tweener_range_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -254,67 +252,36 @@ static int tweener_from_1o_1n(lua_State *L)
     const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
     const float from = self->from;
+    const float to = self->to;
 
     lua_pushnumber(L, (lua_Number)from);
+    lua_pushnumber(L, (lua_Number)to);
 
-    return 1;
+    return 2;
 }
 
-static int tweener_from_2on_0(lua_State *L)
+static int tweener_range_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
     float from = LUAX_NUMBER(L, 2);
+    float to = LUAX_NUMBER(L, 3);
 
     self->from = from;
-
-    return 0;
-}
-
-static int tweener_from_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_from_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, tweener_from_2on_0)
-    LUAX_OVERLOAD_END
-}
-
-static int tweener_to_1o_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-
-    const float to = self->to;
-
-    lua_pushnumber(L, (lua_Number)to);
-
-    return 1;
-}
-
-static int tweener_to_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    float to = LUAX_NUMBER(L, 2);
-
     self->to = to;
 
     return 0;
 }
 
-static int tweener_to_v_v(lua_State *L)
+static int tweener_range_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_to_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, tweener_to_2on_0)
+        LUAX_OVERLOAD_ARITY(1, tweener_range_1o_2nn)
+        LUAX_OVERLOAD_ARITY(3, tweener_range_3onn_0)
     LUAX_OVERLOAD_END
 }
 
