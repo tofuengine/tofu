@@ -40,6 +40,8 @@ static int noise_seed_v_v(lua_State *L);
 static int noise_frequency_v_v(lua_State *L);
 static int noise_rotation_v_v(lua_State *L);
 static int noise_fractal_v_v(lua_State *L);
+static int noise_cellular_v_v(lua_State *L);
+static int noise_domain_v_v(lua_State *L);
 static int noise_warp_v_1n(lua_State *L);
 static int noise_generate_v_1n(lua_State *L);
 // TODO: add noise parameters.
@@ -56,6 +58,8 @@ int noise_loader(lua_State *L)
             { "frequency", noise_frequency_v_v },
             { "rotation", noise_rotation_v_v },
             { "fractal", noise_fractal_v_v },
+            { "cellular", noise_cellular_v_v },
+            { "domain", noise_domain_v_v },
             { "warp", noise_warp_v_1n },
             { "generate", noise_generate_v_1n },
             { NULL, NULL }
@@ -67,8 +71,8 @@ int noise_loader(lua_State *L)
 
 static const Map_Entry_t _types[6] = {
     // TODO: add a "default" case?
-    { "open-simplex-2", FNL_NOISE_OPENSIMPLEX2 },
-    { "open-simplex-2s", FNL_NOISE_OPENSIMPLEX2S },
+    { "open-simplex", FNL_NOISE_OPENSIMPLEX2 },
+    { "super-simplex", FNL_NOISE_OPENSIMPLEX2S },
     { "cellular", FNL_NOISE_CELLULAR },
     { "perlin", FNL_NOISE_PERLIN },
     { "value-cubic", FNL_NOISE_VALUE_CUBIC },
@@ -242,7 +246,7 @@ static const Map_Entry_t _fractals[6] = {
     { "domain-warp-independent", FNL_FRACTAL_DOMAIN_WARP_INDEPENDENT }
 };
 
-static int noise_fractal_1o_1s(lua_State *L)
+static int noise_fractal_1o_6snnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -250,26 +254,45 @@ static int noise_fractal_1o_1s(lua_State *L)
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
     const fnl_state *state = &self->state;
-    const fnl_fractal_type fractal = state->fractal_type;
-    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)fractal, _fractals, 6);
+    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)state->fractal_type, _fractals, 6);
 
     lua_pushstring(L, entry->key);
+    lua_pushnumber(L, (lua_Number)self->state.octaves);
+    lua_pushnumber(L, (lua_Number)self->state.lacunarity);
+    lua_pushnumber(L, (lua_Number)self->state.gain);
+    lua_pushnumber(L, (lua_Number)self->state.weighted_strength);
+    lua_pushnumber(L, (lua_Number)self->state.ping_pong_strength);
 
-    return 1;
+    return 6;
 }
 
-static int noise_fractal_2os_0(lua_State *L)
+static int noise_fractal_7osNNNNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
     const char *fractal = LUAX_STRING(L, 2);
+    float octaves = LUAX_OPTIONAL_NUMBER(L, 3, self->state.octaves);
+    float lacunarity = LUAX_OPTIONAL_NUMBER(L, 4, self->state.lacunarity);
+    float gain = LUAX_OPTIONAL_NUMBER(L, 5, self->state.gain);
+    float weight = LUAX_OPTIONAL_NUMBER(L, 6, self->state.weighted_strength);
+    float ping_pong = LUAX_OPTIONAL_NUMBER(L, 7, self->state.ping_pong_strength);
 
     fnl_state *state = &self->state;
     const Map_Entry_t *entry = map_find_key(L, fractal, _fractals, 6);
     state->fractal_type = (fnl_fractal_type)entry->value;
+    state->octaves = octaves;
+    state->lacunarity = lacunarity;
+    state->gain = gain;
+    state->weighted_strength = weight;
+    state->ping_pong_strength = ping_pong;
 
     return 0;
 }
@@ -277,8 +300,131 @@ static int noise_fractal_2os_0(lua_State *L)
 static int noise_fractal_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_fractal_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, noise_fractal_2os_0)
+        LUAX_OVERLOAD_ARITY(1, noise_fractal_1o_6snnnnn)
+        LUAX_OVERLOAD_ARITY(2, noise_fractal_7osNNNNN_0)
+        LUAX_OVERLOAD_ARITY(3, noise_fractal_7osNNNNN_0)
+        LUAX_OVERLOAD_ARITY(4, noise_fractal_7osNNNNN_0)
+        LUAX_OVERLOAD_ARITY(5, noise_fractal_7osNNNNN_0)
+        LUAX_OVERLOAD_ARITY(6, noise_fractal_7osNNNNN_0)
+        LUAX_OVERLOAD_ARITY(7, noise_fractal_7osNNNNN_0)
+    LUAX_OVERLOAD_END
+}
+
+static const Map_Entry_t _distances[4] = {
+    { "euclidean", FNL_CELLULAR_DISTANCE_EUCLIDEAN },
+    { "euclidean-squared", FNL_CELLULAR_DISTANCE_EUCLIDEANSQ },
+    { "manhattan", FNL_CELLULAR_DISTANCE_MANHATTAN },
+    { "hybrid", FNL_CELLULAR_DISTANCE_HYBRID }
+};
+
+static const Map_Entry_t _values[7] = {
+    { "cell-value", FNL_CELLULAR_RETURN_VALUE_CELLVALUE },
+    { "distance", FNL_CELLULAR_RETURN_VALUE_DISTANCE },
+    { "distance-2", FNL_CELLULAR_RETURN_VALUE_DISTANCE2 },
+    { "distance-2-add", FNL_CELLULAR_RETURN_VALUE_DISTANCE2ADD },
+    { "distance-2-sub", FNL_CELLULAR_RETURN_VALUE_DISTANCE2SUB },
+    { "distance-2-mul", FNL_CELLULAR_RETURN_VALUE_DISTANCE2MUL },
+    { "distance-2-div", FNL_CELLULAR_RETURN_VALUE_DISTANCE2DIV }
+};
+
+static int noise_cellular_1o_3ssn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
+
+    const fnl_state *state = &self->state;
+    const Map_Entry_t *entry0 = map_find_value(L, (Map_Entry_Value_t)state->cellular_distance_func, _distances, 4);
+    const Map_Entry_t *entry1 = map_find_value(L, (Map_Entry_Value_t)state->cellular_return_type, _values, 7);
+
+    lua_pushstring(L, entry0->key);
+    lua_pushstring(L, entry1->key);
+    lua_pushnumber(L, (lua_Number)state->cellular_jitter_mod);
+
+    return 3;
+}
+
+static int noise_cellular_4osSN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
+    const char *distance = LUAX_STRING(L, 2);
+    const char *value = LUAX_OPTIONAL_STRING(L, 3, NULL);
+    float jitter = LUAX_OPTIONAL_NUMBER(L, 4, self->state.cellular_jitter_mod);
+
+    fnl_state *state = &self->state;
+    const Map_Entry_t *entry0 = map_find_key(L, distance, _distances, 4);
+    const Map_Entry_t *entry1 = map_find_key(L, value, _values, 7);
+    state->cellular_distance_func = (fnl_cellular_distance_func)entry0->value;
+    state->cellular_return_type = (fnl_cellular_return_type)entry1->value;
+    state->cellular_jitter_mod = jitter;
+
+    return 0;
+}
+
+static int noise_cellular_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, noise_cellular_1o_3ssn)
+        LUAX_OVERLOAD_ARITY(2, noise_cellular_4osSN_0)
+        LUAX_OVERLOAD_ARITY(3, noise_cellular_4osSN_0)
+        LUAX_OVERLOAD_ARITY(4, noise_cellular_4osSN_0)
+    LUAX_OVERLOAD_END
+}
+
+static const Map_Entry_t _domain_warps[3] = {
+    { "open-simplex", FNL_DOMAIN_WARP_OPENSIMPLEX2 },
+    { "open-simplex-reduces", FNL_DOMAIN_WARP_OPENSIMPLEX2_REDUCED },
+    { "basic-grid", FNL_DOMAIN_WARP_BASICGRID }
+};
+
+static int noise_domain_1o_2sn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
+
+    const fnl_state *state = &self->state;
+    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)state->domain_warp_type, _domain_warps, 3);
+
+    lua_pushstring(L, entry->key);
+    lua_pushnumber(L, (lua_Number)state->domain_warp_amp);
+
+    return 2;
+}
+
+static int noise_domain_3osN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
+    const char *warp = LUAX_STRING(L, 2);
+    float amplitude = LUAX_OPTIONAL_NUMBER(L, 4, self->state.domain_warp_amp);
+
+    fnl_state *state = &self->state;
+    const Map_Entry_t *entry = map_find_key(L, warp, _domain_warps, 3);
+    state->domain_warp_type = (fnl_domain_warp_type)entry->value;
+    state->domain_warp_amp = amplitude;
+
+    return 0;
+}
+
+static int noise_domain_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, noise_domain_1o_2sn)
+        LUAX_OVERLOAD_ARITY(2, noise_domain_3osN_0)
+        LUAX_OVERLOAD_ARITY(3, noise_domain_3osN_0)
     LUAX_OVERLOAD_END
 }
 
