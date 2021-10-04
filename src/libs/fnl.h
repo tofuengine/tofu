@@ -25,6 +25,10 @@
 #ifndef __LIBS_FNL_H__
 #define __LIBS_FNL_H__
 
-#include <FastNoiseLite/FastNoiseLite.h>
+typedef float (*Noise_Function_t)(float, float, float);
+
+extern float fnl_perlin(float x, float y, float z);
+extern float fnl_simplex(float x, float y, float z);
+extern float fnl_worley(float x, float y, float z);
 
 #endif  /* __LIBS_FNL_H__ */

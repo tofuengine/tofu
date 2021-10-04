@@ -22,5 +22,24 @@
  * SOFTWARE.
  */
 
-#define FNL_IMPL
-#include <FastNoiseLite/FastNoiseLite.h>
+#include "fnl.h"
+
+#include <noise/noise1234.h>
+#include <noise/simplexnoise1234.h>
+#include <noise/worley.h>
+
+float fnl_perlin(float x, float y, float z)
+{
+    return noise3(x, y, z);
+}
+
+float fnl_simplex(float x, float y, float z)
+{
+    return snoise3(x, y, z);
+}
+
+float fnl_worley(float x, float y, float z)
+{
+    return 0.0f;
+}
+
