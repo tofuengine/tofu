@@ -37,8 +37,8 @@
 static int noise_new_1S_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
 static int noise_type_v_v(lua_State *L);
+static int noise_seed_v_v(lua_State *L);
 static int noise_frequency_v_v(lua_State *L);
-//static int noise_seed_v_v(lua_State *L);
 static int noise_generate_3onn_1n(lua_State *L);
 
 int noise_loader(lua_State *L)
@@ -50,8 +50,8 @@ int noise_loader(lua_State *L)
             { "__gc", noise_gc_1o_0 },
             { "__call", noise_generate_3onn_1n }, // Call meta-method, mapped to `generate(...)`.
             { "type", noise_type_v_v },
+            { "seed", noise_seed_v_v },
             { "frequency", noise_frequency_v_v },
-//            { "seed", noise_seed_v_v },
             { "generate", noise_generate_3onn_1n },
             { NULL, NULL }
         },
@@ -85,6 +85,7 @@ static int noise_new_1S_1o(lua_State *L)
     Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
             .type = (Noise_Types_t)entry->value,
             .function = _functions[entry->value],
+            .seed = 0.0f,
             .frequency = 1.0f
         }, OBJECT_TYPE_NOISE, META_TABLE);
 
@@ -145,6 +146,41 @@ static int noise_type_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int noise_seed_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
+
+    const float seed = self->seed;
+    lua_pushnumber(L, (lua_Number)seed);
+
+    return 1;
+}
+
+static int noise_seed_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
+    float seed = LUAX_NUMBER(L, 2);
+
+    self->seed = seed;
+
+    return 0;
+}
+
+static int noise_seed_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, noise_seed_1o_1n)
+        LUAX_OVERLOAD_ARITY(2, noise_seed_2on_0)
+    LUAX_OVERLOAD_END
+}
+
 static int noise_frequency_1o_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -193,8 +229,9 @@ static int noise_generate_3onn_1n(lua_State *L)
     float y = LUAX_NUMBER(L, 3);
     float z = LUAX_OPTIONAL_NUMBER(L, 4, 0.0f);
 
+    float seed = self->seed;
     float frequency = self->frequency;
-    float noise = self->function(x * frequency, y * frequency, z * frequency);
+    float noise = self->function(x * frequency + seed, y * frequency + seed, z * frequency + seed);
     float value = (noise + 1.0f) * 0.5f;
 
     lua_pushnumber(L, (lua_Number)value);

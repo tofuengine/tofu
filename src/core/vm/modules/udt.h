@@ -204,6 +204,7 @@ typedef enum Noise_Types_e {
 typedef struct Noise_Object_s {
     Noise_Types_t type;
     Noise_Function_t function;
+    float seed;
     float frequency;
 } Noise_Object_t;
 
