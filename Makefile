@@ -84,11 +84,11 @@ endif
 
 SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/utils/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c src/libs/sl/*.c src/resources/*.c)
 SOURCES+=$(wildcard external/dr_libs/*.c external/gif-h/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/xmp-lite/*.c external/xmp-lite/hio/*.c)
-SOURCES+=$(wildcard external/perlin-noise/*.c)
+SOURCES+=$(wildcard external/noise/*.c)
 SOURCES+=$(wildcard external/chipmunk/*.c)
 INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/utils/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h src/libs/sl/*.h src/resources/*.h)
 INCLUDES+=$(wildcard external/dr_libs/*.h external/gif-h/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h external/xmp-lite/*.h external/xmp-lite/hio/*.h)
-INCLUDES+=$(wildcard external/perlin-noise/*.h)
+INCLUDES+=$(wildcard external/noise/*.h)
 INCLUDES+=$(wildcard external/chipmunk/*.h)
 OBJECTS:=$(SOURCES:%.c=%.o)
 SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)

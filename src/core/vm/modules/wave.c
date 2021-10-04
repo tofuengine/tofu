@@ -32,7 +32,7 @@
 #include "udt.h"
 
 #define LOG_CONTEXT "wave"
-#define META_TABLE  "Tofu_Math_Wave_mt"
+#define META_TABLE  "Tofu_Generators_Wave_mt"
 
 static int wave_new_3sNN_1o(lua_State *L);
 static int wave_gc_1o_0(lua_State *L);

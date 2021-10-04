@@ -46,6 +46,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
+* [x] Noise generators (perlin, simple, and cellular).
 * [x] Logging facility (w/ selectable severity level).
 * [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom [RTTI](https://en.wikipedia.org/wiki/Run-time_type_information) implementation.
 * [x] Crash screen (debug build).
@@ -58,6 +59,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.31, v0.6.31, v0.13.1
+* [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.4
@@ -66,6 +68,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.42
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
+* [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) libraries
 
 ## Inspirations
@@ -130,7 +133,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Game state and display transitions (at which level? Engine or script?).
-* [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), [Perlin](https://github.com/stegu/perlin-noise), etc...).
 * [ ] Multiple players support.
 * [ ] Use a custom memory-management allocator.
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).

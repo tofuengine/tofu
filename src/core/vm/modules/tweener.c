@@ -33,7 +33,7 @@
 #include "udt.h"
 
 #define LOG_CONTEXT "tweener"
-#define META_TABLE  "Tofu_Math_Tweener_mt"
+#define META_TABLE  "Tofu_Generators_Tweener_mt"
 
 static int tweener_new_4sNNN_1o(lua_State *L);
 static int tweener_gc_1o_0(lua_State *L);
