@@ -22,13 +22,9 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_FNL_H__
-#define __LIBS_FNL_H__
+#ifndef __CELLULAR_H__
+#define __CELLULAR_H__
 
-typedef float (*Noise_Function_t)(float, float, float);
+extern float cellular3(float x, float y, float z, int seed, float jitter);
 
-extern float fnl_perlin(float x, float y, float z);
-extern float fnl_simplex(float x, float y, float z);
-extern float fnl_worley(float x, float y, float z);
-
-#endif  /* __LIBS_FNL_H__ */
+#endif  /* __CELLULAR_H__ */

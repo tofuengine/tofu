@@ -29,8 +29,8 @@
 
 #include <core/io/display.h>
 #include <libs/easing.h>
-#include <libs/fnl.h>
 #include <libs/luax.h>
+#include <libs/noise.h>
 #include <libs/wave.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
@@ -194,8 +194,16 @@ typedef struct Tweener_Object_s {
     float to;
 } Tweener_Object_t;
 
+typedef enum Noise_Types_e {
+    NOISE_TYPE_PERLIN,
+    NOISE_TYPE_SIMPLEX,
+    NOISE_TYPE_CELLULAR,
+    Noise_Types_t_CountOf
+} Noise_Types_t;
+
 typedef struct Noise_Object_s {
-    fnl_state state;
+    Noise_Types_t type;
+    Noise_Function_t function;
 } Noise_Object_t;
 
 typedef enum Wave_Types_e {

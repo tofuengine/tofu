@@ -22,24 +22,23 @@
  * SOFTWARE.
  */
 
-#include "fnl.h"
+#include "noise.h"
 
+#include <noise/cellular.h>
 #include <noise/noise1234.h>
 #include <noise/simplexnoise1234.h>
-#include <noise/worley.h>
 
-float fnl_perlin(float x, float y, float z)
+float noise_perlin(float x, float y, float z)
 {
     return noise3(x, y, z);
 }
 
-float fnl_simplex(float x, float y, float z)
+float noise_simplex(float x, float y, float z)
 {
     return snoise3(x, y, z);
 }
 
-float fnl_worley(float x, float y, float z)
+float noise_cellular(float x, float y, float z)
 {
-    return 0.0f;
+    return cellular3(x, y, z, 1337, 1.0f);
 }
-
