@@ -34,25 +34,25 @@
 #define LOG_CONTEXT "noise"
 #define META_TABLE  "Tofu_Generators_Noise_mt"
 
-static int noise_new_1S_1o(lua_State *L);
+static int noise_new_1SNN_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
 static int noise_type_v_v(lua_State *L);
 static int noise_seed_v_v(lua_State *L);
 static int noise_frequency_v_v(lua_State *L);
-static int noise_generate_3onn_1n(lua_State *L);
+static int noise_generate_3onNN_1n(lua_State *L);
 
 int noise_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", noise_new_1S_1o },
+            { "new", noise_new_1SNN_1o },
             { "__gc", noise_gc_1o_0 },
-            { "__call", noise_generate_3onn_1n }, // Call meta-method, mapped to `generate(...)`.
+            { "__call", noise_generate_3onNN_1n }, // Call meta-method, mapped to `generate(...)`.
             { "type", noise_type_v_v },
             { "seed", noise_seed_v_v },
             { "frequency", noise_frequency_v_v },
-            { "generate", noise_generate_3onn_1n },
+            { "generate", noise_generate_3onNN_1n },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -67,26 +67,29 @@ static const Noise_Function_t _functions[Noise_Types_t_CountOf] = {
 };
 
 static const Map_Entry_t _types[Noise_Types_t_CountOf] = {
-    // TODO: add a "default" case?
     { "perlin", NOISE_TYPE_PERLIN },
     { "simplex", NOISE_TYPE_SIMPLEX },
     { "cellular", NOISE_TYPE_CELLULAR }
 };
 
-static int noise_new_1S_1o(lua_State *L)
+static int noise_new_1SNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *type = LUAX_OPTIONAL_STRING(L, 1, "perlin");
+    float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
+    float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
     const Map_Entry_t *entry = map_find_key(L, type, _types, Noise_Types_t_CountOf);
 
     Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
             .type = (Noise_Types_t)entry->value,
             .function = _functions[entry->value],
-            .seed = 0.0f,
-            .frequency = 1.0f
+            .seed = seed,
+            .frequency = frequency
         }, OBJECT_TYPE_NOISE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "noise %p allocated", self);
@@ -216,17 +219,17 @@ static int noise_frequency_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int noise_generate_3onn_1n(lua_State *L)
+static int noise_generate_3onNN_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
     float x = LUAX_NUMBER(L, 2);
-    float y = LUAX_NUMBER(L, 3);
+    float y = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float z = LUAX_OPTIONAL_NUMBER(L, 4, 0.0f);
 
     float seed = self->seed;
