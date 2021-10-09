@@ -41,7 +41,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 static void _reset(GL_Surface_t *surface)
 {
     GL_State_t state = (GL_State_t){
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width, .y1 = surface->height },
             .shifting = { 0 },
             .transparent = { 0 }
         };
@@ -143,15 +143,15 @@ void GL_surface_set_clipping(GL_Surface_t *surface, const GL_Rectangle_t *region
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
-                .x1 = (int)surface->width - 1,
-                .y1 = (int)surface->height - 1
+                .x1 = (int)surface->width,
+                .y1 = (int)surface->height
             };
     } else {
         state->clipping_region = (GL_Quad_t){
                 .x0 = imax(0, region->x),
                 .y0 = imax(0, region->y),
-                .x1 = imin((int)surface->width, region->x + (int)region->width) - 1,
-                .y1 = imin((int)surface->height, region->y + (int)region->height) - 1
+                .x1 = imin((int)surface->width, region->x + (int)region->width),
+                .y1 = imin((int)surface->height, region->y + (int)region->height)
             };
     }
 }
@@ -287,8 +287,8 @@ void GL_surface_scan(const GL_Surface_t *surface, GL_Rectangle_t area, GL_Scan_C
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = area.x,
             .y0 = area.y,
-            .x1 = area.x + (int)area.width - 1,
-            .y1 = area.y + (int)area.height - 1
+            .x1 = area.x + (int)area.width,
+            .y1 = area.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -304,8 +304,8 @@ void GL_surface_scan(const GL_Surface_t *surface, GL_Rectangle_t area, GL_Scan_C
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -342,8 +342,8 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -361,8 +361,8 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -407,8 +407,8 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -426,8 +426,8 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -520,8 +520,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -539,8 +539,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -665,8 +665,8 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -684,8 +684,8 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }

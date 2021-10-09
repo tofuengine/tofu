@@ -191,8 +191,8 @@ static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
             .y0 = y,
-            .x1 = x + (int)length - 1,
-            .y1 = y
+            .x1 = x + (int)length,
+            .y1 = y + 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -208,8 +208,8 @@ static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -230,8 +230,8 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
             .y0 = y,
-            .x1 = x,
-            .y1 = y + (int)length - 1
+            .x1 = x + 1,
+            .y1 = y + (int)length
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -247,8 +247,8 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -356,8 +356,8 @@ void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rec
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
             .y0 = rectangle.y,
-            .x1 = rectangle.x + (int)rectangle.width - 1,
-            .y1 = rectangle.y + (int)rectangle.height - 1
+            .x1 = rectangle.x + (int)rectangle.width,
+            .y1 = rectangle.y + (int)rectangle.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -373,8 +373,8 @@ void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rec
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -416,8 +416,8 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t v0, GL_P
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = imin(imin(v0.x, v1.x), v2.x),
             .y0 = imin(imin(v0.y, v1.y), v2.y),
-            .x1 = imax(imax(v0.x, v1.x), v2.x),
-            .y1 = imax(imax(v0.y, v1.y), v2.y)
+            .x1 = imax(imax(v0.x, v1.x), v2.x) + 1,
+            .y1 = imax(imax(v0.y, v1.y), v2.y) + 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -433,8 +433,8 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t v0, GL_P
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can be negative due to clipping region)
         return;
     }

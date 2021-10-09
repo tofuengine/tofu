@@ -52,8 +52,8 @@ void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -71,8 +71,8 @@ void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -128,8 +128,8 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)drawing_width - 1,
-            .y1 = position.y + (int)drawing_height - 1,
+            .x1 = position.x + (int)drawing_width,
+            .y1 = position.y + (int)drawing_height,
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -147,8 +147,8 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -272,8 +272,8 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = ICEILF(aabb_x0 + dx), // To include every fractionally occupied pixel.
             .y0 = ICEILF(aabb_y0 + dy),
-            .x1 = ICEILF(aabb_x1 + dx),
-            .y1 = ICEILF(aabb_y1 + dy)
+            .x1 = ICEILF(aabb_x1 + dx) + 1,
+            .y1 = ICEILF(aabb_y1 + dy) + 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -291,16 +291,16 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
     const int sminx = area.x;
     const int sminy = area.y;
-    const int smaxx = sminx + (int)area.width - 1;
-    const int smaxy = sminy + (int)area.height - 1;
+    const int smaxx = sminx + (int)area.width;
+    const int smaxy = sminy + (int)area.height;
 
     const float M11 = c / scale_x;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling *and* flip (TRSF -> FSRT).
     const float M12 = s / scale_x;  // | fx  0 | | 1/sx    0 | |  c s |
@@ -343,7 +343,7 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
                 int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
                 int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
-                if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+                if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #ifdef __DEBUG_GRAPHICS__
                     _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
@@ -364,9 +364,9 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
     }
 #ifdef __DEBUG_GRAPHICS__
     _pixel(surface, dx, dy, 7);
-    _pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    _pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
+    _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
+    _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);
+    _pixel(surface, drawing_region.x0    , drawing_region.y1 - 1, 7);
 #endif
 }

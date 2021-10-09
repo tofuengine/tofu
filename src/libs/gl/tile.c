@@ -50,8 +50,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -69,8 +69,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -127,8 +127,8 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)sw - 1,
-            .y1 = position.y + (int)sh - 1
+            .x1 = position.x + (int)sw,
+            .y1 = position.y + (int)sh
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -146,8 +146,8 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
