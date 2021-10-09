@@ -34,7 +34,7 @@
 #define LOG_CONTEXT "noise"
 #define META_TABLE  "Tofu_Generators_Noise_mt"
 
-static int noise_new_1SNN_1o(lua_State *L);
+static int noise_new_1sNN_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
 static int noise_type_v_v(lua_State *L);
 static int noise_seed_v_v(lua_State *L);
@@ -46,7 +46,7 @@ int noise_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", noise_new_1SNN_1o },
+            { "new", noise_new_1sNN_1o },
             { "__gc", noise_gc_1o_0 },
             { "__call", noise_generate_3onNN_1n }, // Call meta-method, mapped to `generate(...)`.
             { "type", noise_type_v_v },
@@ -72,14 +72,14 @@ static const Map_Entry_t _types[Noise_Types_t_CountOf] = {
     { "cellular", NOISE_TYPE_CELLULAR }
 };
 
-static int noise_new_1SNN_1o(lua_State *L)
+static int noise_new_1sNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *type = LUAX_OPTIONAL_STRING(L, 1, "perlin");
+    const char *type = LUAX_STRING(L, 1);
     float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
     float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
