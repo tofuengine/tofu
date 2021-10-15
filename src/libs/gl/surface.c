@@ -336,8 +336,8 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -347,11 +347,11 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -376,7 +376,7 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     int y = drawing_region.y0;
@@ -401,8 +401,8 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -412,11 +412,11 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -441,7 +441,7 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
@@ -514,8 +514,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
     }
 #endif
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -525,11 +525,11 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -557,8 +557,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
     const size_t mskip = mwidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
-    const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
+    const GL_Pixel_t *mptr = mdata + skip_y * mwidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
@@ -659,8 +659,8 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Pixel_Function_t blend = _pixel_functions[function];
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -670,11 +670,11 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -699,7 +699,7 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {

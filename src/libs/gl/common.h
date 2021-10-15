@@ -50,7 +50,7 @@ typedef struct GL_Rectangle_s {
 } GL_Rectangle_t;
 
 typedef struct GL_Quad_s {
-    int x0, y0;
+    int x0, y0; // FIXME: rename to left, top, right, and bottom.
     int x1, y1;
 } GL_Quad_t;
 
