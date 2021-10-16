@@ -44,8 +44,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = offset.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -55,11 +55,11 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -86,8 +86,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     const GL_Pixel_t *sptr = sdata + area.y * swidth + area.x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int ou = IMOD(skip_x + offset.x, area.width);
-    const int ov = IMOD(skip_y + offset.y, area.height);
+    const int ou = IMOD(skip_x, area.width);
+    const int ov = IMOD(skip_y, area.height);
 
     int v = ov;
     for (int i = height; i; --i) {
