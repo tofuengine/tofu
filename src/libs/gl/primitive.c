@@ -130,7 +130,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         }
     }
 
-#ifdef __DDA__
+#ifndef __NON_DDA_LINES__
     GL_Pixel_t *ddata = surface->data;
 
     const int dwidth = (int)surface->width;
@@ -185,6 +185,47 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
     }
 #endif
 }
+
+#if 0
+static void _texture_line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1,
+                          const GL_Surface_t *texture, int sx0, int sy0, int sx1, int sy1)
+{
+    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = texture->data;
+
+    const int dwidth = (int)surface->width;
+    const int swidth = (int)texture->width;
+
+    const int dx = x1 - x0;
+    const int dy = y1 - y0;
+
+    const int sdx = sx1 - sx0;
+    const int sdy = sy1 - sy0;
+
+    const int delta = iabs(dx) >= iabs(dy) ? iabs(dx) : iabs(dy); // Move along the longest delta
+
+    const float xin = (float)dx / (float)delta;
+    const float yin = (float)dy / (float)delta;
+
+    const float sxin = (float)sdx / (float)delta;
+    const float syin = (float)sdy / (float)delta;
+
+    float x = x0 + 0.5f;
+    float y = y0 + 0.5f;
+    float sx = sx0 + 0.5f;
+    float sy = sy0 + 0.5f;
+    for (int i = delta + 1; i; --i) { // One more step, to reach and ending pixel.
+        const GL_Pixel_t *sptr = sdata + (int)sy * swidth + (int)sx;
+        GL_Pixel_t *dptr = ddata + (int)y * dwidth + (int)x;
+        *dptr = *sptr;
+
+        x += xin;
+        y += yin;
+        sx += sxin;
+        sy += syin;
+    }
+}
+#endif
 
 static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, size_t length, GL_Pixel_t index)
 {
