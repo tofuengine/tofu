@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef enum _Storage_Resource_Types_t {
+typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
     // STORAGE_RESOURCE_ENCODED,
     STORAGE_RESOURCE_BLOB,
@@ -38,7 +38,7 @@ typedef enum _Storage_Resource_Types_t {
     Storage_Resource_Types_t_CountOf
 } Storage_Resource_Types_t;
 
-typedef struct _Storage_Resource_t {
+typedef struct Storage_Resource_s {
     char *name; // Resources are references by a name, which can is (base-path) relative.
     Storage_Resource_Types_t type;
     union {
@@ -59,12 +59,12 @@ typedef struct _Storage_Resource_t {
     bool allocated;
 } Storage_Resource_t;
 
-typedef struct _Storage_Configuration_t {
+typedef struct Storage_Configuration_s {
     const char *path;
 } Storage_Configuration_t;
 
 
-typedef struct _Storage_t {
+typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
     struct {
@@ -99,9 +99,6 @@ extern const char *Storage_get_local_path(const Storage_t *storage);
 
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
-
-extern void Storage_lock(Storage_Resource_t *resource);
-extern void Storage_unlock(Storage_Resource_t *resource);
 
 extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
 

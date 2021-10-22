@@ -271,13 +271,13 @@ static int xform_table_1o_0(lua_State *L)
     return 0;
 }
 
-static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = { // Need to be sorted for `bsearch()`
+static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = {
+    { "h", GL_XFORM_REGISTER_H },
+    { "v", GL_XFORM_REGISTER_V },
     { "a", GL_XFORM_REGISTER_A },
     { "b", GL_XFORM_REGISTER_B },
     { "c", GL_XFORM_REGISTER_C },
     { "d", GL_XFORM_REGISTER_D },
-    { "h", GL_XFORM_REGISTER_H },
-    { "v", GL_XFORM_REGISTER_V },
     { "x", GL_XFORM_REGISTER_X },
     { "y", GL_XFORM_REGISTER_Y }
 };
@@ -306,7 +306,7 @@ static int xform_table_2ot_0(lua_State *L)
                 break;
             }
             entry.count = i + 1;
-            entry.operations[i].id = (GL_XForm_Registers_t)map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
+            entry.operations[i].id = (GL_XForm_Registers_t)map_find_key(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
             entry.operations[i].value = LUAX_NUMBER(L, -1);
 
             lua_pop(L, 1);

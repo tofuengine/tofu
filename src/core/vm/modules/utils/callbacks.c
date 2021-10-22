@@ -27,7 +27,7 @@
 #include <config.h>
 
 #pragma pack(push, 1)
-typedef struct _rgba_t {
+typedef struct rgba_s {
     uint8_t r, g, b, a;
 } rgba_t;
 #pragma pack(pop)

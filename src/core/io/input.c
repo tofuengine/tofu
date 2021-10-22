@@ -362,15 +362,15 @@ static void _cursor_update(Input_t *input, float delta_time)
 
         if (cursor->x < cursor->area.x0) {
             cursor->x = cursor->area.x0;
+        } else
+        if (cursor->x >= cursor->area.x1) {
+            cursor->x = cursor->area.x1 - 1;
         }
         if (cursor->y < cursor->area.y0) {
             cursor->y = cursor->area.y0;
-        }
-        if (cursor->x > cursor->area.x1) {
-            cursor->x = cursor->area.x1;
-        }
-        if (cursor->y > cursor->area.y1) {
-            cursor->y = cursor->area.y1;
+        } else
+        if (cursor->y >= cursor->area.y1) {
+            cursor->y = cursor->area.y1 - 1;
         }
     }
 }

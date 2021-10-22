@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-typedef enum _GL_Program_Command_t {
+typedef enum GL_Program_Command_e {
     GL_PROGRAM_COMMAND_WAIT,
     GL_PROGRAM_COMMAND_MODULO,
     GL_PROGRAM_COMMAND_OFFSET,
@@ -36,7 +36,7 @@ typedef enum _GL_Program_Command_t {
     GL_Program_Command_t_CountOf
 } GL_Program_Command_t;
 
-typedef struct _GL_Program_Entry_t {
+typedef struct GL_Program_Entry_s {
     GL_Program_Command_t command;
     union {
         size_t size;
@@ -46,7 +46,7 @@ typedef struct _GL_Program_Entry_t {
     } args[2];
 } GL_Program_Entry_t;
 
-typedef struct _GL_Program_t {
+typedef struct GL_Program_s {
     GL_Program_Entry_t *entries;
 } GL_Program_t;
 

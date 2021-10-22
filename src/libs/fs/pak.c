@@ -77,33 +77,33 @@
 #define PAK_ID_LENGTH_SZ    (MD5_SIZE * 2 + 1)
 
 #pragma pack(push, 1)
-typedef struct _Pak_Header_t {
+typedef struct Pak_Header_s {
     char signature[PAK_SIGNATURE_LENGTH];
     uint8_t version;
     uint8_t flags;
     uint16_t __reserved;
 } Pak_Header_t;
 
-typedef struct _Pak_Entry_Header_t {
+typedef struct Pak_Entry_Header_s {
     uint32_t offset;
     uint32_t size;
     uint16_t chars;
 } Pak_Entry_Header_t;
 
-typedef struct _Pak_Entry_t {
+typedef struct Pak_Entry_s {
     char *name;
     uint8_t id[PAK_ID_LENGTH];
     uint32_t offset;
     uint32_t size;
 } Pak_Entry_t;
 
-typedef struct _Pak_Index_t {
+typedef struct Pak_Index_s {
     uint32_t offset;
     uint32_t entries; // Redundant, we could check file offsets, but it's quicker that way.
 } Pak_Index_t;
 #pragma pack(pop)
 
-typedef struct _Pak_Mount_t {
+typedef struct Pak_Mount_s {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
     size_t entries;
@@ -111,7 +111,7 @@ typedef struct _Pak_Mount_t {
     uint8_t flags;
 } Pak_Mount_t;
 
-typedef struct _Pak_Handle_t {
+typedef struct Pak_Handle_s {
     Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
     size_t stream_size;
@@ -342,8 +342,8 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t key = { .name = (char *)name };
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    Pak_Entry_t needle = { .name = (char *)name };
+    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
     Log_assert(!exists, LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
@@ -354,8 +354,8 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t key = { .name = (char *)name };
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    Pak_Entry_t needle = { .name = (char *)name };
+    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;

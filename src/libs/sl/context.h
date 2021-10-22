@@ -31,7 +31,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct _SL_Context_t {
+typedef struct SL_Context_s {
     SL_Group_t groups[SL_GROUPS_AMOUNT];
     SL_Source_t **sources;
 } SL_Context_t;

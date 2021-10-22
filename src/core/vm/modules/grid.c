@@ -36,7 +36,7 @@
 #define META_TABLE  "Tofu_Collections_Grid_mt"
 #define SCRIPT_NAME "@grid.lua"
 
-static int grid_new_3nnt_1o(lua_State *L);
+static int grid_new_3nnT_1o(lua_State *L);
 static int grid_gc_1o_0(lua_State *L);
 static int grid_size_1o_2nn(lua_State *L);
 static int grid_fill_2ot_0(lua_State *L);
@@ -59,7 +59,7 @@ int grid_loader(lua_State *L)
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
-            { "new", grid_new_3nnt_1o },
+            { "new", grid_new_3nnT_1o },
             { "__gc", grid_gc_1o_0 },
             { "size", grid_size_1o_2nn },
             { "fill", grid_fill_2ot_0 },
@@ -76,16 +76,16 @@ int grid_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int grid_new_3nnt_1o(lua_State *L)
+static int grid_new_3nnT_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TTABLE)
     LUAX_SIGNATURE_END
     size_t width = (size_t)LUAX_INTEGER(L, 1);
     size_t height = (size_t)LUAX_INTEGER(L, 2);
-    // idx #3: LUA_TTABLE
+    size_t length = LUAX_OPTIONAL_TABLE(L, 3, 0);
 
     size_t data_size = width * height;
     Cell_t *data = malloc(sizeof(Cell_t) * data_size);
@@ -93,10 +93,8 @@ static int grid_new_3nnt_1o(lua_State *L)
         return luaL_error(L, "can't allocate %dx%d grid", width, height);
     }
 
-    Cell_t *ptr = data;
-
-    size_t length = lua_rawlen(L, 3);
     if (length > 0) {
+        Cell_t *ptr = data;
         for (size_t i = 0; i < data_size; ++i) {
             size_t index = ((i % length) + 1);
             lua_rawgeti(L, 3, index);

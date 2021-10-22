@@ -40,7 +40,7 @@
   #error Wrong internal format.
 #endif
 
-typedef struct _Source_VTable_t {
+typedef struct Source_VTable_s {
     void (*dtor)(SL_Source_t *source);
     bool (*reset)(SL_Source_t *source);
     bool (*update)(SL_Source_t *source, float delta_time);

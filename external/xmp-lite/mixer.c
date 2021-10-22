@@ -49,6 +49,8 @@
 
 #define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int)
 
+#define ANTICLICK_FPSHIFT	24
+
 MIX_FN(mono_8bit_nearest);
 MIX_FN(mono_8bit_linear);
 MIX_FN(mono_16bit_nearest);
@@ -211,8 +213,10 @@ static void do_anticlick(struct context_data *ctx, int voc, int32_t *buf, int co
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-	int smp_l, smp_r, max_x2;
+	int smp_l, smp_r;
 	int discharge = s->ticksize >> ANTICLICK_SHIFT;
+	int stepmul, stepval;
+	uint32_t stepmul_sq;
 
 	smp_r = vi->sright;
 	smp_l = vi->sleft;
@@ -233,14 +237,23 @@ static void do_anticlick(struct context_data *ctx, int voc, int32_t *buf, int co
 		return;
 	}
 
-	max_x2 = count * count;
+	stepval = (1 << ANTICLICK_FPSHIFT) / count;
+	stepmul = stepval * count;
 
-	while (count--) {
-		if (~s->format & XMP_FORMAT_MONO) {
-			*buf++ += (count * (smp_r >> 10) / max_x2 * count) << 10;
+	if (~s->format & XMP_FORMAT_MONO) {
+		while ((stepmul -= stepval) > 0) {
+			/* Truncate to 16-bits of precision so the product is 32-bits. */
+			stepmul_sq = stepmul >> (ANTICLICK_FPSHIFT - 16);
+			stepmul_sq *= stepmul_sq;
+			*buf++ += (stepmul_sq * (int64)smp_r) >> 32;
+			*buf++ += (stepmul_sq * (int64)smp_l) >> 32;
 		}
-
-		*buf++ += (count * (smp_l >> 10) / max_x2 * count) << 10;
+	} else {
+		while ((stepmul -= stepval) > 0) {
+			stepmul_sq = stepmul >> (ANTICLICK_FPSHIFT - 16);
+			stepmul_sq *= stepmul_sq;
+			*buf++ += (stepmul_sq * (int64)smp_l) >> 32;
+		}
 	}
 }
 
@@ -297,7 +310,7 @@ static void loop_reposition(struct context_data *ctx, struct mixer_voice *vi, st
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 		/* OpenMPT Bidi-Loops.it: "In Impulse Tracker’s software mixer,
-		 * ping-pong loops are shortened by one sample. 
+		 * ping-pong loops are shortened by one sample.
 		 */
 		if (IS_PLAYER_MODE_IT()) {
 			vi->end--;

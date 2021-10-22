@@ -34,7 +34,7 @@
 #include <core/io/storage.h>
 #include <core/vm/interpreter.h>
 
-typedef struct _Engine_t {
+typedef struct Engine_s {
     Storage_t *storage;
     Configuration_t *configuration;
     Display_t *display;

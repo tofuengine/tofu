@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct _Environment_Stats_t {
+typedef struct Environment_Stats_s {
     size_t fps;
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
     float times[4];
@@ -40,7 +40,7 @@ typedef struct _Environment_Stats_t {
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
 } Environment_Stats_t;
 
-typedef struct _Environment_t {
+typedef struct Environment_s {
     const char **args;
     const Display_t *display;
 #ifdef __DISPLAY_FOCUS_SUPPORT__

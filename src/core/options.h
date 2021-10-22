@@ -25,7 +25,7 @@
 #ifndef __CORE_OPTIONS_H__
 #define __CORE_OPTIONS_H__
 
-typedef struct _options_t {
+typedef struct options_s {
     const char *path;
 } options_t;
 

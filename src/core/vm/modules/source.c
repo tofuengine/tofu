@@ -33,7 +33,7 @@
 #include "udt.h"
 #include "utils/map.h"
 
-typedef enum _Source_Types_t {
+typedef enum Source_Types_e {
     SOURCE_TYPE_MUSIC,
     SOURCE_TYPE_SAMPLE,
     SOURCE_TYPE_MODULE,
@@ -108,10 +108,10 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const Map_Entry_t _types[Source_Type_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "module", SOURCE_TYPE_MODULE },
+static const Map_Entry_t _types[Source_Type_t_CountOf] = {
     { "music", SOURCE_TYPE_MUSIC },
     { "sample", SOURCE_TYPE_SAMPLE },
+    { "module", SOURCE_TYPE_MODULE },
 };
 
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
@@ -138,8 +138,8 @@ static int source_new_2sn_1o(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
-    const Map_Entry_t *entry = map_find(L, type, _types, Source_Type_t_CountOf);
-    SL_Source_t *source = _create_functions[entry->value](audio->sl, (SL_Callbacks_t){
+    const Map_Entry_t *entry = map_find_key(L, type, _types, Source_Type_t_CountOf);
+    SL_Source_t *source = _create_functions[entry->value](audio->context, (SL_Callbacks_t){
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,

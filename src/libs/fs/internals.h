@@ -27,13 +27,13 @@
 
 #include "fs.h"
 
-typedef struct _Mount_VTable_t {
+typedef struct Mount_VTable_s {
     void         (*dtor)    (FS_Mount_t *mount);
     bool         (*contains)(const FS_Mount_t *mount, const char *name);
     FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *name);
 } Mount_VTable_t;
 
-typedef struct _Handle_VTable_t {
+typedef struct Handle_VTable_s {
     void   (*dtor)(FS_Handle_t *handle);
     size_t (*size)(FS_Handle_t *handle);
     size_t (*read)(FS_Handle_t *handle, void *buffer, size_t bytes_requested);

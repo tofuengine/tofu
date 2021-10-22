@@ -27,15 +27,9 @@
 
 typedef float (*Wave_Function_t)(float ratio);
 
-typedef struct _Wave_t {
-    const char *name;
-    Wave_Function_t function;
-} Wave_t;
-
-extern const Wave_t *wave_from_name(const char *name);
-
 extern float wave_sine(float t);
 extern float wave_square(float t);
+//extern float wave_pulse(float t, float duty_cycle);
 extern float wave_triangle(float t);
 extern float wave_sawtooth(float t);
 

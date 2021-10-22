@@ -25,7 +25,6 @@
 #include "easing.h"
 
 #include <math.h>
-#include <string.h>
 
 #ifndef M_PI
   #define M_PI      3.14159265358979323846264f
@@ -33,51 +32,6 @@
 #ifndef M_PI_2
   #define M_PI_2    1.57079632679489661923132f
 #endif
-
-static const Easing_t _entries[] = {
-    { "linear", easing_linear },
-    { "quadratic_in", easing_quadratic_in },
-    { "quadratic_out", easing_quadratic_out },
-    { "quadratic_in_out", easing_quadratic_in_out },
-    { "cubic_in", easing_cubic_in },
-    { "cubic_out", easing_cubic_out },
-    { "cubic_in_out", easing_cubic_in_out },
-    { "quartic_in", easing_quartic_in },
-    { "quartic_out", easing_quartic_out },
-    { "quartic_in_out", easing_quartic_in_out },
-    { "quintic_in", easing_quintic_in },
-    { "quintic_out", easing_quintic_out },
-    { "quintic_in_out", easing_quintic_in_out },
-    { "sine_in", easing_sine_in },
-    { "sine_out", easing_sine_out },
-    { "sine_in_out", easing_sine_in_out },
-    { "circular_in", easing_circular_in },
-    { "circular_out", easing_circular_out },
-    { "circular_in_out", easing_circular_in_out },
-    { "exponential_in", easing_exponential_in },
-    { "exponential_out", easing_exponential_out },
-    { "exponential_in_out", easing_exponential_in_out },
-    { "elastic_in", easing_elastic_in },
-    { "elastic_out", easing_elastic_out },
-    { "elastic_in_out", easing_elastic_in_out },
-    { "back_in", easing_back_in },
-    { "back_out", easing_back_out },
-    { "back_in_out", easing_back_in_out },
-    { "bounce_out", easing_bounce_out },
-    { "bounce_in", easing_bounce_in },
-    { "bounce_in_out", easing_bounce_in_out },
-    { NULL, NULL }
-};
-
-const Easing_t *easing_from_id(const char *id)
-{
-    for (const Easing_t *entry = _entries; entry->id; ++entry) {
-        if (strcasecmp(entry->id, id) == 0) {
-            return entry;
-        }
-    }
-    return NULL;
-}
 
 float easing_linear(float p)
 {

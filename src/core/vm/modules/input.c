@@ -65,37 +65,37 @@ int input_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "a", INPUT_BUTTON_A },
-    { "b", INPUT_BUTTON_B },
+static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = {
+    { "up", INPUT_BUTTON_UP },
     { "down", INPUT_BUTTON_DOWN },
-    { "lb", INPUT_BUTTON_LB },
     { "left", INPUT_BUTTON_LEFT },
-    { "lt", INPUT_BUTTON_LT },
-    { "quit", INPUT_BUTTON_QUIT },
-    { "rb", INPUT_BUTTON_RB },
     { "right", INPUT_BUTTON_RIGHT },
+    { "lb", INPUT_BUTTON_LB },
+    { "rb", INPUT_BUTTON_RB },
+    { "lt", INPUT_BUTTON_LT },
     { "rt", INPUT_BUTTON_RT },
+    { "y", INPUT_BUTTON_Y },
+    { "x", INPUT_BUTTON_X },
+    { "b", INPUT_BUTTON_B },
+    { "a", INPUT_BUTTON_A },
     { "select", INPUT_BUTTON_SELECT },
     { "start", INPUT_BUTTON_START },
-    { "up", INPUT_BUTTON_UP },
-    { "x", INPUT_BUTTON_X },
-    { "y", INPUT_BUTTON_Y },
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    { NULL, 0 },
-    { NULL, 0 }
+    { NULL, -1 },
+    { NULL, -1 },
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+    { "quit", INPUT_BUTTON_QUIT }
 };
 
-static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.
+static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = {
     { "left", INPUT_STICK_LEFT },
     { "right", INPUT_STICK_RIGHT }
 };
 
-static const Map_Entry_t _modes[INPUT_MODES_COUNT] = { // Ditto.
-    { "gamepad", INPUT_MODE_GAMEPAD },
+static const Map_Entry_t _modes[INPUT_MODES_COUNT] = {
     { "keyboard", INPUT_MODE_KEYBOARD },
-    { "mouse", INPUT_MODE_MOUSE }
+    { "mouse", INPUT_MODE_MOUSE },
+    { "gamepad", INPUT_MODE_GAMEPAD }
 };
 
 static int input_is_down_1s_1b(lua_State *L)
@@ -107,7 +107,7 @@ static int input_is_down_1s_1b(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
     lua_pushboolean(L, Input_get_button(input, (Input_Buttons_t)entry->value)->down);
 
     return 1;
@@ -122,7 +122,7 @@ static int input_is_up_1s_1b(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
     lua_pushboolean(L, !Input_get_button(input, (Input_Buttons_t)entry->value)->down);
 
     return 1;
@@ -137,7 +137,7 @@ static int input_is_pressed_1s_1b(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
     lua_pushboolean(L, Input_get_button(input, (Input_Buttons_t)entry->value)->pressed);
 
     return 1;
@@ -152,7 +152,7 @@ static int input_is_released_1s_1b(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
     lua_pushboolean(L, Input_get_button(input, (Input_Buttons_t)entry->value)->released);
 
     return 1;
@@ -167,7 +167,7 @@ static int input_auto_repeat_1s_1n(lua_State *L)
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
     float period = Input_get_auto_repeat(input, (Input_Buttons_t)entry->value);
     lua_pushnumber(L, (lua_Number)period);
 
@@ -185,7 +185,7 @@ static int input_auto_repeat_2sn_0(lua_State *L)
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
     Input_set_auto_repeat(input, (Input_Buttons_t)entry->value, period);
 
     return 0;
@@ -247,8 +247,8 @@ static int input_cursor_area_0_4nnnn(lua_State *L)
     const Input_Cursor_t *cursor = Input_get_cursor(input);
     lua_pushnumber(L, (lua_Number)cursor->area.x0);
     lua_pushnumber(L, (lua_Number)cursor->area.y0);
-    lua_pushnumber(L, (lua_Number)(cursor->area.x1 - cursor->area.x0 + 1));
-    lua_pushnumber(L, (lua_Number)(cursor->area.y1 - cursor->area.y0 + 1));
+    lua_pushnumber(L, (lua_Number)(cursor->area.x1 - cursor->area.x0));
+    lua_pushnumber(L, (lua_Number)(cursor->area.y1 - cursor->area.y0));
 
     return 4;
 }
@@ -268,7 +268,7 @@ static int input_cursor_area_4nnnn_0(lua_State *L)
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_set_cursor_area(input, x, y, x + width - 1, y + height - 1);
+    Input_set_cursor_area(input, x, y, x + width, y + height);
 
     return 0;
 }
@@ -290,7 +290,7 @@ static int input_stick_1s_4nnnn(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Map_Entry_t *entry = map_find(L, id, _sticks, Input_Sticks_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _sticks, Input_Sticks_t_CountOf);
     const Input_Stick_t *stick = Input_get_stick(input, (Input_Sticks_t)entry->value);
     lua_pushnumber(L, (lua_Number)stick->x);
     lua_pushnumber(L, (lua_Number)stick->y);
@@ -350,7 +350,7 @@ static int input_mode_1t_0(lua_State *L)
 //        int index = LUAX_INTEGER(L, -2);
         const char *id = LUAX_STRING(L, -1);
 
-        const Map_Entry_t *entry = map_find(L, id, _modes, INPUT_MODES_COUNT);
+        const Map_Entry_t *entry = map_find_key(L, id, _modes, INPUT_MODES_COUNT);
         mode |= entry->value;
 
         lua_pop(L, 1);

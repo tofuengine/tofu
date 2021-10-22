@@ -18,7 +18,7 @@ static float _level_to_db(float level)
     return logf(level) * 20.0f;
 }
 
-typedef struct _Gain_t {
+typedef struct Gain_s {
     float left, right;
 } Gain_t;
 

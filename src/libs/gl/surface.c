@@ -41,7 +41,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 static void _reset(GL_Surface_t *surface)
 {
     GL_State_t state = (GL_State_t){
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width, .y1 = surface->height },
             .shifting = { 0 },
             .transparent = { 0 }
         };
@@ -143,15 +143,15 @@ void GL_surface_set_clipping(GL_Surface_t *surface, const GL_Rectangle_t *region
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
-                .x1 = (int)surface->width - 1,
-                .y1 = (int)surface->height - 1
+                .x1 = (int)surface->width,
+                .y1 = (int)surface->height
             };
     } else {
         state->clipping_region = (GL_Quad_t){
                 .x0 = imax(0, region->x),
                 .y0 = imax(0, region->y),
-                .x1 = imin((int)surface->width, region->x + (int)region->width) - 1,
-                .y1 = imin((int)surface->height, region->y + (int)region->height) - 1
+                .x1 = imin((int)surface->width, region->x + (int)region->width),
+                .y1 = imin((int)surface->height, region->y + (int)region->height)
             };
     }
 }
@@ -279,27 +279,22 @@ void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
+void GL_surface_scan(const GL_Surface_t *surface, GL_Rectangle_t area, GL_Scan_Callback_t callback, void *user_data)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
-
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = position.x,
-            .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x0 = area.x,
+            .y0 = area.y,
+            .x1 = area.x + (int)area.width,
+            .y1 = area.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -309,8 +304,65 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
+        return;
+    }
+
+    GL_Pixel_t *ddata = surface->data;
+
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth - width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    int y = drawing_region.y0;
+    for (int i = height; i; --i) {
+        int x = drawing_region.x0; // TODO: optimize?
+        for (int j = width; j; --j) {
+            GL_Pixel_t index = *dptr;
+            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y }, index);
+            x += 1;
+        }
+        dptr += dskip;
+        y += 1;
+    }
+}
+
+void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
+{
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x += clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y += clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -324,7 +376,7 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     int y = drawing_region.y0;
@@ -333,7 +385,7 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
         for (int j = width; j; --j) {
             GL_Pixel_t from = *dptr;
             GL_Pixel_t to = *(sptr++);
-            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y}, from, to);
+            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to);
             x += 1;
         }
         sptr += sskip;
@@ -349,22 +401,22 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -374,8 +426,8 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -389,7 +441,7 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
@@ -462,22 +514,22 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
     }
 #endif
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -487,8 +539,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -505,8 +557,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
     const size_t mskip = mwidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
-    const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
+    const GL_Pixel_t *mptr = mdata + skip_y * mwidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
@@ -607,22 +659,22 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Pixel_Function_t blend = _pixel_functions[function];
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -632,8 +684,8 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -647,7 +699,7 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {

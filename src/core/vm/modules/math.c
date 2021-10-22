@@ -25,11 +25,9 @@
 #include "math.h"
 
 #include <config.h>
-#include <libs/easing.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/sincos.h>
-#include <libs/wave.h>
 #include <libs/imath.h>
 #include <libs/fmath.h>
 
@@ -52,8 +50,6 @@ static int math_rotation_to_angle_1n_1n(lua_State *L);
 static int math_invsqrt_1n_1n(lua_State *L);
 static int math_finvsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
-static int math_wave_v_1f(lua_State *L);
-static int math_tweener_v_1f(lua_State *L);
 
 static const char _math_lua[] = {
 #include "math.inc"
@@ -82,8 +78,6 @@ int math_loader(lua_State *L)
             { "invsqrt", math_invsqrt_1n_1n },
             { "finvsqrt", math_finvsqrt_1n_1n },
             { "rotate", math_rotate_3nnn_2nn },
-            { "wave", math_wave_v_1f },
-            { "tweener", math_tweener_v_1f },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -341,220 +335,4 @@ static int math_rotate_3nnn_2nn(lua_State *L)
     lua_pushnumber(L, (lua_Number)ry);
 
     return 2;
-}
-
-static int _vanilla_wave_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float t = LUAX_NUMBER(L, 1);
-
-    const Wave_t *wave = (const Wave_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-
-    float value = wave->function(t);
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int _normalize_wave_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float time = LUAX_NUMBER(L, 1);
-
-    const Wave_t *wave = (const Wave_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-    float period = LUAX_NUMBER(L, lua_upvalueindex(2));
-    float amplitude = LUAX_NUMBER(L, lua_upvalueindex(3));
-
-    float ratio = time / period;
-    float value = wave->function(ratio) * amplitude;
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int math_wave_1s_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-
-    const Wave_t *wave = wave_from_name(name);
-    if (!wave) {
-        return luaL_error(L, "unknown wave `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)wave);
-    lua_pushcclosure(L, _vanilla_wave_1n_1n, 1);
-
-    return 1;
-}
-
-static int math_wave_3snN_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-    float period = LUAX_NUMBER(L, 2);
-    float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
-
-    const Wave_t *wave = wave_from_name(name);
-    if (!wave) {
-        return luaL_error(L, "unknown wave `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)wave);
-    lua_pushnumber(L, (lua_Number)period);
-    lua_pushnumber(L, (lua_Number)amplitude);
-    lua_pushcclosure(L, _normalize_wave_1n_1n, 3);
-
-    return 1;
-}
-
-static int math_wave_v_1f(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_wave_1s_1f)
-        LUAX_OVERLOAD_ARITY(2, math_wave_3snN_1f)
-        LUAX_OVERLOAD_ARITY(3, math_wave_3snN_1f)
-    LUAX_OVERLOAD_END
-}
-
-static int _vanilla_tweener_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float ratio = LUAX_NUMBER(L, 1);
-
-    const Easing_t *easing = (const Easing_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-
-    float value = easing->function(ratio);
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int _normalize_tweener_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float time = LUAX_NUMBER(L, 1);
-
-    const Easing_t *easing = (const Easing_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-    float duration = LUAX_NUMBER(L, lua_upvalueindex(2));
-
-    float ratio = time / duration;
-    float value = easing->function(ratio);
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int _normalize_lerp_tweener_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float time = LUAX_NUMBER(L, 1);
-
-    const Easing_t *easing = (const Easing_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-    float duration = LUAX_NUMBER(L, lua_upvalueindex(2));
-    float from = LUAX_NUMBER(L, lua_upvalueindex(3));
-    float to = LUAX_NUMBER(L, lua_upvalueindex(4));
-
-    float ratio = time / duration;
-    float eased_ratio = easing->function(ratio);
-    float value = FLERP(from, to, eased_ratio);
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int math_tweener_1s_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-
-    const Easing_t *easing  = easing_from_id(name);
-    if (!easing) {
-        return luaL_error(L, "unknown easing `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)easing);
-    lua_pushcclosure(L, _vanilla_tweener_1n_1n, 1);
-
-    return 1;
-}
-
-static int math_tweener_2sn_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-    float duration = LUAX_NUMBER(L, 2);
-
-    const Easing_t *easing  = easing_from_id(name);
-    if (!easing) {
-        return luaL_error(L, "unknown easing `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)easing);
-    lua_pushnumber(L, (lua_Number)duration);
-    lua_pushcclosure(L, _normalize_tweener_1n_1n, 2);
-
-    return 1;
-}
-
-static int math_tweener_4snnn_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-    float duration = LUAX_NUMBER(L, 2);
-    float from = LUAX_NUMBER(L, 3);
-    float to = LUAX_NUMBER(L, 4);
-
-    const Easing_t *easing  = easing_from_id(name);
-    if (!easing) {
-        return luaL_error(L, "unknown easing `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)easing);
-    lua_pushnumber(L, (lua_Number)duration);
-    lua_pushnumber(L, (lua_Number)from);
-    lua_pushnumber(L, (lua_Number)to);
-    lua_pushcclosure(L, _normalize_lerp_tweener_1n_1n, 4);
-
-    return 1;
-}
-
-static int math_tweener_v_1f(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_tweener_1s_1f)
-        LUAX_OVERLOAD_ARITY(2, math_tweener_2sn_1f)
-        LUAX_OVERLOAD_ARITY(4, math_tweener_4snnn_1f)
-    LUAX_OVERLOAD_END
 }

@@ -23,9 +23,10 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
+local Noise = require("tofu.generators").Noise
+local Wave = require("tofu.generators").Wave
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
@@ -57,7 +58,7 @@ function Main:__ctor()
 
   self.bank = Bank.new(Canvas.new(BYTES, 0, 5), 8, 8)
   self.font = Font.default(0, 15)
-  self.wave = Math.wave("triangle", 10.0, 128.0)
+  self.wave = Wave.new("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
   self.y_size = height / AMOUNT
   self.palette = 1
@@ -66,6 +67,8 @@ function Main:__ctor()
   self.x, self.y = canvas:center()
   self.mode = 0
   self.clipping = false
+
+  self.noise = Noise.new("simplex", 1234, 0.02)
 
   Display.palette(Palette.new("pico-8"))
 
@@ -98,12 +101,22 @@ function Main:process()
   end
 end
 
+local function _sort_palette(palette) -- Sort the palette by increasing luminance.
+  local colors = palette:colors()
+  table.sort(colors, function(a, b)
+      local av = (a[1] + a[2] + a[3]) / 3
+      local bv = (b[1] + b[2] + b[3]) / 3
+      return av < bv
+    end);
+  return Palette.new(colors)
+end
+
 function Main:update(_)
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
-    local palette = Palette.new(PALETTES[index])
-    Display.palette(palette)
+    local palette = _sort_palette(Palette.new(PALETTES[index]))
+    Display.palette(_sort_palette(palette))
   end
 end
 
@@ -165,6 +178,12 @@ function Main:render(_)
     self.bank:blit(canvas, x - 4, y - 4, 0)
   elseif self.mode == 8 then
     self.bank:blit(canvas, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
+  elseif self.mode == 9 then
+    local noise = self.noise
+    canvas:scan(function(x, y, _)
+        local v = noise:generate(x, y, time * 5.0)
+        return math.tointeger(v * 15)
+      end)
   end
 
   self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()), 1.5)

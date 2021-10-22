@@ -33,7 +33,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct _SL_Props_t {
+typedef struct SL_Props_s {
     const SL_Context_t *context;
     size_t channels;
 
@@ -44,6 +44,8 @@ typedef struct _SL_Props_t {
     float speed;
 
     // TODO: Add M/S processing: https://github.com/dfilaretti/stereowidth-demo
+    // TODO: Add reverb: https://medium.com/the-seekers-project/coding-a-basic-reverb-algorithm-an-introduction-to-audio-programming-d5d90ad58bde
+    //                   https://github.com/fabiensanglard/chocolate_duke3D/blob/master/Game/src/audiolib/mvreverb.c
     ma_data_converter converter;
     SL_Mix_t precomputed_mix;
 } SL_Props_t;

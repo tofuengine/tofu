@@ -45,7 +45,7 @@
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 #define SL_ANY_GROUP            (SL_LAST_GROUP + 1)
 
-typedef struct _SL_Callbacks_t {
+typedef struct SL_Callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
     bool   (*seek)(void *user_data, long offset, int whence);
     long   (*tell)(void *user_data);
@@ -53,12 +53,12 @@ typedef struct _SL_Callbacks_t {
     void *user_data;
 } SL_Callbacks_t;
 
-typedef struct _SL_Mix_t {
+typedef struct SL_Mix_s {
     float left_to_left, left_to_right;
     float right_to_left, right_to_right;
 } SL_Mix_t;
 
-typedef struct _SL_Group_t {
+typedef struct SL_Group_s {
     SL_Mix_t mix;
     float gain;
 } SL_Group_t;

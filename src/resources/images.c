@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <strings.h>
 
-typedef struct _Resource_Image_t {
+typedef struct Resource_Image_s {
     const char *id;
     Image_t data;
 } Resource_Image_t;

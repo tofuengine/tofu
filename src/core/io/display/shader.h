@@ -30,12 +30,12 @@
 
 #include <stdbool.h>
 
-typedef struct _Shader_t {
+typedef struct Shader_s {
     GLuint id;
     GLint *locations;
 } Shader_t;
 
-typedef enum _Shader_Uniforms_t {
+typedef enum Shader_Uniforms_e {
     SHADER_UNIFORM_BOOL,
     SHADER_UNIFORM_INT,
     SHADER_UNIFORM_FLOAT,
@@ -48,7 +48,7 @@ typedef enum _Shader_Uniforms_t {
     SHADER_UNIFORM_TEXTURE
 } Shader_Uniforms_t;
 
-typedef enum _Shader_Types_t {
+typedef enum Shader_Types_e {
     SHADER_TYPE_VERTEX,
     SHADER_TYPE_FRAGMENT,
     Shader_Types_t_CountOf

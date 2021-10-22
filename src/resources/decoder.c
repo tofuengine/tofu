@@ -57,7 +57,7 @@ Blob_t decoder_as_blob(const char *encoded_data)
         };
 }
 
-typedef struct _Cursor_t {
+typedef struct Cursor_s {
     uint8_t *data;
     size_t size;
     size_t index;
