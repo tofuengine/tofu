@@ -37,7 +37,7 @@ function Vector.new(...)
     values = { x = 0, y = 0 }
   elseif #args == 1 then
     local v = args[1]
-    values = { x = v, y = v }
+    values = { x = v.x, y = v.y }
   elseif #args == 2 then
     values = { x = args[1], y = args[2] }
   else
@@ -77,7 +77,8 @@ function Vector.intersect(p0, v0, p1, v1)
   if det == 0.0 then
     return nil, nil
   end
-  local v3 = Vector.new(p1):sub(p0)
+  local v3 = Vector.new(p1)
+  v3:sub(p0)
   local t0 = v3:perp_dot(v1) / det -- ratio for the first ray
   local t1 = v3:perp_dot(v0) / det -- ratio for the second ray
   return t0, t1
