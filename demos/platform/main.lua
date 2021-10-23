@@ -34,7 +34,7 @@ local Palette = require("tofu.graphics").Palette
 local Program = require("tofu.graphics").Program
 local Vector = require("tofu.util").Vector
 
-local Animation = require("lib.animation")
+local Animation = require("lib/animation")
 
 local WATER_DISPLACEMENT = 1.5
 

@@ -32,8 +32,8 @@ local Display = require("tofu.graphics").Display
 local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
-local MovingBunny = require("lib.moving_bunny")
-local StaticBunny = require("lib.static_bunny")
+local MovingBunny = require("lib/moving_bunny")
+local StaticBunny = require("lib/static_bunny")
 
 local INITIAL_BUNNIES = 15000
 local LITTER_SIZE = 250

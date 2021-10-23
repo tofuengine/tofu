@@ -33,7 +33,7 @@ local Font = require("tofu.graphics").Font
 local Body = require("tofu.physics").Body
 local World = require("tofu.physics").World
 
-local Bunny = require("lib.bunny")
+local Bunny = require("lib/bunny")
 
 local INITIAL_BUNNIES = 1
 local LITTER_SIZE = 5

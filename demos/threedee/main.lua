@@ -30,10 +30,10 @@ local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 
-local Background = require("lib.background")
-local Camera = require("lib.camera")
-local Player = require("lib.player")
-local Scene = require("lib.scene")
+local Background = require("lib/background")
+local Camera = require("lib/camera")
+local Player = require("lib/player")
+local Scene = require("lib/scene")
 
 local config = require("config")
 

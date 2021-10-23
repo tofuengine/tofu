@@ -30,7 +30,7 @@ local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 
-local Map = require("lib.map")
+local Map = require("lib/map")
 
 local Main = Class.define()
 

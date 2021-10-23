@@ -31,7 +31,7 @@ local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 
-local bump = require("lib.bump")
+local bump = require("lib/bump")
 
 local cols_len = 0 -- how many collisions are happening
 

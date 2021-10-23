@@ -32,7 +32,7 @@ local Display = require("tofu.graphics").Display
 local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
-local Sprite = require("lib.sprite")
+local Sprite = require("lib/sprite")
 
 local CHUNK_SIZE = 1
 

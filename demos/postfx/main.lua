@@ -31,7 +31,7 @@ local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 
-local Sprite = require("lib.sprite")
+local Sprite = require("lib/sprite")
 
 local LITTER_SIZE = 64
 

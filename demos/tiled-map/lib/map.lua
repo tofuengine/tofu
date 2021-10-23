@@ -28,7 +28,7 @@ local Canvas = require("tofu.graphics").Canvas
 local File = require("tofu.io").File
 local Grid = require("tofu.util").Grid
 
-local Camera = require("lib.camera")
+local Camera = require("lib/camera")
 
 -- https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Scrolling_maps
 
