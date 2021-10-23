@@ -37,14 +37,14 @@ static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 {
     if (x < clipping_region->x0) {
         return;
+    } else
+    if (x >= clipping_region->x1) {
+        return;
     }
     if (y < clipping_region->y0) {
         return;
-    }
-    if (x > clipping_region->x1) {
-        return;
-    }
-    if (y > clipping_region->y1) {
+    } else
+    if (y >= clipping_region->y1) {
         return;
     }
 
@@ -58,13 +58,13 @@ static inline int _compute_code(const GL_Quad_t *clipping_region, int x, int y)
     if (x < clipping_region->x0) {
         code |= REGION_LEFT;
     } else
-    if (x > clipping_region->x1) {
+    if (x >= clipping_region->x1) {
         code |= REGION_RIGHT;
     }
     if (y < clipping_region->y0) {
         code |= REGION_ABOVE;
     } else
-    if (y > clipping_region->y1) {
+    if (y >= clipping_region->y1) {
         code |= REGION_BELOW;
     }
     return code;
@@ -105,7 +105,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
             if (code & REGION_BELOW) {
-                y = clipping_region->y1;
+                y = clipping_region->y1 - 1;
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
             if (code & REGION_LEFT) {
@@ -113,7 +113,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             } else
             if (code & REGION_RIGHT) {
-                x = clipping_region->x1;
+                x = clipping_region->x1 - 1;
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             }
 
