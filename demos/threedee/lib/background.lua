@@ -99,7 +99,7 @@ function Background:render(canvas)
   h = h - (15 - camera.y // 16)
   local wy = y - h
   local offset_x <const> = camera.x // 4
-  for wx = 0, width - w, w do
+  for wx = 0, width, w do
     canvas:tile(wx, wy, self.skyline, 0, 0, w, h, offset_x, 0)
   end
 

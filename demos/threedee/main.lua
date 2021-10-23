@@ -53,8 +53,8 @@ function Main:__ctor()
 
   self.player = Player.new()
   self.camera = Camera.new(CAMERA_FIELD_OF_VIEW, width, height, CAMERA_NEAR, CAMERA_FAR)
-  self.background = Background.new(self.camera, 59)
   self.scene = Scene.new(self.camera, palette, 63)
+  self.background = Background.new(self.camera, 59)
   self.font = Font.default(63, 11)
 
   self.running = true
