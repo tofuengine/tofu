@@ -287,6 +287,11 @@ threedee-pak: $(TARGET)
 	@lua5.3 ./extras/pakgen.lua --input=./demos/threedee --output=./demos/threedee.pak --encrypted
 	@./$(TARGET) --path=./demos/threedee.pak
 
+noise: $(TARGET)
+	@echo "Launching *threedee* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/noise
+	@./$(TARGET) --path=./demos/noise
+
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
