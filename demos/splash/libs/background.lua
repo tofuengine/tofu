@@ -34,21 +34,22 @@ local Background = Class.define()
 
 function Background:__ctor(canvas, transparent, palette)
   local _, height = canvas:size()
-  local half_height = math.tointeger(height * 0.5)
-  local quarter_height = math.tointeger(height * 0.25)
+  local half_height = height // 2
+  local quarter_height = height // 4
 
   self.font = Font.new(Canvas.new("assets/images/font-8x8.png", transparent, palette:match(255, 255, 255)),
       8, 8)
 
   self.timer = Timer.new(10, 0, function(_)
-      local program = Program.gradient(transparent, {
+      local program = Program.new()
+      program:gradient(transparent, {
           { 0, palette:get(math.random(0, transparent)) },
           { quarter_height - 1, palette:get(math.random(0, transparent)) },
           { half_height - 1, palette:get(math.random(0, transparent)) },
           { height - quarter_height - 1, palette:get(math.random(0, transparent)) },
           { height - 1, palette:get(math.random(0, transparent)) }
         })
---      program:wait(0, height - math.tointeger(quarter_height / 2) - 1)
+--      program:wait(0, height - (quarter_height // 2) - 1)
 --      program:modulo(-width * 4)
       Display.program(program)
     end)

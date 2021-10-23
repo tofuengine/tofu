@@ -76,8 +76,6 @@ function Main:__ctor()
   local palette = Palette.new("pico-8-ext")
   Display.palette(palette)
 
-  Class.dump(System.args())
-
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
   canvas:background(12)
@@ -269,7 +267,7 @@ function Main:render(_)
 
   y = y + delta_y
 
-  local ox = math.tointeger(self.position.x / 16)
+  local ox = self.position.x // 16
   local dx = self.position.x % 16
   for i = 1, 5 do
     for j = 1, 15 + 1 do

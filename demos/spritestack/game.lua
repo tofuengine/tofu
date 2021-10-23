@@ -26,6 +26,7 @@ local Class = require("tofu.core").Class
 local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
+local Tweener = require("tofu.generators").Tweener
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
@@ -50,7 +51,7 @@ function Game:__ctor()
   self.bank = Bank.new(Canvas.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
 --  self.bank = Bank.new(Canvas.new("assets/images/racing-car-small-red.png", 0), 32, 32)
   self.font = Font.default(0, 31)
-  self.tweener = Math.tweener("sine_out")
+  self.tweener = Tweener.new("sine-out")
 
   self.sprites = {}
 

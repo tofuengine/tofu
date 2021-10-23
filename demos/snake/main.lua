@@ -85,8 +85,8 @@ function Main:__ctor()
   local width, height = canvas:size()
 
   self.font = Font.default(palette:match(0, 0, 0), palette:match(255, 255, 255))
-  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), { 0 })
---  Class.dump(self)
+  self.grid = Grid.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
+--  Log.dump(self)
 
   self:reset()
 end

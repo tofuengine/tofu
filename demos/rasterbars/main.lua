@@ -113,7 +113,7 @@ function Main:update(delta_time)
   program:color(1, 0x00, 0x11, 0x44)
   program:color(31, 0x00, 0x11, 0x44)
   program:modulo(-width * 2)
-  for i = math.tointeger(height * 0.5), height - 1 do
+  for i = height // 2, height - 1 do
     program:wait(0, i)
     program:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
   end

@@ -84,8 +84,8 @@ function Camera:move_to(x, y)
 
   local scale = self.scale
   local cw, ch = self.bank:size(Bank.NIL)
-  local start_column = math.tointeger(map_x / cw)
-  local start_row = math.tointeger(map_y / ch)
+  local start_column = map_x // cw
+  local start_row = map_y // ch
   local column_offset = -math.tointeger((map_x % cw) * scale) -- In screen coordinates.
   local row_offset = -math.tointeger((map_y % ch) * scale)
 
