@@ -121,33 +121,45 @@ FS_Context_t *FS_create(const char *path)
 
     *context = (FS_Context_t){ 0 };
 
-    struct dirent *directory = _read_directory(path, _dirent_compare_by_name); // Build the non-recursive sorted directory listing.
-    if (!directory) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't access directory `%s`", path);
+    if (path_is_folder(path)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is a folder", path);
+
+        struct dirent *directory = _read_directory(path, _dirent_compare_by_name); // Build the non-recursive sorted directory listing.
+        if (!directory) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't access directory `%s`", path);
+            free(context);
+            return NULL;
+        }
+
+        for (size_t i = 0; i < (size_t)arrlen(directory); ++i) {
+            const struct dirent *entry = &directory[i]; 
+            if (entry->d_type != DT_REG) { // Discard non-regular files (e.g. folders).
+                continue;
+            }
+
+            char subpath[PLATFORM_PATH_MAX] = { 0 };
+            path_join(subpath, path, entry->d_name);
+#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
+            if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
+                continue;
+            }
+#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
+            if (!FS_pak_is_valid(subpath)) {
+                continue;
+            }
+
+            _attach(context, subpath);
+        }
+
+        arrfree(directory);
+    } else
+    if (FS_pak_is_valid(path)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is an archive", path);
+    } else {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
+        free(context);
         return NULL;
     }
-
-    for (size_t i = 0; i < (size_t)arrlen(directory); ++i) {
-        const struct dirent *entry = &directory[i]; 
-        if (entry->d_type != DT_REG) {
-            continue;
-        }
-
-        char subpath[PLATFORM_PATH_MAX] = { 0 };
-        path_join(subpath, path, entry->d_name);
-#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
-        if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
-            continue;
-        }
-#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
-        if (!FS_pak_is_valid(subpath)) {
-            continue;
-        }
-
-        _attach(context, subpath);
-    }
-
-    arrfree(directory);
 
     _attach(context, path); // Mount the resolved folder, as well (overriding archives).
 
