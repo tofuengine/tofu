@@ -80,8 +80,7 @@ function Main:render(_)
 
   for _ = 1, 250 do
     local p = Vector.new(math.random(0, m.x), math.random(0, m.y))
-    local v = Vector.new(p)
-    v:sub(c)
+    local v = Vector.from_points(c, p)
     v:div(c) -- Normalize and center in [-1, 1]
     local d = 1.0 - v:magnitude()
     local angle = t * 3 + d * math.pi -- Angle increase as we reach the center.

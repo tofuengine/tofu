@@ -54,6 +54,10 @@ function Vector:__tostring()
 	return string.format("<%.5f, %.5f>", self.x, self.y)
 end
 
+function Vector.from_points(a, b)
+  return Vector.new(b.x - a.x, b.y - a.y)
+end
+
 function Vector.from_polar(a, l, ox, oy)
   return Vector.new(math.cos(a) * l + (ox and ox or 0), math.sin(a) * l + (oy and oy or 0))
 end
@@ -77,10 +81,9 @@ function Vector.intersect(p0, v0, p1, v1)
   if det == 0.0 then
     return nil, nil
   end
-  local v3 = Vector.new(p1)
-  v3:sub(p0)
-  local t0 = v3:perp_dot(v1) / det -- ratio for the first ray
-  local t1 = v3:perp_dot(v0) / det -- ratio for the second ray
+  local v = Vector.from_points(p0, p1)
+  local t0 = v:perp_dot(v1) / det -- ratio for the first ray
+  local t1 = v:perp_dot(v0) / det -- ratio for the second ray
   return t0, t1
 end
 
