@@ -26,7 +26,7 @@
 
 #include <strings.h>
 
-typedef struct Resource_Palette_s {
+typedef struct Resource_Palette_s { // FIXME: rename to `Palette_Entry_t`.
     const char *id;
     Palette_t palette;
 } Resource_Palette_t;

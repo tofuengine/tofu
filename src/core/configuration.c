@@ -33,6 +33,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "utils/resolution.h"
+
 #define LOG_CONTEXT "configuration"
 
 #define LINE_LENGTH                 256
@@ -76,6 +78,15 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     } else
     if (strcmp(fqn, "display-title") == 0) {
         strncpy(configuration->display.title, value, MAX_VALUE_LENGTH - 1);
+    } else
+    if (strcmp(fqn, "display-resolution") == 0) {
+        const Resolution_t *resolution = Resolution_find(value);
+        if (resolution) {
+            configuration->display.width = resolution->width;
+            configuration->display.height = resolution->height;
+        } else {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown resolution variant `%s`", value);
+        }
     } else
     if (strcmp(fqn, "display-width") == 0) {
         configuration->display.width = (size_t)strtoul(value, NULL, 0);

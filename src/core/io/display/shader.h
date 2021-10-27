@@ -54,6 +54,7 @@ typedef enum Shader_Types_e {
     Shader_Types_t_CountOf
 } Shader_Types_t;
 
+// TODO: rename to first char uppercase.
 extern Shader_t *shader_create(void);
 extern void shader_destroy(Shader_t *shader);
 extern bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type);
