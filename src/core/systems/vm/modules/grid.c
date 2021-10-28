@@ -25,7 +25,7 @@
 #include "grid.h"
 
 #include <config.h>
-#include <core/vm/interpreter.h>
+#include <core/systems/interpreter.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/stb.h>

@@ -25,7 +25,7 @@
 #include "input.h"
 
 #include <config.h>
-#include <core/io/input.h>
+#include <core/systems/input.h>
 
 #include "udt.h"
 #include "utils/map.h"

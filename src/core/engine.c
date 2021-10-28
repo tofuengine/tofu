@@ -35,7 +35,7 @@
   #include <windows.h>
 #endif
 
-#include "options.h"
+#include "utils/options.h"
 
 #define LOG_CONTEXT "engine"
 

@@ -25,7 +25,7 @@
 #ifndef __ENVIRONMENT_H__
 #define __ENVIRONMENT_H__
 
-#include <core/io/display.h>
+#include <core/systems/display.h>
 
 #include <stdbool.h>
 #include <stddef.h>

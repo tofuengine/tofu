@@ -49,35 +49,36 @@
 //   void cursor_1o_2nn();
 //
 
-// FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
-#include <core/vm/modules/arrays.h>
-#include <core/vm/modules/bank.h>
-#include <core/vm/modules/batch.h>
-#include <core/vm/modules/body.h>
-#include <core/vm/modules/canvas.h>
-#include <core/vm/modules/class.h>
-#include <core/vm/modules/display.h>
-#include <core/vm/modules/file.h>
-#include <core/vm/modules/font.h>
-#include <core/vm/modules/grid.h>
-#include <core/vm/modules/input.h>
-#include <core/vm/modules/iterators.h>
-#include <core/vm/modules/log.h>
-#include <core/vm/modules/math.h>
-#include <core/vm/modules/noise.h>
-#include <core/vm/modules/palette.h>
-#include <core/vm/modules/program.h>
-#include <core/vm/modules/source.h>
-#include <core/vm/modules/speakers.h>
-#include <core/vm/modules/system.h>
-#include <core/vm/modules/timers.h>
-#include <core/vm/modules/tweener.h>
-#include <core/vm/modules/vector.h>
-#include <core/vm/modules/wave.h>
-#include <core/vm/modules/world.h>
-#include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
+
+// FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
+#include "modules/arrays.h"
+#include "modules/bank.h"
+#include "modules/batch.h"
+#include "modules/body.h"
+#include "modules/canvas.h"
+#include "modules/class.h"
+#include "modules/display.h"
+#include "modules/file.h"
+#include "modules/font.h"
+#include "modules/grid.h"
+#include "modules/input.h"
+#include "modules/iterators.h"
+#include "modules/log.h"
+#include "modules/math.h"
+#include "modules/noise.h"
+#include "modules/palette.h"
+#include "modules/program.h"
+#include "modules/source.h"
+#include "modules/speakers.h"
+#include "modules/system.h"
+#include "modules/timers.h"
+#include "modules/tweener.h"
+#include "modules/vector.h"
+#include "modules/wave.h"
+#include "modules/world.h"
+#include "modules/xform.h"
 
 #define LOG_CONTEXT "modules"
 

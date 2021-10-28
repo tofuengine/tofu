@@ -27,7 +27,7 @@
 
 #include <chipmunk/chipmunk.h>
 
-#include <core/io/display.h>
+#include <core/systems/display.h>
 #include <libs/easing.h>
 #include <libs/luax.h>
 #include <libs/noise.h>

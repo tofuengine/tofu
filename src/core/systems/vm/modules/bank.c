@@ -25,8 +25,8 @@
 #include "bank.h"
 
 #include <config.h>
-#include <core/io/display.h>
-#include <core/io/storage.h>
+#include <core/systems/display.h>
+#include <core/systems/storage.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 

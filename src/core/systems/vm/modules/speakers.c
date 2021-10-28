@@ -25,7 +25,7 @@
 #include "speakers.h"
 
 #include <config.h>
-#include <core/io/audio.h>
+#include <core/systems/audio.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 

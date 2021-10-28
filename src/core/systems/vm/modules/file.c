@@ -25,7 +25,7 @@
 #include "file.h"
 
 #include <config.h>
-#include <core/io/storage.h>
+#include <core/systems/storage.h>
 #include <libs/luax.h>
 
 #include "udt.h"

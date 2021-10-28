@@ -25,10 +25,10 @@
 #include "canvas.h"
 
 #include <config.h>
-#include <core/environment.h>
-#include <core/io/display.h>
-#include <core/io/storage.h>
-#include <core/vm/interpreter.h>
+#include <core/systems/display.h>
+#include <core/systems/environment.h>
+#include <core/systems/interpreter.h>
+#include <core/systems/storage.h>
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>

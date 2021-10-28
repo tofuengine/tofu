@@ -25,7 +25,7 @@
 #include "world.h"
 
 #include <config.h>
-#include <core/physics.h>
+#include <core/systems/physics.h>
 #include <libs/log.h>
 
 #include "udt.h"

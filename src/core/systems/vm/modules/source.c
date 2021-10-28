@@ -25,8 +25,8 @@
 #include "source.h"
 
 #include <config.h>
-#include <core/io/audio.h>
-#include <core/io/storage.h>
+#include <core/systems/audio.h>
+#include <core/systems/storage.h>
 #include <libs/luax.h>
 #include <libs/log.h>
 

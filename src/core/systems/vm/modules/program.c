@@ -25,7 +25,7 @@
 #include "program.h"
 
 #include <config.h>
-#include <core/io/display.h>
+#include <core/systems/display.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
 #include <libs/luax.h>
