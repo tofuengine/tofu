@@ -33,7 +33,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include "interpreter.h"
 
 #include <config.h>
-#include <core/systems/vm/modules.h>
+#include <core/modules/modules.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -61,9 +61,9 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 
 static const char _boot_lua[] = {
 #ifdef DEBUG
-  #include "vm/boot-debug.inc"
+  #include <assets/scripts/boot-debug.inc>
 #else
-  #include "vm/boot-release.inc"
+  #include <assets/scripts/boot-release.inc>
 #endif
 };
 

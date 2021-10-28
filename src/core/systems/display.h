@@ -29,6 +29,7 @@
 
 #include <config.h>
 #include <libs/gl/gl.h>
+#include <libs/shader.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -38,8 +39,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "display/shader.h"
 
 typedef struct Display_Configuration_s {
     GLFWimage icon;
