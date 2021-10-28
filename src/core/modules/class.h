@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_CLASS_H__
-#define __MODULES_CLASS_H__
+#ifndef __CORE_MODULES_CLASS_H__
+#define __CORE_MODULES_CLASS_H__
 
 #include <lua/lua.h>
 
 extern int class_loader(lua_State *L);
 
-#endif  /* __MODULES_CLASS_H__ */
+#endif  /* __CORE_MODULES_CLASS_H__ */

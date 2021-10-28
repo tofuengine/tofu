@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __STORAGE_H__
-#define __STORAGE_H__
+#ifndef __CORE_SYSTEMS_STORAGE_H__
+#define __CORE_SYSTEMS_STORAGE_H__
 
 #include <libs/fs/fs.h>
 
@@ -104,4 +104,4 @@ extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); //
 
 extern bool Storage_update(Storage_t *storage, float delta_time);
 
-#endif  /* __STORAGE_H__ */
+#endif  /* __CORE_SYSTEMS_STORAGE_H__ */

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __INPUT_H__
-#define __INPUT_H__
+#ifndef __CORE_SYSTEMS_INPUT_H__
+#define __CORE_SYSTEMS_INPUT_H__
 
 #include <config.h>
 
@@ -181,4 +181,4 @@ extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t
 extern float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button);
 extern int Input_get_mode(const Input_t *input);
 
-#endif  /* __INPUT_H__ */
+#endif  /* __CORE_SYSTEMS_INPUT_H__ */

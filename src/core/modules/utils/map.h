@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_MAP_H__
-#define __LIBS_MAP_H__
+#ifndef __CORE_MODULES_UTILS_MAP_H__
+#define __CORE_MODULES_UTILS_MAP_H__
 
 #include <libs/luax.h>
 
@@ -37,4 +37,4 @@ typedef struct Map_Entry_s {
 extern const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size);
 extern const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size);
 
-#endif  /* __LIBS_MAP_H__ */
+#endif  /* __CORE_MODULES_UTILS_MAP_H__ */

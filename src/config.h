@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TOFU_CONFIG_H__
-#define __TOFU_CONFIG_H__
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
 
 // Constant MACROs have no prefix.
 #define FPS_AVERAGE_SAMPLES         128
@@ -108,4 +108,4 @@
   #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #endif
 
-#endif  /* __TOFU_CONFIG_H__ */
+#endif  /* __CONFIG_H__ */

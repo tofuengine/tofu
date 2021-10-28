@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_CALLBACKS_H__
-#define __MODULES_CALLBACKS_H__
+#ifndef __CORE_MODULES_UTILS_CALLBACKS_H__
+#define __CORE_MODULES_UTILS_CALLBACKS_H__
 
 #include <libs/gl/gl.h>
 
@@ -45,4 +45,4 @@ typedef struct Callback_Indexes_Closure_s {
 extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels);
 extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels);
 
-#endif  /* __MODULES_CALLBACKS_H__ */
+#endif  /* __CORE_MODULES_UTILS_CALLBACKS_H__ */

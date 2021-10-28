@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_BANK_H__
-#define __MODULES_BANK_H__
+#ifndef __CORE_MODULES_BANK_H__
+#define __CORE_MODULES_BANK_H__
 
 #include <lua/lua.h>
 
 extern int bank_loader(lua_State *L); // TODO: rename `Bank` to `Sheet`?
 
-#endif  /* __MODULES_BANK_H__ */
+#endif  /* __CORE_MODULES_BANK_H__ */

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __CORE_OPTIONS_H__
-#define __CORE_OPTIONS_H__
+#ifndef __CORE_UTILS_OPTIONS_H__
+#define __CORE_UTILS_OPTIONS_H__
 
 typedef struct options_s {
     const char *path;
@@ -31,5 +31,5 @@ typedef struct options_s {
 
 extern options_t options_parse_command_line(int argc, const char *argv[]);
 
-#endif /* __CORE_OPTIONS_H__ */
+#endif /* __CORE_UTILS_OPTIONS_H__ */
 

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_LOG_H__
-#define __MODULES_LOG_H__
+#ifndef __CORE_MODULES_LOG_H__
+#define __CORE_MODULES_LOG_H__
 
 #include <lua/lua.h>
 
 extern int log_loader(lua_State *L);
 
-#endif  /* __MODULES_LOG_H__ */
+#endif  /* __CORE_MODULES_LOG_H__ */

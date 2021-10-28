@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __CONFIGURATION_H__
-#define __CONFIGURATION_H__
+#ifndef __CORE_CONFIGURATION_H__
+#define __CORE_CONFIGURATION_H__
 
 #include <platform.h>
 
@@ -83,4 +83,4 @@ extern void Configuration_destroy(Configuration_t *configuration);
 
 extern void Configuration_override(Configuration_t *configuration, int argc, const char *argv[]);
 
-#endif  /* __CONFIGURATION_H__ */
+#endif  /* __CORE_CONFIGURATION_H__ */

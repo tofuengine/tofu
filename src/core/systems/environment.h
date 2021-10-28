@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __ENVIRONMENT_H__
-#define __ENVIRONMENT_H__
+#ifndef __CORE_SYSTEMS_ENVIRONMENT_H__
+#define __CORE_SYSTEMS_ENVIRONMENT_H__
 
 #include <core/systems/display.h>
 
@@ -72,4 +72,4 @@ extern void Environment_process(Environment_t *environment, float frame_time);
 
 extern void Environment_update(Environment_t *environment, float delta_time);
 
-#endif  /* __ENVIRONMENT_H__ */
+#endif  /* __CORE_SYSTEMS_ENVIRONMENT_H__ */

@@ -22,17 +22,17 @@
  * SOFTWARE.
  */
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#ifndef __CORE_ENGINE_H__
+#define __CORE_ENGINE_H__
 
-#include <core/configuration.h>
-#include <core/systems/audio.h>
-#include <core/systems/display.h>
-#include <core/systems/environment.h>
-#include <core/systems/input.h>
-#include <core/systems/physics.h>
-#include <core/systems/storage.h>
-#include <core/systems/interpreter.h>
+#include "configuration.h"
+#include "systems/audio.h"
+#include "systems/display.h"
+#include "systems/environment.h"
+#include "systems/input.h"
+#include "systems/physics.h"
+#include "systems/storage.h"
+#include "systems/interpreter.h"
 
 typedef struct Engine_s {
     Storage_t *storage;
@@ -50,4 +50,4 @@ extern void Engine_destroy(Engine_t *engine);
 
 extern void Engine_run(Engine_t *engine);
 
-#endif  /* __ENGINE_H__ */
+#endif  /* __CORE_ENGINE_H__ */

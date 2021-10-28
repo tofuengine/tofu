@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_SPEAKERS_H__
-#define __MODULES_SPEAKERS_H__
+#ifndef __CORE_MODULES_SPEAKERS_H__
+#define __CORE_MODULES_SPEAKERS_H__
 
 #include <lua/lua.h>
 
 extern int speakers_loader(lua_State *L);
 
-#endif  /* __MODULES_SPEAKERS_H__ */
+#endif  /* __CORE_MODULES_SPEAKERS_H__ */

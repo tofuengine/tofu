@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_NOISE_H__
-#define __MODULES_NOISE_H__
+#ifndef __CORE_MODULES_NOISE_H__
+#define __CORE_MODULES_NOISE_H__
 
 #include <lua/lua.h>
 
 extern int noise_loader(lua_State *L);
 
-#endif  /* __MODULES_NOISE_H__ */
+#endif  /* __CORE_MODULES_NOISE_H__ */

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __AUDIO_H__
-#define __AUDIO_H__
+#ifndef __CORE_SYSTEMS_AUDIO_H__
+#define __CORE_SYSTEMS_AUDIO_H__
 
 #include <libs/sl/sl.h>
 
@@ -70,4 +70,4 @@ extern bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source);
 
 extern bool Audio_update(Audio_t *audio, float delta_time);
 
-#endif  /* __AUDIO_H__ */
+#endif  /* __CORE_SYSTEMS_AUDIO_H__ */

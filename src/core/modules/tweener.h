@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_TWEENER_H__
-#define __MODULES_TWEENER_H__
+#ifndef __CORE_MODULES_TWEENER_H__
+#define __CORE_MODULES_TWEENER_H__
 
 #include <lua/lua.h>
 
 extern int tweener_loader(lua_State *L);
 
-#endif  /* __MODULES_TWEENER_H__ */
+#endif  /* __CORE_MODULES_TWEENER_H__ */

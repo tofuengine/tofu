@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __DISPLAY_H__
-#define __DISPLAY_H__
+#ifndef __CORE_SYSTEMS_DISPLAY_H__
+#define __CORE_SYSTEMS_DISPLAY_H__
 
 // TODO: rename Display to Video?
 
@@ -108,4 +108,4 @@ extern void Display_grab_snapshot(const Display_t *display, const char *base_pat
 extern void Display_toggle_recording(Display_t *display, const char *base_path);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-#endif  /* __DISPLAY_H__ */
+#endif  /* __CORE_SYSTEMS_DISPLAY_H__ */

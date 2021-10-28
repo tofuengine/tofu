@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_ITERATORS_H__
-#define __MODULES_ITERATORS_H__
+#ifndef __CORE_MODULES_ITERATORS_H__
+#define __CORE_MODULES_ITERATORS_H__
 
 #include <lua/lua.h>
 
 extern int iterators_loader(lua_State *L);
 
-#endif  /* __MODULES_ITERATORS_H__ */
+#endif  /* __CORE_MODULES_ITERATORS_H__ */

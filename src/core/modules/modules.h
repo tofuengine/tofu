@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TOFU_MODULES_H__
-#define __TOFU_MODULES_H__
+#ifndef __CORE_MODULES_MODULES_H__
+#define __CORE_MODULES_MODULES_H__
 
 #include <stdbool.h>
 
@@ -31,4 +31,4 @@
 
 extern void modules_initialize(lua_State *L, int nup);
 
-#endif  /* __TOFU_MODULES_H__ */
+#endif  /* __CORE_MODULES_MODULES_H__ */

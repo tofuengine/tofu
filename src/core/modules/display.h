@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_DISPLAY_H__
-#define __MODULES_DISPLAY_H__
+#ifndef __CORE_MODULES_DISPLAY_H__
+#define __CORE_MODULES_DISPLAY_H__
 
 #include <lua/lua.h>
 
 extern int display_loader(lua_State *L);
 
-#endif  /* __MODULES_DISPLAY_H__ */
+#endif  /* __CORE_MODULES_DISPLAY_H__ */

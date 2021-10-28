@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_SOURCE_H__
-#define __MODULES_SOURCE_H__
+#ifndef __CORE_MODULES_SOURCE_H__
+#define __CORE_MODULES_SOURCE_H__
 
 #include <lua/lua.h>
 
 extern int source_loader(lua_State *L);
 
-#endif  /* __MODULES_SOURCE_H__ */
+#endif  /* __CORE_MODULES_SOURCE_H__ */

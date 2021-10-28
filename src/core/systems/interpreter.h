@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __INTERPRETER_H__
-#define __INTERPRETER_H__
+#ifndef __CORE_SYSTEMS_INTERPRETER_H__
+#define __CORE_SYSTEMS_INTERPRETER_H__
 
 #include <config.h>
 
@@ -58,4 +58,4 @@ extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);
 
-#endif  /* __INTERPRETER_H__ */
+#endif  /* __CORE_SYSTEMS_INTERPRETER_H__ */

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __PHYSICS_H__
-#define __PHYSICS_H__
+#ifndef __CORE_SYSTEMS_PHYSICS_H__
+#define __CORE_SYSTEMS_PHYSICS_H__
 
 #include <chipmunk/chipmunk.h>
 
@@ -44,4 +44,4 @@ extern void Physics_destroy(Physics_t *physics);
 
 extern bool Physics_update(Physics_t *physics, float delta_time);
 
-#endif  /* __PHYSICS_H__ */
+#endif  /* __CORE_SYSTEMS_PHYSICS_H__ */

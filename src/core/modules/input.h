@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_INPUT_H__
-#define __MODULES_INPUT_H__
+#ifndef __CORE_MODULES_INPUT_H__
+#define __CORE_MODULES_INPUT_H__
 
 #include <lua/lua.h>
 
 extern int input_loader(lua_State *L);
 
-#endif  /* __MODULES_INPUT_H__ */
+#endif  /* __CORE_MODULES_INPUT_H__ */

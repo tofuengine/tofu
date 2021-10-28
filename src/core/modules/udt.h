@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_UDT_H__
-#define __MODULES_UDT_H__
+#ifndef __CORE_MODULES_UDT_H__
+#define __CORE_MODULES_UDT_H__
 
 #include <chipmunk/chipmunk.h>
 
@@ -223,4 +223,4 @@ typedef struct Wave_Object_s {
     float amplitude;
 } Wave_Object_t;
 
-#endif  /* __MODULES_UDT_H__ */
+#endif  /* __CORE_MODULES_UDT_H__ */
