@@ -22,23 +22,19 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __MODULES_UTILS_MAP_H__
+#define __MODULES_UTILS_MAP_H__
 
-#include <stdlib.h>
+#include <libs/luax.h>
 
-#include "engine.h"
+typedef int Map_Entry_Value_t;
 
-#define LOG_CONTEXT "main"
+typedef struct Map_Entry_s {
+    const char *key;
+    Map_Entry_Value_t value;
+} Map_Entry_t;
 
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
+extern const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size);
+extern const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size);
 
-    return EXIT_SUCCESS;
-}
+#endif  /* __MODULES_UTILS_MAP_H__ */

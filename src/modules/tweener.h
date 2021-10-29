@@ -22,23 +22,11 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __MODULES_TWEENER_H__
+#define __MODULES_TWEENER_H__
 
-#include <stdlib.h>
+#include <lua/lua.h>
 
-#include "engine.h"
+extern int tweener_loader(lua_State *L);
 
-#define LOG_CONTEXT "main"
-
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
-
-    return EXIT_SUCCESS;
-}
+#endif  /* __MODULES_TWEENER_H__ */

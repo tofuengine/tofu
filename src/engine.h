@@ -22,23 +22,32 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __ENGINE_H__
+#define __ENGINE_H__
 
-#include <stdlib.h>
+#include "systems/audio.h"
+#include "systems/display.h"
+#include "systems/environment.h"
+#include "systems/input.h"
+#include "systems/physics.h"
+#include "systems/storage.h"
+#include "systems/interpreter.h"
+#include "utils/configuration.h"
 
-#include "engine.h"
+typedef struct Engine_s {
+    Storage_t *storage;
+    Configuration_t *configuration;
+    Display_t *display;
+    Input_t *input;
+    Audio_t *audio;
+    Physics_t *physics;
+    Environment_t *environment;
+    Interpreter_t *interpreter;
+} Engine_t;
 
-#define LOG_CONTEXT "main"
+extern Engine_t *Engine_create(int argc, const char *argv[]);
+extern void Engine_destroy(Engine_t *engine);
 
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
+extern void Engine_run(Engine_t *engine);
 
-    return EXIT_SUCCESS;
-}
+#endif  /* __ENGINE_H__ */

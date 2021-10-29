@@ -22,23 +22,27 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __MODULES_UTILS_CALLBACKS_H__
+#define __MODULES_UTILS_CALLBACKS_H__
 
-#include <stdlib.h>
+#include <libs/gl/gl.h>
 
-#include "engine.h"
+typedef struct Callback_Palette_Closure_s {
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    GL_Palette_t *palette;
+#else
+    const GL_Palette_t *palette;
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+    GL_Pixel_t transparent;
+    uint8_t threshold;
+} Callback_Palette_Closure_t;
 
-#define LOG_CONTEXT "main"
+typedef struct Callback_Indexes_Closure_s {
+    GL_Pixel_t background;
+    GL_Pixel_t foreground;
+} Callback_Indexes_Closure_t;
 
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
+extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels);
+extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels);
 
-    return EXIT_SUCCESS;
-}
+#endif  /* __MODULES_UTILS_CALLBACKS_H__ */

@@ -22,23 +22,26 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __SYSTEMS_PHYSICS_H__
+#define __SYSTEMS_PHYSICS_H__
 
-#include <stdlib.h>
+#include <chipmunk/chipmunk.h>
 
-#include "engine.h"
+#include <stdbool.h>
 
-#define LOG_CONTEXT "main"
+typedef struct Physics_Configuration_s {
+    const char *path;
+} Physics_Configuration_t;
 
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
+typedef struct Physics_s {
+    Physics_Configuration_t configuration;
 
-    return EXIT_SUCCESS;
-}
+    cpSpace *space;
+} Physics_t;
+
+extern Physics_t *Physics_create(const Physics_Configuration_t *configuration);
+extern void Physics_destroy(Physics_t *physics);
+
+extern bool Physics_update(Physics_t *physics, float delta_time);
+
+#endif  /* __SYSTEMS_PHYSICS_H__ */

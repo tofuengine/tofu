@@ -22,23 +22,14 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __UTILS_OPTIONS_H__
+#define __UTILS_OPTIONS_H__
 
-#include <stdlib.h>
+typedef struct options_s {
+    const char *path;
+} options_t;
 
-#include "engine.h"
+extern options_t options_parse_command_line(int argc, const char *argv[]);
 
-#define LOG_CONTEXT "main"
+#endif /* __UTILS_OPTIONS_H__ */
 
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
-
-    return EXIT_SUCCESS;
-}

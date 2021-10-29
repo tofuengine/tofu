@@ -22,23 +22,13 @@
  * SOFTWARE.
  */
 
-#include <libs/log.h>
+#ifndef __MODULES_MODULES_H__
+#define __MODULES_MODULES_H__
 
-#include <stdlib.h>
+#include <stdbool.h>
 
-#include "engine.h"
+#include <lua/lua.h>
 
-#define LOG_CONTEXT "main"
+extern void modules_initialize(lua_State *L, int nup);
 
-int main(int argc, const char *argv[])
-{
-    Engine_t *engine = Engine_create(argc, argv);
-    if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(engine);
-    Engine_destroy(engine);
-
-    return EXIT_SUCCESS;
-}
+#endif  /* __MODULES_MODULES_H__ */
