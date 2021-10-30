@@ -41,8 +41,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    size_t skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = offset.y;
+    int skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = offset.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -118,8 +118,8 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
-    size_t skip_y = 0;
+    int skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
+    int skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -170,11 +170,11 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
     //   - the movement vector, according to x/y flipping.
     const int su = IABS(scale_x);
     const int sv = IABS(scale_y);
-    const int ru0 = (int)skip_x % su;
-    const int rv0 = (int)skip_y % sv;
+    const int ru0 = skip_x % su;
+    const int rv0 = skip_y % sv;
 
-    const int ou0 = (int)skip_x / su;
-    const int ov0 = (int)skip_y / sv;
+    const int ou0 = skip_x / su;
+    const int ov0 = skip_y / sv;
     const int ou1 = (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
     const int ov1 = (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
     const int ou = IMOD(ou1 + offset.x, area.width); // Pre-add the offset (wrapping around). Negative offset is supported.
