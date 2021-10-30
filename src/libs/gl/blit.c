@@ -25,6 +25,7 @@
 #include "blit.h"
 
 #include <config.h>
+#include <libs/fmath.h>
 #include <libs/imath.h>
 #include <libs/sincos.h>
 
@@ -218,8 +219,8 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
-    const float dw = sw * fabs(scale_x);
-    const float dh = sh * fabs(scale_y);
+    const float dw = sw * FABS(scale_x);
+    const float dh = sh * FABS(scale_y);
 
     const float sax = (sw - 1.0f) * anchor_x; // Anchor points, relative to the source and destination areas.
     const float say = (sh - 1.0f) * anchor_y;
