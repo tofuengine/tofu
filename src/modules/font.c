@@ -28,13 +28,9 @@
 #include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/luax.h>
-#include <systems/display.h>
 #include <systems/storage.h>
 
 #include "udt.h"
-#include "utils/callbacks.h"
-
-#include <math.h>
 
 #define LOG_CONTEXT "font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
@@ -257,7 +253,7 @@ static int font_blit_5oonns_2nn(lua_State *L)
             continue;
         }
         const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
-        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = x + width, .y = y }, cell_id);
+        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id);
         width += cell_size.width;
         if (height < cell_size.height) {
             height = cell_size.height;
@@ -302,7 +298,7 @@ static int font_blit_7oonnsnN_2nn(lua_State *L)
             continue;
         }
         const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
-        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = x + width, .y = y }, cell_id, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id, scale_x, scale_y);
         width += cell_size.width;
         if (height < cell_size.height) {
             height = cell_size.height;
