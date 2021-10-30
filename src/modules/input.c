@@ -268,7 +268,7 @@ static int input_cursor_area_4nnnn_0(lua_State *L)
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_set_cursor_area(input, x, y, x + width, y + height);
+    Input_set_cursor_area(input, x, y, x + (int)width, y + (int)height);
 
     return 0;
 }

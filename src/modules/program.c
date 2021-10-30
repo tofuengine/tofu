@@ -251,7 +251,7 @@ static int program_gradient_3ont_0(lua_State *L)
     lua_pushnil(L); // O N T -> O N T N
     for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
 #ifdef __DEFENSIVE_CHECKS__
-        int count = lua_rawlen(L, 5);
+        size_t count = lua_rawlen(L, 5);
         if (count != 4) {
             luaL_error(L, "marker #%d has %d components (out of 4 required)", i, count);
         }
@@ -313,7 +313,7 @@ static int program_palette_4onnt_0(lua_State *L)
         const GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, -2);
 
 #ifdef __DEFENSIVE_CHECKS__
-        int count = lua_rawlen(L, 6);
+        size_t count = lua_rawlen(L, 6);
         if (count != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
         }

@@ -31,9 +31,6 @@
 
 #include "udt.h"
 
-#include <ctype.h>
-#include <stdlib.h>
-
 #define LOG_CONTEXT "display"
 
 static int display_palette_1o_0(lua_State *L);

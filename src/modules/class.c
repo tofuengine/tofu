@@ -26,8 +26,6 @@
 
 #include <libs/luax.h>
 
-#include <stdint.h>
-
 #define SCRIPT_NAME "@class.lua"
 
 static const char _class_lua[] = {

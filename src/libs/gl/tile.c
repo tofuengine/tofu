@@ -26,9 +26,6 @@
 
 #include <config.h>
 #include <libs/imath.h>
-#include <libs/sincos.h>
-
-#include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
@@ -104,9 +101,9 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
             } else {
                 *(dptr++) = index;
             }
-            u = (u + 1) % area.width; // Prefer modulo over branch.
+            u = (u + 1) % (int)area.width; // Prefer modulo over branch.
         }
-        v = (v + 1) % area.height;
+        v = (v + 1) % (int)area.height;
         dptr += dskip;
     }
 }
@@ -173,8 +170,8 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
     //   - the movement vector, according to x/y flipping.
     const int su = IABS(scale_x);
     const int sv = IABS(scale_y);
-    const int ru0 = skip_x % su;
-    const int rv0 = skip_y % sv;
+    const int ru0 = (int)skip_x % su;
+    const int rv0 = (int)skip_y % sv;
 
     const int ou0 = (int)skip_x / su;
     const int ov0 = (int)skip_y / sv;

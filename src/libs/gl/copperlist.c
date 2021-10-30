@@ -28,8 +28,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <memory.h>
-
 #define LOG_CONTEXT "gl-copperlist"
 
 GL_Copperlist_t *GL_copperlist_create(void)

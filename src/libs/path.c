@@ -128,7 +128,6 @@ bool path_mkdirs(const char *path)
 #if PLATFORM_ID == PLATFORM_WINDOWS
 static inline bool _path_is_root(const char *path)
 {
-    size_t length = strlen(path);
     return strlen(path) >= 2 && strlen(path) <= 3 && path[1] == ':'; // e.g. `C:` or `C:\`)
 }
 #endif

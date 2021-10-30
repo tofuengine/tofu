@@ -24,7 +24,6 @@
 
 #include "map.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size)

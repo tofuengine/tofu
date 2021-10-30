@@ -359,7 +359,7 @@ static int xform_project_4onnn_0(lua_State *L)
         const float p = elevation / yc;
 
         GL_XForm_Table_Entry_t entry = {
-                .scan_line = scan_line,
+                .scan_line = (int)scan_line,
                 .operations = {
                         { .id = GL_XFORM_REGISTER_A, .value = a * p },
                         { .id = GL_XFORM_REGISTER_B, .value = b * p },
@@ -394,13 +394,13 @@ static int xform_warp_3onn_0(lua_State *L)
     GL_XForm_Table_Entry_t *table = NULL;
 
     for (size_t scan_line = 0; scan_line < height; ++scan_line) {
-        const float angle = ((float)scan_line / (float)height) * M_PI; // Could be partially pre-computed, but who cares...
+        const float angle = ((float)scan_line / (float)height) * (float)M_PI; // Could be partially pre-computed, but who cares...
         const float scale_x = (1.0f - sinf(angle)) * factor + 1.0f;
 
         GL_XForm_Table_Entry_t entry = {
-                .scan_line = scan_line,
+                .scan_line = (int)scan_line,
                 .operations = {
-                        { .id = GL_XFORM_REGISTER_Y, .value = scan_line },
+                        { .id = GL_XFORM_REGISTER_Y, .value = (float)scan_line },
                         { .id = GL_XFORM_REGISTER_A, .value = scale_x },
                         { .id = GL_XFORM_REGISTER_B, .value = 0.0f },
                         { .id = GL_XFORM_REGISTER_C, .value = 0.0f },

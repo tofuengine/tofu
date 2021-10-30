@@ -26,8 +26,6 @@
 
 #include <libs/luax.h>
 
-#include <stdint.h>
-
 #define SCRIPT_NAME "@arrays.lua"
 
 static const char _arrays_lua[] = {

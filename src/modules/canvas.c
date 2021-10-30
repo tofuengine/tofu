@@ -25,11 +25,9 @@
 #include "canvas.h"
 
 #include <config.h>
-#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-#include <systems/environment.h>
 #include <systems/interpreter.h>
 #include <systems/storage.h>
 

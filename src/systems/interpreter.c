@@ -46,8 +46,8 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 
 #ifdef __DEBUG_VM_CALLS__
   #define TRACEBACK_STACK_INDEX   1
-  #define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
-  #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
+  #define OBJECT_STACK_INDEX      (TRACEBACK_STACK_INDEX + 1)
+  #define METHOD_STACK_INDEX(m)   (OBJECT_STACK_INDEX + 1 + (m))
 #else
   #define OBJECT_STACK_INDEX      1
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)

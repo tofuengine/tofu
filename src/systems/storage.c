@@ -25,7 +25,6 @@
 #include "storage.h"
 
 #include <config.h>
-#include <libs/gl/palette.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
@@ -305,11 +304,11 @@ static int _resource_compare_by_age(const void *lhs, const void *rhs)
 {
     const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
     const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
-    const float age_delta = (*l)->age - (*r)->age;
-    if (age_delta > 0.0f) { // Sort by highest age.
+    const double age_delta = (*l)->age - (*r)->age;
+    if (age_delta > 0.0) { // Sort by highest age.
         return -1;
     } else
-    if (age_delta < 0.0f) {
+    if (age_delta < 0.0) {
         return 1;
     } else {
         return 0;

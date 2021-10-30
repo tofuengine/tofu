@@ -62,7 +62,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
             .group_id = SL_DEFAULT_GROUP,
             .looped = false,
             .mix = channels_in == 1 ? mix_pan(0.0f) : mix_balance(0.0f), // mono -> center panned, stereo -> separated
-            .gain = 1.0,
+            .gain = 1.0f,
             .speed = 1.0f
         };
 

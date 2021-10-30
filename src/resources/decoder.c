@@ -66,7 +66,7 @@ typedef struct Cursor_s {
 static int _stbi_io_read(void *user_data, char *data, int size)
 {
     Cursor_t *cursor = (Cursor_t *)user_data;
-    int count = imin(size, cursor->size - cursor->index);
+    int count = imin(size, (int)cursor->size - cursor->index);
     memcpy(data, cursor->data + cursor->index, count);
     cursor->index += count;
     return count;

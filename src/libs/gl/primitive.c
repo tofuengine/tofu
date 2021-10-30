@@ -143,8 +143,8 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
     const float xin = (float)dx / (float)delta;
     const float yin = (float)dy / (float)delta;
 
-    float x = x0 + 0.5f;
-    float y = y0 + 0.5f;
+    float x = (float)x0 + 0.5f;
+    float y = (float)y0 + 0.5f;
     for (int i = delta + 1; i; --i) { // One more step, to reach and ending pixel.
         GL_Pixel_t *dptr = ddata + (int)y * dwidth + (int)x;
         *dptr = index;

@@ -123,7 +123,7 @@ void GL_palette_set_greyscale(GL_Palette_t *palette, size_t size)
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }
 
-void GL_palette_set_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits)
+void GL_palette_set_quantized(GL_Palette_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits)
 {
     const size_t red_values = 1 << red_bits;
     const size_t green_values = 1 << green_bits;
@@ -164,7 +164,7 @@ GL_Color_t GL_palette_get(const GL_Palette_t *palette, GL_Pixel_t index)
 void GL_palette_set(GL_Palette_t *palette, GL_Pixel_t index, GL_Color_t color)
 {
     size_t size = palette->size;
-    palette->size = (size_t)imax(palette->size, index + 1);
+    palette->size = (size_t)imax((int)size, index + 1);
     for (size_t i = size; i < palette->size; ++i) { // Expand palette if setting a color outside current range.
         palette->colors[i] = (GL_Color_t){ .r = 0, .g = 0, .b = 0, .a = 255 };
     }
@@ -178,9 +178,9 @@ void GL_palette_set(GL_Palette_t *palette, GL_Pixel_t index, GL_Color_t color)
 }
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, const GL_Color_t color)
+GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, GL_Color_t color)
 #else
-GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
+GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, GL_Color_t color)
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 {
 #ifdef __PALETTE_COLOR_MEMOIZATION__
@@ -228,7 +228,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
     return index;
 }
 
-GL_Color_t GL_palette_mix(const GL_Color_t from, const GL_Color_t to, float ratio)
+GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio)
 {
     return (GL_Color_t){
             .r = (uint8_t)FLERP((float)from.r, (float)to.r, ratio),
@@ -272,7 +272,7 @@ void GL_palette_merge(GL_Palette_t *palette, const GL_Palette_t *other, bool rem
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }
 
-void GL_palette_lerp(GL_Palette_t *palette, const GL_Color_t color, float ratio)
+void GL_palette_lerp(GL_Palette_t *palette, GL_Color_t color, float ratio)
 {
     GL_Color_t *colors = palette->colors;
     for (size_t i = 0; i < palette->size; ++i) {

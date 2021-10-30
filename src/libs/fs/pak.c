@@ -405,7 +405,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, siz
             .stream = stream,
             .stream_size = size,
             .beginning_of_stream = offset,
-            .end_of_stream = offset + size - 1,
+            .end_of_stream = offset + (long)size - 1L,
             .encrypted = encrypted,
             .cipher_context = { { 0 } } // Uh! The first member of the structure is an array, need additional braces!
         };

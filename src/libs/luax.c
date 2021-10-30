@@ -48,7 +48,7 @@ luaX_String luaX_tolstring(lua_State *L, int idx)
 }
 
 #ifdef __LUAX_RTTI__
-typedef struct _luaX_Object {
+typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
 #endif  /* __LUAX_RTTI__ */
@@ -161,7 +161,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
 //   - a searcher that looks for a loader in the `package.preload` table,
 //   - a searcher that looks for a loader as a Lua library,
 //   - a searcher that looks for a loader as a C library,
-//   - a searcher that looks for a all-in-one, combined, loader.
+//   - a searcher that looks for an all-in-one, combined, loader.
 //
 // This function modifies the table by clearing table entries #3 and #4. The first one is kept (to enable
 // module reuse), and the second one is overwritten with the given `searcher`. As a result the module loading
@@ -177,10 +177,10 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
     lua_pushcclosure(L, searcher, nup);
     lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
 
-    int n = lua_rawlen(L, -1);
-    for (int i = 3; i <= n; ++i) { // Discard the others (two) searchers.
+    size_t n = lua_rawlen(L, -1);
+    for (size_t i = 3; i <= n; ++i) { // Discard the others (two) searchers.
         lua_pushnil(L);
-        lua_rawseti(L, -2, i);
+        lua_rawseti(L, -2, (lua_Integer)i);
     }
 
     lua_pop(L, 2); // Pop the `package` and `searchers` table.

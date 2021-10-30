@@ -33,7 +33,7 @@
 
 #define MAX_VALUE_LENGTH   128
 
-typedef struct _Configuration {
+typedef struct Configuration_s {
     struct {
         char identity[MAX_VALUE_LENGTH];
         struct {

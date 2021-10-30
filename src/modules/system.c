@@ -25,7 +25,6 @@
 #include "system.h"
 
 #include <config.h>
-#include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
@@ -190,7 +189,7 @@ static int system_fps_0_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     const Environment_Stats_t *stats = Environment_get_stats(environment);
-    lua_pushinteger(L, (lua_Number)stats->fps);
+    lua_pushinteger(L, (lua_Integer)stats->fps);
 
     return 1;
 }

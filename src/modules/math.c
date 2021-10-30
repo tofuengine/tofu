@@ -28,7 +28,6 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/sincos.h>
-#include <libs/imath.h>
 #include <libs/fmath.h>
 
 #include <stdint.h>

@@ -29,13 +29,13 @@
 #include <libs/path.h>
 #include <libs/stb.h>
 
+#include <dirent.h>
+
 #include "internals.h"
 #include "pak.h"
 #include "std.h"
 
-#include <dirent.h>
-
-struct _FS_Context_t {
+struct FS_Context_s {
     FS_Mount_t **mounts;
 };
 
@@ -133,12 +133,14 @@ FS_Context_t *FS_create(const char *path)
 
         for (size_t i = 0; i < (size_t)arrlen(directory); ++i) {
             const struct dirent *entry = &directory[i]; 
-            if (entry->d_type != DT_REG) { // Discard non-regular files (e.g. folders).
-                continue;
-            }
 
             char subpath[PLATFORM_PATH_MAX] = { 0 };
             path_join(subpath, path, entry->d_name);
+
+            if (!path_is_file(subpath)) { // Discard non-regular files (e.g. folders).
+                continue;
+            }
+
 #ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
             if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
                 continue;

@@ -27,7 +27,6 @@
 #include <config.h>
 #include <libs/imath.h>
 #include <libs/log.h>
-#include <libs/sincos.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-xform"
@@ -127,8 +126,8 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, GL_Poin
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + surface->width, // We need to scan the whole destination region.
-            .y1 = position.y + surface->height
+            .x1 = position.x + (int)surface->width, // We need to scan the whole destination region.
+            .y1 = position.y + (int)surface->height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {

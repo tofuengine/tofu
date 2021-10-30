@@ -170,10 +170,10 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     //
     // Notice that we need to work in the mid-center of the pixels. We can also rewrite the
     // formula in a recurring fashion if we increment and accumulate by `1 / S_x` and `1 / S_y` steps.
-    const float ou0 = (skip_x + 0.5f) / scale_x;
-    const float ov0 = (skip_y + 0.5f) / scale_y; // `skip_*` is never negative, so we can check the sign!
-    const float ou = area.x + (ou0 < 0.0f ? (float)area.width + ou0 : ou0); // Offset to the correct margin, according to flipping.
-    const float ov = area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
+    const float ou0 = ((float)skip_x + 0.5f) / scale_x;
+    const float ov0 = ((float)skip_y + 0.5f) / scale_y; // `skip_*` is never negative, so we can check the sign!
+    const float ou = (float)area.x + (ou0 < 0.0f ? (float)area.width + ou0 : ou0); // Offset to the correct margin, according to flipping.
+    const float ov = (float)area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
 
     const float du = 1.0f / scale_x; // Retain sign of the scaling to move according to a "vector" along the scaling.
     const float dv = 1.0f / scale_y;

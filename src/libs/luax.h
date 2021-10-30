@@ -29,7 +29,7 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
-typedef enum _luaX_Const_Type {
+typedef enum luaX_Const_Type_e {
     LUA_CT_NIL,
     LUA_CT_BOOLEAN,
     LUA_CT_INTEGER,
@@ -37,7 +37,7 @@ typedef enum _luaX_Const_Type {
     LUA_CT_STRING
 } luaX_Const_Type;
 
-typedef struct _luaX_Const {
+typedef struct luaX_Const_s {
     const char *name;
     luaX_Const_Type type;
     union {
@@ -48,7 +48,7 @@ typedef struct _luaX_Const {
     } value;
 } luaX_Const;
 
-typedef struct _luaX_Script {
+typedef struct luaX_Script_s {
     const char *data;
     size_t size;
     const char *name;
@@ -56,7 +56,7 @@ typedef struct _luaX_Script {
 
 typedef int luaX_Reference;
 
-typedef struct _luaX_String {
+typedef struct luaX_String_s {
     const char *data;
     size_t size;
 } luaX_String;

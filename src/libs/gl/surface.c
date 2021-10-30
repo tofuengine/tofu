@@ -41,7 +41,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 static void _reset(GL_Surface_t *surface)
 {
     GL_State_t state = (GL_State_t){
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width, .y1 = surface->height },
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width, .y1 = (int)surface->height },
             .shifting = { 0 },
             .transparent = { 0 }
         };
@@ -59,7 +59,7 @@ static inline bool _is_power_of_two(int n)
     return n && !(n & (n - 1));
 }
 
-GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data)
+GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, GL_Surface_Callback_t callback, void *user_data)
 {
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
@@ -93,7 +93,7 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .height = height,
             .data = data,
             .data_size = width * height,
-            .is_power_of_two = _is_power_of_two(width) && _is_power_of_two(height),
+            .is_power_of_two = _is_power_of_two((int)width) && _is_power_of_two((int)height),
             .state = { .current = { { 0 }, { 0 }, { 0 } }, .stack = NULL }
         };
 
@@ -131,7 +131,7 @@ void GL_surface_pop(GL_Surface_t *surface, size_t levels)
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no more states to pop from canvas");
         return;
     }
-    for (size_t i = imin(length, levels); i; --i) {
+    for (size_t i = imin((int)length, (int)levels); i; --i) {
         surface->state.current = arrpop(surface->state.stack);
     }
 }

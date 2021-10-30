@@ -74,7 +74,7 @@ static inline float _accumulate_f32(float accumulator, float left_sample, float 
 // |         | * |   | = | L/L * L + R/L * R, L/R * L + R/R * R |
 // | L/R R/R |   | R |
 //
-void mix_2on2_additive(void *output, const void *input, size_t frames, const SL_Mix_t mix)
+void mix_2on2_additive(void *output, const void *input, size_t frames, SL_Mix_t mix)
 {
     const float left_to_left = mix.left_to_left;
     const float left_to_right = mix.left_to_right;
@@ -104,7 +104,7 @@ void mix_2on2_additive(void *output, const void *input, size_t frames, const SL_
 #endif
 }
 
-void mix_1on2_additive(void *output, const void *input, size_t frames, const SL_Mix_t mix)
+void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t mix)
 {
     const float left_to_left = mix.left_to_left;
     const float left_to_right = mix.left_to_right;
@@ -134,7 +134,7 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, const SL_
 #endif
 }
 
-// Thread the stereo source as two seperate mono channels and pan the individually.
+// Thread the stereo source as two separate mono channels and pan them individually.
 SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
 {
 #if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN

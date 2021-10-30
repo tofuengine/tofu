@@ -26,8 +26,6 @@
 
 #include <libs/luax.h>
 
-#include <stdint.h>
-
 #define SCRIPT_NAME "@timers.lua"
 
 static const char _timers_lua[] = {

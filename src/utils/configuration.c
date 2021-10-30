@@ -236,7 +236,7 @@ static void _normalize_identity(Configuration_t *configuration)
     if (configuration->system.identity[0] == '\0') {
         size_t length = strlen(configuration->display.title);
         for (size_t i = 0, j = 0; i < length; ++i) {
-            int c = configuration->display.title[i];
+            char c = configuration->display.title[i];
             if (!isalnum(c)) {
                 continue;
             }
@@ -246,8 +246,8 @@ static void _normalize_identity(Configuration_t *configuration)
 
     size_t length = strlen(configuration->system.identity);
     for (size_t i = 0; i < length; ++i) {
-        int c = configuration->system.identity[i];
-        configuration->system.identity[i] = tolower(c); // Game identity is lowercase.
+        char c = configuration->system.identity[i];
+        configuration->system.identity[i] = (char)tolower(c); // Game identity is lowercase.
     }
 }
 

@@ -97,7 +97,7 @@ static int grid_new_3nnT_1o(lua_State *L)
         Cell_t *ptr = data;
         for (size_t i = 0; i < data_size; ++i) {
             size_t index = ((i % length) + 1);
-            lua_rawgeti(L, 3, index);
+            lua_rawgeti(L, 3, (lua_Integer)index);
 
             Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
             *(ptr++) = value;
@@ -166,7 +166,7 @@ static int grid_fill_2ot_0(lua_State *L)
 
     for (size_t i = 0; i < self->data_size; ++i) {
         size_t index = ((i % length) + 1);
-        lua_rawgeti(L, 2, index);
+        lua_rawgeti(L, 2, (lua_Integer)index);
 
         Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
         *(ptr++) = value;

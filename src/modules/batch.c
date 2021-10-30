@@ -289,7 +289,7 @@ static int batch_blit_3ooS_0(lua_State *L)
 
     const GL_Batch_t *batch = self->batch;
     const GL_Surface_t *surface = canvas->surface;
-    if (mode[0] == 'f') { // FIXME: traslate all these into map-lookups?
+    if (mode[0] == 'f') { // FIXME: translate all these into map-lookups?
         GL_batch_blit(batch, surface);
     } else
     if (mode[0] == 's') {

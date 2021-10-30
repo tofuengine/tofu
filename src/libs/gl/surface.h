@@ -55,7 +55,7 @@ typedef GL_Pixel_t (*GL_Process_Callback_t)(void *user_data, GL_Point_t position
 
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.
-extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
+extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, GL_Surface_Callback_t callback, void *user_data);
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 

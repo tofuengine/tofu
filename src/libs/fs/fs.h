@@ -35,10 +35,10 @@
 
 #define FS_ARCHIVE_EXTENSION    ".pak"
 
-typedef struct _FS_Mount_t FS_Mount_t;
-typedef struct _FS_Handle_t FS_Handle_t;
+typedef struct FS_Mount_s FS_Mount_t;
+typedef struct FS_Handle_s FS_Handle_t;
 
-typedef struct _FS_Context_t FS_Context_t;
+typedef struct FS_Context_s FS_Context_t;
 
 extern FS_Context_t *FS_create(const char *path);
 extern void FS_destroy(FS_Context_t *context);

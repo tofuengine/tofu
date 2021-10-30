@@ -26,8 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/stb.h>
-#include <systems/display.h>
 #include <systems/storage.h>
 
 #include "udt.h"

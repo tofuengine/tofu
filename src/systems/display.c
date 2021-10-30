@@ -30,7 +30,6 @@
 #include <libs/imath.h>
 #include <libs/stb.h>
 
-#include <ctype.h>
 #include <time.h>
 
 #define LOG_CONTEXT "display"
@@ -280,7 +279,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 
-    glfwSetWindowSize(window, window_rectangle.width, window_rectangle.height);
+    glfwSetWindowSize(window, (int)window_rectangle.width, (int)window_rectangle.height);
     if (!configuration->fullscreen) {
         glfwSetWindowPos(window, window_rectangle.x, window_rectangle.y);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", window_rectangle.x, window_rectangle.y);
@@ -561,19 +560,19 @@ void Display_present(const Display_t *display)
     // Add x/y offset to implement screen-shaking or similar effects.
     const int x0 = vram_rectangle->x + vram_offset->x;
     const int y0 = vram_rectangle->y + vram_offset->y;
-    const int x1 = x0 + vram_rectangle->width;
-    const int y1 = y0 + vram_rectangle->height;
+    const int x1 = x0 + (int)vram_rectangle->width;
+    const int y1 = y0 + (int)vram_rectangle->height;
 
     // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
     const float vertices[] = { // Inspired to https://github.com/emoon/minifb
         0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        x0, y0,
+        (float)x0, (float)y0,
         0.0f, 1.0f,
-        x0, y1,
+        (float)x0, (float)y1,
         1.0f, 0.0f,
-        x1, y0,
+        (float)x1, (float)y0,
         1.0f, 1.0f,
-        x1, y1
+        (float)x1, (float)y1
     };
 
 #ifdef __OPENGL_STATE_CLEANUP__

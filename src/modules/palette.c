@@ -27,7 +27,6 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/luax.h>
-#include <libs/stb.h>
 #include <resources/palettes.h>
 
 #include "udt.h"
@@ -167,7 +166,7 @@ static int palette_new_1t_1o(lua_State *L)
     lua_pushnil(L); // T -> T N
     for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
 #ifdef __DEFENSIVE_CHECKS__
-        int count = lua_rawlen(L, 3);
+        size_t count = lua_rawlen(L, 3);
         if (count != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
         }

@@ -26,8 +26,6 @@
 
 #include <libs/luax.h>
 
-#include <stdint.h>
-
 #define SCRIPT_NAME "@iterators.lua"
 
 static const char _iterators_lua[] = {

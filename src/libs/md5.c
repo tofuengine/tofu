@@ -73,7 +73,7 @@
 #define S44 21
 
 static void _transform(uint32_t state[4], const uint8_t block[64]);
-static void _encode(uint8_t *output, uint32_t *input, uint32_t len);
+static void _encode(uint8_t *output, const uint32_t *input, uint32_t len);
 static void _decode(uint32_t *output, const uint8_t *input, uint32_t len);
 
 static const uint8_t PADDING[64] = {
@@ -84,10 +84,10 @@ static const uint8_t PADDING[64] = {
 
 /* F, G, H and I are basic MD5 functions.
  */
-#define F(x, y, z) (((x) & (y)) | ((~x) & (z)))
-#define G(x, y, z) (((x) & (z)) | ((y) & (~z)))
+#define F(x, y, z) (((x) & (y)) | ((~(x)) & (z)))
+#define G(x, y, z) (((x) & (z)) | ((y) & (~(z))))
 #define H(x, y, z) ((x) ^ (y) ^ (z))
-#define I(x, y, z) ((y) ^ ((x) | (~z)))
+#define I(x, y, z) ((y) ^ ((x) | (~(z))))
 
 /* ROTATE_LEFT rotates x left n bits.  */
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
@@ -260,7 +260,7 @@ static void _transform(uint32_t state[4], const uint8_t block[64])
  * Encodes input (uint32_t) into output (uint8_t). Assumes len is
  *   a multiple of 4.
  */
-static void _encode(uint8_t *output, uint32_t *input, uint32_t len)
+static void _encode(uint8_t *output, const uint32_t *input, uint32_t len)
 {
     uint32_t i, j;
 

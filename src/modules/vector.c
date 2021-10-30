@@ -26,8 +26,6 @@
 
 #include <libs/luax.h>
 
-#include <stdint.h>
-
 #define SCRIPT_NAME "@vector.lua"
 
 static const char _vector_lua[] = {
