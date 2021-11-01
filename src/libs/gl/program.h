@@ -28,6 +28,7 @@
 #include "common.h"
 
 typedef enum GL_Program_Command_e {
+    GL_PROGRAM_COMMAND_NOP,
     GL_PROGRAM_COMMAND_WAIT,
     GL_PROGRAM_COMMAND_MODULO,
     GL_PROGRAM_COMMAND_OFFSET,
@@ -55,6 +56,8 @@ extern GL_Program_t *GL_program_clone(const GL_Program_t *program);
 extern void GL_program_destroy(GL_Program_t *program);
 
 extern void GL_program_clear(GL_Program_t *program);
+
+extern void GL_program_nop(GL_Program_t *program);
 extern void GL_program_wait(GL_Program_t *program, size_t x, size_t y);
 extern void GL_program_modulo(GL_Program_t *program, int amount);
 extern void GL_program_offset(GL_Program_t *program, int amount);

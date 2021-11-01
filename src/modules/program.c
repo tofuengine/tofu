@@ -39,6 +39,7 @@
 static int program_new_0_1o(lua_State *L);
 static int program_gc_1o_0(lua_State *L);
 static int program_clear_1o_0(lua_State *L);
+static int program_nop_1o_0(lua_State *L);
 static int program_wait_3onn_0(lua_State *L);
 static int program_modulo_2on_0(lua_State *L);
 static int program_offset_2on_0(lua_State *L);
@@ -57,6 +58,7 @@ int program_loader(lua_State *L)
             { "new", program_new_0_1o },
             { "__gc", program_gc_1o_0 },
             { "clear", program_clear_1o_0 },
+            { "nop", program_nop_1o_0 },
             { "wait", program_wait_3onn_0 },
             { "modulo", program_modulo_2on_0 },
             { "offset", program_offset_2on_0 },
@@ -118,6 +120,18 @@ static int program_clear_1o_0(lua_State *L)
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
 
     GL_program_clear(self->program);
+
+    return 0;
+}
+
+static int program_nop_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+
+    GL_program_nop(self->program);
 
     return 0;
 }

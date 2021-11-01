@@ -105,6 +105,12 @@ void GL_program_clear(GL_Program_t *program)
             (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } });
 }
 
+void GL_program_nop(GL_Program_t *program)
+{
+    program->entries = _insert(program->entries, -1,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_NOP, .args = { { 0 } } });
+}
+
 void GL_program_wait(GL_Program_t *program, size_t x, size_t y)
 {
     program->entries = _insert(program->entries, -1,
