@@ -118,7 +118,7 @@ static int display_shift_1t_0(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_set_shifting(display, from, to, arrlen(from));
+    Display_set_shifting(display, from, to, arrlenu(from));
 
     arrfree(from);
     arrfree(to);

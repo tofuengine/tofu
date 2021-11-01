@@ -104,7 +104,7 @@ static struct dirent *_read_directory(const char *path, int (*compare)(const voi
         arrpush(directory, *entry);
     }
 
-    qsort(directory, arrlen(directory), sizeof(struct dirent), compare);
+    qsort(directory, arrlenu(directory), sizeof(struct dirent), compare);
 
     closedir(dp);
 
@@ -131,7 +131,7 @@ FS_Context_t *FS_create(const char *path)
             return NULL;
         }
 
-        for (size_t i = 0; i < (size_t)arrlen(directory); ++i) {
+        for (size_t i = 0; i < arrlenu(directory); ++i) {
             const struct dirent *entry = &directory[i]; 
 
             char subpath[PLATFORM_PATH_MAX] = { 0 };
@@ -171,7 +171,7 @@ FS_Context_t *FS_create(const char *path)
 void FS_destroy(FS_Context_t *context)
 {
     FS_Mount_t **current = context->mounts;
-    for (size_t count = arrlen(context->mounts); count; --count) {
+    for (size_t count = arrlenu(context->mounts); count; --count) {
         FS_Mount_t *mount = *(current++);
         _unmount(mount);
     }
@@ -193,9 +193,9 @@ FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
     const FS_Mount_t *mount = NULL;
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
-    for (int index = (int)arrlen(context->mounts) - 1; index >= 0; --index) {
+    for (int index = arrlen(context->mounts) - 1; index >= 0; --index) {
 #else
-    for (int index = 0; index < (int)arrlen(context->mounts); ++index) {
+    for (int index = 0; index < arrlen(context->mounts); ++index) {
 #endif
         FS_Mount_t *current = context->mounts[index];
         if (current->vtable.contains(current, name)) {

@@ -318,7 +318,7 @@ static int xform_table_2ot_0(lua_State *L)
     }
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, table, arrlen(table));
+    GL_xform_table(xform, table, arrlenu(table));
 
     arrfree(table);
 
@@ -373,7 +373,7 @@ static int xform_project_4onnn_0(lua_State *L)
     }
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, table, arrlen(table));
+    GL_xform_table(xform, table, arrlenu(table));
 
     arrfree(table);
 
@@ -413,7 +413,7 @@ static int xform_warp_3onn_0(lua_State *L)
     }
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, table, arrlen(table));
+    GL_xform_table(xform, table, arrlenu(table));
 
     arrfree(table);
 

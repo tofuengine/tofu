@@ -94,7 +94,7 @@ static int system_args_0_1t(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_newtable(L); // Initially empty.
-    size_t count = arrlen(environment->args);
+    size_t count = arrlenu(environment->args);
     for (size_t i = 0; i < count; ++i) {
         lua_pushstring(L, environment->args[i]);
         lua_rawseti(L, -2, (lua_Integer)(i + 1));

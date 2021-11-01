@@ -473,7 +473,7 @@ static int canvas_shift_2ot_0(lua_State *L)
     }
 
     GL_Surface_t *surface = self->surface;
-    GL_surface_set_shifting(surface, from, to, arrlen(from));
+    GL_surface_set_shifting(surface, from, to, arrlenu(from));
 
     arrfree(from);
     arrfree(to);
@@ -541,7 +541,7 @@ static int canvas_transparent_2ot_0(lua_State *L)
     }
 
     GL_Surface_t *surface = self->surface;
-    GL_surface_set_transparent(surface, indexes, transparent, arrlen(indexes));
+    GL_surface_set_transparent(surface, indexes, transparent, arrlenu(indexes));
 
     arrfree(indexes);
     arrfree(transparent);
@@ -711,7 +711,7 @@ static int canvas_polyline_3otN_0(lua_State *L)
 
     GL_Point_t *vertices = _fetch(L, 2);
 
-    size_t count = arrlen(vertices);
+    size_t count = arrlenu(vertices);
     if (count > 1) {
         const GL_Surface_t *surface = self->surface;
         GL_surface_polyline(surface, vertices, count, index);

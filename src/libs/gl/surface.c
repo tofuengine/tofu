@@ -126,7 +126,7 @@ void GL_surface_push(GL_Surface_t *surface)
 
 void GL_surface_pop(GL_Surface_t *surface, size_t levels)
 {
-    const size_t length = arrlen(surface->state.stack);
+    const size_t length = arrlenu(surface->state.stack);
     if (length < 1) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no more states to pop from canvas");
         return;
@@ -231,7 +231,7 @@ void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t in
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
 
-    while (arrlen(stack) > 0) {
+    while (arrlenu(stack) > 0) {
         const GL_Point_t position = arrpop(stack);
 
         int x = position.x;

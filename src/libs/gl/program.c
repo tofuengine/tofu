@@ -30,7 +30,7 @@
 
 static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, const GL_Program_Entry_t entry)
 {
-    const size_t length = arrlen(program);
+    const size_t length = arrlenu(program);
     size_t offset = position >= 0 ? (size_t)position : length + position;
     arrins(program, offset, entry);
     return program;
@@ -71,7 +71,7 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
     *clone = (GL_Program_t){ 0 };
 
     const GL_Program_Entry_t *current = program->entries;
-    for (size_t count = arrlen(program->entries); count; --count) {
+    for (size_t count = arrlenu(program->entries); count; --count) {
         GL_Program_Entry_t entry = *(current++);
         arrpush(clone->entries, entry);
     }

@@ -229,7 +229,7 @@ static void _free_directory(Pak_Entry_t *directory)
     if (!directory) { // Corner case, array empty.
         return;
     }
-    for (size_t i = 0; i < (size_t)arrlen(directory); ++i) {
+    for (size_t i = 0; i < arrlenu(directory); ++i) {
         free(directory[i].name);
     }
     arrfree(directory);

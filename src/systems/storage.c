@@ -107,7 +107,7 @@ static void _release(Storage_Resource_t *resource)
 void Storage_destroy(Storage_t *storage)
 {
     Storage_Resource_t **current = storage->resources;
-    for (size_t count = arrlen(storage->resources); count; --count) {
+    for (size_t count = arrlenu(storage->resources); count; --count) {
         Storage_Resource_t *resource = *(current++);
         _release(resource);
     }
@@ -477,7 +477,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 #endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
 
     const Storage_Resource_t *needle = &(Storage_Resource_t){ .name = (char *)name };
-    Storage_Resource_t **entry = bsearch((const void *)&needle, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
+    Storage_Resource_t **entry = bsearch((const void *)&needle, storage->resources, arrlenu(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
     if (entry) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
         Storage_Resource_t *resource = *entry;
@@ -508,14 +508,14 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     arrpush(storage->resources, resource);
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
-    if (arrlen(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
-        qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
+    if (arrlenu(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
+        qsort(storage->resources, arrlenu(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
         storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->name);
     }
 #endif
 
-    qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name); // Keep sorted to use binary-search.
+    qsort(storage->resources, arrlenu(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", name, resource);
 
     return resource;
@@ -585,7 +585,7 @@ FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
 bool Storage_update(Storage_t *storage, float delta_time)
 {
     // Backward scan, to remove to-be-released resources.
-    for (int index = (int)arrlen(storage->resources) - 1; index >= 0; --index) {
+    for (int index = arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
         resource->age += delta_time;
         if (resource->age < STORAGE_RESOURCE_AGE_LIMIT) {
