@@ -544,10 +544,10 @@ void Display_present(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Convert the offscreen surface to a texture. The actual function changes when a copperlist is defined.
-    GL_Surface_t *surface = display->canvas.surface;
+    const GL_Surface_t *surface = display->canvas.surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    GL_copperlist_surface_to_rgba(surface, display->canvas.copperlist, pixels);
+    GL_copperlist_surface_to_rgba(display->canvas.copperlist, surface, pixels);
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
