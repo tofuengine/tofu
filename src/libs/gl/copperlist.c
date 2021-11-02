@@ -118,25 +118,28 @@ void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *f
 // FIXME: make a copy or track the reference? (also for xform and palettes)
 void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
 {
-    // if (copperlist->program
-    //     && program
-    //     && arrlenu(copperlist->program->entries) == arrlenu(program->entries)) {
-    //     memcpy(copperlist->program->entries, program->entries, sizeof(GL_Program_Entry_t) * arrlenu(program->entries));
-    //     return;
-    // }
-
-    if (copperlist->program) {
-        GL_program_destroy(copperlist->program);
+    if (copperlist->program && program) {
+#ifdef VERBOSE_DEBUG
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p copied at %p", program, copperlist->program);
+#endif  /* VERBOSE_DEBUG */
+        GL_program_copy(copperlist->program, program);
+    } else
+    if (copperlist->program && !program) {
+       GL_program_destroy(copperlist->program);
 #ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
 #endif  /* VERBOSE_DEBUG */
         copperlist->program = NULL;
-    }
-
-    if (program) {
+    } else
+    if (!copperlist->program && program) {
         copperlist->program = GL_program_clone(program);
 #ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p cloned at %p", program, copperlist->program);
+#endif  /* VERBOSE_DEBUG */
+    } else
+    if (!copperlist->program && !program) {
+#ifdef VERBOSE_DEBUG
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "nothing to do :)");
 #endif  /* VERBOSE_DEBUG */
     }
 }
@@ -267,6 +270,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
     }
 }
 
+// FIXME: use function pointer to avoid branch!
 void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_Copperlist_t *copperlist, GL_Color_t *pixels)
 {
     if (copperlist->program) {

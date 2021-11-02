@@ -101,6 +101,13 @@ void GL_program_destroy(GL_Program_t *program)
 #endif  /* VERBOSE_DEBUG */
 }
 
+void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
+{
+    size_t length = arrlenu(other->entries);
+    arrsetlen(program->entries, length);
+    memcpy(program->entries, other->entries, sizeof(GL_Program_Entry_t) * arrlenu(program->entries));
+}
+
 void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);

@@ -56,6 +56,7 @@ extern GL_Program_t *GL_program_create(void);
 extern GL_Program_t *GL_program_clone(const GL_Program_t *program);
 extern void GL_program_destroy(GL_Program_t *program);
 
+extern void GL_program_copy(GL_Program_t *program, const GL_Program_t *other);
 extern void GL_program_clear(GL_Program_t *program);
 
 extern void GL_program_nop(GL_Program_t *program, int position);
