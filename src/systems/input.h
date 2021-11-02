@@ -167,7 +167,7 @@ extern void Input_destroy(Input_t *input);
 extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
-extern void Input_set_cursor_position(Input_t *input, float x, float y);
+extern void Input_set_cursor_position(Input_t *input, float x, float y); // FIXME: use `int` instead of `float`.
 extern void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1);
 extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
 extern void Input_set_mode(Input_t *input, int mode);

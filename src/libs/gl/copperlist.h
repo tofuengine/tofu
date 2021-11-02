@@ -30,17 +30,19 @@
 #include "program.h"
 #include "surface.h"
 
-typedef struct GL_Copperlist_s GL_Copperlist_t;
-
-typedef void (*Surface_To_Rgba_Callback_t)(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels);
-
-struct GL_Copperlist_s { // FIXME: rename to something better!!!
-    GL_Palette_t *palette;
+typedef struct Copperlist_State_s {
+    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    GL_Program_t *program;
+} Copperlist_State_t;
 
-    Surface_To_Rgba_Callback_t surface_to_rgba;
-};
+typedef void (*GL_Copperlist_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries);
+
+typedef struct GL_Copperlist_s { // FIXME: rename to something better!!!
+    Copperlist_State_t state;
+    GL_Program_Entry_t *entries;
+
+    GL_Copperlist_Surface_To_Rgba_t surface_to_rgba;
+} GL_Copperlist_t;
 
 extern GL_Copperlist_t *GL_copperlist_create(void);
 extern void GL_copperlist_destroy(GL_Copperlist_t *copperlist);

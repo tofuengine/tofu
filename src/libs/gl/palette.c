@@ -58,6 +58,14 @@ void GL_palette_destroy(GL_Palette_t *palette)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p freed", palette);
 }
 
+size_t GL_palette_get_colors(const GL_Palette_t *palette, GL_Color_t colors[GL_MAX_PALETTE_COLORS])
+{
+    for (size_t i = 0; i < palette->size; ++i) {
+        colors[i] = palette->colors[i];
+    }
+    return palette->size;
+}
+
 void GL_palette_set_colors(GL_Palette_t *palette, const GL_Color_t *colors, size_t size)
 {
     for (size_t i = 0; i < size; ++i) {

@@ -375,9 +375,21 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     GL_surface_clear(display->canvas.surface, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p cleared", display->canvas.surface);
 
+    display->canvas.palette = GL_palette_create();
+    if (!display->canvas.palette) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create palette");
+        GL_surface_destroy(display->canvas.surface);
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        free(display);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p created", display->canvas.palette);
+
     display->canvas.copperlist = GL_copperlist_create();
     if (!display->canvas.copperlist) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create copperlist");
+        GL_palette_destroy(display->canvas.palette);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -386,11 +398,17 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p created", display->canvas.copperlist);
 
+    // HACK: load an initial greyscale palette and use it.
+    // TODO: use a configuration-driven initial palette.
+    GL_palette_set_greyscale(display->canvas.palette, GL_MAX_PALETTE_COLORS);
+    Display_set_palette(display, display->canvas.palette);
+
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
         GL_copperlist_destroy(display->canvas.copperlist);
+        GL_palette_destroy(display->canvas.palette);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -404,6 +422,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram.pixels);
         GL_copperlist_destroy(display->canvas.copperlist);
+        GL_palette_destroy(display->canvas.palette);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -434,6 +453,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
         GL_copperlist_destroy(display->canvas.copperlist);
+        GL_palette_destroy(display->canvas.palette);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -449,7 +469,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
         GL_copperlist_destroy(display->canvas.copperlist);
-        GL_context_destroy(display->canvas.context);
+        GL_palette_destroy(display->canvas.palette);
+        GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -491,6 +512,9 @@ void Display_destroy(Display_t *display)
 
     free(display->vram.pixels);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
+
+    GL_palette_destroy(display->canvas.palette);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", display->canvas.palette);
 
     GL_copperlist_destroy(display->canvas.copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p destroyed", display->canvas.copperlist);
@@ -615,6 +639,12 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
     display->vram.offset = offset;
 }
 
+void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    GL_palette_copy(display->canvas.palette, palette);
+    GL_copperlist_set_palette(display->canvas.copperlist, palette);
+}
+
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
@@ -642,7 +672,7 @@ GL_Surface_t *Display_get_surface(const Display_t *display)
 
 GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return display->canvas.copperlist->palette;
+    return display->canvas.palette;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)

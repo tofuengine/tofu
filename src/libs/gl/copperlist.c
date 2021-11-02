@@ -38,18 +38,7 @@ GL_Copperlist_t *GL_copperlist_create(void)
         return NULL;
     }
 
-    GL_Palette_t *palette = GL_palette_create();
-    if (!palette) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create palette");
-        free(copperlist);
-        return NULL;
-    }
-
-    *copperlist = (GL_Copperlist_t){
-            .palette = palette,
-            .shifting = { 0 },
-            .program  = NULL
-        };
+    *copperlist = (GL_Copperlist_t){ 0 };
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
 #endif  /* VERBOSE_DEBUG */
@@ -61,17 +50,12 @@ GL_Copperlist_t *GL_copperlist_create(void)
 
 void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 {
-    if (copperlist->program) {
-        GL_program_destroy(copperlist->program);
+    if (copperlist->entries) {
+        arrfree(copperlist->entries);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist entries at %p freed", copperlist->entries);
 #endif  /* VERBOSE_DEBUG */
     }
-
-    GL_palette_destroy(copperlist->palette);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist palette %p freed", copperlist->palette);
-#endif  /* VERBOSE_DEBUG */
 
     free(copperlist);
 #ifdef VERBOSE_DEBUG
@@ -88,37 +72,30 @@ void GL_copperlist_reset(GL_Copperlist_t *copperlist)
 
 void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette)
 {
-    if (palette) {
-        GL_palette_copy(copperlist->palette, palette);
+    GL_palette_get_colors(palette, copperlist->state.colors);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 #endif  /* VERBOSE_DEBUG */
-    } else {
-        GL_palette_set_greyscale(copperlist->palette, GL_MAX_PALETTE_COLORS);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
-#endif  /* VERBOSE_DEBUG */
-    }
 }
 
-// TODO: change API, accepting a single array with consecutives from/to pairs.
+// TODO: change API, accepting a single array with successive from/to pairs.
 void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            copperlist->shifting[i] = (GL_Pixel_t)i;
+            copperlist->state.shifting[i] = (GL_Pixel_t)i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
-            copperlist->shifting[from[i]] = to[i];
+            copperlist->state.shifting[from[i]] = to[i];
         }
     }
 }
 
-static void _surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels)
+static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries)
 {
-    const GL_Color_t *colors = copperlist->palette->colors;
-    const GL_Pixel_t *shifting = copperlist->shifting;
+    const GL_Color_t *colors = state->colors;
+    const GL_Pixel_t *shifting = state->shifting;
 
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->size;
@@ -147,13 +124,11 @@ static void _surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface
 }
 
 // TODO: use array of function pointers instead of mega-switch?
-void _surface_to_rgba_program(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels)
+void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries)
 {
-    GL_Color_t colors[GL_MAX_PALETTE_COLORS] = { 0 }; // Make a local copy, the copperlist can change it.
-    memcpy(colors, copperlist->palette->colors, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS);
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
-    memcpy(shifting, copperlist->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
-    const GL_Program_t *program = copperlist->program;
+    Copperlist_State_t aux = *state; // Make a local copy, the copperlist could change it.
+    GL_Color_t *colors = aux.colors;
+    GL_Pixel_t *shifting = aux.shifting;
 
     size_t wait_y = 0, wait_x = 0;
 #ifdef __DEBUG_GRAPHICS__
@@ -162,7 +137,7 @@ void _surface_to_rgba_program(const GL_Copperlist_t *copperlist, const GL_Surfac
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
 
-    const GL_Program_Entry_t *entry = program->entries;
+    const GL_Program_Entry_t *entry = entries;
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = pixels;
 
@@ -250,32 +225,28 @@ void _surface_to_rgba_program(const GL_Copperlist_t *copperlist, const GL_Surfac
     }
 }
 
+static inline GL_Program_Entry_t *_copy(GL_Program_Entry_t *entries, const GL_Program_t *program)
+{
+    size_t length = arrlenu(program->entries);
+    arrsetlen(entries, length);
+    memcpy(entries, program->entries, sizeof(GL_Program_Entry_t) * length);
+    return entries;
+}
+
 // FIXME: make a copy or track the reference? (also for xform and palettes)
 void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
 {
-    if (copperlist->program && program) {
+    if (program) {
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p copied at %p", program, copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p copied at entries %p", program, copperlist->entries);
 #endif  /* VERBOSE_DEBUG */
-        GL_program_copy(copperlist->program, program);
-    } else
-    if (copperlist->program && !program) {
-       GL_program_destroy(copperlist->program);
+        copperlist->entries = _copy(copperlist->entries, program);
+    } else {
+       arrfree(copperlist->entries);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist entries at %p freed", copperlist->entries);
 #endif  /* VERBOSE_DEBUG */
-        copperlist->program = NULL;
-    } else
-    if (!copperlist->program && program) {
-        copperlist->program = GL_program_clone(program);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p cloned at %p", program, copperlist->program);
-#endif  /* VERBOSE_DEBUG */
-    } else
-    if (!copperlist->program && !program) {
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "nothing to do :)");
-#endif  /* VERBOSE_DEBUG */
+        copperlist->entries = NULL;
     }
 
     copperlist->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
@@ -283,5 +254,5 @@ void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *
 
 void GL_copperlist_surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    copperlist->surface_to_rgba(copperlist, surface, pixels);
+    copperlist->surface_to_rgba(surface, pixels, &copperlist->state, copperlist->entries);
 }

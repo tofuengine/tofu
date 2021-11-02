@@ -62,7 +62,8 @@ typedef struct Display_s {
     struct {
         GL_Size_t size;
         GL_Surface_t *surface;
-        GL_Copperlist_t *copperlist;
+        GL_Palette_t *palette; // Explicit palette, used to support color-indexing and such.
+        GL_Copperlist_t *copperlist; // The copperlist holds the palette and shifting logic.
     } canvas;
 
     struct {
@@ -94,6 +95,7 @@ extern void Display_present(const Display_t *display);
 extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `copperlist` field directly?
 
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
+extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void Display_set_program(Display_t *display, const GL_Program_t *program);
 
