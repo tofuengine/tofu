@@ -285,6 +285,8 @@ static int math_invsqrt_1n_1n(lua_State *L)
 //
 // The magic number is for doubles is from https://cs.uwaterloo.ca/~m32rober/rsqrt.pdf
 //     i = 0x5fe6eb50c7b537a9 - (i >> 1);
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 static inline float _Q_rsqrt(float number)
 {
     const float x2 = number * 0.5f;
@@ -299,6 +301,7 @@ static inline float _Q_rsqrt(float number)
 //	y = y * (threehalfs - (x2 * y * y));    // 2nd iteration, this can be removed
     return y;
 }
+#pragma GCC pop_options
 
 static int math_finvsqrt_1n_1n(lua_State *L)
 {
