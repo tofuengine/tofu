@@ -192,9 +192,17 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
             while (y >= wait_y && x >= wait_x) {
 #endif
                 switch (entry->command) {
+                    case GL_PROGRAM_COMMAND_NOP: {
+                        break;
+                    }
                     case GL_PROGRAM_COMMAND_WAIT: {
                         wait_x = entry->args[0].size;
                         wait_y = entry->args[1].size;
+                        break;
+                    }
+                    case GL_PROGRAM_COMMAND_SKIP: {
+                        wait_x += entry->args[0].size;
+                        wait_y += entry->args[1].size;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_MODULO: {

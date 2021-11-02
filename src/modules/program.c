@@ -41,7 +41,7 @@ static int program_gc_1o_0(lua_State *L);
 static int program_clear_1o_0(lua_State *L);
 static int program_nop_2oN_0(lua_State *L);
 static int program_wait_4onnN_0(lua_State *L);
-static int program_modulo_2on_0(lua_State *L);
+static int program_skip_4onnN_0(lua_State *L);
 static int program_modulo_3onN_0(lua_State *L);
 static int program_offset_3onN_0(lua_State *L);
 static int program_color_6onnnnN_0(lua_State *L);
@@ -61,7 +61,7 @@ int program_loader(lua_State *L)
             { "clear", program_clear_1o_0 },
             { "nop", program_nop_2oN_0 },
             { "wait", program_wait_4onnN_0 },
-            { "modulo", program_modulo_2on_0 },
+            { "skip", program_skip_4onnN_0 },
             { "modulo", program_modulo_3onN_0 },
             { "offset", program_offset_3onN_0 },
             { "color", program_color_6onnnnN_0 },
@@ -158,7 +158,24 @@ static int program_wait_4onnN_0(lua_State *L)
     return 0;
 }
 
-static int program_modulo_2on_0(lua_State *L)
+static int program_skip_4onnN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+    size_t delta_x = (size_t)LUAX_INTEGER(L, 2);
+    size_t delta_y = (size_t)LUAX_INTEGER(L, 3);
+    int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
+
+    GL_program_skip(self->program, position, delta_x, delta_y);
+
+    return 0;
+}
+
 static int program_modulo_3onN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -307,7 +324,7 @@ static int program_gradient_4ontN_0(lua_State *L)
             const uint8_t r = (uint8_t)FLERP(current_r, wait_r, ratio);
             const uint8_t g = (uint8_t)FLERP(current_g, wait_g, ratio);
             const uint8_t b = (uint8_t)FLERP(current_b, wait_b, ratio);
-            GL_program_wait(self->program, 0, y);
+            GL_program_skip(self->program, position, 0, 1);
             const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
             GL_program_color(self->program, position, index, color);
         }

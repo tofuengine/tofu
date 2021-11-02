@@ -125,7 +125,12 @@ void GL_program_wait(GL_Program_t *program, int position, size_t x, size_t y)
             (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = x }, { .size = y } } });
 }
 
-void GL_program_modulo(GL_Program_t *program, int amount)
+void GL_program_skip(GL_Program_t *program, int position, size_t delta_x, size_t delta_y)
+{
+    program->entries = _insert(program->entries, position,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_SKIP, .args = { { .size = delta_x }, { .size = delta_y} } });
+}
+
 void GL_program_modulo(GL_Program_t *program, int position, int amount)
 {
     program->entries = _insert(program->entries, position,
