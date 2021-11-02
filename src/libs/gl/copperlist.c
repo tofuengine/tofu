@@ -101,6 +101,7 @@ void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *
     }
 }
 
+// TODO: change API, accepting a single array with consecutives from/to pairs.
 void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
@@ -114,8 +115,16 @@ void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *f
     }
 }
 
-void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program) // FIXME: make a copy or track the reference? (also for xform)
+// FIXME: make a copy or track the reference? (also for xform and palettes)
+void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
 {
+    // if (copperlist->program
+    //     && program
+    //     && arrlenu(copperlist->program->entries) == arrlenu(program->entries)) {
+    //     memcpy(copperlist->program->entries, program->entries, sizeof(GL_Program_Entry_t) * arrlenu(program->entries));
+    //     return;
+    // }
+
     if (copperlist->program) {
         GL_program_destroy(copperlist->program);
 #ifdef VERBOSE_DEBUG
@@ -160,6 +169,7 @@ static void _surface_to_rgba(const GL_Surface_t *surface, const GL_Pixel_t shift
     }
 }
 
+// TODO: use array of function pointers instead of mega-switch?
 void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Color_t colors[GL_MAX_PALETTE_COLORS], const GL_Program_t *program, GL_Color_t *pixels)
 {
     size_t wait_y = 0, wait_x = 0;
