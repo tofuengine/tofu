@@ -65,7 +65,7 @@ void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 
 void GL_copperlist_reset(GL_Copperlist_t *copperlist)
 {
-    GL_copperlist_set_palette(copperlist, NULL);
+    // Palette is not part of the "reset" operation.
     GL_copperlist_set_shifting(copperlist, NULL, NULL, 0);
     GL_copperlist_set_program(copperlist, NULL);
 }
