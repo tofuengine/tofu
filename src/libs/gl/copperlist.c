@@ -124,6 +124,7 @@ static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, co
 }
 
 // TODO: use array of function pointers instead of mega-switch?
+// TODO: ditch wait-x? copperlist operations changes only once per scanline?
 void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries)
 {
     Copperlist_State_t aux = *state; // Make a local copy, the copperlist could change it.
@@ -151,9 +152,9 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
         for (size_t x = 0; x < dwidth; ++x) {
             // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
             // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
-            // trailer is added to the program in the `Display_set_copperlist()` function. This somehow mimics the
-            // real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE` is used to mark the end of
-            // the copperlist.
+            // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
+            // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
+            // is used to mark the end of the copperlist.
 #ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
             if (y >= wait_y && x >= wait_x) {
 #else

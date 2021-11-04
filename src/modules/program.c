@@ -267,7 +267,7 @@ static int program_shift_4onnN_0(lua_State *L)
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
-    int position = LUAX_OPTIONAL_INTEGER(L, 3, -1);
+    int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_shift(self->program, position, from, to);
 
