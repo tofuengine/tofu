@@ -39,13 +39,15 @@
 static int program_new_0_1o(lua_State *L);
 static int program_gc_1o_0(lua_State *L);
 static int program_clear_1o_0(lua_State *L);
-static int program_wait_3onn_0(lua_State *L);
-static int program_modulo_2on_0(lua_State *L);
-static int program_offset_2on_0(lua_State *L);
-static int program_color_5onnnn_0(lua_State *L);
+static int program_nop_2oN_0(lua_State *L);
+static int program_wait_4onnN_0(lua_State *L);
+static int program_skip_4onnN_0(lua_State *L);
+static int program_modulo_3onN_0(lua_State *L);
+static int program_offset_3onN_0(lua_State *L);
+static int program_color_6onnnnN_0(lua_State *L);
 static int program_shift_v_0(lua_State *L);
-static int program_gradient_3ont_0(lua_State *L);
-static int program_palette_4onnt_0(lua_State *L);
+static int program_gradient_4ontN_0(lua_State *L);
+static int program_palette_5onntN_0(lua_State *L);
 // TODO: add program `merging`
 // TODO: add some helper functions to populate the program.
 
@@ -57,13 +59,15 @@ int program_loader(lua_State *L)
             { "new", program_new_0_1o },
             { "__gc", program_gc_1o_0 },
             { "clear", program_clear_1o_0 },
-            { "wait", program_wait_3onn_0 },
-            { "modulo", program_modulo_2on_0 },
-            { "offset", program_offset_2on_0 },
-            { "color", program_color_5onnnn_0 },
+            { "nop", program_nop_2oN_0 },
+            { "wait", program_wait_4onnN_0 },
+            { "skip", program_skip_4onnN_0 },
+            { "modulo", program_modulo_3onN_0 },
+            { "offset", program_offset_3onN_0 },
+            { "color", program_color_6onnnnN_0 },
             { "shift", program_shift_v_0 },
-            { "gradient", program_gradient_3ont_0 },
-            { "palette", program_palette_4onnt_0 },
+            { "gradient", program_gradient_4ontN_0 },
+            { "palette", program_palette_5onntN_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -122,51 +126,89 @@ static int program_clear_1o_0(lua_State *L)
     return 0;
 }
 
-static int program_wait_3onn_0(lua_State *L)
+static int program_nop_2oN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+    int position = LUAX_OPTIONAL_INTEGER(L, 2, -1);
+
+    GL_program_nop(self->program, position);
+
+    return 0;
+}
+
+static int program_wait_4onnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     size_t x = (size_t)LUAX_INTEGER(L, 2);
     size_t y = (size_t)LUAX_INTEGER(L, 3);
+    int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
-    GL_program_wait(self->program, x, y);
+    GL_program_wait(self->program, position, x, y);
 
     return 0;
 }
 
-static int program_modulo_2on_0(lua_State *L)
+static int program_skip_4onnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+    size_t delta_x = (size_t)LUAX_INTEGER(L, 2);
+    size_t delta_y = (size_t)LUAX_INTEGER(L, 3);
+    int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
+
+    GL_program_skip(self->program, position, delta_x, delta_y);
+
+    return 0;
+}
+
+static int program_modulo_3onN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     int amount = LUAX_INTEGER(L, 2);
+    int position = LUAX_OPTIONAL_INTEGER(L, 3, -1);
 
-    GL_program_modulo(self->program, amount);
+    GL_program_modulo(self->program, position, amount);
 
     return 0;
 }
 
-static int program_offset_2on_0(lua_State *L)
+static int program_offset_3onN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     int amount = LUAX_INTEGER(L, 2);
+    int position = LUAX_OPTIONAL_INTEGER(L, 3, -1);
 
-    GL_program_offset(self->program, amount);
+    GL_program_offset(self->program, position, amount);
 
     return 0;
 }
 
-static int program_color_5onnnn_0(lua_State *L)
+static int program_color_6onnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -174,35 +216,39 @@ static int program_color_5onnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
+    int position = LUAX_OPTIONAL_INTEGER(L, 6, -1);
 
     const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
-    GL_program_color(self->program, index, color);
+    GL_program_color(self->program, position, index, color);
 
     return 0;
 }
 
-static int program_shift_2ot_0(lua_State *L)
+static int program_shift_3otN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     // idx #2: LUA_TTABLE
+    int position = LUAX_OPTIONAL_INTEGER(L, 3, -1);
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
         const GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, -2);
         const GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, -1);
 
-        GL_program_shift(self->program, from, to);
+        GL_program_shift(self->program, position, from, to);
 
         lua_pop(L, 1);
     }
@@ -210,18 +256,20 @@ static int program_shift_2ot_0(lua_State *L)
     return 0;
 }
 
-static int program_shift_3onn_0(lua_State *L)
+static int program_shift_4onnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
+    int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
-    GL_program_shift(self->program, from, to);
+    GL_program_shift(self->program, position, from, to);
 
     return 0;
 }
@@ -229,24 +277,30 @@ static int program_shift_3onn_0(lua_State *L)
 static int program_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, program_shift_2ot_0)
-        LUAX_OVERLOAD_ARITY(3, program_shift_3onn_0)
+        LUAX_OVERLOAD_ARITY(2, program_shift_3otN_0)
+        LUAX_OVERLOAD_ARITY(3, program_shift_4onnN_0)
     LUAX_OVERLOAD_END
 }
 
-static int program_gradient_3ont_0(lua_State *L)
+#define INC_IF_VALID(x)  ((x) >= 0 ? (x)++ : (x))
+
+static int program_gradient_4ontN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     // idx #3: LUA_TTABLE
+    int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     size_t current_y = 0;
     uint8_t current_r = 0, current_g = 0, current_b = 0;
+
+    GL_program_wait(self->program, INC_IF_VALID(position), 0, current_y);
 
     lua_pushnil(L); // O N T -> O N T N
     for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
@@ -273,9 +327,9 @@ static int program_gradient_3ont_0(lua_State *L)
             const uint8_t r = (uint8_t)FLERP(current_r, wait_r, ratio);
             const uint8_t g = (uint8_t)FLERP(current_g, wait_g, ratio);
             const uint8_t b = (uint8_t)FLERP(current_b, wait_b, ratio);
-            GL_program_wait(self->program, 0, y);
             const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-            GL_program_color(self->program, index, color);
+            GL_program_color(self->program, INC_IF_VALID(position), index, color);
+            GL_program_skip(self->program, INC_IF_VALID(position), 0, 1); // Skip to next after changing the color.
         }
 
         current_y = wait_y;
@@ -286,27 +340,28 @@ static int program_gradient_3ont_0(lua_State *L)
         lua_pop(L, 1); // O N T N T -> O N T N
     }
 
-    GL_program_wait(self->program, 0, current_y);
     const GL_Color_t color = (GL_Color_t){ .r = current_r, .g = current_g, .b = current_b, .a = 255 };
-    GL_program_color(self->program, index, color);
+    GL_program_color(self->program, INC_IF_VALID(position), index, color);
 
     return 0;
 }
 
-static int program_palette_4onnt_0(lua_State *L)
+static int program_palette_5onntN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     // idx #2: LUA_TTABLE
     size_t x = (size_t)LUAX_INTEGER(L, 3);
     size_t y = (size_t)LUAX_INTEGER(L, 4);
+    int position = LUAX_OPTIONAL_INTEGER(L, 5, -1);
 
-    GL_program_wait(self->program, x, y);
+    GL_program_wait(self->program, INC_IF_VALID(position), x, y);
 
     lua_pushnil(L); // O T N N -> O T N N N
     for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
@@ -329,7 +384,7 @@ static int program_palette_4onnt_0(lua_State *L)
         lua_pop(L, 3); // O T N T I I I -> O T N T
 
         const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-        GL_program_color(self->program, index, color);
+        GL_program_color(self->program, INC_IF_VALID(position), index, color);
 
         lua_pop(L, 1); // O T N N N T -> O T N N N
     }

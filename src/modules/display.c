@@ -65,7 +65,7 @@ static int display_palette_1o_0(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_palette_copy(Display_get_palette(display), palette->palette);
+    Display_set_palette(display, palette->palette);
 
     return 0;
 }

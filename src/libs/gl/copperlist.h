@@ -30,10 +30,18 @@
 #include "program.h"
 #include "surface.h"
 
-typedef struct GL_Copperlist_s { // FIXME: rename to something better!!!
-    GL_Palette_t *palette;
+typedef struct Copperlist_State_s {
+    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    GL_Program_t *program;
+} Copperlist_State_t;
+
+typedef void (*GL_Copperlist_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries);
+
+typedef struct GL_Copperlist_s { // FIXME: rename to something better!!!
+    Copperlist_State_t state;
+    GL_Program_Entry_t *entries;
+
+    GL_Copperlist_Surface_To_Rgba_t surface_to_rgba;
 } GL_Copperlist_t;
 
 extern GL_Copperlist_t *GL_copperlist_create(void);
@@ -45,6 +53,6 @@ extern void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Pale
 extern void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program);
 
-extern void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_Copperlist_t *copperlist, GL_Color_t *pixels);
+extern void GL_copperlist_surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels);
 
 #endif  /* __GL_COPPERLIST_H__ */

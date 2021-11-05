@@ -52,6 +52,8 @@ typedef struct GL_Palette_s {
 extern GL_Palette_t *GL_palette_create(void);
 extern void GL_palette_destroy(GL_Palette_t *palette);
 
+extern size_t GL_palette_get_colors(const GL_Palette_t *palette, GL_Color_t colors[GL_MAX_PALETTE_COLORS]);
+
 extern void GL_palette_set_colors(GL_Palette_t *palette, const GL_Color_t *colors, size_t size);
 extern void GL_palette_set_greyscale(GL_Palette_t *palette, size_t size);
 extern void GL_palette_set_quantized(GL_Palette_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits);

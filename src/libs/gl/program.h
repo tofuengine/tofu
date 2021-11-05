@@ -28,7 +28,9 @@
 #include "common.h"
 
 typedef enum GL_Program_Command_e {
+    GL_PROGRAM_COMMAND_NOP,
     GL_PROGRAM_COMMAND_WAIT,
+    GL_PROGRAM_COMMAND_SKIP,
     GL_PROGRAM_COMMAND_MODULO,
     GL_PROGRAM_COMMAND_OFFSET,
     GL_PROGRAM_COMMAND_COLOR,
@@ -54,11 +56,15 @@ extern GL_Program_t *GL_program_create(void);
 extern GL_Program_t *GL_program_clone(const GL_Program_t *program);
 extern void GL_program_destroy(GL_Program_t *program);
 
+extern void GL_program_copy(GL_Program_t *program, const GL_Program_t *other);
 extern void GL_program_clear(GL_Program_t *program);
-extern void GL_program_wait(GL_Program_t *program, size_t x, size_t y);
-extern void GL_program_modulo(GL_Program_t *program, int amount);
-extern void GL_program_offset(GL_Program_t *program, int amount);
-extern void GL_program_color(GL_Program_t *program, GL_Pixel_t index, GL_Color_t color);
-extern void GL_program_shift(GL_Program_t *program, GL_Pixel_t from, GL_Pixel_t to);
+
+extern void GL_program_nop(GL_Program_t *program, int position);
+extern void GL_program_wait(GL_Program_t *program, int position, size_t x, size_t y);
+extern void GL_program_skip(GL_Program_t *program, int position, size_t delta_x, size_t delta_y);
+extern void GL_program_modulo(GL_Program_t *program, int position, int amount);
+extern void GL_program_offset(GL_Program_t *program, int position, int amount);
+extern void GL_program_color(GL_Program_t *program, int position, GL_Pixel_t index, GL_Color_t color);
+extern void GL_program_shift(GL_Program_t *program, int position, GL_Pixel_t from, GL_Pixel_t to);
 
 #endif  /* __GL_PROGRAM_H__ */
