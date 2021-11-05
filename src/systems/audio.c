@@ -307,6 +307,11 @@ float Audio_get_gain(const Audio_t *audio, size_t group_id)
 
 void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 {
+    // FIXME: audio tracks are enqueued into a -- ehm -- queue, the call just block a list mutex. Then, on update,
+    // the queue is spooled.
+
+    // FIXME: should the audio voices be limited?
+
     ma_mutex_lock(&audio->driver.lock);
     bool success = reset ? SL_source_reset(source) : true; // If the source can't be reset, it won't be tracked.
     if (success) {
