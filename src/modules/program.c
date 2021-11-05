@@ -282,6 +282,8 @@ static int program_shift_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+#define INC_IF_VALID(x)  ((x) >= 0 ? (x)++ : (x))
+
 static int program_gradient_4ontN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -297,6 +299,8 @@ static int program_gradient_4ontN_0(lua_State *L)
 
     size_t current_y = 0;
     uint8_t current_r = 0, current_g = 0, current_b = 0;
+
+    GL_program_wait(self->program, INC_IF_VALID(position), 0, current_y);
 
     lua_pushnil(L); // O N T -> O N T N
     for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
@@ -318,15 +322,14 @@ static int program_gradient_4ontN_0(lua_State *L)
 
         lua_pop(L, 4); // O N T N T I I I I -> O N T N T
 
-        GL_program_wait(self->program, position, 0, current_y);
         for (size_t y = current_y; y < wait_y; ++y) { // Skip target scanline, will be added on the next loop.
             const float ratio = (float)(y - current_y) / (float)(wait_y - current_y);
             const uint8_t r = (uint8_t)FLERP(current_r, wait_r, ratio);
             const uint8_t g = (uint8_t)FLERP(current_g, wait_g, ratio);
             const uint8_t b = (uint8_t)FLERP(current_b, wait_b, ratio);
-            GL_program_skip(self->program, position, 0, 1);
             const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-            GL_program_color(self->program, position, index, color);
+            GL_program_color(self->program, INC_IF_VALID(position), index, color);
+            GL_program_skip(self->program, INC_IF_VALID(position), 0, 1); // Skip to next after changing the color.
         }
 
         current_y = wait_y;
@@ -337,9 +340,8 @@ static int program_gradient_4ontN_0(lua_State *L)
         lua_pop(L, 1); // O N T N T -> O N T N
     }
 
-    GL_program_wait(self->program, position, 0, current_y);
     const GL_Color_t color = (GL_Color_t){ .r = current_r, .g = current_g, .b = current_b, .a = 255 };
-    GL_program_color(self->program, position, index, color);
+    GL_program_color(self->program, INC_IF_VALID(position), index, color);
 
     return 0;
 }
@@ -359,8 +361,7 @@ static int program_palette_5onntN_0(lua_State *L)
     size_t y = (size_t)LUAX_INTEGER(L, 4);
     int position = LUAX_OPTIONAL_INTEGER(L, 5, -1);
 
-    // FIXME: update the position if positive.
-    GL_program_wait(self->program, position, x, y);
+    GL_program_wait(self->program, INC_IF_VALID(position), x, y);
 
     lua_pushnil(L); // O T N N -> O T N N N
     for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
@@ -383,7 +384,7 @@ static int program_palette_5onntN_0(lua_State *L)
         lua_pop(L, 3); // O T N T I I I -> O T N T
 
         const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-        GL_program_color(self->program, position, index, color);
+        GL_program_color(self->program, INC_IF_VALID(position), index, color);
 
         lua_pop(L, 1); // O T N N N T -> O T N N N
     }
