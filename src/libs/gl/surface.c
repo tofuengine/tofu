@@ -336,8 +336,8 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
-    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = area.y;
+    int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -401,8 +401,8 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
-    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = area.y;
+    int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -514,8 +514,8 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const 
     }
 #endif
 
-    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = area.y;
+    int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -659,8 +659,8 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Pixel_Function_t blend = _pixel_functions[function];
 
-    size_t skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = area.y;
+    int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
