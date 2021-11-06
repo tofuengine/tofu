@@ -227,9 +227,8 @@ void Audio_destroy(Audio_t *audio)
     ma_mutex_uninit(&audio->driver.lock);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
 
-    arrfree(audio->incoming);
-    arrfree(audio->outgoing);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio queues freed");
+    arrfree(audio->queue);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio queue freed");
 
     SL_context_destroy(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");
@@ -316,8 +315,12 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 #ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
 #endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
-    Audio_Source_t entry = (Audio_Source_t){ .source = source, .reset = reset };
-    arrpush(audio->incoming, entry);
+    if (reset) {
+        Audio_Source_t entry = (Audio_Source_t){ .source = source, .action = AUDIO_SOURCE_ACTION_RESET };
+        arrpush(audio->queue, entry);
+    }
+    Audio_Source_t entry = (Audio_Source_t){ .source = source, .action = AUDIO_SOURCE_ACTION_TRACK };
+    arrpush(audio->queue, entry);
 #ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
 #endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
@@ -325,10 +328,14 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 
 void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 {
+#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
-    Audio_Source_t entry = (Audio_Source_t){ .source = source };
-    arrpush(audio->outgoing, entry);
+#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    Audio_Source_t entry = (Audio_Source_t){ .source = source, .action = AUDIO_SOURCE_ACTION_UNTRACK };
+    arrpush(audio->queue, entry);
+#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
+#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
 }
 
 bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
@@ -343,25 +350,27 @@ bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->driver.lock);
 
-    for (size_t i = 0; i < arrlenu(audio->incoming); ++i) {
-        Audio_Source_t entry = audio->incoming[i];
-        if (SL_context_is_tracked(audio->context, entry.source)) {
-            continue;
+    Audio_Source_t *current = audio->queue;
+    for (size_t count = arrlenu(audio->queue); count; --count) {
+        Audio_Source_t entry = *(current++);
+        if (entry.action == AUDIO_SOURCE_ACTION_RESET) {
+            bool success = SL_source_reset(entry.source);
+            Log_assert(success, LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p", entry.source);
+        } else
+        if (entry.action == AUDIO_SOURCE_ACTION_TRACK) {
+            if (SL_context_is_tracked(audio->context, entry.source)) {
+                continue;
+            }
+            SL_context_track(audio->context, entry.source);
+        } else
+        if (entry.action == AUDIO_SOURCE_ACTION_UNTRACK) {
+            if (!SL_context_is_tracked(audio->context, entry.source)) {
+                continue;
+            }
+            SL_context_untrack(audio->context, entry.source);
         }
-        bool success = entry.reset ? SL_source_reset(entry.source) : true; // If the source can't be reset, it won't be tracked.
-        if (!success) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p, won't be tracked", entry.source);
-            continue;
-        }
-        SL_context_track(audio->context, entry.source);
     }
-    arrsetlen(audio->incoming, 0); // Don't free, just force length to `0` to save time.
-
-    for (size_t i = 0; i < arrlenu(audio->outgoing); ++i) {
-        Audio_Source_t entry = audio->outgoing[i];
-        SL_context_untrack(audio->context, entry.source);
-    }
-    arrsetlen(audio->outgoing, 0); // Ditto.
+    arrsetlen(audio->queue, 0); // Don't free, just force length to `0` to save time.
 
     bool updated = SL_context_update(audio->context, delta_time);
 #ifdef __AUDIO_START_AND_STOP__

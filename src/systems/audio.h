@@ -36,9 +36,15 @@ typedef struct Audio_Configuration_s {
     float master_volume;
 } Audio_Configuration_t;
 
+typedef enum Audio_Source_Action_e {
+    AUDIO_SOURCE_ACTION_TRACK,
+    AUDIO_SOURCE_ACTION_RESET,
+    AUDIO_SOURCE_ACTION_UNTRACK,
+} Audio_Source_Action_t;
+
 typedef struct Audio_Source_s {
     SL_Source_t *source;
-    bool reset;
+    Audio_Source_Action_t action;
 } Audio_Source_t;
 
 typedef struct Audio_s {
@@ -52,8 +58,7 @@ typedef struct Audio_s {
 
     // TODO: should the audio voices be limited?
 
-    Audio_Source_t *incoming; // Incoming and outgoing source, handled in the `Audio_update()` function.
-    Audio_Source_t *outgoing;
+    Audio_Source_t *queue; // Incoming and outgoing source, handled in the `Audio_update()` function.
 
     SL_Context_t *context;
 } Audio_t;
