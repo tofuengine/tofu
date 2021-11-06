@@ -36,6 +36,11 @@ typedef struct Audio_Configuration_s {
     float master_volume;
 } Audio_Configuration_t;
 
+typedef struct Audio_Source_s {
+    SL_Source_t *source;
+    bool reset;
+} Audio_Source_t;
+
 typedef struct Audio_s {
     Audio_Configuration_t configuration;
 
@@ -44,6 +49,11 @@ typedef struct Audio_s {
         ma_device device;
         ma_mutex lock;
     } driver;
+
+    // TODO: should the audio voices be limited?
+
+    Audio_Source_t *incoming; // Incoming and outgoing source, handled in the `Audio_update()` function.
+    Audio_Source_t *outgoing;
 
     SL_Context_t *context;
 } Audio_t;
