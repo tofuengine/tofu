@@ -201,7 +201,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
         ma_device_uninit(&audio->driver.device);
-        ma_context_uninit(audio->driver.context);
+        ma_context_uninit(&audio->driver.context);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
         free(audio);
