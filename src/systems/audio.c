@@ -316,10 +316,10 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
     ma_mutex_lock(&audio->driver.lock);
 #endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     if (reset) {
-        Audio_Source_t entry = (Audio_Source_t){ .source = source, .action = AUDIO_SOURCE_ACTION_RESET };
+        Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_RESET };
         arrpush(audio->queue, entry);
     }
-    Audio_Source_t entry = (Audio_Source_t){ .source = source, .action = AUDIO_SOURCE_ACTION_TRACK };
+    Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_TRACK };
     arrpush(audio->queue, entry);
 #ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
@@ -331,7 +331,7 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 #ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
 #endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
-    Audio_Source_t entry = (Audio_Source_t){ .source = source, .action = AUDIO_SOURCE_ACTION_UNTRACK };
+    Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_UNTRACK };
     arrpush(audio->queue, entry);
 #ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
@@ -350,20 +350,20 @@ bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->driver.lock);
 
-    Audio_Source_t *current = audio->queue;
+    Audio_Queue_Entry_t *current = audio->queue;
     for (size_t count = arrlenu(audio->queue); count; --count) {
-        Audio_Source_t entry = *(current++);
-        if (entry.action == AUDIO_SOURCE_ACTION_RESET) {
+        Audio_Queue_Entry_t entry = *(current++);
+        if (entry.action == AUDIO_QUEUE_ACTION_RESET) {
             bool success = SL_source_reset(entry.source);
             Log_assert(success, LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p", entry.source);
         } else
-        if (entry.action == AUDIO_SOURCE_ACTION_TRACK) {
+        if (entry.action == AUDIO_QUEUE_ACTION_TRACK) {
             if (SL_context_is_tracked(audio->context, entry.source)) {
                 continue;
             }
             SL_context_track(audio->context, entry.source);
         } else
-        if (entry.action == AUDIO_SOURCE_ACTION_UNTRACK) {
+        if (entry.action == AUDIO_QUEUE_ACTION_UNTRACK) {
             if (!SL_context_is_tracked(audio->context, entry.source)) {
                 continue;
             }
@@ -385,20 +385,26 @@ bool Audio_update(Audio_t *audio, float delta_time)
 
 #ifdef __AUDIO_START_AND_STOP__
     const bool is_started = ma_device_is_started(&audio->driver.device);
-    if (!is_started && count > 0) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d incoming source(s), starting device", count);
-        ma_result result = ma_device_start(&audio->driver.device);
-        if (result != MA_SUCCESS) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
-            return false;
+    if (count == 0 && is_started) {
+        audio->grace -= delta_time;
+        if (audio->grace <= 0.0) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no more sources and grace period elapsed, stopping device");
+            ma_result result = ma_device_stop(&audio->driver.device);
+            if (result != MA_SUCCESS) {
+                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't stop the audio device");
+                return false;
+            }
         }
     } else
-    if (is_started && count == 0) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no more sources, stopping device");
-        ma_result result = ma_device_stop(&audio->driver.device);
-        if (result != MA_SUCCESS) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't stop the audio device");
-            return false;
+    if (count > 0) {
+        audio->grace = __AUDIO_START_AND_STOP_GRACE_PERIOD__;
+        if (!is_started) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d incoming source(s), starting device", count);
+            ma_result result = ma_device_start(&audio->driver.device);
+            if (result != MA_SUCCESS) {
+                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
+                return false;
+            }
         }
     }
 #endif
