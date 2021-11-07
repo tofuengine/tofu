@@ -340,9 +340,13 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 
 bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
 {
-    ma_mutex_lock((ma_mutex *)&audio->driver.lock);
+#ifdef __AUDIO_MULTITHREAD_SUPPORT__
+    ma_mutex_lock(&audio->driver.lock);
+#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     bool is_tracked = SL_context_is_tracked(audio->context, source);
+#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
+#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     return is_tracked;
 }
 
