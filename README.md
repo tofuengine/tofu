@@ -15,6 +15,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fully scripted in [Lua](https://www.lua.org/).
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
+* [x] Array of predefined common/famous resolutions (e.g. C64, Capcom's arcades, Nintendo DS, Sony PSP, etc...).
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
 * [x] Support for both proportional and non-proportional bitmap based fonts (alphabet subset can be specified, if required).
@@ -128,7 +129,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
-* [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
