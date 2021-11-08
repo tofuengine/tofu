@@ -340,6 +340,7 @@ void Engine_run(Engine_t *engine)
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             // TODO: use array of pointers?
             Environment_update(engine->environment, delta_time);
+            Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
             running = running && Audio_update(engine->audio, delta_time);
             running = running && Physics_update(engine->physics, delta_time);
@@ -350,7 +351,8 @@ void Engine_run(Engine_t *engine)
 //        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
 //        running = running && Storage_update_variable(engine->storage, elapsed);
-        Input_update(engine->input, elapsed);
+//        running = running && Input_update_variable(engine->storage, elapsed);
+//        running = running && Physics_update_variable(engine->storage, elapsed);
         Display_update(engine->display, elapsed);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
