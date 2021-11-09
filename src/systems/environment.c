@@ -174,7 +174,8 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
 }
 
-void Environment_update(Environment_t *environment, float frame_time)
+bool Environment_update(Environment_t *environment, float frame_time)
 {
     environment->time += frame_time;
+    return true;
 }

@@ -375,7 +375,7 @@ static void _cursor_update(Input_t *input, float delta_time)
     }
 }
 
-void Input_update(Input_t *input, float delta_time)
+bool Input_update(Input_t *input, float delta_time)
 {
     input->time += delta_time;
 
@@ -394,11 +394,13 @@ void Input_update(Input_t *input, float delta_time)
 
     _buttons_update(input, delta_time);
     _cursor_update(input, delta_time);
+
+    return true;
 }
 
 void Input_process(Input_t *input)
 {
-    static Input_Handler_t handlers[Input_Handlers_t_CountOf] = {
+    static const Input_Handler_t handlers[Input_Handlers_t_CountOf] = {
         _default_handler,
         _keyboard_handler,
         _mouse_handler,

@@ -70,6 +70,6 @@ extern void Environment_process(Environment_t *environment, float frame_time, co
 extern void Environment_process(Environment_t *environment, float frame_time);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
-extern void Environment_update(Environment_t *environment, float delta_time);
+extern bool Environment_update(Environment_t *environment, float delta_time);
 
 #endif  /* __SYSTEMS_ENVIRONMENT_H__ */

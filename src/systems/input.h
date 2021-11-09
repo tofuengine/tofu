@@ -164,7 +164,7 @@ typedef struct Input_s {
 extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
 extern void Input_destroy(Input_t *input);
 
-extern void Input_update(Input_t *input, float delta_time);
+extern bool Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
 extern void Input_set_cursor_position(Input_t *input, float x, float y); // FIXME: use `int` instead of `float`.
