@@ -49,6 +49,7 @@ typedef struct Display_Configuration_s {
     bool fullscreen;
     bool vertical_sync;
     bool hide_cursor;
+    const char *palette;
     const char *effect;
 } Display_Configuration_t;
 

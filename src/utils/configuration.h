@@ -48,6 +48,7 @@ typedef struct Configuration_s {
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
+        char palette[MAX_VALUE_LENGTH];
         char effect[MAX_VALUE_LENGTH];
     } display;
     struct {

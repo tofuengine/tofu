@@ -29,6 +29,7 @@
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>
+#include <resources/palettes.h>
 
 #include <time.h>
 
@@ -398,9 +399,14 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p created", display->canvas.copperlist);
 
-    // HACK: load an initial greyscale palette and use it.
-    // TODO: use a configuration-driven initial palette.
-    GL_palette_set_greyscale(display->canvas.palette, GL_MAX_PALETTE_COLORS);
+    const Palette_t *palette = resources_palettes_find(configuration->palette);
+    if (!palette) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown palette `%s`, defaulting to greyscale");
+        GL_palette_set_greyscale(display->canvas.palette, GL_MAX_PALETTE_COLORS);
+    } else {
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "loading palette `%s`", configuration->palette);
+        GL_palette_set_colors(display->canvas.palette, palette->colors, palette->size);
+    }
     Display_set_palette(display, display->canvas.palette);
 
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;

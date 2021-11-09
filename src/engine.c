@@ -165,6 +165,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
             .hide_cursor = engine->configuration->cursor.hide,
+            .palette = engine->configuration->display.palette,
             .effect = effect ? S_SCHARS(effect) : NULL
         });
     if (!engine->display) {
