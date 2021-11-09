@@ -249,7 +249,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
 
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-    if (window == NULL) {
+    if (!window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
         glfwTerminate();
         return NULL;

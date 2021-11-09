@@ -129,6 +129,7 @@ static void _mouse_handler(Input_t *input)
 // http://blog.hypersect.com/interpreting-analog-sticks/
 static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone, float range)
 {
+    // TODO: optimize by calculating angle/magnitude only if the stick status is requested.
     const float angle = atan2f(y, x);
     const float magnitude = sqrtf(x * x + y * y);
     if (magnitude < deadzone) {
@@ -142,6 +143,7 @@ static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone, flo
 
 static inline float _gamepad_trigger(float magnitude, float deadzone, float range)
 {
+    // TODO: optimize by calculating angle/magnitude only if the trigger status is requested.
     if (magnitude < deadzone) {
         return 0.0f;
     } else {

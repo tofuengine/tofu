@@ -69,7 +69,7 @@ static int _write(lua_State *L, Log_Levels_t level)
         lua_pushvalue(L, i); // F F -> F F I
         lua_call(L, 1, 1); // F F I -> F R
         const char *s = lua_tostring(L, -1);
-        if (s == NULL) {
+        if (!s) {
             return luaL_error(L, "`tostring` must return a string `log_write`");
         }
         Log_write(level, LOG_CONTEXT, (i > 1) ? "\t%s" : "%s", s);

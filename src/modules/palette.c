@@ -95,7 +95,7 @@ static int palette_new_1s_1o(lua_State *L)
     const char *id = LUAX_STRING(L, 1);
 
     const Palette_t *predefined_palette = resources_palettes_find(id);
-    if (predefined_palette == NULL) {
+    if (!predefined_palette) {
         return luaL_error(L, "unknown predefined palette w/ id `%s`", id);
     }
 
