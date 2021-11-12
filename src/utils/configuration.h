@@ -67,7 +67,7 @@ typedef struct Configuration_s {
     struct {
         bool enabled;
         float sensitivity;
-        float inner_deadzone;
+        float inner_deadzone; // TODO: separate into distinct stick and trigger deadzone.
         float outer_deadzone;
         bool emulate_dpad;
         bool emulate_cursor;
