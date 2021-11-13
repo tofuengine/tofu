@@ -129,12 +129,11 @@ static void _mouse_handler(Input_t *input)
 // http://blog.hypersect.com/interpreting-analog-sticks/
 static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone, float range)
 {
-    // TODO: optimize by calculating angle/magnitude only if the stick status is requested.
-    const float angle = atan2f(y, x);
     const float magnitude = sqrtf(x * x + y * y);
     if (magnitude < deadzone) {
-        return (Input_Stick_t){ .x = 0.0f, .y = 0.0f, .angle = angle, .magnitude = 0.0f };
+        return (Input_Stick_t){ .x = 0.0f, .y = 0.0f, .angle = 0.0f, .magnitude = 0.0f };
     } else { // Rescale to ensure [0, 1] range. Response curve is left to the final user.
+        const float angle = atan2f(y, x);
         const float normalized_magnitude = fminf(1.0f, (magnitude - deadzone) / range);
         const float scale = normalized_magnitude / magnitude;
         return (Input_Stick_t){ .x = x * scale, .y = y * scale, .angle = angle, .magnitude = normalized_magnitude };
