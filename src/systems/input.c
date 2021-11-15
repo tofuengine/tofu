@@ -79,6 +79,25 @@ static void _keyboard_handler(Input_t *input)
     }
 }
 
+static inline void _move_and_bound_cursor(Input_Cursor_t *cursor, float x, float y)
+{
+    cursor->x = x;
+    cursor->y = y;
+
+    if (cursor->x < cursor->area.x0) {
+        cursor->x = cursor->area.x0;
+    } else
+    if (cursor->x > cursor->area.x1) {
+        cursor->x = cursor->area.x1;
+    }
+    if (cursor->y < cursor->area.y0) {
+        cursor->y = cursor->area.y0;
+    } else
+    if (cursor->y > cursor->area.y1) {
+        cursor->y = cursor->area.y1;
+    }
+}
+
 static void _mouse_handler(Input_t *input)
 {
     static const int mouse_buttons[Input_Buttons_t_CountOf] = {
@@ -121,8 +140,8 @@ static void _mouse_handler(Input_t *input)
     glfwGetCursorPos(window, &x, &y);
 
     const float scale = input->configuration.cursor.scale;
-    input->cursor.x = (float)x * scale;
-    input->cursor.y = (float)y * scale;
+    Input_Cursor_t *cursor = &input->cursor;
+    _move_and_bound_cursor(cursor, (float)x * scale + 0.5f, (float)y * scale + 0.5f);
 }
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
@@ -353,26 +372,11 @@ static void _buttons_update(Input_t *input, float delta_time)
 static void _cursor_update(Input_t *input, float delta_time)
 {
     if (input->configuration.gamepad.emulate_cursor) {
-        Input_Cursor_t *cursor = &input->cursor;
         const Input_Stick_t *stick = &input->sticks[INPUT_STICK_RIGHT];
-
         const float delta = input->configuration.cursor.speed * delta_time;
 
-        cursor->x += stick->x * delta;
-        cursor->y += stick->y * delta;
-
-        if (cursor->x < cursor->area.x0) {
-            cursor->x = cursor->area.x0;
-        } else
-        if (cursor->x >= cursor->area.x1) {
-            cursor->x = cursor->area.x1 - 1;
-        }
-        if (cursor->y < cursor->area.y0) {
-            cursor->y = cursor->area.y0;
-        } else
-        if (cursor->y >= cursor->area.y1) {
-            cursor->y = cursor->area.y1 - 1;
-        }
+        Input_Cursor_t *cursor = &input->cursor;
+        _move_and_bound_cursor(cursor, cursor->x + stick->x * delta, cursor->y + stick->y * delta);
     }
 }
 
@@ -451,18 +455,18 @@ void Input_process(Input_t *input)
     }
 }
 
-void Input_set_cursor_position(Input_t *input, float x, float y)
+void Input_set_cursor_position(Input_t *input, int x, int y)
 {
-    input->cursor.x = x;
-    input->cursor.y = y;
+    input->cursor.x = (float)x + 0.5f; // Center on mid-pixel, as movements are float-based (to support dpad/stick)
+    input->cursor.y = (float)y + 0.5f;
 }
 
-void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1)
+void Input_set_cursor_area(Input_t *input, int x, int y, size_t width, size_t height)
 {
-    input->cursor.area.x0 = x0;
-    input->cursor.area.y0 = y0;
-    input->cursor.area.x1 = x1;
-    input->cursor.area.y1 = y1;
+    input->cursor.area.x0 = (float)x + 0.5f;
+    input->cursor.area.y0 = (float)y + 0.5f;
+    input->cursor.area.x1 = (float)x + (float)width - 0.5f; // Cursor area is right-bottom inclusive.
+    input->cursor.area.y1 = (float)y + (float)height - 0.5f;
 }
 
 void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period)

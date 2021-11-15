@@ -207,8 +207,8 @@ static int input_cursor_0_2nn(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Input_Cursor_t *cursor = Input_get_cursor(input);
-    lua_pushnumber(L, (lua_Number)cursor->x);
-    lua_pushnumber(L, (lua_Number)cursor->y);
+    lua_pushinteger(L, (lua_Integer)cursor->x);
+    lua_pushinteger(L, (lua_Integer)cursor->y);
 
     return 2;
 }
@@ -219,8 +219,8 @@ static int input_cursor_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    float x = LUAX_NUMBER(L, 1);
-    float y = LUAX_NUMBER(L, 2);
+    int x = LUAX_INTEGER(L, 1);
+    int y = LUAX_INTEGER(L, 2);
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -245,10 +245,10 @@ static int input_cursor_area_0_4nnnn(lua_State *L)
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Input_Cursor_t *cursor = Input_get_cursor(input);
-    lua_pushnumber(L, (lua_Number)cursor->area.x0);
-    lua_pushnumber(L, (lua_Number)cursor->area.y0);
-    lua_pushnumber(L, (lua_Number)(cursor->area.x1 - cursor->area.x0));
-    lua_pushnumber(L, (lua_Number)(cursor->area.y1 - cursor->area.y0));
+    lua_pushinteger(L, (lua_Integer)cursor->area.x0);
+    lua_pushinteger(L, (lua_Integer)cursor->area.y0);
+    lua_pushinteger(L, (lua_Integer)(cursor->area.x1 - cursor->area.x0 + 1.0f));
+    lua_pushinteger(L, (lua_Integer)(cursor->area.y1 - cursor->area.y0 + 1.0f));
 
     return 4;
 }
@@ -268,7 +268,7 @@ static int input_cursor_area_4nnnn_0(lua_State *L)
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_set_cursor_area(input, x, y, x + (int)width, y + (int)height);
+    Input_set_cursor_area(input, x, y, width, height);
 
     return 0;
 }
