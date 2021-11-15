@@ -67,7 +67,7 @@ static void _keyboard_handler(Input_t *input)
         GLFW_KEY_ESCAPE
     };
 
-    if ((input->mode & INPUT_MODE_KEYBOARD) == 0) {
+    if (!(input->mode & INPUT_MODE_KEYBOARD)) {
         return;
     }
 
@@ -122,7 +122,7 @@ static void _mouse_handler(Input_t *input)
         -1
     };
 
-    if ((input->mode & INPUT_MODE_MOUSE) == 0) {
+    if (!(input->mode & INPUT_MODE_MOUSE)) {
         return;
     }
 
@@ -193,7 +193,7 @@ static void _gamepad_handler(Input_t *input)
         -1
     };
 
-    if ((input->mode & INPUT_MODE_GAMEPAD) == 0) {
+    if (!(input->mode & INPUT_MODE_GAMEPAD)) {
         return;
     }
 
@@ -341,8 +341,30 @@ void Input_destroy(Input_t *input)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
+static void _gamepad_update(Input_t *input, float delta_time)
+{
+    if (!(input->mode & INPUT_MODE_GAMEPAD)) {
+        return;
+    }
+
+    size_t was_gamepad_count = input->gamepad.count; // Check if new gamepad is added/removed!
+    size_t gamepads_count = _gamepad_detect(input);
+    if (gamepads_count != was_gamepad_count) {
+        input->gamepad.count = gamepads_count;
+        if (gamepads_count == 0) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "gamepads disconnected");
+        } else {
+            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads connected", gamepads_count);
+        }
+    }
+}
+
 static void _buttons_update(Input_t *input, float delta_time)
 {
+    if (!(input->mode & INPUT_MODE_KEYPAD)) {
+        return;
+    }
+
     Input_Button_t *buttons = input->buttons;
 
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
@@ -371,6 +393,10 @@ static void _buttons_update(Input_t *input, float delta_time)
 
 static void _cursor_update(Input_t *input, float delta_time)
 {
+    if (!(input->mode & INPUT_MODE_MOUSEPAD)) { // Cursor state can be changed by either mouse or gamepad (emulated).
+        return;
+    }
+
     if (input->configuration.gamepad.emulate_cursor) {
         const Input_Stick_t *stick = &input->sticks[INPUT_STICK_RIGHT];
         const float delta = input->configuration.cursor.speed * delta_time;
@@ -384,38 +410,17 @@ bool Input_update(Input_t *input, float delta_time)
 {
     input->time += delta_time;
 
-    if (input->mode == INPUT_MODE_GAMEPAD) {
-        size_t was_gamepad_count = input->gamepad.count; // Check if new gamepad is added/removed!
-        size_t gamepads_count = _gamepad_detect(input);
-        if (gamepads_count != was_gamepad_count) {
-            input->gamepad.count = gamepads_count;
-            if (gamepads_count == 0) {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "gamepads disconnected");
-            } else {
-                Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads connected", gamepads_count);
-            }
-        }
-    }
-
+    _gamepad_update(input, delta_time);
     _buttons_update(input, delta_time);
     _cursor_update(input, delta_time);
 
     return true;
 }
 
-void Input_process(Input_t *input)
+static void _buttons_process(Input_t *input)
 {
-    static const Input_Handler_t handlers[Input_Handlers_t_CountOf] = {
-        _default_handler,
-        _keyboard_handler,
-        _mouse_handler,
-        _gamepad_handler
-    };
-
-    glfwPollEvents();
-
-    for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
-        handlers[i](input);
+    if (!(input->mode & INPUT_MODE_KEYPAD)) { // Buttons' state can be changed by either keyboard or gamepad (emulated).
+        return;
     }
 
     Input_Button_t *buttons = input->buttons;
@@ -445,10 +450,28 @@ void Input_process(Input_t *input)
             Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
+}
+
+void Input_process(Input_t *input)
+{
+    static const Input_Handler_t handlers[Input_Handlers_t_CountOf] = {
+        _default_handler,
+        _keyboard_handler,
+        _mouse_handler,
+        _gamepad_handler
+    };
+
+    glfwPollEvents();
+
+    for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
+        handlers[i](input);
+    }
+
+    _buttons_process(input);
 
     const Input_Configuration_t *configuration = &input->configuration;
     if (configuration->keyboard.exit_key) {
-        if (buttons[INPUT_BUTTON_QUIT].state.pressed) {
+        if (glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);
         }
