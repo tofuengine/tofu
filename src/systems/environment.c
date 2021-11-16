@@ -166,6 +166,9 @@ void Environment_process(Environment_t *environment, float frame_time)
         PROCESS_MEMORY_COUNTERS pmc = { 0 };
         GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
         environment->stats.memory_usage = pmc.WorkingSetSize;
+#elif __GNUC__ < 9
+        struct mallinfo mi = mallinfo();
+        environment->stats.memory_usage = mi.uordblks;
 #else
         struct mallinfo2 mi = mallinfo2();
         environment->stats.memory_usage = mi.uordblks;
