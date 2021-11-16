@@ -83,61 +83,61 @@ else
 endif
 
 # Source files list (src)
-SOURCES:=$(wildcard src/*.c)
-SOURCES+=$(wildcard src/libs/*.c)
-SOURCES+=$(wildcard src/libs/fs/*.c)
-SOURCES+=$(wildcard src/libs/gl/*.c)
-SOURCES+=$(wildcard src/libs/sl/*.c)
-SOURCES+=$(wildcard src/modules/*.c)
-SOURCES+=$(wildcard src/modules/utils/*.c)
-SOURCES+=$(wildcard src/resources/*.c)
-SOURCES+=$(wildcard src/systems/*.c)
-SOURCES+=$(wildcard src/utils/*.c)
+SOURCES:=$(wildcard src/*.c) \
+	$(wildcard src/libs/*.c) \
+	$(wildcard src/libs/fs/*.c) \
+	$(wildcard src/libs/gl/*.c) \
+	$(wildcard src/libs/sl/*.c) \
+	$(wildcard src/modules/*.c) \
+	$(wildcard src/modules/utils/*.c) \
+	$(wildcard src/resources/*.c) \
+	$(wildcard src/systems/*.c) \
+	$(wildcard src/utils/*.c)
 # Source files list (external)
-SOURCES+=$(wildcard external/dr_libs/*.c)
-SOURCES+=$(wildcard external/gif-h/*.c)
-SOURCES+=$(wildcard external/glad/*.c)
-SOURCES+=$(wildcard external/lua/*.c)
-SOURCES+=$(wildcard external/miniaudio/*.c)
-SOURCES+=$(wildcard external/spleen/*.c)
-SOURCES+=$(wildcard external/xmp-lite/*.c)
-SOURCES+=$(wildcard external/noise/*.c)
-SOURCES+=$(wildcard external/chipmunk/*.c)
+SOURCES+=$(wildcard external/dr_libs/*.c) \
+	$(wildcard external/gif-h/*.c) \
+	$(wildcard external/glad/*.c) \
+	$(wildcard external/lua/*.c) \
+	$(wildcard external/miniaudio/*.c) \
+	$(wildcard external/spleen/*.c) \
+	$(wildcard external/xmp-lite/*.c) \
+	$(wildcard external/noise/*.c) \
+	$(wildcard external/chipmunk/*.c)
 # Include files list (src)
-INCLUDES:=$(wildcard src/*.h)
-INCLUDES+=$(wildcard src/libs/*.h)
-INCLUDES+=$(wildcard src/libs/fs/*.h)
-INCLUDES+=$(wildcard src/libs/gl/*.h)
-INCLUDES+=$(wildcard src/libs/sl/*.h)
-INCLUDES+=$(wildcard src/modules/*.h)
-INCLUDES+=$(wildcard src/modules/utils/*.h)
-INCLUDES+=$(wildcard src/resources/*.h)
-INCLUDES+=$(wildcard src/systems/*.h)
-INCLUDES+=$(wildcard src/utils/*.h)
+INCLUDES:=$(wildcard src/*.h) \
+	$(wildcard src/libs/*.h) \
+	$(wildcard src/libs/fs/*.h) \
+	$(wildcard src/libs/gl/*.h) \
+	$(wildcard src/libs/sl/*.h) \
+	$(wildcard src/modules/*.h) \
+	$(wildcard src/modules/utils/*.h) \
+	$(wildcard src/resources/*.h) \
+	$(wildcard src/systems/*.h) \
+	$(wildcard src/utils/*.h)
 # Include files list (external)
-INCLUDES+=$(wildcard external/dr_libs/*.h)
-INCLUDES+=$(wildcard external/gif-h/*.h)
-INCLUDES+=$(wildcard external/glad/*.h)
-INCLUDES+=$(wildcard external/GLFW/*.h)
-INCLUDES+=$(wildcard external/lua/*.h)
-INCLUDES+=$(wildcard external/miniaudio/*.h)
-INCLUDES+=$(wildcard external/spleen/*.h)
-INCLUDES+=$(wildcard external/stb/*.h)
-INCLUDES+=$(wildcard external/xmp-lite/*.h)
-INCLUDES+=$(wildcard external/noise/*.h)
-INCLUDES+=$(wildcard external/chipmunk/*.h)
-INCLUDES+=$(wildcard external/noise/*.h)
-INCLUDES+=$(wildcard external/chipmunk/*.h)
+INCLUDES+=$(wildcard external/dr_libs/*.h) \
+	$(wildcard external/gif-h/*.h) \
+	$(wildcard external/glad/*.h) \
+	$(wildcard external/GLFW/*.h) \
+	$(wildcard external/lua/*.h) \
+	$(wildcard external/miniaudio/*.h) \
+	$(wildcard external/spleen/*.h) \
+	$(wildcard external/stb/*.h) \
+	$(wildcard external/xmp-lite/*.h) \
+	$(wildcard external/noise/*.h) \
+	$(wildcard external/chipmunk/*.h) \
+	$(wildcard external/noise/*.h) \
+	$(wildcard external/chipmunk/*.h)
 #
-SCRIPTS:=$(wildcard src/assets/scripts/*.lua)
-SCRIPTS+=$(wildcard src/core/modules/*.lua)
+SCRIPTS:=$(wildcard src/assets/scripts/*.lua) \
+	$(wildcard src/modules/*.lua)
 #
 TEXTS:=$(wildcard src/assets/*.txt)
 #
 BEXTS:=$(wildcard src/assets/shaders/*.glsl)
 #
-PNGS:=$(wildcard src/assets/images/*.png)
-PNGS+=$(wildcard external/spleen/*.png)
+PNGS:=$(wildcard src/assets/images/*.png) \
+	$(wildcard external/spleen/*.png)
 # Output files
 OBJECTS:=$(SOURCES:%.c=%.o)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
