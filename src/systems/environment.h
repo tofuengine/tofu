@@ -56,6 +56,7 @@ extern Environment_t *Environment_create(int argc, const char *argv[], const Dis
 extern void Environment_destroy(Environment_t *environment);
 
 extern void Environment_quit(Environment_t *environment);
+extern void Environment_event(Environment_t *environment, const char *event);
 
 extern bool Environment_should_quit(const Environment_t *environment);
 

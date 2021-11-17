@@ -372,7 +372,8 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
 
 bool Interpreter_process(const Interpreter_t *interpreter, const char *events[])
 {
-    if (events && events[0]) { // Create an event table, or `nil` when non presents.
+//    if (events && events[0]) {
+    if (events[0]) { // Create an event table, or `nil` when non presents.
         lua_newtable(interpreter->state);
         for (size_t i = 0; events[i]; ++i) {
             lua_pushstring(interpreter->state, events[i]);

@@ -81,6 +81,11 @@ void Environment_quit(Environment_t *environment)
     environment->quit = true;
 }
 
+void Environment_event(Environment_t *environment, const char *event)
+{
+    arrins(environment->events, 0, event); // Always push on top to preserve the `NULL` trailer.
+}
+
 bool Environment_should_quit(const Environment_t *environment)
 {
     return environment->quit || Display_should_close(environment->display);
