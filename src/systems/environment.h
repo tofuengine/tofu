@@ -49,6 +49,7 @@ typedef struct Environment_s {
     bool quit;
     double time;
     Environment_Stats_t stats;
+    const char **events;
 } Environment_t;
 
 extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);

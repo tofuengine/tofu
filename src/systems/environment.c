@@ -57,7 +57,8 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
         .display = display,
         .quit = false,
         .time = 0.0,
-        .stats = { 0 }
+        .stats = { 0 },
+        .events = NULL
     };
 
     return environment;
@@ -67,6 +68,9 @@ void Environment_destroy(Environment_t *environment)
 {
     arrfree(environment->args);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "arguments freed");
+
+    arrfree(environment->events);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "events freed");
 
     free(environment);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
@@ -152,8 +156,15 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
+    arrsetlen(environment->events, 0);
+    arrpush(environment->events, NULL);
+
 #ifdef __DISPLAY_FOCUS_SUPPORT__
+    const bool was_active = environment->is_active;
     environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
+    if (was_active != environment->is_active) {
+        arrins(environment->events, 0, "on_focus_changed");
+    }
 #endif
 
 #ifdef __SYSTEM_HEAP_STATISTICS__

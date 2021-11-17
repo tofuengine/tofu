@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2021 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -254,7 +254,7 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 #endif
 }
 
-static int _call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
+static inline int _call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
 {
     int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {
@@ -269,7 +269,7 @@ static int _call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nres
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
 #ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
+    int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX); // Add the object instance to the arguments count.
     if (result != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -370,9 +370,18 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     return true;
 }
 
-bool Interpreter_process(const Interpreter_t *interpreter)
+bool Interpreter_process(const Interpreter_t *interpreter, const char *events[])
 {
-    return _call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
+    if (events && events[0]) { // Create an event table, or `nil` when non presents.
+        lua_newtable(interpreter->state);
+        for (size_t i = 0; events[i]; ++i) {
+            lua_pushstring(interpreter->state, events[i]);
+            lua_rawseti(interpreter->state, -2, i + 1);
+        }
+    } else {
+        lua_pushnil(interpreter->state);
+    }
+    return _call(interpreter->state, METHOD_PROCESS, 1, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
