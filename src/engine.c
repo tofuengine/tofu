@@ -284,14 +284,16 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
-static const char **_prepare_events(Engine_t *engine)
+static const char **_prepare_events(Engine_t *engine, const char **events) // TODO: move to lower-priority?
 {
-    const char **events = NULL;
+    arrsetlen(events, 0);
 
+#ifdef __DISPLAY_FOCUS_SUPPORT__
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
     if (environment_state->active.was != environment_state->active.is) {
-        arrpush(events, "on_focus_changed");
+        arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
     const Input_State_t *input_state = Input_get_state(engine->input);
     if (input_state->gamepad.delta > 0) {
@@ -303,6 +305,8 @@ static const char **_prepare_events(Engine_t *engine)
             arrpush(events, "on_gamepad_not_available");
         }
     }
+
+    arrpush(events, NULL);
 
     return events;
 }
@@ -339,6 +343,8 @@ void Engine_run(Engine_t *engine)
     double previous = glfwGetTime();
     float lag = 0.0f;
 
+    const char **events = NULL;
+
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Environment_should_quit(engine->environment); ) {
         const double current = glfwGetTime();
@@ -353,12 +359,9 @@ void Engine_run(Engine_t *engine)
 
         Input_process(engine->input);
 
-        const **events = _prepare_events(engine);
-        arrpush(events, NULL);
+        events = _prepare_events(engine, events);
 
         running = running && Interpreter_process(engine->interpreter, events); // Lazy evaluate `running`, will avoid calls when error.
-
-        arrfree(events);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
         const double process_marker = glfwGetTime();
@@ -421,4 +424,6 @@ void Engine_run(Engine_t *engine)
         deltas[3] = (float)(glfwGetTime() - current);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     }
+
+    arrfree(events);
 }
