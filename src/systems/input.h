@@ -144,23 +144,28 @@ typedef struct Input_Configuration_s {
 
 #define INPUT_MODES_COUNT   3
 
+typedef struct Input_State_s {
+    int mode;
+    struct {
+        int id; // TODO: add multiple gamepads
+        bool available[INPUT_GAMEPADS_COUNT];
+        size_t count;
+        int delta;
+    } gamepad;
+    double time;
+} Input_State_t;
+
 typedef struct Input_s {
     Input_Configuration_t configuration;
 
     GLFWwindow *window;
 
-    int mode;
-    struct {
-        bool state[INPUT_GAMEPADS_COUNT];
-        size_t count;
-        int id;
-    } gamepad;
     Input_Button_t buttons[Input_Buttons_t_CountOf];
     Input_Cursor_t cursor;
     Input_Stick_t sticks[Input_Sticks_t_CountOf];
     Input_Triggers_t triggers;
 
-    double time;
+    Input_State_t state;
 } Input_t;
 
 extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
@@ -169,12 +174,12 @@ extern void Input_destroy(Input_t *input);
 extern bool Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
+extern const Input_State_t *Input_get_state(const Input_t *input);
+
 extern void Input_set_cursor_position(Input_t *input, int x, int y);
 extern void Input_set_cursor_area(Input_t *input, int x, int y, size_t width, size_t height);
 extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
 extern void Input_set_mode(Input_t *input, int mode);
-
-//extern const size_t Input_has_gamepad(const Input_t *input);
 
 extern const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
 extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);

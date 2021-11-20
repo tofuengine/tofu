@@ -90,6 +90,11 @@ const Environment_State_t *Environment_get_state(const Environment_t *environmen
     return &environment->state;
 }
 
+const Environment_Stats_t *Environment_get_stats(const Environment_t *environment)
+{
+    return &environment->stats;
+}
+
 static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };

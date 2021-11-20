@@ -55,7 +55,7 @@ typedef struct Environment_s {
     const char **args;
     const Display_t *display;
     Environment_State_t state;
-    Environment_Stats_t stats;
+    Environment_Stats_t stats; // FIXME: move into the state!
 } Environment_t;
 
 extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
@@ -66,6 +66,7 @@ extern void Environment_quit(Environment_t *environment);
 extern bool Environment_should_quit(const Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
+extern const Environment_Stats_t *Environment_get_stats(const Environment_t *environment);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
