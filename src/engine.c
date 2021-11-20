@@ -284,6 +284,29 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
+static const char **_prepare_events(Engine_t *engine)
+{
+    const char **events = NULL;
+
+    const Environment_State_t *environment_state = Environment_get_state(engine->environment);
+    if (environment_state->active.was != environment_state->active.is) {
+        arrpush(events, "on_focus_changed");
+    }
+
+    const Input_State_t *input_state = Input_get_state(engine->input);
+    if (input_state->gamepad.delta > 0) {
+        arrpush(events, "on_gamepad_connected");
+    } else
+    if (input_state->gamepad.delta < 0) {
+        arrpush(events, "on_gamepad_disconnected");
+        if (input_state->gamepad.count == 0) {
+            arrpush(events, "on_gamepad_not_available");
+        }
+    }
+
+    return events;
+}
+
 void Engine_run(Engine_t *engine)
 {
     // Initialize the VM now that all the sub-systems are ready.
@@ -330,7 +353,12 @@ void Engine_run(Engine_t *engine)
 
         Input_process(engine->input);
 
-        running = running && Interpreter_process(engine->interpreter, engine->environment->events); // Lazy evaluate `running`, will avoid calls when error.
+        const **events = _prepare_events(engine);
+        arrpush(events, NULL);
+
+        running = running && Interpreter_process(engine->interpreter, events); // Lazy evaluate `running`, will avoid calls when error.
+
+        arrfree(events);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
         const double process_marker = glfwGetTime();
