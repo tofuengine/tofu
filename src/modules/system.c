@@ -52,9 +52,6 @@ static int system_stats_0_4nnnn(lua_State *L);
 #ifdef __SYSTEM_HEAP_STATISTICS__
 static int system_heap_1S_1n(lua_State *L);
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-static int system_is_active_0_1b(lua_State *L);
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 static int system_quit_0_0(lua_State *L);
 
 int system_loader(lua_State *L)
@@ -75,9 +72,6 @@ int system_loader(lua_State *L)
 #ifdef __SYSTEM_HEAP_STATISTICS__
             { "heap", system_heap_1S_1n },
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-            { "is_active", system_is_active_0_1b },
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
             { "quit", system_quit_0_0 },
             { NULL, NULL }
         },
@@ -156,7 +150,8 @@ static int system_time_0_1n(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushnumber(L, (lua_Number)Environment_get_time(environment));
+    const Environment_State_t *state = Environment_get_state(environment);
+    lua_pushnumber(L, (lua_Number)state->time);
 
     return 1;
 }
@@ -234,20 +229,6 @@ static int system_heap_1S_1n(lua_State *L)
     return 1;
 }
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
-
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-static int system_is_active_0_1b(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-    LUAX_SIGNATURE_END
-
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
-
-    lua_pushboolean(L, Environment_is_active(environment));
-
-    return 1;
-}
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
 static int system_quit_0_0(lua_State *L)
 {
