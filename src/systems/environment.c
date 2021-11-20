@@ -55,10 +55,12 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
     *environment = (Environment_t){
         .args = args,
         .display = display,
-        .quit = false,
-        .time = 0.0,
-        .stats = { 0 },
-        .events = NULL
+        .state = (Environment_State_t){
+            .active = { .is = false, .was = false },
+            .quit = false,
+            .time = 0.0
+        },
+        .stats = { 0 }
     };
 
     return environment;
@@ -69,44 +71,24 @@ void Environment_destroy(Environment_t *environment)
     arrfree(environment->args);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "arguments freed");
 
-    arrfree(environment->events);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "events freed");
-
     free(environment);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
 }
 
 void Environment_quit(Environment_t *environment)
 {
-    environment->quit = true;
-}
-
-void Environment_event(Environment_t *environment, const char *event)
-{
-    arrins(environment->events, 0, event); // Always push on top to preserve the `NULL` trailer.
+    environment->state.quit = true;
 }
 
 bool Environment_should_quit(const Environment_t *environment)
 {
-    return environment->quit || Display_should_close(environment->display);
+    return environment->state.quit || Display_should_close(environment->display);
 }
 
-double Environment_get_time(const Environment_t *environment)
+const Environment_State_t *Environment_get_state(const Environment_t *environment)
 {
-    return environment->time;
+    return &environment->state;
 }
-
-const Environment_Stats_t *Environment_get_stats(const Environment_t *environment)
-{
-    return &environment->stats;
-}
-
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-bool Environment_is_active(const Environment_t *environment)
-{
-    return environment->is_active;
-}
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
 static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
@@ -161,15 +143,9 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
-    arrsetlen(environment->events, 0);
-    arrpush(environment->events, NULL);
-
 #ifdef __DISPLAY_FOCUS_SUPPORT__
-    const bool was_active = environment->is_active;
-    environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
-    if (was_active != environment->is_active) {
-        arrins(environment->events, 0, "on_focus_changed");
-    }
+    environment->state.active.was = environment->state.active.is;
+    environment->state.active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
 
 #ifdef __SYSTEM_HEAP_STATISTICS__
@@ -196,6 +172,6 @@ void Environment_process(Environment_t *environment, float frame_time)
 
 bool Environment_update(Environment_t *environment, float frame_time)
 {
-    environment->time += frame_time;
+    environment->state.time += frame_time;
     return true;
 }
