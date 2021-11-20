@@ -57,10 +57,10 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
         .display = display,
         .state = (Environment_State_t){
             .active = { .is = false, .was = false },
+            .stats = { 0 },
             .quit = false,
             .time = 0.0
         },
-        .stats = { 0 }
     };
 
     return environment;
@@ -88,11 +88,6 @@ bool Environment_should_quit(const Environment_t *environment)
 const Environment_State_t *Environment_get_state(const Environment_t *environment)
 {
     return &environment->state;
-}
-
-const Environment_Stats_t *Environment_get_stats(const Environment_t *environment)
-{
-    return &environment->stats;
 }
 
 static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
@@ -133,25 +128,27 @@ void Environment_process(Environment_t *environment, float frame_time, const flo
 void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 {
-    environment->stats.fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
+    Environment_State_t *state = &environment->state;
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+    state->active.was = state->active.is;
+    state->active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
+#endif
+
+    Environment_Stats_t *stats = &state->stats;
+    stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
-    _calculate_times(environment->stats.times, deltas);
+    _calculate_times(stats->times, deltas);
 #ifdef __DEBUG_ENGINE_PERFORMANCES__
     static float stats_time = __ENGINE_PERFORMANCES_PERIOD__;
     stats_time += frame_time;
     while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
         stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
-            environment->stats.fps, environment->stats.times[0], environment->stats.times[1], environment->stats.times[2], environment->stats.times[3]);
+            stats->fps, stats->times[0], stats->times[1], stats->times[2], stats->times[3]);
     }
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-    environment->state.active.was = environment->state.active.is;
-    environment->state.active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
-#endif
 
 #ifdef __SYSTEM_HEAP_STATISTICS__
     static float heap_time = __SYSTEM_HEAP_PERIOD__;
@@ -162,14 +159,14 @@ void Environment_process(Environment_t *environment, float frame_time)
 #if PLATFORM_ID == PLATFORM_WINDOWS
         PROCESS_MEMORY_COUNTERS pmc = { 0 };
         GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-        environment->stats.memory_usage = pmc.WorkingSetSize;
+        stats->memory_usage = pmc.WorkingSetSize;
 #elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
         // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
         struct mallinfo2 mi = mallinfo2();
-        environment->stats.memory_usage = mi.uordblks;
+        stats->memory_usage = mi.uordblks;
 #else
         struct mallinfo mi = mallinfo();
-        environment->stats.memory_usage = mi.uordblks;
+        stats->memory_usage = mi.uordblks;
 #endif
     }
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
@@ -178,5 +175,6 @@ void Environment_process(Environment_t *environment, float frame_time)
 bool Environment_update(Environment_t *environment, float frame_time)
 {
     environment->state.time += frame_time;
+
     return true;
 }
