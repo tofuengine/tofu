@@ -58,7 +58,6 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
         .state = (Environment_State_t){
             .active = { .is = false, .was = false },
             .stats = { 0 },
-            .quit = false,
             .time = 0.0
         },
     };
@@ -73,16 +72,6 @@ void Environment_destroy(Environment_t *environment)
 
     free(environment);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
-}
-
-void Environment_quit(Environment_t *environment)
-{
-    environment->state.quit = true;
-}
-
-bool Environment_should_quit(const Environment_t *environment)
-{
-    return environment->state.quit || Display_should_close(environment->display);
 }
 
 const Environment_State_t *Environment_get_state(const Environment_t *environment)

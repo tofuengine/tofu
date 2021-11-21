@@ -48,7 +48,6 @@ typedef struct Environment_State_s {
     } active;
 #endif
     Environment_Stats_t stats;
-    bool quit;
     double time;
 } Environment_State_t;
 
@@ -60,10 +59,6 @@ typedef struct Environment_s {
 
 extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
 extern void Environment_destroy(Environment_t *environment);
-
-extern void Environment_quit(Environment_t *environment);
-
-extern bool Environment_should_quit(const Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 

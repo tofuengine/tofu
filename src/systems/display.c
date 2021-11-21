@@ -538,6 +538,11 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
 }
 
+void Display_close(Display_t *display)
+{
+    glfwSetWindowShouldClose(display->window, true);
+}
+
 bool Display_should_close(const Display_t *display)
 {
     return glfwWindowShouldClose(display->window);
