@@ -40,15 +40,22 @@ typedef struct Environment_Stats_s {
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
 } Environment_Stats_t;
 
+typedef struct Environment_State_s {
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+    struct {
+        bool is;
+        bool was;
+    } active;
+#endif
+    Environment_Stats_t stats;
+    bool quit;
+    double time;
+} Environment_State_t;
+
 typedef struct Environment_s {
     const char **args;
     const Display_t *display;
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-    bool is_active;
-#endif
-    bool quit;
-    double time;
-    Environment_Stats_t stats;
+    Environment_State_t state;
 } Environment_t;
 
 extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
@@ -58,11 +65,7 @@ extern void Environment_quit(Environment_t *environment);
 
 extern bool Environment_should_quit(const Environment_t *environment);
 
-extern double Environment_get_time(const Environment_t *environment);
-extern const Environment_Stats_t *Environment_get_stats(const Environment_t *environment);
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-extern bool Environment_is_active(const Environment_t *environment);
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
+extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);

@@ -33,8 +33,8 @@ function Tofu:__ctor()
   self.main = Main.new()
 end
 
-function Tofu:process()
-  self.main:process()
+function Tofu:process(events)
+  self.main:process(events)
 end
 
 function Tofu:update(delta_time)

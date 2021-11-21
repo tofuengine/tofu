@@ -53,8 +53,8 @@ function Tofu:__ctor()
           canvas:reset() -- Reset default canvas from the game state.
           me.main = nil
         end,
-      process = function(me)
-          me.main:process()
+      process = function(me, events)
+          me.main:process(events)
         end,
       update = function(me, delta_time)
           Pool.default():update(delta_time)
@@ -106,7 +106,7 @@ function Tofu:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      process = function(_)
+      process = function(_, _)
           if Input.is_pressed("start") then
             System.quit()
           end
@@ -128,11 +128,11 @@ function Tofu:__ctor()
   self:switch_to("normal")
 end
 
-function Tofu:process()
+function Tofu:process(events)
   self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
 
   local me = self.state
-  self:call(me.process, me)
+  self:call(me.process, me, events)
 end
 
 function Tofu:update(delta_time)
