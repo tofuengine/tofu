@@ -42,6 +42,7 @@ typedef struct Configuration_s {
         bool debug;
         char icon[MAX_VALUE_LENGTH];
         char mappings[MAX_VALUE_LENGTH];
+        bool quit_on_close;
     } system;
     struct {
         char title[MAX_VALUE_LENGTH];
@@ -57,7 +58,7 @@ typedef struct Configuration_s {
     } audio;
     struct {
         bool enabled;
-        bool exit_key;
+        bool exit_key; // TODO: enum type with disabled/notify/autoclose?
     } keyboard;
     struct {
         bool enabled;

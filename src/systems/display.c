@@ -133,7 +133,7 @@ static void _error_callback(int error, const char *description)
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", description);
 }
 
-static void _size_callback(GLFWwindow* window, int width, int height)
+static void _size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "viewport size set to %dx%d", width, height);
@@ -162,6 +162,15 @@ static void _size_callback(GLFWwindow* window, int width, int height)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling OpenGL debug");
 #endif
+}
+
+static void _close_callback(GLFWwindow *window)
+{
+    const Display_Configuration_t *configuration = (const Display_Configuration_t *)glfwGetWindowUserPointer(window);
+
+    // The close flag has been set before this callback is called, so we can override it.
+    glfwSetWindowShouldClose(window, configuration->quit_on_close ? GLFW_TRUE : GLFW_FALSE);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "closing flag set to `%s`", configuration->quit_on_close ? "true" : "false");
 }
 
 static bool _compute_size(size_t width, size_t height, size_t scale, bool fullscreen, GL_Rectangle_t *present_area, GL_Rectangle_t *window_area, GL_Size_t *canvas_size)
@@ -248,6 +257,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
+    // TODO: add control for the minize/button controls, what is a auto-iconify and floating window?
 
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window) {
@@ -266,7 +276,9 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLAD initialized");
 
+    glfwSetWindowUserPointer(window, (void *)configuration);
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
+    glfwSetWindowCloseCallback(window, _close_callback); // Overide close button, according to configuration.
 
     if (configuration->icon.pixels) {
         glfwSetWindowIcon(window, 1, &configuration->icon);
@@ -354,7 +366,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(configuration, &display->vram.rectangle, &display->canvas.size);
+    display->window = _window_initialize(&display->configuration, &display->vram.rectangle, &display->canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);

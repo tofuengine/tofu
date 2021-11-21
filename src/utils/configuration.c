@@ -76,6 +76,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "system-mappings") == 0) {
         strncpy(configuration->system.mappings, value, MAX_VALUE_LENGTH - 1);
     } else
+    if (strcmp(fqn, "system-quit-on-close") == 0) {
+        configuration->system.quit_on_close = strcmp(value, "true") == 0;
+    } else
     if (strcmp(fqn, "display-title") == 0) {
         strncpy(configuration->display.title, value, MAX_VALUE_LENGTH - 1);
     } else
@@ -269,7 +272,8 @@ Configuration_t *Configuration_create(const char *data)
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
                 .debug = true,
                 .icon = "icon.png",
-                .mappings = "gamecontrollerdb.txt"
+                .mappings = "gamecontrollerdb.txt",
+                .quit_on_close = true
             },
             .display = {
                 .title = ".: Tofu Engine :.",
