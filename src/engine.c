@@ -37,6 +37,8 @@
 
 #include "utils/options.h"
 
+#define EVENTS_INITIAL_CAPACITY 8
+
 #define LOG_CONTEXT "engine"
 
 static inline void _wait_for(float seconds)
@@ -345,9 +347,10 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
 
     const char **events = NULL;
+    arrsetcap(events, EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-    for (bool running = true; running && !Environment_should_quit(engine->environment); ) {
+    for (bool running = true; running && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
         const float elapsed = (float)(current - previous);
         previous = current;
