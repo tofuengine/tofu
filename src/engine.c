@@ -301,11 +301,14 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
     const Input_State_t *input_state = Input_get_state(engine->input);
     if (input_state->gamepad.delta > 0) {
         arrpush(events, "on_gamepad_connected");
+        if (input_state->gamepad.count == 1) {
+            arrpush(events, "on_gamepad_available");
+        }
     } else
     if (input_state->gamepad.delta < 0) {
         arrpush(events, "on_gamepad_disconnected");
         if (input_state->gamepad.count == 0) {
-            arrpush(events, "on_gamepad_not_available");
+            arrpush(events, "on_gamepad_unavailable");
         }
     }
 
