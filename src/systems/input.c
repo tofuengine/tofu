@@ -333,6 +333,9 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
             }
         };
 
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->cursor.hide ? "hiding" : "showing");
+    glfwSetInputMode(window, GLFW_CURSOR, configuration->cursor.hide ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
     _gamepad_detect(input);
     if (input->state.gamepad.count == 0) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");

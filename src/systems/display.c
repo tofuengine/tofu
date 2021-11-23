@@ -257,7 +257,6 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
-    // TODO: add control for the minize/button controls, what is a auto-iconify and floating window?
 
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window) {
@@ -277,6 +276,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLAD initialized");
 
     glfwSetWindowUserPointer(window, (void *)configuration);
+    // glfwSetWindowFocusCallback(window, window_focus_callback)
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
     glfwSetWindowCloseCallback(window, _close_callback); // Overide close button, according to configuration.
 
@@ -285,9 +285,6 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     } else {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "icon is missing");
     }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
-    glfwSetInputMode(window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
