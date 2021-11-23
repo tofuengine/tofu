@@ -166,7 +166,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
             },
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
-            .hide_cursor = engine->configuration->cursor.hide,
             .quit_on_close = engine->configuration->system.quit_on_close,
             .palette = engine->configuration->display.palette,
             .effect = effect ? S_SCHARS(effect) : NULL
@@ -189,6 +188,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
             },
             .cursor = {
                 .enabled = engine->configuration->cursor.enabled,
+                .hide = engine->configuration->cursor.hide,
                 .speed = engine->configuration->cursor.speed,
                 .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
             },
