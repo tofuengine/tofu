@@ -333,6 +333,9 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
             }
         };
 
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling sticky-keys input mode");
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->cursor.hide ? "hiding" : "showing");
     glfwSetInputMode(window, GLFW_CURSOR, configuration->cursor.hide ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
