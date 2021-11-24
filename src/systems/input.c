@@ -328,8 +328,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
                     .available = { 0 },
                     .count = 0,
                     .delta = 0
-                },
-                .time = 0.0
+                }
             }
         };
 
@@ -420,8 +419,6 @@ static void _cursor_update(Input_t *input, float delta_time)
 bool Input_update(Input_t *input, float delta_time)
 {
     Input_State_t *state = &input->state;
-
-    state->time += delta_time;
 
     _gamepad_update(input, delta_time);
     _buttons_update(input, delta_time);

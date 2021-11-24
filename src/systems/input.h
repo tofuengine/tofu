@@ -152,7 +152,6 @@ typedef struct Input_State_s {
         size_t count;
         int delta;
     } gamepad;
-    double time;
 } Input_State_t;
 
 typedef struct Input_s {
