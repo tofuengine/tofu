@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Pool = require("tofu.timers").Pool
+local Class = require("tofu.core.class")
+local Pool = require("tofu.timers.pool")
 
 local Main = require("main")
 
