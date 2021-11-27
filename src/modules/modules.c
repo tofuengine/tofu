@@ -84,19 +84,6 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-static int _create_module(lua_State *L, const luaL_Reg *classes)
-{
-    lua_newtable(L);
-    for (const luaL_Reg *class = classes; class->func; ++class) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initializing class `%s`", class->name);
-        if (class->func(L) != 1) {
-            return luaL_error(L, "can't initialize class `%s`", class->name);
-        }
-        lua_setfield(L, -2, class->name);
-    }
-    return 1;
-}
-
 static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
 {
 #ifdef INSIST
@@ -117,99 +104,35 @@ static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
 #endif
 }
 
-static int core_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Class", class_loader },
-            { "Log", log_loader },
-            { "Math", math_loader },
-            { "System", system_loader },
-            { NULL, NULL }
-        });
-}
-
-static int events_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Input", input_loader },
-            { NULL, NULL }
-        });
-}
-
-static int generators_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Noise", noise_loader },
-            { "Tweener", tweener_loader },
-            { "Wave", wave_loader },
-            { NULL, NULL }
-        });
-}
-
-static int graphics_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Bank", bank_loader },
-            { "Batch", batch_loader },
-            { "Canvas", canvas_loader },
-            { "Display", display_loader },
-            { "Font", font_loader },
-            { "Palette", palette_loader },
-            { "Program", program_loader },
-            { "XForm", xform_loader },
-            { NULL, NULL }
-        });
-}
-
-static int io_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "File", file_loader },
-            { NULL, NULL }
-        });
-}
-
-static int physics_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Body", body_loader },
-            { "World", world_loader },
-            { NULL, NULL }
-        });
-}
-
-static int sound_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Source", source_loader },
-            { "Speakers", speakers_loader }, // FIXME: find a better name.
-            { NULL, NULL }
-        });
-}
-
-static int util_loader(lua_State *L)
-{
-    return _create_module(L, (const luaL_Reg[]){
-            { "Arrays", arrays_loader },
-            { "Grid", grid_loader },
-            { "Iterators", iterators_loader },
-            { "Vector", vector_loader },
-            { NULL, NULL }
-        });
-}
-
 void modules_initialize(lua_State *L, int nup)
 {
     _preload_modules(L, nup, (const luaL_Reg[]){
-            { "tofu.core", core_loader }, // TODO: core should be loaded for first?
-            { "tofu.events", events_loader },
-            { "tofu.generators", generators_loader },
-            { "tofu.graphics", graphics_loader },
-            { "tofu.io", io_loader },
-            { "tofu.physics", physics_loader },
-            { "tofu.sound", sound_loader },
-            { "tofu.timers", timers_loader },
-            { "tofu.util", util_loader },
+            //{ "tofu.core.class", class_loader }, // TODO: core should be loaded for first?
+            { "tofu.core.log", log_loader },
+            { "tofu.core.math", math_loader },
+            { "tofu.core.system", system_loader },
+            { "tofu.events.input", input_loader },
+            { "tofu.events.timer", timers_loader },
+            { "tofu.generators.noise", noise_loader },
+            { "tofu.generators.tweener", tweener_loader },
+            { "tofu.generators.wave", wave_loader },
+            { "tofu.graphics.bank", bank_loader },
+            { "tofu.graphics.batch", batch_loader },
+            { "tofu.graphics.canvas", canvas_loader },
+            { "tofu.graphics.display", display_loader },
+            { "tofu.graphics.font", font_loader },
+            { "tofu.graphics.palette", palette_loader },
+            { "tofu.graphics.program", program_loader },
+            { "tofu.graphics.xform", xform_loader },
+            { "tofu.io.file", file_loader },
+            { "tofu.physics.body", body_loader },
+            { "tofu.physics.world", world_loader },
+            { "tofu.sound.source", source_loader },
+            { "tofu.sound.speakers", speakers_loader }, // FIXME: find a better name.
+            //{ "tofu.util.arrays", arrays_loader },
+            { "tofu.util.grid", grid_loader },
+            //{ "tofu.util.iterators", iterators_loader },
+            //{ "tofu.util.vector", vector_loader },
             { NULL, NULL }
         });
 }
