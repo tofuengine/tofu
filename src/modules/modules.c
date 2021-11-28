@@ -53,18 +53,15 @@
 #include <libs/luax.h>
 
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
-#include "arrays.h"
 #include "bank.h"
 #include "batch.h"
 #include "body.h"
 #include "canvas.h"
-#include "class.h"
 #include "display.h"
 #include "file.h"
 #include "font.h"
 #include "grid.h"
 #include "input.h"
-#include "iterators.h"
 #include "log.h"
 #include "math.h"
 #include "noise.h"
@@ -73,9 +70,7 @@
 #include "source.h"
 #include "speakers.h"
 #include "system.h"
-#include "timers.h"
 #include "tweener.h"
-#include "vector.h"
 #include "wave.h"
 #include "world.h"
 #include "xform.h"
@@ -112,7 +107,6 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },
             { "tofu.events.input", input_loader },
-            { "tofu.events.timer", timers_loader },
             { "tofu.generators.noise", noise_loader },
             { "tofu.generators.tweener", tweener_loader },
             { "tofu.generators.wave", wave_loader },
