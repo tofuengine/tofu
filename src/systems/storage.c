@@ -28,8 +28,6 @@
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-#include <resources/blobs.h>
-#include <resources/images.h>
 #include <resources/decoder.h>
 
 #include <stdint.h>
@@ -328,73 +326,6 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return loaded;
 }
 
-static bool _resource_fetch(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
-{
-    if (type == STORAGE_RESOURCE_STRING) {
-        const Blob_t *blob = resources_blobs_find(name);
-        if (!blob) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as string", name);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_STRING,
-                .var = {
-                    .string = {
-                        .chars = (char *)blob->ptr,
-                        .length = blob->size
-                    }
-                },
-                .age = 0.0,
-                .allocated = false
-            };
-    } else
-    if (type == STORAGE_RESOURCE_BLOB) {
-        const Blob_t *blob = resources_blobs_find(name);
-        if (!blob) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as blob", name);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_BLOB,
-                .var = {
-                    .blob = {
-                        .ptr = (void *)blob->ptr,
-                        .size = blob->size
-                    }
-                },
-                .age = 0.0,
-                .allocated = false
-            };
-    } else
-    if (type == STORAGE_RESOURCE_IMAGE) {
-        const Image_t *image = resources_images_find(name);
-        if (!image) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as image", name);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_IMAGE,
-                .var = {
-                    .image = {
-                        .width = image->width,
-                        .height = image->height,
-                        .pixels = (void *)image->pixels
-                    }
-                },
-                .age = 0.0,
-                .allocated = false
-            };
-    }
-
-    return true;
-}
-
 static bool _resource_decode(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
 {
     if (!decoder_is_valid(name)) {
@@ -493,9 +424,6 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     if (_resource_load(resource, name, type, storage->context)) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
-    } else
-    if (_resource_fetch(resource, name, type)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` fetched from bundle", name);
     } else
     if (_resource_decode(resource, name, type)) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` decoded", name);

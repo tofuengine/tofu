@@ -106,9 +106,6 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "display-vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "display-palette") == 0) {
-        strncpy(configuration->display.palette, value, MAX_VALUE_LENGTH - 1);
-    } else
     if (strcmp(fqn, "display-effect") == 0) {
         strncpy(configuration->display.effect, value, MAX_VALUE_LENGTH - 1);
     } else
@@ -282,7 +279,6 @@ Configuration_t *Configuration_create(const char *data)
                 .scale = 0,
                 .fullscreen = false,
                 .vertical_sync = false,
-                .palette = "famicube",
                 .effect = "effect.glsl"
             },
             .audio = {
