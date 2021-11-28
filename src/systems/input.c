@@ -418,8 +418,6 @@ static void _cursor_update(Input_t *input, float delta_time)
 
 bool Input_update(Input_t *input, float delta_time)
 {
-    Input_State_t *state = &input->state;
-
     _gamepad_update(input, delta_time);
     _buttons_update(input, delta_time);
     _cursor_update(input, delta_time);

@@ -26,7 +26,7 @@ local Palette = {}
 
 local _palettes = require("resources/scripts/palettes")
 
-function Palette.predefined(id)
+function Palette.default(id)
   return Palette.new(_palettes[id])
 end
 

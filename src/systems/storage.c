@@ -74,6 +74,22 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
 
+    // FIXME: move to a separate function.
+    char executable_path[PATH_MAX];
+    path_split(configuration->executable, executable_path, NULL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "executable path is `%s`", executable_path);
+
+    char kernal_path[PLATFORM_PATH_MAX] = { 0 };
+    path_join(kernal_path, executable_path, "kernal.pak");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal path is `%s`", kernal_path);
+
+    bool attached = FS_attach(storage->context, kernal_path);
+    if (!attached) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach `%s`", kernal_path);
+        free(storage);
+        return NULL;
+    }
+
     return storage;
 }
 

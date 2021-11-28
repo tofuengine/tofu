@@ -129,6 +129,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     _information();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
+            .executable = argv[0],
             .path = options.path
         });
     if (!engine->storage) {
@@ -167,7 +168,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
             .quit_on_close = engine->configuration->system.quit_on_close,
-            .palette = engine->configuration->display.palette,
             .effect = effect ? S_SCHARS(effect) : NULL
         });
     if (!engine->display) {
