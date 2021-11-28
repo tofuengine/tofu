@@ -29,7 +29,6 @@
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>
-#include <resources/palettes.h>
 
 #include <time.h>
 
@@ -408,16 +407,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p created", display->canvas.copperlist);
 
-    const Palette_t *palette = resources_palettes_find(configuration->palette);
-    if (!palette) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown palette `%s`, defaulting to greyscale");
-        GL_palette_set_greyscale(display->canvas.palette, GL_MAX_PALETTE_COLORS);
-    } else {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "loading palette `%s`", configuration->palette);
-        GL_palette_set_colors(display->canvas.palette, palette->colors, palette->size);
-    }
-    Display_set_palette(display, display->canvas.palette);
-
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
@@ -497,6 +486,28 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
+
+    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
+#ifdef __DISPLAY_DEFAULT_QUANTIZED_PALETTE__
+  #if GL_MAX_PALETTE_COLORS == 256
+    GL_palette_set_quantized(display->canvas.palette, 3, 3, 2);
+  #elif GL_MAX_PALETTE_COLORS == 128
+    GL_palette_set_quantized(display->canvas.palette, 2, 3, 2);
+  #elif GL_MAX_PALETTE_COLORS == 64
+    GL_palette_set_quantized(display->canvas.palette, 2, 2, 2);
+  #elif GL_MAX_PALETTE_COLORS == 32
+    GL_palette_set_quantized(display->canvas.palette, 2, 2, 1);
+  #elif GL_MAX_PALETTE_COLORS == 16
+    GL_palette_set_quantized(display->canvas.palette, 1, 2, 1);
+  #elif GL_MAX_PALETTE_COLORS == 8
+    GL_palette_set_quantized(display->canvas.palette, 1, 1, 1);
+  #else
+    #error "Too few palette entries!"
+  #endif
+#else
+    GL_palette_set_greyscale(display->canvas.palette, GL_MAX_PALETTE_COLORS);
+#endif
+    Display_set_palette(display, display->canvas.palette);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
