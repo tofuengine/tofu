@@ -4,5 +4,6 @@ external/**/*.inc
 external/**/*.o
 src/**/*.inc
 src/**/*.o
+*.pak
 tofu
 tofu*.exe

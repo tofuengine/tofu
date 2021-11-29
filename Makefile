@@ -175,8 +175,8 @@ default: engine
 all: default
 
 $(KERNAL): $(RESOURCES) Makefile
-	@find ./src/kernal/runtime -name '*.lua' | xargs $(ANALYZER) $(AFLAGS)
-	@lua5.3 ./extras/pakgen.lua --input=./src/kernal/runtime --input=./src/kernal/resources --output=./$(KERNAL) --encrypted
+	@find ./src/kernal -name '*.lua' | xargs $(ANALYZER) $(AFLAGS)
+	@lua5.3 ./extras/pakgen.lua --input=./src/kernal --output=./$(KERNAL) --encrypted
 
 $(TARGET): $(OBJECTS) Makefile
 	@$(LINKER) $(OBJECTS) $(LWARNINGS) $(LFLAGS) $(LOPTS) -o $@

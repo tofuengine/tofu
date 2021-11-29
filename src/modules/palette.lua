@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Palette = {}
 
-local _palettes = require("lua/palettes")
+local _palettes = require("assets/lua/palettes")
 
 function Palette.default(id)
   return Palette.new(_palettes[id])
