@@ -22,12 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Palette = {}
+local System = require("tofu.core.system")
 
-local _palettes = require("lua/palettes")
-
-function Palette.default(id)
-  return Palette.new(_palettes[id])
-end
-
-return Palette
+return require(System.is("debug") and "boot-debug" or "boot-release")

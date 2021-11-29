@@ -46,6 +46,7 @@ static int system_clock_0_1n(lua_State *L);
 static int system_time_0_1n(lua_State *L);
 static int system_date_2SS_1s(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
+static int system_is_1s_1b(lua_State *L);
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_stats_0_4nnnn(lua_State *L);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
@@ -66,6 +67,7 @@ int system_loader(lua_State *L)
             { "time", system_time_0_1n },
             { "date", system_date_2SS_1s },
             { "fps", system_fps_0_1n },
+            { "is", system_is_1s_1b },
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
             { "stats", system_stats_0_4nnnn },
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
@@ -186,6 +188,33 @@ static int system_fps_0_1n(lua_State *L)
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
     lua_pushinteger(L, (lua_Integer)stats->fps);
+
+    return 1;
+}
+
+static int system_is_1s_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *flag = LUAX_STRING(L, 1);
+
+    if (strcasecmp(flag, "debug") == 0) {
+#ifdef DEBUG
+        lua_pushboolean(L, true);
+#else
+        lua_pushboolean(L, false);
+#endif
+    } else
+    if (strcasecmp(flag, "release") == 0) {
+#ifdef NDEBUG
+        lua_pushboolean(L, true);
+#else
+        lua_pushboolean(L, false);
+#endif
+    } else {
+        lua_pushnil(L);
+    }
 
     return 1;
 }

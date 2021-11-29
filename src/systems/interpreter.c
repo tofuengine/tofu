@@ -59,13 +59,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define READER_CONTEXT_BUFFER_SIZE  __VM_READER_BUFFER_SIZE__
 #endif
 
-static const char _boot_lua[] = {
-#ifdef DEBUG
-  #include <assets/scripts/boot-debug.inc>
-#else
-  #include <assets/scripts/boot-release.inc>
-#endif
-};
+static const char *_boot_lua = "return require(\"boot\")\0";
 
 typedef enum Entry_Point_Methods_e {
     METHOD_PROCESS,
@@ -354,7 +348,7 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     }
     modules_initialize(interpreter->state, nup);
 
-    int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
+    int result = _execute(interpreter->state, _boot_lua, strlen(_boot_lua) / sizeof(char), "@kickstart.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != LUA_OK) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         return false;

@@ -102,7 +102,6 @@ static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
 void modules_initialize(lua_State *L, int nup)
 {
     _preload_modules(L, nup, (const luaL_Reg[]){
-            //{ "tofu.core.class", class_loader }, // TODO: core should be loaded for first?
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },
@@ -123,10 +122,7 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.physics.world", world_loader },
             { "tofu.sound.source", source_loader },
             { "tofu.sound.speakers", speakers_loader }, // FIXME: find a better name.
-            //{ "tofu.util.arrays", arrays_loader },
             { "tofu.util.grid", grid_loader },
-            //{ "tofu.util.iterators", iterators_loader },
-            //{ "tofu.util.vector", vector_loader },
             { NULL, NULL }
         });
 }

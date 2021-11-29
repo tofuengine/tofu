@@ -268,8 +268,8 @@ Configuration_t *Configuration_create(const char *data)
                 .identity = { 0 },
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
                 .debug = true,
-                .icon = "icon.png",
-                .mappings = "gamecontrollerdb.txt",
+                .icon = "png/icon.png",
+                .mappings = "txt/gamecontrollerdb.txt",
                 .quit_on_close = true
             },
             .display = {
@@ -279,7 +279,7 @@ Configuration_t *Configuration_create(const char *data)
                 .scale = 0,
                 .fullscreen = false,
                 .vertical_sync = false,
-                .effect = "effect.glsl"
+                .effect = "glsl/effect.glsl"
             },
             .audio = {
                 .device_index = -1, // Pick the default device.
