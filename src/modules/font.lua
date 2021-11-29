@@ -28,12 +28,12 @@ local Font = {}
 -- Font.__index = Font
 
 local FONTS <const> = {
-    ["5x8"] = { file = "png/spleen-5x8.png", width = 5, height = 8 },
-    ["6x12"] = { file = "png/spleen-6x12.png", width = 6, height = 12 },
-    ["8x16"] = { file = "png/spleen-8x16.png", width = 8, height = 16 },
-    ["12x24"] = { file = "png/spleen-12x24.png", width = 12, height = 24 },
-    ["16x32"] = { file = "png/spleen-16x32.png", width = 16, height = 32 },
-    ["32x64"] = { file = "png/spleen-32x64.png", width = 32, height = 64 },
+    ["5x8"] = { file = "assets/png/spleen-5x8.png", width = 5, height = 8 },
+    ["6x12"] = { file = "assets/png/spleen-6x12.png", width = 6, height = 12 },
+    ["8x16"] = { file = "assets/png/spleen-8x16.png", width = 8, height = 16 },
+    ["12x24"] = { file = "assets/png/spleen-12x24.png", width = 12, height = 24 },
+    ["16x32"] = { file = "assets/png/spleen-16x32.png", width = 16, height = 32 },
+    ["32x64"] = { file = "assets/png/spleen-32x64.png", width = 32, height = 64 },
   }
 
 function Font.default(...)
