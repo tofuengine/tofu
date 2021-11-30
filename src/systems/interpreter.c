@@ -34,6 +34,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <libs/stb.h>
 #include <modules/modules.h>
 
@@ -171,14 +172,8 @@ static int _searcher(lua_State *L)
 
     const char *name = lua_tostring(L, 1);
 
-    char path[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
-    strcat(path, name);
-    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
-        if (*ptr == '.') {
-            *ptr = FS_PATH_SEPARATOR;
-        }
-    }
-    strcat(path, ".lua");
+    char path[PLATFORM_PATH_MAX] = { 0 };
+    path_lua_to_fs(path, name);
 
     FS_Handle_t *handle = Storage_open(storage, path + 1); // Don't waste storage cache! The module will be cached by Lua!
     if (!handle) {

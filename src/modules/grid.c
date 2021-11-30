@@ -27,15 +27,15 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/luax.h>
+#include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/interpreter.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "grid"
+#define MODULE_NAME "tofu.util.grid"
 #define META_TABLE  "Tofu_Util_Grid_mt"
-#define SCRIPT_PATH "tofu/util/grid.lua"
-#define SCRIPT_NAME "@grid.lua"
 
 static int grid_new_3nnT_1o(lua_State *L);
 static int grid_gc_1o_0(lua_State *L);
@@ -49,14 +49,17 @@ static int grid_process_2of_0(lua_State *L);
 
 int grid_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
 
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
             .data = S_SCHARS(script),
             .size = S_SLENTGH(script),
-            .name = SCRIPT_NAME
+            .name = file
         },
         (const struct luaL_Reg[]){
             { "new", grid_new_3nnT_1o },

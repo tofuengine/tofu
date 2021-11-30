@@ -28,14 +28,14 @@
 #include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/luax.h>
+#include <libs/path.h>
 #include <systems/storage.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "font"
+#define MODULE_NAME "tofu.graphics.font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
-#define SCRIPT_PATH "tofu/graphics/font.lua"
-#define SCRIPT_NAME "@font.lua"
 
 static int font_new_v_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
@@ -44,14 +44,17 @@ static int font_blit_v_2nn(lua_State *L);
 
 int font_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
 
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
             .data = S_SCHARS(script),
             .size = S_SLENTGH(script),
-            .name = SCRIPT_NAME
+            .name = file
         },
         (const struct luaL_Reg[]){
             { "new", font_new_v_1o },

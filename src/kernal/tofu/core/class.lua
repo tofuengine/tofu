@@ -24,10 +24,10 @@ SOFTWARE.
 
 local Class = {}
 
-function Class.define()ss
+function Class.define()
   local proto = {}
   proto.__index = proto
-  proto.new = function(...)sss
+  proto.new = function(...)
       local self = setmetatable({}, proto)
       if self.__ctor then
         self:__ctor(...)

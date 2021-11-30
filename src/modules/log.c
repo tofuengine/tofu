@@ -27,13 +27,13 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/luax.h>
+#include <libs/path.h>
 #include <systems/storage.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "log"
-#define SCRIPT_PATH "tofu/core/log.lua"
-#define SCRIPT_NAME "@log.lua"
+#define MODULE_NAME "tofu.core.log"
 
 static int log_info_v_0(lua_State *L);
 static int log_warning_v_0(lua_State *L);
@@ -42,14 +42,17 @@ static int log_fatal_v_0(lua_State *L);
 
 int log_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
 
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
             .data = S_SCHARS(script),
             .size = S_SLENTGH(script),
-            .name = SCRIPT_NAME
+            .name = file
         },
         (const struct luaL_Reg[]){
             { "info", log_info_v_0 },
