@@ -60,7 +60,12 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define READER_CONTEXT_BUFFER_SIZE  __VM_READER_BUFFER_SIZE__
 #endif
 
-//static const char *_boot_lua = "return require(\"boot\")\0";
+#ifdef DEBUG
+  #define BOOT_SCRIPT "boot-debug"
+#else
+  #define BOOT_SCRIPT "boot-release"
+#endif
+static const char *_kickstart_lua = "return require(\"" BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
     METHOD_PROCESS,
@@ -327,13 +332,8 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     }
     modules_initialize(interpreter->state, nup);
 
-    lua_getglobal(interpreter->state, "require"); // Load the proper boot script, according to build type.
-#ifdef DEBUG
-    lua_pushstring(interpreter->state, "boot-debug");
-#else
-    lua_pushstring(interpreter->state, "boot-release");
-#endif
-    int result = _raw_call(interpreter->state, 1, 1);
+    luaL_loadstring(interpreter->state, _kickstart_lua);
+    int result = _raw_call(interpreter->state, 0, 1);
     if (result != LUA_OK) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load boot script");
         return false;
