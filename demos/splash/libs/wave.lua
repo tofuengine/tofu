@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local Tweener = require("tofu.generators").Tweener
-local Canvas = require("tofu.graphics").Canvas
-local Timer = require("tofu.timers").Timer
+local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
+local Tweener = require("tofu.generators.tweener")
+local Canvas = require("tofu.graphics.canvas")
+local Timer = require("tofu.timers.timer")
 
-local Oscillator = require("libs/oscillator")
+local Oscillator = require("libs.oscillator")
 
 local Wave = Class.define()
 

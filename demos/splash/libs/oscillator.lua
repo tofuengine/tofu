@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Wave = require("tofu.generators").Wave
+local Class = require("tofu.core.class")
+local Wave = require("tofu.generators.wave")
 
 local Oscillator = Class.define()
 

@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
 
 local Logo = Class.define()
 
