@@ -424,6 +424,5 @@ bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
-    int result = _raw_call(interpreter->state, nargs, nresults);
-    return result == LUA_OK ? true : false;
+    return _raw_call(interpreter->state, nargs, nresults) == LUA_OK;
 }
