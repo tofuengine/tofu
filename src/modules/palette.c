@@ -27,11 +27,13 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/luax.h>
+#include <systems/storage.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "palette"
 #define META_TABLE  "Tofu_Graphics_Palette_mt"
+#define SCRIPT_PATH "tofu/graphics/palette.lua"
 #define SCRIPT_NAME "@palette.lua"
 
 static int palette_new_v_1o(lua_State *L);
@@ -45,16 +47,15 @@ static int palette_match_4onnn_1n(lua_State *L);
 static int palette_lerp_5onnnN_0(lua_State *L);
 static int palette_merge_3ooB_0(lua_State *L);
 
-static const char _palette_lua[] = {
-#include "palette.inc"
-};
-
 int palette_loader(lua_State *L)
 {
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .data = _palette_lua,
-            .size = sizeof(_palette_lua) / sizeof(char),
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){

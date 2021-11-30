@@ -37,7 +37,9 @@
 
 #define LOG_CONTEXT "canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
+#define SCRIPT_PATH "tofu/graphics/canvas.lua"
 #define SCRIPT_NAME "@canvas.lua"
+// FIXME: collapse meta and script name?
 
 #define CANVAS_DEFAULT_BACKGROUND   0
 #define CANVAS_DEFAULT_FOREGROUND   1
@@ -78,16 +80,15 @@ static int canvas_blend_v_0(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
 
-static const char _canvas_lua[] = {
-#include "canvas.inc"
-};
-
 int canvas_loader(lua_State *L)
 {
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .data = _canvas_lua,
-            .size = sizeof(_canvas_lua) / sizeof(char),
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){

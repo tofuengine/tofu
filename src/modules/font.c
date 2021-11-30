@@ -34,6 +34,7 @@
 
 #define LOG_CONTEXT "font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
+#define SCRIPT_PATH "tofu/graphics/font.lua"
 #define SCRIPT_NAME "@font.lua"
 
 static int font_new_v_1o(lua_State *L);
@@ -41,16 +42,15 @@ static int font_gc_1o_0(lua_State *L);
 static int font_size_4osNN_2n(lua_State *L);
 static int font_blit_v_2nn(lua_State *L);
 
-static const char _font_lua[] = {
-#include "font.inc"
-};
-
 int font_loader(lua_State *L)
 {
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .data = _font_lua,
-            .size = sizeof(_font_lua) / sizeof(char),
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){

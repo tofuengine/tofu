@@ -33,7 +33,8 @@
 #include "udt.h"
 
 #define LOG_CONTEXT "grid"
-#define META_TABLE  "Tofu_Collections_Grid_mt"
+#define META_TABLE  "Tofu_Util_Grid_mt"
+#define SCRIPT_PATH "tofu/util/grid.lua"
 #define SCRIPT_NAME "@grid.lua"
 
 static int grid_new_3nnT_1o(lua_State *L);
@@ -46,16 +47,15 @@ static int grid_poke_v_0(lua_State *L);
 static int grid_scan_2of_0(lua_State *L);
 static int grid_process_2of_0(lua_State *L);
 
-static const char _grid_lua[] = {
-#include "grid.inc"
-};
-
 int grid_loader(lua_State *L)
 {
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, SCRIPT_PATH, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .data = _grid_lua,
-            .size = sizeof(_grid_lua) / sizeof(char),
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
