@@ -237,7 +237,7 @@ static inline int _raw_call(lua_State *L, int nargs, int nresults)
     }
     return result;
 #else
-    lua_call(L, nargs + 1, nresults);
+    lua_call(L, nargs, nresults);
     return LUA_OK;
 #endif
 }

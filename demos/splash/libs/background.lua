@@ -85,10 +85,10 @@ function Background:render(canvas)
   end
   self.canvas:pop()
 --]]
-  local width, height = canvas:size()
+  local width, _ = canvas:size()
 
   self.font:write(canvas, width, 0, string.format("%d FPS", System.fps()), "right", "top")
-  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
+--  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
 end
 
 return Background
