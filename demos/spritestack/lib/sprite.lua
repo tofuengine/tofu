@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local Vector = require("tofu.util").Vector
+local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
+local Vector = require("tofu.util.vector")
 
 local Sprite = Class.define()
 

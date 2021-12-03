@@ -28,8 +28,6 @@
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-#include <resources/blobs.h>
-#include <resources/images.h>
 #include <resources/decoder.h>
 
 #include <stdint.h>
@@ -75,6 +73,22 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
+
+    // FIXME: move to a separate function.
+    char executable_path[PATH_MAX];
+    path_split(configuration->executable, executable_path, NULL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "executable path is `%s`", executable_path);
+
+    char kernal_path[PLATFORM_PATH_MAX] = { 0 };
+    path_join(kernal_path, executable_path, "kernal.pak");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal path is `%s`", kernal_path);
+
+    bool attached = FS_attach(storage->context, kernal_path);
+    if (!attached) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach `%s`", kernal_path);
+        free(storage);
+        return NULL;
+    }
 
     return storage;
 }
@@ -328,73 +342,6 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return loaded;
 }
 
-static bool _resource_fetch(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
-{
-    if (type == STORAGE_RESOURCE_STRING) {
-        const Blob_t *blob = resources_blobs_find(name);
-        if (!blob) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as string", name);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_STRING,
-                .var = {
-                    .string = {
-                        .chars = (char *)blob->ptr,
-                        .length = blob->size
-                    }
-                },
-                .age = 0.0,
-                .allocated = false
-            };
-    } else
-    if (type == STORAGE_RESOURCE_BLOB) {
-        const Blob_t *blob = resources_blobs_find(name);
-        if (!blob) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as blob", name);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_BLOB,
-                .var = {
-                    .blob = {
-                        .ptr = (void *)blob->ptr,
-                        .size = blob->size
-                    }
-                },
-                .age = 0.0,
-                .allocated = false
-            };
-    } else
-    if (type == STORAGE_RESOURCE_IMAGE) {
-        const Image_t *image = resources_images_find(name);
-        if (!image) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as image", name);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_IMAGE,
-                .var = {
-                    .image = {
-                        .width = image->width,
-                        .height = image->height,
-                        .pixels = (void *)image->pixels
-                    }
-                },
-                .age = 0.0,
-                .allocated = false
-            };
-    }
-
-    return true;
-}
-
 static bool _resource_decode(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
 {
     if (!decoder_is_valid(name)) {
@@ -493,9 +440,6 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     if (_resource_load(resource, name, type, storage->context)) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
-    } else
-    if (_resource_fetch(resource, name, type)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` fetched from bundle", name);
     } else
     if (_resource_decode(resource, name, type)) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` decoded", name);

@@ -22,23 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Canvas = require("tofu.graphics.canvas")
+
 local Font = {}
 
 -- Note: the `__index` metatable reference is set by the module loader.
 -- Font.__index = Font
 
-local FONTS = {
-    ["5x8"] = { file = "5x8.png", width = 5, height = 8 },
-    ["6x12"] = { file = "6x12.png", width = 6, height = 12 },
-    ["8x16"] = { file = "8x16.png", width = 8, height = 16 },
-    ["12x24"] = { file = "12x24.png", width = 12, height = 24 },
-    ["16x32"] = { file = "16x32.png", width = 16, height = 32 },
-    ["32x64"] = { file = "32x64.png", width = 32, height = 64 },
+local FONTS <const> = {
+    ["5x8"] = { file = "assets/png/spleen-5x8.png", width = 5, height = 8 },
+    ["6x12"] = { file = "assets/png/spleen-6x12.png", width = 6, height = 12 },
+    ["8x16"] = { file = "assets/png/spleen-8x16.png", width = 8, height = 16 },
+    ["12x24"] = { file = "assets/png/spleen-12x24.png", width = 12, height = 24 },
+    ["16x32"] = { file = "assets/png/spleen-16x32.png", width = 16, height = 32 },
+    ["32x64"] = { file = "assets/png/spleen-32x64.png", width = 32, height = 64 },
   }
 
 function Font.default(...)
-  local Canvas = require("tofu.graphics").Canvas -- Lazy `require()` to permit initial load.
-
   local args = { ... }
   if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]

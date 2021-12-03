@@ -22,28 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
--- No dependency from `tofu.core.Class` module.
+local Class = require("tofu.core.class")
 
-local Vector = { }
+local Vector = Class.define()
 
 -- TODO: optimize by using `{ x, y }` over `{ x = x, y = y }`.
 
-Vector.__index = Vector
-
-function Vector.new(...)
+function Vector:__ctor(...)
   local args = { ... }
-  local values
   if #args == 0 then
-    values = { x = 0, y = 0 }
+    self.x, self.y = 0, 0
   elseif #args == 1 then
     local v = args[1]
-    values = { x = v.x, y = v.y }
+    self.x, self.y = v.x, v.y
   elseif #args == 2 then
-    values = { x = args[1], y = args[2] }
+    self.x, self.y = args[1], args[2]
   else
     error("invalid arguments for Vector")
   end
-  return setmetatable(values, Vector)
 end
 
 function Vector:__eq(v)

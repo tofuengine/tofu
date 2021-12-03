@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Noise = require("tofu.generators").Noise
-local Wave = require("tofu.generators").Wave
-local Bank = require("tofu.graphics").Bank
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Font = require("tofu.graphics").Font
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Noise = require("tofu.generators.noise")
+local Wave = require("tofu.generators.wave")
+local Bank = require("tofu.graphics.bank")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Palette = require("tofu.graphics.palette")
+local Font = require("tofu.graphics.font")
 
 local Main = Class.define()
 
@@ -70,7 +70,7 @@ function Main:__ctor()
 
   self.noise = Noise.new("simplex", 1234, 0.02)
 
-  Display.palette(Palette.new("pico-8"))
+  Display.palette(Palette.default("pico-8"))
 
   Input.auto_repeat("y", 0.5)
 end

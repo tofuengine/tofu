@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local Bank = require("tofu.graphics").Bank
-local Canvas = require("tofu.graphics").Canvas
-local Timer = require("tofu.timers").Timer
-local Arrays = require("tofu.util").Arrays
+local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
+local Bank = require("tofu.graphics.bank")
+local Canvas = require("tofu.graphics.canvas")
+local Timer = require("tofu.timers.timer")
+local Arrays = require("tofu.util.arrays")
 
 local STAR_WIDTH = 23
 local STAR_HEIGHT = 23

@@ -22,18 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Log = {}
+local Class = require("tofu.core.class")
+local Pool = require("tofu.timers.pool")
 
-function Log.dump(t, spaces)
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    Log.info(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if k ~= "__index" and k ~= "__newindex" then
-        Log.dump(v, spaces .. " ")
-      end
-    end
-  end
+local Main = require("main")
+
+local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+
+function Tofu:__ctor()
+  self.main = Main.new()
 end
 
-return Log
+function Tofu:process(events)
+  self.main:process(events)
+end
+
+function Tofu:update(delta_time)
+  Pool.default():update(delta_time)
+  self.main:update(delta_time)
+end
+
+function Tofu:render(ratio)
+  self.main:render(ratio)
+end
+
+return Tofu.new()

@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 
 local COMPARATORS <const> = {
   "never",
@@ -44,7 +44,7 @@ local COMPARATORS <const> = {
 local Main = Class.define()
 
 function Main:__ctor()
-  local color = Palette.new("famicube")
+  local color = Palette.default("famicube")
   local greyscale = Palette.new(color:size())
 
   self.font = Font.default(0, 15)

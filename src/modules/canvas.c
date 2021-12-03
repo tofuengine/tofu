@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/interpreter.h>
@@ -36,8 +37,9 @@
 #include "utils/map.h"
 
 #define LOG_CONTEXT "canvas"
+#define MODULE_NAME "tofu.graphics.canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
-#define SCRIPT_NAME "@canvas.lua"
+// FIXME: collapse meta and script name?
 
 #define CANVAS_DEFAULT_BACKGROUND   0
 #define CANVAS_DEFAULT_FOREGROUND   1
@@ -78,17 +80,19 @@ static int canvas_blend_v_0(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
 
-static const char _canvas_lua[] = {
-#include "canvas.inc"
-};
-
 int canvas_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .data = _canvas_lua,
-            .size = sizeof(_canvas_lua) / sizeof(char),
-            .name = SCRIPT_NAME
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
+            .name = file
         },
         (const struct luaL_Reg[]){
             { "new", canvas_new_v_1o },

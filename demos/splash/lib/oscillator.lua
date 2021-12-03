@@ -22,34 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
+local Class = require("tofu.core.class")
+local Wave = require("tofu.generators.wave")
 
-local Logo = Class.define()
+local Oscillator = Class.define()
 
-function Logo:__ctor(canvas, transparent, _)
-  self.images = {
-      Canvas.new("assets/images/tofu.png", transparent),
-      Canvas.new("assets/images/engine.png", transparent)
-    }
-  self.outline = Canvas.new("assets/images/outline.png", transparent)
+-- See: https://blog.demofox.org/2012/05/19/diy-synthesizer-chapter-2-common-wave-forms/
 
-  local cw, ch = canvas:size()
-  local w, h = self.outline:size()
-  self.x = (cw - w) * 0.5
-  self.y = (ch - h) * 0.5
+function Oscillator:__ctor(...)
+  self.wave = Wave.new(...)
+  self.phase = 0
 end
 
-function Logo:update(_)
+function Oscillator:advance(delta_phase)
+  local phase = self.phase + delta_phase
+  local period = self.wave:period()
+  while phase >= period do -- Keep constrained in [0, period) in order not to loose precision.
+    phase = phase - period
+  end
+  while phase < 0.0 do
+    phase = phase + period
+  end
+  self.phase = phase
 end
 
-function Logo:render(canvas)
-  -- TODO: generate the outline w/ 4 offsetted blits.
-  local t = System.time()
-
-  canvas:blit(self.x, self.y, self.outline)
-  canvas:blit(self.x, self.y, self.images[(math.tointeger(t * 1.0) % 2) + 1])
+function Oscillator:value(offset)
+  return self.wave(self.phase + (offset or 0.0))
 end
 
-return Logo
+return Oscillator

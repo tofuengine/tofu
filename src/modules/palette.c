@@ -27,11 +27,13 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/luax.h>
-#include <resources/palettes.h>
+#include <libs/path.h>
+#include <systems/storage.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "palette"
+#define MODULE_NAME "tofu.graphics.palette"
 #define META_TABLE  "Tofu_Graphics_Palette_mt"
 
 static int palette_new_v_1o(lua_State *L);
@@ -47,8 +49,18 @@ static int palette_merge_3ooB_0(lua_State *L);
 
 int palette_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L, (luaX_Script){
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
+            .name = file
+        },
         (const struct luaL_Reg[]){
             { "new", palette_new_v_1o },
             { "__gc", palette_gc_1o_0 },
@@ -83,35 +95,6 @@ static int palette_new_0_1o(lua_State *L)
         }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "greyscale palette %p allocated w/ %d color(s)", self, palette->size);
-
-    return 1;
-}
-
-static int palette_new_1s_1o(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const char *id = LUAX_STRING(L, 1);
-
-    const Palette_t *predefined_palette = resources_palettes_find(id);
-    if (!predefined_palette) {
-        return luaL_error(L, "unknown predefined palette w/ id `%s`", id);
-    }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->size);
-
-    GL_Palette_t *palette = GL_palette_create();
-    if (!palette) {
-        return luaL_error(L, "can't create palette");
-    }
-    GL_palette_set_colors(palette, predefined_palette->colors, predefined_palette->size);
-
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .palette = palette
-        }, OBJECT_TYPE_PALETTE, META_TABLE);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size); // FIXME: mark alloc/dealloc as TRACE.
 
     return 1;
 }
@@ -265,7 +248,6 @@ static int palette_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, palette_new_0_1o)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1o, LUA_TSTRING)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1o, LUA_TNUMBER)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1o, LUA_TTABLE)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1o_1o, LUA_TOBJECT)

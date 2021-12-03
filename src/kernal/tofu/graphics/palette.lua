@@ -22,32 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Wave = require("tofu.generators").Wave
+local Palette = {}
 
-local Oscillator = Class.define()
+local PALETTES <const> = require("assets/lua/palettes")
 
--- See: https://blog.demofox.org/2012/05/19/diy-synthesizer-chapter-2-common-wave-forms/
-
-function Oscillator:__ctor(...)
-  self.wave = Wave.new(...)
-  self.phase = 0
+function Palette.default(id)
+  return Palette.new(PALETTES[id])
 end
 
-function Oscillator:advance(delta_phase)
-  local phase = self.phase + delta_phase
-  local period = self.wave:period()
-  while phase >= period do -- Keep constrained in [0, period) in order not to loose precision.
-    phase = phase - period
-  end
-  while phase < 0.0 do
-    phase = phase + period
-  end
-  self.phase = phase
-end
-
-function Oscillator:value(offset)
-  return self.wave(self.phase + (offset or 0.0))
-end
-
-return Oscillator
+return Palette

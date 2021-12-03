@@ -23,12 +23,12 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 
 -- The entry point is a class, we are creating with a helper function.
 local Main = Class.define()
@@ -38,7 +38,7 @@ local MESSAGE = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
-  Display.palette(Palette.new("pico-8"))
+  Display.palette(Palette.default("pico-8"))
 
   -- Create a default font, palette color `0` as background and `15` as foreground.
   -- Please note that, as default, palette color `0` is set as transparent. This

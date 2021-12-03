@@ -34,6 +34,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <libs/stb.h>
 #include <modules/modules.h>
 
@@ -59,13 +60,12 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define READER_CONTEXT_BUFFER_SIZE  __VM_READER_BUFFER_SIZE__
 #endif
 
-static const char _boot_lua[] = {
 #ifdef DEBUG
-  #include <assets/scripts/boot-debug.inc>
+  #define BOOT_SCRIPT "boot-debug"
 #else
-  #include <assets/scripts/boot-release.inc>
+  #define BOOT_SCRIPT "boot-release"
 #endif
-};
+static const char *_kickstart_lua = "return require(\"" BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
     METHOD_PROCESS,
@@ -177,14 +177,8 @@ static int _searcher(lua_State *L)
 
     const char *name = lua_tostring(L, 1);
 
-    char path[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
-    strcat(path, name);
-    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
-        if (*ptr == '.') {
-            *ptr = FS_PATH_SEPARATOR;
-        }
-    }
-    strcat(path, ".lua");
+    char path[PLATFORM_PATH_MAX] = { 0 };
+    path_lua_to_fs(path, name);
 
     FS_Handle_t *handle = Storage_open(storage, path + 1); // Don't waste storage cache! The module will be cached by Lua!
     if (!handle) {
@@ -233,16 +227,10 @@ static bool _detect(lua_State *L, int index, const char *methods[])
     return true;
 }
 
-static int _execute(lua_State *L, const char *script, size_t size, const char *name, int nargs, int nresults)
+static inline int _raw_call(lua_State *L, int nargs, int nresults)
 {
-    int result = luaL_loadbuffer(L, script, size, name);
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load: %s", result, lua_tostring(L, -1));
-        lua_pop(L, 1);
-        return result;
-    }
 #ifdef __DEBUG_VM_CALLS__
-    result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -254,7 +242,7 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 #endif
 }
 
-static inline int _call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
+static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
 {
     int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {
@@ -268,17 +256,7 @@ static inline int _call(lua_State *L, Entry_Point_Methods_t method, int nargs, i
     lua_pushvalue(L, OBJECT_STACK_INDEX);   // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
-#ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX); // Add the object instance to the arguments count.
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
-        lua_pop(L, 1);
-    }
-    return result;
-#else
-    lua_call(L, nargs + 1, nresults);
-    return LUA_OK;
-#endif
+    return _raw_call(L, nargs + 1, nresults); // Add the object instance to the arguments count.
 }
 
 Interpreter_t *Interpreter_create(const Storage_t *storage)
@@ -354,12 +332,13 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     }
     modules_initialize(interpreter->state, nup);
 
-    int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
+    luaL_loadstring(interpreter->state, _kickstart_lua);
+    int result = _raw_call(interpreter->state, 0, 1);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load boot script");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "boot script executed");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "boot script loaded");
 
     if (!_detect(interpreter->state, -1, _methods)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect entry-points");
@@ -382,13 +361,13 @@ bool Interpreter_process(const Interpreter_t *interpreter, const char *events[])
     } else {
         lua_pushnil(interpreter->state);
     }
-    return _call(interpreter->state, METHOD_PROCESS, 1, 0) == LUA_OK;
+    return _method_call(interpreter->state, METHOD_PROCESS, 1, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
     lua_pushnumber(interpreter->state, (lua_Number)delta_time);
-    if (_call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+    if (_method_call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
 
@@ -435,21 +414,10 @@ bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     // TODO: pass the default `Canvas` instance?
     lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
-    return _call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
+    return _method_call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
-    lua_State *L = interpreter->state;
-#ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in execute: %s", result, lua_tostring(L, -1));
-        lua_pop(L, 1);
-    }
-    return result == LUA_OK ? true : false;
-#else
-    lua_call(L, nargs, nresults);
-    return true;
-#endif
+    return _raw_call(interpreter->state, nargs, nresults) == LUA_OK;
 }

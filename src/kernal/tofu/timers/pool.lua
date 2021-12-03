@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Pool = {}
+local Class = require("tofu.core.class")
 
-Pool.__index = Pool
+local Pool = Class.define()
 
 local _default = nil
 
@@ -35,8 +35,8 @@ function Pool.default()
   return _default
 end
 
-function Pool.new()
-  return setmetatable({ timers = {} }, Pool)
+function Pool:__ctor()
+  self.timers = {}
 end
 
 function Pool:clear()
@@ -69,42 +69,4 @@ function Pool:update(delta_time)
   end
 end
 
-local Timer = {}
-
-Timer.__index = Timer
-
-function Timer.new(period, repeats, callback, pool)
-  local self = setmetatable({
-      period = period,
-      repeats = repeats,
-      callback = callback,
-      rate = 1.0,
---      age = 0.0,
---      loops = repeats,
---      cancelled = false
-    }, Timer)
-  table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
-  self:reset()
-  return self
-end
-
-function Timer:rate(rate)
-  self.rate = rate or 1.0
-end
-
-function Timer:reset()
-  self.age = 0.0
-  self.loops = self.repeats
-  self.cancelled = false
-  self.callback("reset")
-end
-
-function Timer:cancel()
-  self.cancelled = true
-  self.callback("cancelled")
-end
-
-return {
-    Pool = Pool,
-    Timer = Timer
-  }
+return Pool

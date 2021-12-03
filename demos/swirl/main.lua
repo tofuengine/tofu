@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Font = require("tofu.graphics").Font
-local Vector = require("tofu.util").Vector
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Palette = require("tofu.graphics.palette")
+local Font = require("tofu.graphics.font")
+local Vector = require("tofu.util.vector")
 
 local function square(canvas, x, y, s, r, g, b)
 --  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
@@ -40,7 +40,7 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new("pico-8"))
+  Display.palette(Palette.default("pico-8"))
 
   local canvas = Canvas.default()
   canvas:transparent(0, false)
@@ -54,16 +54,36 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 
   self.time = 0
+  self.running = true
 end
 
-function Main:process()
+function Main:on_focus_acquired()
+  self.running = true
+end
+
+function Main:on_focus_lost()
+  self.running = false
+end
+
+function Main:process(events)
+  -- TODO: move to the boot script.
+  if events then
+    for _, event in ipairs(events) do
+      local callback = self[event]
+      if callback then
+        callback(self)
+      end
+    end
+  end
+  -- TODO: add "pressed" buttons auto-events?
+
   if Input.is_pressed("start") then
     self.fan = not self.fan
   end
 end
 
 function Main:update(delta_time)
-  if not System.is_active() then
+  if not self.running then
     return
   end
   self.time = self.time + delta_time

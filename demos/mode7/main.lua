@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
-local XForm = require("tofu.graphics").XForm
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
+local XForm = require("tofu.graphics.xform")
 
 local WRAP_MODES = {
   "repeat", "edge", "border", "mirror-repeat", "mirror-edge", "mirror-border"
@@ -38,7 +38,7 @@ local WRAP_MODES = {
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.new("famicube")
+  local palette = Palette.default("famicube")
   Display.palette(palette)
 
   local canvas = Canvas.default()

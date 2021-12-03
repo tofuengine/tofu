@@ -22,28 +22,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Pool = require("tofu.timers").Pool
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
 
-local Main = require("main")
+local Logo = Class.define()
 
-local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+function Logo:__ctor(canvas, transparent, _)
+  self.images = {
+      Canvas.new("assets/images/tofu.png", transparent),
+      Canvas.new("assets/images/engine.png", transparent)
+    }
+  self.outline = Canvas.new("assets/images/outline.png", transparent)
 
-function Tofu:__ctor()
-  self.main = Main.new()
+  local cw, ch = canvas:size()
+  local w, h = self.outline:size()
+  self.x = (cw - w) * 0.5
+  self.y = (ch - h) * 0.5
 end
 
-function Tofu:process(events)
-  self.main:process(events)
+function Logo:update(_)
 end
 
-function Tofu:update(delta_time)
-  Pool.default():update(delta_time)
-  self.main:update(delta_time)
+function Logo:render(canvas)
+  -- TODO: generate the outline w/ 4 offsetted blits.
+  local t = System.time()
+
+  canvas:blit(self.x, self.y, self.outline)
+  canvas:blit(self.x, self.y, self.images[(math.tointeger(t * 1.0) % 2) + 1])
 end
 
-function Tofu:render(ratio)
-  self.main:render(ratio)
-end
-
-return Tofu.new()
+return Logo

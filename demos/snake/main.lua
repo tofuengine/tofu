@@ -22,24 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
-local Input = require("tofu.events").Input
-local Source = require("tofu.sound").Source
-local Grid = require("tofu.util").Grid
+local Class = require("tofu.core.class")
+local Log = require("tofu.core.log")
+local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
+local Input = require("tofu.events.input")
+local Source = require("tofu.sound.source")
+local Grid = require("tofu.util.grid")
 
-local INITIAL_LENGTH = 5
-local SPEED_RATIO = 5
-local CELL_SIZE = 8
-local LIFE = 1.0
-local SPEED = 5.0
+local INITIAL_LENGTH <const> = 5
+local SPEED_RATIO <const> = 5
+local CELL_SIZE <const> = 8
+local LIFE <const> = 1.0
+local SPEED <const> = 5.0
 
-local DELTA_X = { up = 0, down = 0, left = -1, right = 1 }
-local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
+local DELTA_X <const> = { up = 0, down = 0, left = -1, right = 1 }
+local DELTA_Y <const> = { up = -1, down = 1, left = 0, right = 0 }
 
 --[[
 ************************************************
@@ -85,7 +86,7 @@ local SOURCES <const> = {
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.new("gameboy")
+  local palette = Palette.default("gameboy")
   Display.palette(palette)
 
   local canvas = Canvas.default()

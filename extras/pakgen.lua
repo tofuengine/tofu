@@ -75,16 +75,17 @@ end
 
 local function parse_arguments(args)
   local config = {
-      input = nil,
+      input = {},
       output = nil,
       encrypted = false
     }
   for _, arg in ipairs(args) do
     if arg:starts_with("--input=") then
-      config.input = arg:sub(9)
-      if config.input:ends_with("/") then
-        config.input = config.input:sub(1, -2)
+      local path = arg:sub(9)
+      if path:ends_with("/") then
+        path = path:sub(1, -2)
       end
+      table.insert(config.input, path)
     elseif arg:starts_with("--output=") then
       config.output = arg:sub(10)
       if not config.output:ends_with(".pak") then
@@ -97,28 +98,36 @@ local function parse_arguments(args)
   return (config.input and config.output) and config or nil
 end
 
-local function attrdir(path, list)
+local function attrdir(path)
+  local files = {}
   for file in lfs.dir(path) do
       if file ~= "." and file ~= ".." then
         local pathfile = path .. "/" .. file
         local mode = lfs.attributes(pathfile, "mode")
         if mode == "directory" then
-            attrdir(pathfile, list)
+            for _, file in ipairs(attrdir(pathfile)) do
+              table.insert(files, file)
+            end
         else
           local size = lfs.attributes(pathfile, "size")
-          table.insert(list, { pathfile = pathfile, size = size, name = nil })
+          table.insert(files, { pathfile = pathfile, size = size, name = nil })
         end
       end
   end
+  return files
 end
 
-local function fetch_files(path)
+local function fetch_files(paths)
   local files = {}
-  attrdir(path, files)
-  table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
-  for _, file in ipairs(files) do
-    file.name = file.pathfile:sub(1 + #path + 1)
+  for _, path in ipairs(paths) do
+    print(string.format("Fetching files from folder `%s`", path))
+    for _, file in ipairs(attrdir(path)) do
+      file.name = file.pathfile:sub(1 + #path + 1)
+      table.insert(files, file)
+    end
   end
+  print(string.format("optimizing..."))
+  table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
   return files
 end
 
@@ -225,7 +234,7 @@ local function main(arg)
     return
   end
 
-  print("PakGen v0.3.0")
+  print("PakGen v0.4.0")
   print("=============")
 
   local flags = {}
@@ -234,7 +243,6 @@ local function main(arg)
   end
   local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
 
-  print(string.format("Fetching files from folder `%s`", config.input))
   local files = fetch_files(config.input)
 
   print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))

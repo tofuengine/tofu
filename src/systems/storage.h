@@ -60,6 +60,7 @@ typedef struct Storage_Resource_s {
 } Storage_Resource_t;
 
 typedef struct Storage_Configuration_s {
+    const char *executable;
     const char *path;
 } Storage_Configuration_t;
 

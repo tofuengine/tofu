@@ -23,14 +23,14 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
-local XForm = require("tofu.graphics").XForm
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
+local XForm = require("tofu.graphics.xform")
 
 -- The entry point is a class, we are creating with a helper function.
 local Main = Class.define()
@@ -40,7 +40,7 @@ local MESSAGE = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
-  Display.palette(Palette.new("pico-8"))
+  Display.palette(Palette.default("pico-8"))
 
   self.factor = 0.0
 

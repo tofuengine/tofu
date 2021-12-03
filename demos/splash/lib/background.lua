@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Program = require("tofu.graphics").Program
-local Font = require("tofu.graphics").Font
-local Timer = require("tofu.timers").Timer
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Program = require("tofu.graphics.program")
+local Font = require("tofu.graphics.font")
+local Timer = require("tofu.timers.timer")
 
 local Background = Class.define()
 
@@ -85,10 +85,10 @@ function Background:render(canvas)
   end
   self.canvas:pop()
 --]]
-  local width, height = canvas:size()
+  local width, _ = canvas:size()
 
   self.font:write(canvas, width, 0, string.format("%d FPS", System.fps()), "right", "top")
-  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
+--  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
 end
 
 return Background
