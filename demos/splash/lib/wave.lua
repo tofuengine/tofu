@@ -28,7 +28,7 @@ local Tweener = require("tofu.generators.tweener")
 local Canvas = require("tofu.graphics.canvas")
 local Timer = require("tofu.timers.timer")
 
-local Oscillator = require("libs.oscillator")
+local Oscillator = require("lib/oscillator")
 
 local Wave = Class.define()
 

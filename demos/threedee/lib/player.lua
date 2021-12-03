@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Input = require("tofu.events").Input
+local Class = require("tofu.core.class")
+local Input = require("tofu.events.input")
 
 local config = require("config")
 

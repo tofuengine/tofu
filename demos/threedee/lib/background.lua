@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Program = require("tofu.graphics").Program
+local Class = require("tofu.core.class")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Program = require("tofu.graphics.program")
 
 local config = require("config")
 

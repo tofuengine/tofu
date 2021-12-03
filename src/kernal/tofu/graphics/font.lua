@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Canvas = require("tofu.graphics.canvas")
+
 local Font = {}
 
 -- Note: the `__index` metatable reference is set by the module loader.
@@ -37,8 +39,6 @@ local FONTS <const> = {
   }
 
 function Font.default(...)
-  local Canvas = require("tofu.graphics").Canvas -- Lazy `require()` to permit initial load.
-
   local args = { ... }
   if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]

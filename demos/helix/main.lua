@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Font = require("tofu.graphics").Font
+local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Palette = require("tofu.graphics.palette")
+local Font = require("tofu.graphics.font")
 
 local SIZE <const> = 4
 local RADIUS <const> = SIZE * 0.5
@@ -37,7 +37,7 @@ local RADIUS <const> = SIZE * 0.5
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.new("pico-8-ext")
+  local palette = Palette.default("pico-8-ext")
   Display.palette(palette)
 
   self.palette = palette

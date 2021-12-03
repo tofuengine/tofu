@@ -28,10 +28,9 @@ local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Source = require("tofu.sound.source")
 
-local Background = require("libs.background")
-local Logo = require("libs.logo")
-local Stars = require("libs.stars")
-local Wave = require("libs.wave")
+local Background = require("lib/background")
+local Logo = require("lib/logo")
+local Stars = require("lib/stars")
 
 local Main = Class.define()
 
