@@ -174,6 +174,9 @@ engine: $(TARGET) $(KERNAL)
 default: engine
 all: default
 
+# The `kernal.pak` archive contains all the Lua scripts that constitue (part of)
+# and runtime. It's required for the engine to work and it's repacked each time
+# a file is changed.
 $(KERNAL): $(RESOURCES) Makefile
 	@find ./src/kernal -name '*.lua' | xargs $(ANALYZER) $(AFLAGS)
 	@lua5.3 ./extras/pakgen.lua --input=./src/kernal --output=./$(KERNAL) --encrypted
