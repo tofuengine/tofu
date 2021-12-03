@@ -93,7 +93,7 @@ function Main:update(_) -- delta_time
 
     local dx = self.b.x - self.a.x
     local dy = self.b.y - self.a.y
-    local d = math.sqrt((dx * dx) + (dy * dy))
+    local d = ((dx * dx) + (dy * dy)) ^ 0.5
     self.v = { x = dx / d, y = dy / d }
     self.d = d
   end
