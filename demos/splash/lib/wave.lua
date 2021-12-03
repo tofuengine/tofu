@@ -24,11 +24,10 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
+local Oscillator = require("tofu.generators.oscillator")
 local Tweener = require("tofu.generators.tweener")
 local Canvas = require("tofu.graphics.canvas")
 local Timer = require("tofu.timers.timer")
-
-local Oscillator = require("lib/oscillator")
 
 local Wave = Class.define()
 
