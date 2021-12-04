@@ -31,6 +31,7 @@ local Source = require("tofu.sound.source")
 local Background = require("lib/background")
 local Logo = require("lib/logo")
 local Stars = require("lib/stars")
+local Wave = require("lib/wave")
 
 local Main = Class.define()
 
