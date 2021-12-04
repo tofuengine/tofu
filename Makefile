@@ -22,6 +22,17 @@
 # SOFTWARE.
 #
 
+# This makefile has been written in accordance to the GNU general conventions
+# available at the following URL
+#
+#   https://www.gnu.org/prep/standards/html_node/Makefile-Basics.html
+
+#
+builddir=./build
+srcdir=./src
+externaldir=./external
+extrasdir=./extras
+
 # The default target platform is Linux.
 ifeq ($(PLATFORM),)
 	PLATFORM:=linux
@@ -45,21 +56,16 @@ endif
 KERNAL=kernal.pak
 
 # CppCheck
-# 	cppcheck --enable=all ./src > /dev/null
+# 	cppcheck --force --enable=all $(srcdir) > /dev/null
 
-# Use software renderer to use VALGRIND
-#   export LIBGL_ALWAYS_SOFTWARE=1
-#   valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./tofu --path=./demos/splash
+PACKER=$(extrasdir)/pakgen.lua
+PACKERFLAGS=--encrypted
 
-ANALYZER=luacheck
-AFLAGS=--no-self --std lua53 -q
+LUACHECK=luacheck
+LUACHECKFLAGS=--no-self --std lua53 -q
 
-RM=rm -f
-
-# In case we want to embed pre-compiled script, we need to disable the `LUA_32BITS` compile flag!
-#	@luac5.3 -o - $< | $(DUMPER) $(DFLAGS) > $@
-DUMPER=hexdump
-DFLAGS=-v -e '1/1 "0x%02X,"'
+VALGRIND=valgrind
+VALGRINDFLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
 
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
@@ -72,7 +78,7 @@ else
 endif
 CWARNINGS=-std=c99 -Wall -Wextra -Werror -Winline -Wlogical-op -Wno-unused-parameter -Wpedantic -Wpointer-arith -Wstrict-prototypes -Wshadow -Wunreachable-code -Wwrite-strings
 #CWARNINGS+=-Wfloat-equal
-CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DGIF_FLIP_VERT -DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DLIBXMP_BUILDING_STATIC -Isrc -Iexternal
+CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DGIF_FLIP_VERT -DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DLIBXMP_BUILDING_STATIC -I$(srcdir) -I$(externaldir)
 ifneq ($(PLATFORM),windows)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
@@ -93,17 +99,17 @@ endif
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		LINKER=x86_64-w64-mingw32-gcc
-		LFLAGS=-Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32 -lpsapi
+		LFLAGS=-L$(externaldir)/GLFW/windows/x64 -lglfw3 -lgdi32 -lpsapi
 	else
 		LINKER=i686-w64-mingw32-gcc
-		LFLAGS=-Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32 -lpsapi
+		LFLAGS=-L$(externaldir)/GLFW/windows/x32 -lglfw3 -lgdi32 -lpsapi
 	endif
 else ifeq ($(PLATFORM),rpi)
 	LINKER=gcc
-	LFLAGS=-Lexternal/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-L$(externaldir)/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
 else
 	LINKER=gcc
-	LFLAGS=-Lexternal/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-L$(externaldir)/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
 endif
 LWARNINGS=-Wall -Wextra -Werror
 ifeq ($(BUILD),release)
@@ -117,264 +123,266 @@ else
 endif
 
 # Source files list (src)
-SOURCES:=$(wildcard src/*.c) \
-	$(wildcard src/libs/*.c) \
-	$(wildcard src/libs/fs/*.c) \
-	$(wildcard src/libs/gl/*.c) \
-	$(wildcard src/libs/sl/*.c) \
-	$(wildcard src/modules/*.c) \
-	$(wildcard src/modules/utils/*.c) \
-	$(wildcard src/resources/*.c) \
-	$(wildcard src/systems/*.c) \
-	$(wildcard src/utils/*.c)
+SOURCES:=$(wildcard $(srcdir)/*.c) \
+	$(wildcard $(srcdir)/libs/*.c) \
+	$(wildcard $(srcdir)/libs/fs/*.c) \
+	$(wildcard $(srcdir)/libs/gl/*.c) \
+	$(wildcard $(srcdir)/libs/sl/*.c) \
+	$(wildcard $(srcdir)/modules/*.c) \
+	$(wildcard $(srcdir)/modules/utils/*.c) \
+	$(wildcard $(srcdir)/resources/*.c) \
+	$(wildcard $(srcdir)/systems/*.c) \
+	$(wildcard $(srcdir)/utils/*.c)
 # Source files list (external)
-SOURCES+=$(wildcard external/dr_libs/*.c) \
-	$(wildcard external/gif-h/*.c) \
-	$(wildcard external/glad/*.c) \
-	$(wildcard external/lua/*.c) \
-	$(wildcard external/miniaudio/*.c) \
-	$(wildcard external/spleen/*.c) \
-	$(wildcard external/xmp-lite/*.c) \
-	$(wildcard external/noise/*.c) \
-	$(wildcard external/chipmunk/*.c)
+SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
+	$(wildcard $(externaldir)/gif-h/*.c) \
+	$(wildcard $(externaldir)/glad/*.c) \
+	$(wildcard $(externaldir)/lua/*.c) \
+	$(wildcard $(externaldir)/miniaudio/*.c) \
+	$(wildcard $(externaldir)/spleen/*.c) \
+	$(wildcard $(externaldir)/xmp-lite/*.c) \
+	$(wildcard $(externaldir)/noise/*.c) \
+	$(wildcard $(externaldir)/chipmunk/*.c)
 # Include files list (src)
-INCLUDES:=$(wildcard src/*.h) \
-	$(wildcard src/libs/*.h) \
-	$(wildcard src/libs/fs/*.h) \
-	$(wildcard src/libs/gl/*.h) \
-	$(wildcard src/libs/sl/*.h) \
-	$(wildcard src/modules/*.h) \
-	$(wildcard src/modules/utils/*.h) \
-	$(wildcard src/resources/*.h) \
-	$(wildcard src/systems/*.h) \
-	$(wildcard src/utils/*.h)
+INCLUDES:=$(wildcard $(srcdir)/*.h) \
+	$(wildcard $(srcdir)/libs/*.h) \
+	$(wildcard $(srcdir)/libs/fs/*.h) \
+	$(wildcard $(srcdir)/libs/gl/*.h) \
+	$(wildcard $(srcdir)/libs/sl/*.h) \
+	$(wildcard $(srcdir)/modules/*.h) \
+	$(wildcard $(srcdir)/modules/utils/*.h) \
+	$(wildcard $(srcdir)/resources/*.h) \
+	$(wildcard $(srcdir)/systems/*.h) \
+	$(wildcard $(srcdir)/utils/*.h)
 # Include files list (external)
-INCLUDES+=$(wildcard external/dr_libs/*.h) \
-	$(wildcard external/gif-h/*.h) \
-	$(wildcard external/glad/*.h) \
-	$(wildcard external/GLFW/*.h) \
-	$(wildcard external/lua/*.h) \
-	$(wildcard external/miniaudio/*.h) \
-	$(wildcard external/spleen/*.h) \
-	$(wildcard external/stb/*.h) \
-	$(wildcard external/xmp-lite/*.h) \
-	$(wildcard external/noise/*.h) \
-	$(wildcard external/chipmunk/*.h) \
-	$(wildcard external/noise/*.h) \
-	$(wildcard external/chipmunk/*.h)
+INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
+	$(wildcard $(externaldir)/gif-h/*.h) \
+	$(wildcard $(externaldir)/glad/*.h) \
+	$(wildcard $(externaldir)/GLFW/*.h) \
+	$(wildcard $(externaldir)/lua/*.h) \
+	$(wildcard $(externaldir)/miniaudio/*.h) \
+	$(wildcard $(externaldir)/spleen/*.h) \
+	$(wildcard $(externaldir)/stb/*.h) \
+	$(wildcard $(externaldir)/xmp-lite/*.h) \
+	$(wildcard $(externaldir)/noise/*.h) \
+	$(wildcard $(externaldir)/chipmunk/*.h) \
+	$(wildcard $(externaldir)/noise/*.h) \
+	$(wildcard $(externaldir)/chipmunk/*.h)
 # Output files
 OBJECTS:=$(SOURCES:%.c=%.o)
-# Every Lua script present in the source folder will be converted to "dumped" `.inc` files.
-SCRIPTS:=$(shell find ./src/modules -type f -name '*.lua')
-DUMPS:=$(SCRIPTS:%.lua=%.inc)
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
-RESOURCES:=$(shell find ./src/kernal -type f -name '*.*')
+RESOURCES:=$(shell find $(srcdir)/kernal -type f -name '*.*')
 
-engine: $(TARGET) $(KERNAL)
-default: engine
-all: default
+# Build rules.
+all: engine
+
+.PHONY: check
+check:
+	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
+	@echo "Checking complete!"
+
+engine: $(builddir) $(builddir)/$(TARGET) $(builddir)/$(KERNAL)
+
+$(builddir):
+	mkdir -p $(builddir)
 
 # The `kernal.pak` archive contains all the Lua scripts that constitue (part of)
 # and runtime. It's required for the engine to work and it's repacked each time
 # a file is changed.
-$(KERNAL): $(RESOURCES) Makefile
-	@find ./src/kernal -name '*.lua' | xargs $(ANALYZER) $(AFLAGS)
-	@lua5.3 ./extras/pakgen.lua --input=./src/kernal --output=./$(KERNAL) --encrypted
+#
+# In case we want to embed pre-compiled scripts
+#
+#	@luac5.3 $< -o $@
 
-$(TARGET): $(OBJECTS) Makefile
-	@$(LINKER) $(OBJECTS) $(LWARNINGS) $(LFLAGS) $(LOPTS) -o $@
+$(builddir)/$(KERNAL): $(RESOURCES) Makefile
+	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
+	@$(PACKER) $(PACKERFLAGS) --input=$(srcdir)/kernal --output=$(builddir)/$(KERNAL)
+
+$(builddir)/$(TARGET): $(OBJECTS) Makefile
+	@$(LINKER) $(OBJECTS) $(LOPTS) $(LWARNINGS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
 $(OBJECTS): %.o : %.c $(DUMPS) $(INCLUDES) Makefile
-	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
+	@$(COMPILER) $(COPTS) $(CWARNINGS) $(CFLAGS) -c $< -o $@
 	@echo "Compiled '"$<"' successfully!"
 
-# Define automatically rules to convert `.lua` script, `.txt` files, and `.rgba` images
-# into an embeddable-ready `.inc` file. `.inc` files also depend upon `Makefile` to be
-# rebuild in case of tweakings.
-$(DUMPS): %.inc: %.lua Makefile
-	@$(ANALYZER) $(AFLAGS) $<
-	@$(DUMPER) $(DFLAGS) $< > $@
-	@echo "Generated '"$@"' from '"$<"' successfully!"
-
 stats:
-	@cloc ./src > stats.txt
+	@cloc $(srcdir) > stats.txt
 
 primitives: engine
 	@echo "Launching *primitives* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/primitives
-	./$(TARGET) --path=./demos/primitives
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/primitives
+	@$(builddir)/$(TARGET) --path=./demos/primitives
 
 bunnymark: engine
 	@echo "Launching *bunnymark* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/bunnymark
-	@./$(TARGET) --path=./demos/bunnymark
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/bunnymark
+	@$(builddir)/$(TARGET) --path=./demos/bunnymark
 
 fire: engine
 	@echo "Launching *fire* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/fire
-	@./$(TARGET) --path=./demos/fire
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/fire
+	@$(builddir)/$(TARGET) --path=./demos/fire
 
 tiled-map: engine
 	@echo "Launching *tiled-map* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/tiled-map
-	@./$(TARGET) --path=./demos/tiled-map
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/tiled-map
+	@$(builddir)/$(TARGET) --path=./demos/tiled-map
 
 timers: engine
 	@echo "Launching *timers* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/timers
-	@./$(TARGET) --path=./demos/timers
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/timers
+	@$(builddir)/$(TARGET) --path=./demos/timers
 
 postfx: engine
 	@echo "Launching *postfx* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/postfx
-	@./$(TARGET) --path=./demos/postfx
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/postfx
+	@$(builddir)/$(TARGET) --path=./demos/postfx
 
 spritestack: engine
 	@echo "Launching *spritestack* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/spritestack
-	@./$(TARGET) --path=./demos/spritestack
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/spritestack
+	@$(builddir)/$(TARGET) --path=./demos/spritestack
 
 palette: engine
 	@echo "Launching *palette* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/palette
-	@./$(TARGET) --path=./demos/palette
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/palette
+	@$(builddir)/$(TARGET) --path=./demos/palette
 
 mode7: engine
 	@echo "Launching *mode7* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/mode7
-	@./$(TARGET) --path=./demos/mode7
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/mode7
+	@$(builddir)/$(TARGET) --path=./demos/mode7
 
 snake: engine
 	@echo "Launching *snake* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/snake
-	@./$(TARGET) --path=./demos/snake
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/snake
+	@$(builddir)/$(TARGET) --path=./demos/snake
 
 shades: engine
 	@echo "Launching *shades* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/shades
-	@./$(TARGET) --path=./demos/shades
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/shades
+	@$(builddir)/$(TARGET) --path=./demos/shades
 
 gamepad: engine
 	@echo "Launching *gamepad* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
-	@./$(TARGET) --path=./demos/gamepad
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/gamepad
+	@$(builddir)/$(TARGET) --path=./demos/gamepad
 
 gamepad-pak: engine
 	@echo "Launching *gamepad (PAK)* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
-	@lua5.3 ./extras/pakgen.lua --input=./demos/gamepad --output=./demos/gamepad.pak --encrypted
-	@./$(TARGET) --path=./demos/gamepad.pak
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/gamepad
+	@$(PACKER) $(PACKERFLAGS) --input=./demos/gamepad --output=./demos/gamepad.pak
+	@$(builddir)/$(TARGET) --path=./demos/gamepad.pak
 
 hello-tofu: engine
 	@echo "Launching *hello-tofu* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/hello-tofu
-	@./$(TARGET) --path=./demos/hello-tofu
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/hello-tofu
+	@$(builddir)/$(TARGET) --path=./demos/hello-tofu
 
 swirl: engine
 	@echo "Launching *swirl* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/swirl
-	@./$(TARGET) --path=./demos/swirl
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/swirl
+	@$(builddir)/$(TARGET) --path=./demos/swirl
 
 twist: engine
 	@echo "Launching *twist* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/twist
-	@./$(TARGET) --path=./demos/twist
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/twist
+	@$(builddir)/$(TARGET) --path=./demos/twist
 
 tween: engine
 	@echo "Launching *tween* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/tween
-	@./$(TARGET) --path=./demos/tween
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/tween
+	@$(builddir)/$(TARGET) --path=./demos/tween
 
 helix: engine
 	@echo "Launching *helix* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/helix
-	@./$(TARGET) --path=./demos/helix
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/helix
+	@$(builddir)/$(TARGET) --path=./demos/helix
 
 mixer: engine
 	@echo "Launching *mixer* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/mixer
-	@./$(TARGET) --path=./demos/mixer
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/mixer
+	@$(builddir)/$(TARGET) --path=./demos/mixer
 
 scaling: engine
 	@echo "Launching *scaling* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/scaling
-	@./$(TARGET) --path=./demos/scaling
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/scaling
+	@$(builddir)/$(TARGET) --path=./demos/scaling
 
 rotations: engine
 	@echo "Launching *rotations* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/rotations
-	@./$(TARGET) --path=./demos/rotations
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/rotations
+	@$(builddir)/$(TARGET) --path=./demos/rotations
 
 platform: engine
 	@echo "Launching *platform* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/platform
-	@./$(TARGET) --path=./demos/platform
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/platform
+	@$(builddir)/$(TARGET) --path=./demos/platform
 
 splash: engine
 	@echo "Launching *splash* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/splash
-	@./$(TARGET) --path=./demos/splash
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/splash
+	@$(builddir)/$(TARGET) --path=./demos/splash
 
 rasterbars: engine
 	@echo "Launching *rasterbars* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/rasterbars
-	@./$(TARGET) --path=./demos/rasterbars
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/rasterbars
+	@$(builddir)/$(TARGET) --path=./demos/rasterbars
 
 stencil: engine
 	@echo "Launching *stencil* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/stencil
-	@./$(TARGET) --path=./demos/stencil
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/stencil
+	@$(builddir)/$(TARGET) --path=./demos/stencil
 
 lasers: engine
 	@echo "Launching *lasers* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/lasers
-	@./$(TARGET) --path=./demos/lasers
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/lasers
+	@$(builddir)/$(TARGET) --path=./demos/lasers
 
 physics: engine
 	@echo "Launching *physics* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/physics
-	@./$(TARGET) --path=./demos/physics
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/physics
+	@$(builddir)/$(TARGET) --path=./demos/physics
 
 bump: engine
 	@echo "Launching *bump* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/bump
-	@./$(TARGET) --path=./demos/bump
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/bump
+	@$(builddir)/$(TARGET) --path=./demos/bump
 
 threedee: engine
 	@echo "Launching *threedee* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/threedee
-	@./$(TARGET) --path=./demos/threedee
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/threedee
+	@$(builddir)/$(TARGET) --path=./demos/threedee
 
 threedee-pak: engine
 	@echo "Launching *threedee (PAK)* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/threedee
-	@lua5.3 ./extras/pakgen.lua --input=./demos/threedee --output=./demos/threedee.pak --encrypted
-	@./$(TARGET) --path=./demos/threedee.pak
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/threedee
+	@$(PACKER) $(PACKERFLAGS) --input=./demos/threedee --output=./demos/threedee.pak
+	@$(builddir)/$(TARGET) --path=./demos/threedee.pak
 
 noise: engine
 	@echo "Launching *threedee* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/noise
-	@./$(TARGET) --path=./demos/noise
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/noise
+	@$(builddir)/$(TARGET) --path=./demos/noise
 
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
-	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
-	@./$(TARGET) --path=./demos/$(DEMO)
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
+	@$(builddir)/$(TARGET) --path=./demos/$(DEMO)
 
+# Use software renderer to use VALGRIND
 valgrind: engine
 	@echo "Valgrind *$(DEMO)* application!"
-	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
+	@export LIBGL_ALWAYS_SOFTWARE=1
+	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) ./demos/$(DEMO)
+	@export LIBGL_ALWAYS_SOFTWARE=0
 
 .PHONY: clean
 clean:
-	@$(RM) $(OBJECTS)
-	@$(RM) $(DUMPS)
-	@$(RM) $(KERNAL)
+	@rm -f $(OBJECTS)
+	@rm -f $(DUMPS)
+	@rm -f $(builddir)/$(KERNAL)
+	@rm -f $(builddir)/$(TARGET)
 	@echo "Cleanup complete!"
-
-.PHONY: remove
-remove: clean
-	@$(RM) $(TARGET)
-	@echo "Executable removed!"

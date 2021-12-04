@@ -2,3 +2,4 @@
 .vscode/
 external/**/*.o
 src/**/*.o
+build/
