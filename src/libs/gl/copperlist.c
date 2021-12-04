@@ -207,8 +207,8 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
 #ifdef __DEBUG_GRAPHICS__
             GL_Color_t color;
             if (index >= count) {
-                const int y = (index - 240) * 8;
-                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+                const int v = (index - 240) * 8;
+                color = (GL_Color_t){ 0, 63 + v, 0, 255 };
             } else {
                 color = colors[index];
             }

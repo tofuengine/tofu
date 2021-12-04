@@ -76,7 +76,7 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
-        return false;
+        return NULL;
     }
 
     Configuration_t *configuration = Configuration_create(S_SCHARS(resource));
