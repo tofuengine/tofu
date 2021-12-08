@@ -850,7 +850,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
-	xc->info_period = final_period * 4096;
+	xc->info_period = MIN(final_period * 4096, INT_MAX);
 
 	if (IS_PERIOD_MODRNG()) {
 		CLAMP(xc->info_period,
@@ -1177,9 +1177,16 @@ static void play_channel(struct context_data *ctx, int chn)
 			xc->volume += rval[xc->retrig.type].s;
 			xc->volume *= rval[xc->retrig.type].m;
 			xc->volume /= rval[xc->retrig.type].d;
-                	xc->retrig.count = LSN(xc->retrig.val);
+			xc->retrig.count = LSN(xc->retrig.val);
+
+			if (xc->retrig.limit > 0) {
+				/* Limit the number of retriggers. */
+				--xc->retrig.limit;
+				if (xc->retrig.limit == 0)
+					RESET(RETRIG);
+			}
 		}
-        }
+	}
 
 	/* Do keyoff */
 	if (xc->keyoff) {
@@ -1289,16 +1296,16 @@ static void next_row(struct context_data *ctx)
 
 		next_order(ctx);
 	} else {
-		if (f->loop_chn) {
-			p->row = f->loop[f->loop_chn - 1].start - 1;
-			f->loop_chn = 0;
-		}
-
 		if (f->rowdelay == 0) {
 			p->row++;
 			f->rowdelay_set = 0;
 		} else {
 			f->rowdelay--;
+		}
+
+		if (f->loop_chn) {
+			p->row = f->loop[f->loop_chn - 1].start;
+			f->loop_chn = 0;
 		}
 
 		/* check end of pattern */
@@ -1398,8 +1405,11 @@ LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 		mod->len = 0;
 	}
 
-	if (mod->len == 0 || mod->chn == 0) {
+	if (mod->len == 0) {
 		/* set variables to sane state */
+		/* Note: previously did this for mod->chn == 0, which caused
+		 * crashes on invalid order 0s. 0 channel modules are technically
+		 * valid (if useless) so just let them play normally. */
 		p->ord = p->scan[0].ord = 0;
 		p->row = p->scan[0].row = 0;
 		f->end_point = 0;
@@ -1419,6 +1429,7 @@ LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 	f->delay = 0;
 	f->jumpline = 0;
 	f->jump = -1;
+	f->loop_chn = 0;
 	f->pbreak = 0;
 	f->rowdelay_set = 0;
 

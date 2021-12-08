@@ -28,11 +28,6 @@
 #include "period.h"
 #include "smix.h"
 
-static inline int is_valid_note(int note)
-{
-	return (note >= 0 && note < XMP_MAX_KEYS);
-}
-
 static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 						   int ins, int key)
 {
@@ -42,7 +37,7 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 
 	if (IS_VALID_INSTRUMENT(ins)) {
 		instrument = &mod->xxi[ins];
-		if (is_valid_note(key)) {
+		if (IS_VALID_NOTE(key)) {
 			int mapped = instrument->map[key].ins;
 			if (mapped != 0xff && mapped >= 0 && mapped < instrument->nsm)
 			  	return &instrument->sub[mapped];
@@ -299,7 +294,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		if (e->note == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
-		} else if (!is_toneporta && is_valid_note(e->note - 1)) {
+		} else if (!is_toneporta && IS_VALID_NOTE(e->note - 1)) {
 			xc->key = e->note - 1;
 			RESET_NOTE(NOTE_END);
 
@@ -312,7 +307,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				note = xc->key + sub->xpo + transp;
 				smp = sub->sid;
 
-				if (mod->xxs[smp].len == 0) {
+				if (!IS_VALID_SAMPLE(smp)) {
 					smp = -1;
 				}
 
@@ -373,6 +368,7 @@ static int sustain_check(struct xmp_envelope *env, int idx)
 {
 	return (env &&
 		(env->flg & XMP_ENVELOPE_ON) &&
+		(env->flg & XMP_ENVELOPE_SUS) &&
 		(~env->flg & XMP_ENVELOPE_LOOP) &&
 		idx == env->data[env->sus << 1]);
 }
@@ -620,7 +616,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	 *  and remains in the memory."
 	 */
 	sub = NULL;
-	if (is_valid_note(key - 1)) {
+	if (IS_VALID_NOTE(key - 1)) {
 		int k = key - 1;
 		sub = get_subinstrument(ctx, xc->ins, k);
 		if (!new_invalid_ins && sub != NULL) {
@@ -633,7 +629,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	if (is_valid_note(key - 1)) {
+	if (IS_VALID_NOTE(key - 1)) {
 		xc->key = --key;
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_END);
@@ -651,7 +647,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			note = key + sub->xpo + transp;
 			smp = sub->sid;
 
-			if (mod->xxs[smp].len == 0) {
+			if (!IS_VALID_SAMPLE(smp)) {
 				smp = -1;
 			}
 
@@ -807,7 +803,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			if (not_same_ins) {
 				xc->offset.val = 0;
 			}
-		} else if (is_valid_note(e->note - 1)) {
+		} else if (IS_VALID_NOTE(e->note - 1)) {
 			xc->key = e->note - 1;
 			RESET_NOTE(NOTE_END);
 
@@ -820,7 +816,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 				note = xc->key + sub->xpo + transp;
 				smp = sub->sid;
 
-				if (mod->xxs[smp].len == 0) {
+				if (!IS_VALID_SAMPLE(smp)) {
 					smp = -1;
 				}
 
@@ -1171,7 +1167,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					SET(NEW_INS);
 					RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
 				} else {
-					if (is_valid_note(key - 1)) {
+					if (IS_VALID_NOTE(key - 1)) {
 						xc->key_porta = key - 1;
 					}
 					key = 0;
@@ -1180,7 +1176,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		}
 	}
 
-	if (is_valid_note(key - 1) && !new_invalid_ins) {
+	if (IS_VALID_NOTE(key - 1) && !new_invalid_ins) {
 		if (TEST_NOTE(NOTE_CUT)) {
 			use_ins_vol = 1;	/* See OpenMPT NoteOffInstr.it */
 		}
@@ -1196,7 +1192,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 			note = key + sub->xpo + transp;
 			smp = sub->sid;
-			if (smp >= mod->smp || mod->xxs[smp].len == 0) {
+			if (!IS_VALID_SAMPLE(smp)) {
 				smp = -1;
 			}
 
@@ -1399,7 +1395,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 			xc->smp = smp;
 		}
 	} else {
-		sub = is_valid_note(xc->key) ?
+		sub = IS_VALID_NOTE(xc->key) ?
 			get_subinstrument(ctx, xc->ins, xc->key) : NULL;
 		if (sub == NULL) {
 			return 0;
@@ -1407,7 +1403,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 		transp = mod->xxi[xc->ins].map[xc->key].xpo;
 		note = xc->key + sub->xpo + transp;
 		smp = sub->sid;
-		if (mod->xxs[smp].len == 0)
+		if (!IS_VALID_SAMPLE(smp))
 			smp = -1;
 		if (smp >= 0 && smp < mod->smp) {
 			set_patch(ctx, chn, xc->ins, smp, note);
