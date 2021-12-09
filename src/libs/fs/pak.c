@@ -41,8 +41,6 @@
 
 #define PAK_VERSION             0
 
-#define PAK_FLAG_ENCRYPTED      0x0001
-
 // TODO: no in-memory directory?
 
 /*
@@ -80,7 +78,17 @@
 typedef struct Pak_Header_s {
     char signature[PAK_SIGNATURE_LENGTH];
     uint8_t version;
-    uint8_t flags;
+    struct { // Bit ordering is implementation dependent, il LE machines lower bits are the first.
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        uint8_t encrypted : 1;
+        uint8_t __padding : 7;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        uint8_t __padding : 7;
+        uint8_t encrypted : 1;
+#else
+#    error unsupported endianness
+#endif
+    } flags;
     uint16_t __reserved;
 } Pak_Header_t;
 
@@ -103,12 +111,16 @@ typedef struct Pak_Index_s {
 } Pak_Index_t;
 #pragma pack(pop)
 
+typedef struct Pak_Flags_s {
+    bool encrypted;
+} Pak_Flags_t;
+
 typedef struct Pak_Mount_s {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
-    uint8_t flags;
+    Pak_Flags_t flags;
 } Pak_Mount_t;
 
 typedef struct Pak_Handle_s {
@@ -121,7 +133,7 @@ typedef struct Pak_Handle_s {
     xor_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, Pak_Flags_t flags);
 static void _pak_mount_dtor(FS_Mount_t *mount);
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
@@ -151,7 +163,7 @@ static bool _pak_validate_archive(FILE *stream, const char *path, uint8_t *flags
         return false;
     }
     if (flags) {
-        *flags = header.flags;
+        flags->encrypted = header.flags.encrypted;
     }
     return true;
 }
@@ -250,7 +262,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    uint8_t flags;
+    Pak_Flags_t flags;
     bool validated = _pak_validate_archive(stream, path, &flags);
     if (!validated) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't validate file `%s` as archive", path);
@@ -312,7 +324,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
     return mount;
 }
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, Pak_Flags_t flags)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -382,7 +394,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         return NULL;
     }
 
-    _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->id);
+    _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags.encrypted, entry->id);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
 

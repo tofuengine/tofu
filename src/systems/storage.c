@@ -80,7 +80,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "executable path is `%s`", executable_path);
 
     char kernal_path[PLATFORM_PATH_MAX] = { 0 };
-    path_join(kernal_path, executable_path, "kernal.pak");
+    path_join(kernal_path, executable_path, __ENGINE_KERNAL_NAME__);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal path is `%s`", kernal_path);
 
     bool attached = FS_attach(storage->context, kernal_path);
