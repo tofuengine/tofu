@@ -34,8 +34,6 @@ function Oscillator:__ctor(...)
   self.phase = 0
 end
 
-Oscillator.__call = Oscillator.value
-
 function Oscillator:advance(delta_phase)
   local phase = self.phase + delta_phase
   local period = self.wave:period()
@@ -51,5 +49,7 @@ end
 function Oscillator:value(offset)
   return self.wave(self.phase + (offset or 0.0))
 end
+
+Oscillator.__call = Oscillator.value
 
 return Oscillator
