@@ -10349,7 +10349,7 @@ static MA_INLINE ma_bool32 ma_has_sse2(void)
 }
 
 #if 0
-static MA_INLINE ma_bool32 ma_has_avx()
+static MA_INLINE ma_bool32 ma_has_avx(void)
 {
 #if defined(MA_SUPPORT_AVX)
     #if (defined(MA_X64) || defined(MA_X86)) && !defined(MA_NO_AVX)
@@ -10592,7 +10592,7 @@ static MA_INLINE void ma_sleep(ma_uint32 milliseconds)
 }
 #endif
 
-static MA_INLINE void ma_yield()
+static MA_INLINE void ma_yield(void)
 {
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
     /* x86/x64 */
@@ -10627,7 +10627,7 @@ static MA_INLINE void ma_yield()
 #define MA_MM_DENORMALS_ZERO_MASK   0x0040
 #define MA_MM_FLUSH_ZERO_MASK       0x8000
 
-static MA_INLINE unsigned int ma_disable_denormals()
+static MA_INLINE unsigned int ma_disable_denormals(void)
 {
     unsigned int prevState;
 
@@ -12044,7 +12044,7 @@ MA_API const char* ma_log_level_to_string(ma_uint32 logLevel)
     }
 }
 
-#if defined(MA_DEBUG_OUTPUT)
+#if defined(MA_DEBUG_OUTPUT_DEFAULT_CALLBACK)
 
 /* Customize this to use a specific tag in __android_log_print() for debug output messages. */
 #ifndef MA_ANDROID_LOG_TAG
@@ -12102,7 +12102,7 @@ MA_API ma_result ma_log_init(const ma_allocation_callbacks* pAllocationCallbacks
     #endif
 
     /* If we're using debug output, enable it. */
-    #if defined(MA_DEBUG_OUTPUT)
+    #if defined(MA_DEBUG_OUTPUT_DEFAULT_CALLBACK)
     {
         ma_log_register_callback(pLog, ma_log_callback_init(ma_log_callback_debug, NULL)); /* Doesn't really matter if this fails. */
     }
@@ -33512,7 +33512,7 @@ OSS Backend
 
 #define MA_OSS_DEFAULT_DEVICE_NAME  "/dev/dsp"
 
-static int ma_open_temp_device__oss()
+static int ma_open_temp_device__oss(void)
 {
     /* The OSS sample code uses "/dev/mixer" as the device for getting system properties so I'm going to do the same. */
     int fd = open("/dev/mixer", O_RDONLY, 0);
@@ -36190,7 +36190,7 @@ Web Audio Backend
 #ifdef MA_HAS_WEBAUDIO
 #include <emscripten/emscripten.h>
 
-static ma_bool32 ma_is_capture_supported__webaudio()
+static ma_bool32 ma_is_capture_supported__webaudio(void)
 {
     return EM_ASM_INT({
         return (navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined);
@@ -37258,7 +37258,7 @@ static ma_bool32 ma_context_is_backend_asynchronous(ma_context* pContext)
 }
 
 
-MA_API ma_context_config ma_context_config_init()
+MA_API ma_context_config ma_context_config_init(void)
 {
     ma_context_config config;
     MA_ZERO_OBJECT(&config);
@@ -37493,7 +37493,7 @@ MA_API ma_result ma_context_uninit(ma_context* pContext)
     return MA_SUCCESS;
 }
 
-MA_API size_t ma_context_sizeof()
+MA_API size_t ma_context_sizeof(void)
 {
     return sizeof(ma_context);
 }
@@ -49317,7 +49317,7 @@ MA_API ma_result ma_channel_converter_get_output_channel_map(const ma_channel_co
 Data Conversion
 
 **************************************************************************************************************************************************************/
-MA_API ma_data_converter_config ma_data_converter_config_init_default()
+MA_API ma_data_converter_config ma_data_converter_config_init_default(void)
 {
     ma_data_converter_config config;
     MA_ZERO_OBJECT(&config);
@@ -55991,7 +55991,7 @@ MA_API ma_decoder_config ma_decoder_config_init(ma_format outputFormat, ma_uint3
     return config;
 }
 
-MA_API ma_decoder_config ma_decoder_config_init_default()
+MA_API ma_decoder_config ma_decoder_config_init_default(void)
 {
     return ma_decoder_config_init(ma_format_unknown, 0, 0);
 }
@@ -62819,7 +62819,7 @@ MA_API ma_log* ma_resource_manager_get_log(ma_resource_manager* pResourceManager
 
 
 
-MA_API ma_resource_manager_data_source_config ma_resource_manager_data_source_config_init()
+MA_API ma_resource_manager_data_source_config ma_resource_manager_data_source_config_init(void)
 {
     ma_resource_manager_data_source_config config;
 
