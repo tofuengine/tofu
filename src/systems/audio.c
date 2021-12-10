@@ -182,22 +182,22 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
     if (configuration->device_index == -1) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using default device for context %p", audio->driver.context);
-        device_config.playback.pDeviceID  = NULL;
+        device_config.playback.pDeviceID    = NULL;
     } else {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d for context %p", closure.device_index, audio->driver.context);
-        device_config.playback.pDeviceID  = &closure.device_id;
+        device_config.playback.pDeviceID    = &closure.device_id;
     }
 #if SL_BYTES_PER_SAMPLE == 2
-    device_config.playback.format         = ma_format_s16;
+    device_config.playback.format           = ma_format_s16;
 #elif SL_BYTES_PER_SAMPLE == 4
-    device_config.playback.format         = ma_format_f32;
+    device_config.playback.format           = ma_format_f32;
 #endif
-    device_config.playback.channels       = SL_CHANNELS_PER_FRAME;
-    device_config.sampleRate              = SL_FRAMES_PER_SECOND;
-    device_config.dataCallback            = _data_callback;
-    device_config.stopCallback            = _stop_callback;
-    device_config.pUserData               = (void *)audio;
-    device_config.noPreZeroedOutputBuffer = MA_FALSE;
+    device_config.playback.channels         = SL_CHANNELS_PER_FRAME;
+    device_config.sampleRate                = SL_FRAMES_PER_SECOND;
+    device_config.dataCallback              = _data_callback;
+    device_config.stopCallback              = _stop_callback;
+    device_config.pUserData                 = (void *)audio;
+    device_config.noPreSilencedOutputBuffer = MA_FALSE;
 
     result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {

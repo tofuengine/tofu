@@ -276,7 +276,9 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
-        ma_uint64 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
+
+        ma_uint64 frames_to_consume;
+        ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
 
         void *consumed_buffer;
         ma_audio_buffer_map(buffer, &consumed_buffer, &frames_to_consume); // No need to check the result, can't fail.
