@@ -36,7 +36,7 @@
 
 #define LOG_CONTEXT "audio"
 
-static void _log_callback(void* user_data, ma_uint32 level, const char* message)
+static void _log_callback(void *user_data, ma_uint32 level, const char *message)
 {
     static int _levels[] = {
         LOG_LEVELS_FATAL,   // !!!UNUSED!!!

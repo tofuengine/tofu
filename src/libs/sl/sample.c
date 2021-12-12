@@ -147,6 +147,21 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
+static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.
+{
+    return malloc(sz);
+}
+
+static void *_realloc(void *ptr, size_t sz, void *pUserData)
+{
+    return realloc(ptr, sz);
+}
+
+static void  _free(void *ptr, void *pUserData)
+{
+    free(ptr);
+}
+
 static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Sample_t *sample = (Sample_t *)source;
@@ -162,7 +177,12 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
             .frames_completed = 0
         };
 
-    sample->decoder = drflac_open(_sample_read, _sample_seek, sample, NULL);
+    sample->decoder = drflac_open(_sample_read, _sample_seek, sample, &(drflac_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc  = _malloc,
+            .onRealloc = _realloc,
+            .onFree    = _free
+        });
     if (!sample->decoder) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create sample decoder");
         return false;
