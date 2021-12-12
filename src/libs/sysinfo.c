@@ -114,6 +114,7 @@ bool SI_inspect(System_Information_t *si)
         {
           int major;
           int minor;
+          int build;
           unsigned int server_offset;
           const char *name;
         };
@@ -122,23 +123,24 @@ bool SI_inspect(System_Information_t *si)
          stream does not waste memory when they are the same.  These
          macros abstract the representation.  VERSION1 is used if
          version.wProductType does not matter, VERSION2 if it does.  */
-      #define VERSION1(major, minor, name) \
-        { major, minor, 0, name }
-      #define VERSION2(major, minor, workstation, server) \
-        { major, minor, sizeof workstation, workstation "\0" server }
+      #define VERSION1(major, minor, build, name) \
+        { major, minor, build, 0, name }
+      #define VERSION2(major, minor, build, workstation, server) \
+        { major, minor, build, sizeof workstation, workstation "\0" server }
       static const struct windows_version versions[] =
         {
-          VERSION2 (3, -1, "Windows NT Workstation", "Windows NT Server"),
-          VERSION2 (4, -1, "Windows NT Workstation", "Windows NT Server"),
-          VERSION1 (5, 0, "Windows 2000"),
-          VERSION1 (5, 1, "Windows XP"),
-          VERSION1 (5, 2, "Windows Server 2003"),
-          VERSION2 (6, 0, "Windows Vista", "Windows Server 2008"),
-          VERSION2 (6, 1, "Windows 7", "Windows Server 2008 R2"),
-          VERSION2 (6, 2, "Windows 8", "Windows Server 2012"),
-          VERSION2 (6, 3, "Windows 8.1", "Windows Server 2012 R2"),
-          VERSION2 (10, 0, "Windows 10", "Windows Server 2016"),
-          VERSION2 (-1, -1, "Windows", "Windows Server")
+          VERSION2 (3, -1, -1, "Windows NT Workstation", "Windows NT Server"),
+          VERSION2 (4, -1, -1, "Windows NT Workstation", "Windows NT Server"),
+          VERSION1 (5, 0, -1, "Windows 2000"),
+          VERSION1 (5, 1, -1, "Windows XP"),
+          VERSION1 (5, 2, -1, "Windows Server 2003"),
+          VERSION2 (6, 0, -1, "Windows Vista", "Windows Server 2008"),
+          VERSION2 (6, 1, -1, "Windows 7", "Windows Server 2008 R2"),
+          VERSION2 (6, 2, -1, "Windows 8", "Windows Server 2012"),
+          VERSION2 (6, 3, -1, "Windows 8.1", "Windows Server 2012 R2"),
+          VERSION2 (10, 0, -1, "Windows 10", "Windows Server 2016"),
+          VERSION1 (10, 0, 22000, "Windows 11"),
+          VERSION2 (-1, -1, -1, "Windows", "Windows Server")
         };
       const char *base;
       const struct windows_version *v = versions;
@@ -146,7 +148,8 @@ bool SI_inspect(System_Information_t *si)
       /* Find a version that matches ours.  The last element is a
          wildcard that always ends the loop.  */
       while ((v->major != (int)version.dwMajorVersion && v->major != -1)
-             || (v->minor != (int)version.dwMinorVersion && v->minor != -1))
+             || (v->minor != (int)version.dwMinorVersion && v->minor != -1)
+             || (v->build < (int)version.dwBuildNumber && v->build != -1))
         v++;
 
       if (have_versionex && versionex.wProductType != VER_NT_WORKSTATION)
