@@ -146,7 +146,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence);
 static long _pak_handle_tell(FS_Handle_t *handle);
 static bool _pak_handle_eof(FS_Handle_t *handle);
 
-static bool _pak_validate_archive(FILE *stream, const char *path, uint8_t *flags)
+static bool _pak_validate_archive(FILE *stream, const char *path, Pak_Flags_t *flags)
 {
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
