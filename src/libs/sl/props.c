@@ -46,7 +46,20 @@
 
 #define LOG_CONTEXT "sl-props"
 
-static void _precompute(SL_Props_t *props);
+static void *_malloc(size_t sz, void *pUserData)
+{
+    return malloc(sz);
+}
+
+static void *_realloc(void *ptr, size_t sz, void *pUserData)
+{
+    return realloc(ptr, sz);
+}
+
+static void  _free(void *ptr, void *pUserData)
+{
+    free(ptr);
+}
 
 SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
@@ -67,8 +80,13 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
         };
 
     ma_data_converter_config config = ma_data_converter_config_init(format, INTERNAL_FORMAT, channels_in, channels_out, sample_rate, SL_FRAMES_PER_SECOND);
-    config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
-    ma_result result = ma_data_converter_init(&config, &props->converter);
+    config.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
+    ma_result result = ma_data_converter_init(&config, &(ma_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc = _malloc,
+            .onRealloc = _realloc,
+            .onFree = _free
+        }, &props->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create data converter");
         free(props);
@@ -80,7 +98,12 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
 
 void SL_props_destroy(SL_Props_t *props)
 {
-    ma_data_converter_uninit(&props->converter);
+    ma_data_converter_uninit(&props->converter, &(ma_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc = _malloc,
+            .onRealloc = _realloc,
+            .onFree = _free
+        });
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data converted deinitialized");
 
     free(props);
@@ -95,6 +118,37 @@ void SL_props_set_group(SL_Props_t *props, size_t group_id)
 void SL_props_set_looped(SL_Props_t *props, bool looped)
 {
     props->looped = looped;
+}
+
+//
+// Sm * v = u -> Gm * u'
+//
+//   or
+//
+// Gm * Sm * v = (Gm * Sm) * v = GSm * v
+//
+static void _precompute(SL_Props_t *props)
+{
+    const SL_Group_t *group = SL_context_get_group(props->context, props->group_id);
+
+    const SL_Mix_t S = props->mix;
+    const SL_Mix_t G = group->mix;
+
+    const float left_to_left = S.left_to_left * G.left_to_left + S.right_to_left * G.left_to_right;
+    const float left_to_right = S.left_to_right * G.left_to_left + S.right_to_right * G.left_to_right;
+    const float right_to_left = S.left_to_left * G.right_to_left + S.right_to_left * G.right_to_right;
+    const float right_to_right = S.left_to_right * G.right_to_left + S.right_to_right * G.right_to_right;
+
+    const float S_gain = props->gain;
+    const float G_gain = group->gain;
+    const float gain = S_gain * G_gain;
+
+    props->precomputed_mix = (SL_Mix_t){
+            .left_to_left = left_to_left * gain,
+            .left_to_right = left_to_right * gain,
+            .right_to_left = right_to_left * gain,
+            .right_to_right = right_to_right * gain
+        };
 }
 
 // mix, pan, and balance are mutually exclusive, that is pan is a special case of mix.
@@ -143,35 +197,3 @@ void SL_props_on_group_changed(SL_Props_t *props, size_t group_id)
     }
     _precompute(props);
 }
-
-//
-// Sm * v = u -> Gm * u'
-//
-//   or
-//
-// Gm * Sm * v = (Gm * Sm) * v = GSm * v
-//
-static void _precompute(SL_Props_t *props)
-{
-    const SL_Group_t *group = SL_context_get_group(props->context, props->group_id);
-
-    const SL_Mix_t S = props->mix;
-    const SL_Mix_t G = group->mix;
-
-    const float left_to_left = S.left_to_left * G.left_to_left + S.right_to_left * G.left_to_right;
-    const float left_to_right = S.left_to_right * G.left_to_left + S.right_to_right * G.left_to_right;
-    const float right_to_left = S.left_to_left * G.right_to_left + S.right_to_left * G.right_to_right;
-    const float right_to_right = S.left_to_right * G.right_to_left + S.right_to_right * G.right_to_right;
-
-    const float S_gain = props->gain;
-    const float G_gain = group->gain;
-    const float gain = S_gain * G_gain;
-
-    props->precomputed_mix = (SL_Mix_t){
-            .left_to_left = left_to_left * gain,
-            .left_to_right = left_to_right * gain,
-            .right_to_left = right_to_left * gain,
-            .right_to_right = right_to_right * gain
-        };
-}
-

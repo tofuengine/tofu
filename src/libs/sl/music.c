@@ -124,7 +124,7 @@ static inline bool _produce(Music_t *music)
     size_t frames_produced = drflac_read_pcm_frames_f32(music->decoder, frames_to_produce, write_buffer);
 #endif
 
-    ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
+    ma_pcm_rb_commit_write(buffer, frames_produced);
 
     music->frames_completed += frames_produced;
 
@@ -312,16 +312,18 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
 
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
-        ma_uint32 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
+        ma_uint64 frames_to_consume;
+        ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
 
+        ma_uint32 frames_to_acquire = (ma_uint32)frames_to_consume;
         void *consumed_buffer;
-        ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &consumed_buffer);
+        ma_pcm_rb_acquire_read(buffer, &frames_to_acquire, &consumed_buffer);
 
-        ma_uint64 frames_consumed = frames_to_consume;
+        ma_uint64 frames_consumed = frames_to_acquire;
         ma_uint64 frames_generated = frames_to_generate;
         ma_data_converter_process_pcm_frames(converter, consumed_buffer, &frames_consumed, converted_buffer, &frames_generated);
 
-        ma_pcm_rb_commit_read(buffer, frames_consumed, consumed_buffer);
+        ma_pcm_rb_commit_read(buffer, frames_consumed);
 
         mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
         cursor += frames_generated * SL_BYTES_PER_FRAME;

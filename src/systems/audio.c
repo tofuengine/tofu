@@ -36,9 +36,16 @@
 
 #define LOG_CONTEXT "audio"
 
-static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
+static void _log_callback(void *user_data, ma_uint32 level, const char *message)
 {
-    Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
+    static int _levels[] = {
+        LOG_LEVELS_FATAL,   // !!!UNUSED!!!
+        LOG_LEVELS_ERROR,   // #define MA_LOG_LEVEL_ERROR      1
+        LOG_LEVELS_WARNING, // #define MA_LOG_LEVEL_WARNING    2
+        LOG_LEVELS_INFO,    // #define MA_LOG_LEVEL_INFO       3
+        LOG_LEVELS_DEBUG    // #define MA_LOG_LEVEL_DEBUG      4
+    };
+    Log_write(_levels[level], "miniaudio", message);
 }
 
 typedef struct enum_callback_closure_s {
@@ -130,9 +137,17 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
 
+    ma_log_init(&(ma_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc = _malloc,
+            .onRealloc = _realloc,
+            .onFree = _free
+        }, &audio->driver.log);
+    ma_log_callback log_callback = ma_log_callback_init(_log_callback, (void *)audio);
+    ma_log_register_callback(&audio->driver.log, log_callback);
+
     ma_context_config context_config = ma_context_config_init();
-    context_config.pUserData   = (void *)audio;
-    context_config.logCallback = _log_callback;
+    context_config.pLog = &audio->driver.log;
     context_config.allocationCallbacks = (ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
@@ -143,6 +158,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     result = ma_context_init(NULL, 0, &context_config, &audio->driver.context);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio context");
+        ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
         free(audio);
@@ -156,6 +172,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     result = ma_context_enumerate_devices(&audio->driver.context, _enum_callback, &closure);
     if (result != MA_SUCCESS || (!closure.found && configuration->device_index != -1)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect audio device for context %p", audio->driver.context);
+        ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
         free(audio);
@@ -165,27 +182,28 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
     if (configuration->device_index == -1) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using default device for context %p", audio->driver.context);
-        device_config.playback.pDeviceID  = NULL;
+        device_config.playback.pDeviceID    = NULL;
     } else {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d for context %p", closure.device_index, audio->driver.context);
-        device_config.playback.pDeviceID  = &closure.device_id;
+        device_config.playback.pDeviceID    = &closure.device_id;
     }
 #if SL_BYTES_PER_SAMPLE == 2
-    device_config.playback.format         = ma_format_s16;
+    device_config.playback.format           = ma_format_s16;
 #elif SL_BYTES_PER_SAMPLE == 4
-    device_config.playback.format         = ma_format_f32;
+    device_config.playback.format           = ma_format_f32;
 #endif
-    device_config.playback.channels       = SL_CHANNELS_PER_FRAME;
-    device_config.sampleRate              = SL_FRAMES_PER_SECOND;
-    device_config.dataCallback            = _data_callback;
-    device_config.stopCallback            = _stop_callback;
-    device_config.pUserData               = (void *)audio;
-    device_config.noPreZeroedOutputBuffer = MA_FALSE;
+    device_config.playback.channels         = SL_CHANNELS_PER_FRAME;
+    device_config.sampleRate                = SL_FRAMES_PER_SECOND;
+    device_config.dataCallback              = _data_callback;
+    device_config.stopCallback              = _stop_callback;
+    device_config.pUserData                 = (void *)audio;
+    device_config.noPreSilencedOutputBuffer = MA_FALSE;
 
     result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio device");
         ma_context_uninit(&audio->driver.context);
+        ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
         free(audio);
@@ -202,6 +220,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
         ma_device_uninit(&audio->driver.device);
         ma_context_uninit(&audio->driver.context);
+        ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
         free(audio);
@@ -224,6 +243,7 @@ void Audio_destroy(Audio_t *audio)
 {
     ma_device_uninit(&audio->driver.device); // Device is automatically stopped on deinitialization.
     ma_context_uninit(&audio->driver.context);
+    ma_log_uninit(&audio->driver.log);
     ma_mutex_uninit(&audio->driver.lock);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
 

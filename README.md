@@ -66,7 +66,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.5
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.42
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
@@ -117,6 +117,8 @@ into a suitable work folder. Change directory into `tofu` folder you've just cre
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
 * `ARCHITECTURE`, can be either `x64` or `x32`. Please note that this is used only for the **Windows** build as the Linux one is 64-bit only, and the Raspberry-Pi is 32-bit only.
 
+The build artifacts will be placed in the `build` directory.
+
 ## Sample projects
 
 Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-folder and can be launched using `make`, passing the name of the project as a target (e.g. `make bunnymark`).
@@ -126,6 +128,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ## Desiderata
 
 * [ ] Physics-engine.
+* [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
@@ -140,7 +143,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] game time management, in system class (speed, up down pause)
 * [ ] both shoulder and trigger axes are analogue?
 * [ ] rumble?
-* [ ] Audio effects (e.g. reverb)?
 * [ ] analogues low pass filter (page 591) or moving average?
 * [ ] buttons states with XOR (page 594)
 * [ ] chords and gestures detection

@@ -121,7 +121,7 @@ static inline bool _produce(Module_t *module)
     const int loops = module->props->looped ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looped.
     int play_result = xmp_play_buffer(context, write_buffer, (int)frames_to_produce * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
 
-    ma_pcm_rb_commit_write(buffer, frames_to_produce, write_buffer);
+    ma_pcm_rb_commit_write(buffer, frames_to_produce);
 
     if (play_result == -XMP_END) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module %p reached end, marking as completed", module);
@@ -287,16 +287,18 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
-        ma_uint32 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
+        ma_uint64 frames_to_consume;
+        ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
 
+        ma_uint32 frames_to_acquire = (ma_uint32)frames_to_consume;
         void *consumed_buffer;
-        ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &consumed_buffer);
+        ma_pcm_rb_acquire_read(buffer, &frames_to_acquire, &consumed_buffer);
 
-        ma_uint64 frames_consumed = frames_to_consume;
+        ma_uint64 frames_consumed = frames_to_acquire;
         ma_uint64 frames_generated = frames_to_generate;
         ma_data_converter_process_pcm_frames(converter, consumed_buffer, &frames_consumed, converted_buffer, &frames_generated);
 
-        ma_pcm_rb_commit_read(buffer, frames_consumed, consumed_buffer);
+        ma_pcm_rb_commit_read(buffer, frames_consumed);
 
         mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
         cursor += frames_generated * SL_BYTES_PER_FRAME;

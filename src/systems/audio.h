@@ -52,6 +52,7 @@ typedef struct Audio_s {
     Audio_Configuration_t configuration;
 
     struct {
+        ma_log log;
         ma_context context;
         ma_device device;
         ma_mutex lock;
