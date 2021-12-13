@@ -65,18 +65,7 @@ function Main:on_focus_lost()
   self.running = false
 end
 
-function Main:process(events)
-  -- TODO: move to the boot script.
-  if events then
-    for _, event in ipairs(events) do
-      local callback = self[event]
-      if callback then
-        callback(self)
-      end
-    end
-  end
-  -- TODO: add "pressed" buttons auto-events?
-
+function Main:process()
   if Input.is_pressed("start") then
     self.fan = not self.fan
   end

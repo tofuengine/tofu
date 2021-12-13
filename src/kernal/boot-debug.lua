@@ -54,7 +54,15 @@ function Tofu:__ctor()
           me.main = nil
         end,
       process = function(me, events)
-          me.main:process(events)
+          if events then
+            for _, event in ipairs(events) do
+              local callback = me.main[event]
+              if callback then
+                callback(me.main)
+              end
+            end
+          end
+          me.main:process()
         end,
       update = function(me, delta_time)
           Pool.default():update(delta_time)

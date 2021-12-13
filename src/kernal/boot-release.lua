@@ -34,7 +34,16 @@ function Tofu:__ctor()
 end
 
 function Tofu:process(events)
-  self.main:process(events)
+  if events then
+    for _, event in ipairs(events) do
+      local callback = self.main[event]
+      if callback then
+        callback(self.main)
+      end
+    end
+  end
+  -- TODO: add "pressed" buttons auto-events?
+  self.main:process()
 end
 
 function Tofu:update(delta_time)
