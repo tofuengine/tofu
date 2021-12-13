@@ -363,9 +363,14 @@ threedee-pak: engine
 	@$(builddir)/$(TARGET) --path=./demos/threedee.pak
 
 noise: engine
-	@echo "Launching *threedee* application!"
+	@echo "Launching *noise* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/noise
 	@$(builddir)/$(TARGET) --path=./demos/noise
+
+copperbars: engine
+	@echo "Launching *copperbars* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/copperbars
+	@$(builddir)/$(TARGET) --path=./demos/copperbars
 
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
