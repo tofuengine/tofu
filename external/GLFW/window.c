@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
@@ -1102,3 +1105,4 @@ GLFWAPI void glfwPostEmptyEvent(void)
     _glfwPlatformPostEmptyEvent();
 }
 
+#pragma GCC diagnostic pop

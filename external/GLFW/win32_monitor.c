@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 //========================================================================
 // GLFW 3.3 Win32 - www.glfw.org
 //------------------------------------------------------------------------
@@ -546,3 +549,4 @@ GLFWAPI const char* glfwGetWin32Monitor(GLFWmonitor* handle)
     return monitor->win32.publicDisplayName;
 }
 
+#pragma GCC diagnostic pop

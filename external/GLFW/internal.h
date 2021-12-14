@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
@@ -778,3 +781,4 @@ char* _glfw_strdup(const char* source);
 float _glfw_fminf(float a, float b);
 float _glfw_fmaxf(float a, float b);
 
+#pragma GCC diagnostic pop

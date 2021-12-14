@@ -1,3 +1,7 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+
 //========================================================================
 // GLFW 3.3 EGL - www.glfw.org
 //------------------------------------------------------------------------
@@ -788,3 +792,4 @@ GLFWAPI EGLSurface glfwGetEGLSurface(GLFWwindow* handle)
     return window->context.egl.surface;
 }
 
+#pragma GCC diagnostic pop
