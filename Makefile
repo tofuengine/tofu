@@ -99,17 +99,17 @@ endif
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		LINKER=x86_64-w64-mingw32-gcc
-		LFLAGS=-L$(externaldir)/GLFW/windows/x64 -lglfw3 -lgdi32 -lpsapi
+		LFLAGS=-lgdi32 -lpsapi
 	else
 		LINKER=i686-w64-mingw32-gcc
-		LFLAGS=-L$(externaldir)/GLFW/windows/x32 -lglfw3 -lgdi32 -lpsapi
+		LFLAGS=-lgdi32 -lpsapi
 	endif
 else ifeq ($(PLATFORM),rpi)
 	LINKER=gcc
-	LFLAGS=-L$(externaldir)/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-lm -lpthread -lX11 -ldl
 else
 	LINKER=gcc
-	LFLAGS=-L$(externaldir)/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-lm -lpthread -lX11 -ldl
 endif
 LWARNINGS=-Wall -Wextra -Werror
 ifeq ($(BUILD),release)
@@ -158,7 +158,6 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/gif-h/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
-	$(wildcard $(externaldir)/GLFW/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
@@ -168,6 +167,59 @@ INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h)
+
+# Prepare GLFW flags according to the target platform.
+SOURCES+=$(externaldir)/GLFW/context.c \
+	$(externaldir)/GLFW/init.c \
+	$(externaldir)/GLFW/input.c \
+	$(externaldir)/GLFW/monitor.c \
+	$(externaldir)/GLFW/vulkan.c \
+	$(externaldir)/GLFW/window.c \
+	$(externaldir)/GLFW/egl_context.c \
+	$(externaldir)/GLFW/osmesa_context.c
+INCLUDES+=$(externaldir)/GLFW/internal.h \
+	$(externaldir)/GLFW/mappings.h \
+	$(externaldir)/GLFW/glfw3.h \
+	$(externaldir)/GLFW/glfw3native.h \
+	$(externaldir)/GLFW/egl_context.h \
+	$(externaldir)/GLFW/osmesa_context.h
+
+ifeq ($(PLATFORM),windows)
+	CFLAGS+=-D_GLFW_WIN32
+    CFLAGS+=-DWINVER=0x0501
+
+	SOURCES+=$(externaldir)/GLFW/wgl_context.c \
+		$(externaldir)/GLFW/win32_init.c \
+		$(externaldir)/GLFW/win32_joystick.c \
+		$(externaldir)/GLFW/win32_thread.c \
+		$(externaldir)/GLFW/win32_time.c \
+		$(externaldir)/GLFW/win32_window.c \
+		$(externaldir)/GLFW/win32_monitor.c
+	INCLUDES+=$(externaldir)/GLFW/win32_joystick.h \
+		$(externaldir)/GLFW/win32_platform.h \
+		$(externaldir)/GLFW/wgl_context.h
+else
+	CFLAGS+=-D_GLFW_X11
+
+	SOURCES+=$(externaldir)/GLFW/glx_context.c \
+		$(externaldir)/GLFW/posix_thread.c \
+		$(externaldir)/GLFW/posix_time.c \
+		$(externaldir)/GLFW/x11_monitor.c \
+		$(externaldir)/GLFW/x11_window.c \
+		$(externaldir)/GLFW/xkb_unicode.c \
+		$(externaldir)/GLFW/x11_init.c \
+		$(externaldir)/GLFW/linux_joystick.c
+	INCLUDES+=$(externaldir)/GLFW/glx_context.h \
+		$(externaldir)/GLFW/posix_time.h \
+		$(externaldir)/GLFW/xkb_unicode.h \
+		$(externaldir)/GLFW/posix_thread.h \
+		$(externaldir)/GLFW/x11_platform.h \
+		$(externaldir)/GLFW/linux_joystick.h
+endif
+
+$(info SOURCES="$(SOURCES)")
+$(info INCLUDES="$(INCLUDES)")
+
 # Output files
 OBJECTS:=$(SOURCES:%.c=%.o)
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
