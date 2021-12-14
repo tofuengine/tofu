@@ -49,7 +49,7 @@
 #endif
 
 #define GLFW_INCLUDE_NONE
-#include "../include/GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 
 #define _GLFW_INSERT_FIRST      0
 #define _GLFW_INSERT_LAST       1
