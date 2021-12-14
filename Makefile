@@ -67,6 +67,10 @@ LUACHECKFLAGS=--no-self --std lua53 -q
 VALGRIND=valgrind
 VALGRINDFLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
 
+# ------------------------------------------------------------------------------
+# --- Compiler -----------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		COMPILER=x86_64-w64-mingw32-gcc
@@ -76,12 +80,39 @@ ifeq ($(PLATFORM),windows)
 else
 	COMPILER=gcc
 endif
-CWARNINGS=-std=c99 -Wall -Wextra -Werror -Winline -Wlogical-op -Wno-unused-parameter -Wpedantic -Wpointer-arith -Wstrict-prototypes -Wshadow -Wunreachable-code -Wwrite-strings
-#CWARNINGS+=-Wfloat-equal
-CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DGIF_FLIP_VERT -DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DLIBXMP_BUILDING_STATIC -I$(srcdir) -I$(externaldir)
+
+CWARNINGS=-std=c99 \
+	-Wall \
+	-Wextra \
+	-Werror \
+	-Winline \
+	-Wlogical-op \
+	-Wno-unused-parameter \
+	-Wpedantic \
+	-Wpointer-arith \
+	-Wstrict-prototypes \
+	-Wshadow \
+	-Wunreachable-code \
+	-Wwrite-strings
+#	-Wfloat-equal
+
+CFLAGS=-D_DEFAULT_SOURCE \
+	-DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor \
+	-DGIF_FLIP_VERT \
+	-DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
+	-DDR_FLAC_NO_STDIO \
+	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION \
+	-DLIBXMP_BUILDING_STATIC \
+	-I$(srcdir) -I$(externaldir)
 ifneq ($(PLATFORM),windows)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
+ifeq ($(PLATFORM),windows)
+	CFLAGS+=-D_GLFW_WIN32
+else
+	CFLAGS+=-D_GLFW_X11
+endif
+
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
@@ -96,22 +127,20 @@ else
 	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG
 endif
 
+# ------------------------------------------------------------------------------
+# --- Linker -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+LINKER=$(COMPILER)
+
 ifeq ($(PLATFORM),windows)
-	ifeq ($(ARCHITECTURE),x64)
-		LINKER=x86_64-w64-mingw32-gcc
-		LFLAGS=-lgdi32 -lpsapi
-	else
-		LINKER=i686-w64-mingw32-gcc
-		LFLAGS=-lgdi32 -lpsapi
-	endif
-else ifeq ($(PLATFORM),rpi)
-	LINKER=gcc
-	LFLAGS=-lm -lpthread -lX11 -ldl
+	LFLAGS=-lgdi32 -lpsapi
 else
-	LINKER=gcc
 	LFLAGS=-lm -lpthread -lX11 -ldl
 endif
+
 LWARNINGS=-Wall -Wextra -Werror
+
 ifeq ($(BUILD),release)
 	LOPTS=-fomit-frame-pointer
 else ifeq ($(BUILD),profile)
@@ -121,6 +150,10 @@ else ifeq ($(BUILD),sanitize)
 else
 	LOPTS=
 endif
+
+# ------------------------------------------------------------------------------
+# --- Files --------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Source files list (src)
 SOURCES:=$(wildcard $(srcdir)/*.c) \
@@ -185,9 +218,6 @@ INCLUDES+=$(externaldir)/GLFW/internal.h \
 	$(externaldir)/GLFW/osmesa_context.h
 
 ifeq ($(PLATFORM),windows)
-	CFLAGS+=-D_GLFW_WIN32
-    CFLAGS+=-DWINVER=0x0501
-
 	SOURCES+=$(externaldir)/GLFW/wgl_context.c \
 		$(externaldir)/GLFW/win32_init.c \
 		$(externaldir)/GLFW/win32_joystick.c \
@@ -199,8 +229,6 @@ ifeq ($(PLATFORM),windows)
 		$(externaldir)/GLFW/win32_platform.h \
 		$(externaldir)/GLFW/wgl_context.h
 else
-	CFLAGS+=-D_GLFW_X11
-
 	SOURCES+=$(externaldir)/GLFW/glx_context.c \
 		$(externaldir)/GLFW/posix_thread.c \
 		$(externaldir)/GLFW/posix_time.c \
@@ -217,15 +245,19 @@ else
 		$(externaldir)/GLFW/linux_joystick.h
 endif
 
-$(info SOURCES="$(SOURCES)")
-$(info INCLUDES="$(INCLUDES)")
+#$(info SOURCES="$(SOURCES)")
+#$(info INCLUDES="$(INCLUDES)")
 
 # Output files
 OBJECTS:=$(SOURCES:%.c=%.o)
+
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
 RESOURCES:=$(shell find $(srcdir)/kernal -type f -name '*.*')
 
-# Build rules.
+# ------------------------------------------------------------------------------
+# --- Build Rules --------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 all: engine
 
 .PHONY: check
