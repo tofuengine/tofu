@@ -202,47 +202,14 @@ INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h)
 
 # Prepare GLFW flags according to the target platform.
-SOURCES+=$(externaldir)/GLFW/context.c \
-	$(externaldir)/GLFW/init.c \
-	$(externaldir)/GLFW/input.c \
-	$(externaldir)/GLFW/monitor.c \
-	$(externaldir)/GLFW/vulkan.c \
-	$(externaldir)/GLFW/window.c \
-	$(externaldir)/GLFW/egl_context.c \
-	$(externaldir)/GLFW/osmesa_context.c
-INCLUDES+=$(externaldir)/GLFW/internal.h \
-	$(externaldir)/GLFW/mappings.h \
-	$(externaldir)/GLFW/glfw3.h \
-	$(externaldir)/GLFW/glfw3native.h \
-	$(externaldir)/GLFW/egl_context.h \
-	$(externaldir)/GLFW/osmesa_context.h
-
+SOURCES+=$(shell cat $(externaldir)/GLFW/dependencies/common_c.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
+INCLUDES+=$(shell cat $(externaldir)/GLFW/dependencies/common_h.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
 ifeq ($(PLATFORM),windows)
-	SOURCES+=$(externaldir)/GLFW/wgl_context.c \
-		$(externaldir)/GLFW/win32_init.c \
-		$(externaldir)/GLFW/win32_joystick.c \
-		$(externaldir)/GLFW/win32_thread.c \
-		$(externaldir)/GLFW/win32_time.c \
-		$(externaldir)/GLFW/win32_window.c \
-		$(externaldir)/GLFW/win32_monitor.c
-	INCLUDES+=$(externaldir)/GLFW/win32_joystick.h \
-		$(externaldir)/GLFW/win32_platform.h \
-		$(externaldir)/GLFW/wgl_context.h
+	SOURCES+=$(shell cat $(externaldir)/GLFW/dependencies/win32_c.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
+	INCLUDES+=$(shell cat $(externaldir)/GLFW/dependencies/win32_h.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
 else
-	SOURCES+=$(externaldir)/GLFW/glx_context.c \
-		$(externaldir)/GLFW/posix_thread.c \
-		$(externaldir)/GLFW/posix_time.c \
-		$(externaldir)/GLFW/x11_monitor.c \
-		$(externaldir)/GLFW/x11_window.c \
-		$(externaldir)/GLFW/xkb_unicode.c \
-		$(externaldir)/GLFW/x11_init.c \
-		$(externaldir)/GLFW/linux_joystick.c
-	INCLUDES+=$(externaldir)/GLFW/glx_context.h \
-		$(externaldir)/GLFW/posix_time.h \
-		$(externaldir)/GLFW/xkb_unicode.h \
-		$(externaldir)/GLFW/posix_thread.h \
-		$(externaldir)/GLFW/x11_platform.h \
-		$(externaldir)/GLFW/linux_joystick.h
+	SOURCES+=$(shell cat $(externaldir)/GLFW/dependencies/x11_c.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
+	INCLUDES+=$(shell cat $(externaldir)/GLFW/dependencies/x11_h.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
 endif
 
 #$(info SOURCES="$(SOURCES)")
