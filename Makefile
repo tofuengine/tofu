@@ -202,14 +202,16 @@ INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h)
 
 # Prepare GLFW flags according to the target platform.
-SOURCES+=$(shell cat $(externaldir)/GLFW/dependencies/common_c.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
-INCLUDES+=$(shell cat $(externaldir)/GLFW/dependencies/common_h.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
+depends_from = $(shell cat $(1) | sed 's|^|$(2)|g' | tr '\n' ' ')
+
+SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/common_c.in,$(externaldir)/GLFW/)
+INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/common_h.in,$(externaldir)/GLFW/)
 ifeq ($(PLATFORM),windows)
-	SOURCES+=$(shell cat $(externaldir)/GLFW/dependencies/win32_c.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
-	INCLUDES+=$(shell cat $(externaldir)/GLFW/dependencies/win32_h.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
+	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/win32_c.in,$(externaldir)/GLFW/)
+	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/win32_h.in,$(externaldir)/GLFW/)
 else
-	SOURCES+=$(shell cat $(externaldir)/GLFW/dependencies/x11_c.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
-	INCLUDES+=$(shell cat $(externaldir)/GLFW/dependencies/x11_h.in | sed 's|^|$(externaldir)/GLFW/|g' | tr '\n' ' ')
+	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/x11_c.in,$(externaldir)/GLFW/)
+	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/x11_h.in,$(externaldir)/GLFW/)
 endif
 
 #$(info SOURCES="$(SOURCES)")
