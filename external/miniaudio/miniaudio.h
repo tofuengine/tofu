@@ -1,6 +1,6 @@
 /*
 Audio playback and capture library. Choice of public domain or MIT-0. See license statements at the end of this file.
-miniaudio - v0.10.43 - 2021-12-10
+miniaudio - v0.11.0 - TBD
 
 David Reid - mackron@gmail.com
 
@@ -283,9 +283,9 @@ the context.
 -------------------
 The high level API consists of three main parts:
 
-  * Resource management
-  * Node graph
-  * Engine
+  * Resource management for loading and streaming sounds.
+  * A node graph for advanced mixing and effect processing.
+  * A high level "engine" that wraps around the resource manager and node graph.
 
 The resource manager (`ma_resource_manager`) is used for loading sounds. It supports loading sounds
 fully into memory and also streaming. It will also deal with reference counting for you which
@@ -1928,12 +1928,33 @@ miniaudio's routing infrastructure follows a node graph paradigm. The idea is th
 node whose outputs are attached to inputs of another node, thereby creating a graph. There are
 different types of nodes, with each node in the graph processing input data to produce output,
 which is then fed through the chain. Each node in the graph can apply their own custom effects. At
-the end of the graph is an endpoint which represents the end of the chain and is where the final
-output is ultimately extracted from.
+the start of the graph will usually be one or more data source nodes which have no inputs, but
+instead pull their data from a data source. At the end of the graph is an endpoint which represents
+the end of the chain and is where the final output is ultimately extracted from.
 
 Each node has a number of input buses and a number of output buses. An output bus from a node is
 attached to an input bus of another. Multiple nodes can connect their output buses to another
-node's input bus, in which case their outputs will be mixed before processing by the node.
+node's input bus, in which case their outputs will be mixed before processing by the node. Below is
+a diagram that illustrates a hypothetical node graph setup:
+
+    ```
+    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Data flows left to right >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+    +---------------+                              +-----------------+
+    | Data Source 1 =----+    +----------+    +----= Low Pass Filter =----+
+    +---------------+    |    |          =----+    +-----------------+    |    +----------+
+                         +----= Splitter |                                +----= ENDPOINT |
+    +---------------+    |    |          =----+    +-----------------+    |    +----------+
+    | Data Source 2 =----+    +----------+    +----=  Echo / Delay   =----+
+    +---------------+                              +-----------------+
+    ```
+
+In the above graph, it starts with two data sources whose outputs are attached to the input of a
+splitter node. It's at this point that the two data sources are mixed. After mixing, the splitter
+performs it's processing routine and produces two outputs which is simply a duplication of the
+input stream. One output is attached to a low pass filter, whereas the other output is attached to
+a echo/delay. The outputs of the the low pass filter and the echo are attached to the endpoint, and
+since they're both connected to the same input but, they'll be mixed.
 
 Each input bus must be configured to accept the same number of channels, but input buses and output
 buses can each have different channel counts, in which case miniaudio will automatically convert
@@ -3603,8 +3624,8 @@ extern "C" {
 #define MA_XSTRINGIFY(x)    MA_STRINGIFY(x)
 
 #define MA_VERSION_MAJOR    0
-#define MA_VERSION_MINOR    10
-#define MA_VERSION_REVISION 43
+#define MA_VERSION_MINOR    11
+#define MA_VERSION_REVISION 0
 #define MA_VERSION_STRING   MA_XSTRINGIFY(MA_VERSION_MAJOR) "." MA_XSTRINGIFY(MA_VERSION_MINOR) "." MA_XSTRINGIFY(MA_VERSION_REVISION)
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -6938,6 +6959,9 @@ can then be set directly on the structure. Below are the members of the `ma_cont
         | ma_thread_priority_default           |
         |--------------------------------------|
 
+    threadStackSize
+        The desired size of the stack for the audio thread. Defaults to the operating system's default.
+
     pUserData
         A pointer to application-defined data. This can be accessed from the context object directly such as `context.pUserData`.
 
@@ -6992,6 +7016,12 @@ can then be set directly on the structure. Below are the members of the `ma_cont
         | ma_ios_session_category_option_allow_air_play                             | AVAudioSessionCategoryOptionAllowAirPlay                         |
         |---------------------------------------------------------------------------|------------------------------------------------------------------|
 
+    coreaudio.noAudioSessionActivate
+        iOS only. When set to true, does not perform an explicit [[AVAudioSession sharedInstace] setActive:true] on initialization.
+
+    coreaudio.noAudioSessionDeactivate
+        iOS only. When set to true, does not perform an explicit [[AVAudioSession sharedInstace] setActive:false] on uninitialization.
+
     jack.pClientName
         The name of the client to pass to `jack_client_open()`.
 
@@ -7035,9 +7065,12 @@ ma_backend backends[] = {
     ma_backend_dsound
 };
 
+ma_log log;
+ma_log_init(&log);
+ma_log_register_callback(&log, ma_log_callback_init(my_log_callbac, pMyLogUserData));
+
 ma_context_config config = ma_context_config_init();
-config.logCallback = my_log_callback;
-config.pUserData   = pMyUserData;
+config.pLog = &log; // Specify a custom log object in the config so any logs that are posted from ma_context_init() are captured.
 
 ma_context context;
 ma_result result = ma_context_init(backends, sizeof(backends)/sizeof(backends[0]), &config, &context);
@@ -7047,6 +7080,9 @@ if (result != MA_SUCCESS) {
         // Couldn't find an appropriate backend.
     }
 }
+
+// You could also attach a log callback post-initialization:
+ma_log_register_callback(ma_context_get_log(&context), ma_log_callback_init(my_log_callback, pMyLogUserData));
 ```
 
 
@@ -7097,6 +7133,8 @@ Remarks
 -------
 Pass the returned pointer to `ma_log_post()`, `ma_log_postv()` or `ma_log_postf()` to post a log
 message.
+
+You can attach your own logging callback to the log with `ma_log_register_callback()`
 
 
 Return Value
@@ -7462,6 +7500,12 @@ then be set directly on the structure. Below are the members of the `ma_device_c
         The resampling algorithm to use when miniaudio needs to perform resampling between the rate specified by `sampleRate` and the device's native rate. The
         default value is `ma_resample_algorithm_linear`, and the quality can be configured with `resampling.linear.lpfOrder`.
 
+    resampling.pBackendVTable
+        A pointer to an optional vtable that can be used for plugging in a custom resampler.
+
+    resampling.pBackendUserData
+        A pointer that will passed to callbacks in pBackendVTable.
+
     resampling.linear.lpfOrder
         The linear resampler applies a low-pass filter as part of it's procesing for anti-aliasing. This setting controls the order of the filter. The higher
         the value, the better the quality, in general. Setting this to 0 will disable low-pass filtering altogether. The maximum value is
@@ -7479,9 +7523,9 @@ then be set directly on the structure. Below are the members of the `ma_device_c
         The number of channels to use for playback. When set to 0 the device's native channel count will be used. This can be retrieved after initialization
         from the device object directly with `device.playback.channels`.
 
-    playback.channelMap
+    playback.pChannelMap
         The channel map to use for playback. When left empty, the device's native channel map will be used. This can be retrieved after initialization from the
-        device object direct with `device.playback.channelMap`.
+        device object direct with `device.playback.pChannelMap`. When set, the buffer should contain `channels` items.
 
     playback.shareMode
         The preferred share mode to use for playback. Can be either `ma_share_mode_shared` (default) or `ma_share_mode_exclusive`. Note that if you specify
@@ -7500,9 +7544,9 @@ then be set directly on the structure. Below are the members of the `ma_device_c
         The number of channels to use for capture. When set to 0 the device's native channel count will be used. This can be retrieved after initialization
         from the device object directly with `device.capture.channels`.
 
-    capture.channelMap
+    capture.pChannelMap
         The channel map to use for capture. When left empty, the device's native channel map will be used. This can be retrieved after initialization from the
-        device object direct with `device.capture.channelMap`.
+        device object direct with `device.capture.pChannelMap`. When set, the buffer should contain `channels` items.
 
     capture.shareMode
         The preferred share mode to use for capture. Can be either `ma_share_mode_shared` (default) or `ma_share_mode_exclusive`. Note that if you specify
@@ -7546,6 +7590,25 @@ then be set directly on the structure. Below are the members of the `ma_device_c
         that is known to be natively supported by the hardware thereby avoiding the cost of resampling. When set to true, miniaudio will
         find the closest match between the sample rate requested in the device config and the sample rates natively supported by the
         hardware. When set to false, the sample rate currently set by the operating system will always be used.
+
+    opensl.streamType
+        OpenSL only. Explicitly sets the stream type. If left unset (`ma_opensl_stream_type_default`), the
+        stream type will be left unset. Think of this as the type of audio you're playing.
+
+    opensl.recordingPreset
+        OpenSL only. Explicitly sets the type of recording your program will be doing. When left
+        unset, the recording preset will be left unchanged.
+
+    aaudio.usage
+        AAudio only. Explicitly sets the nature of the audio the program will be consuming. When
+        left unset, the usage will be left unchanged.
+
+    aaudio.contentType
+        AAudio only. Sets the content type. When left unset, the content type will be left unchanged.
+
+    aaudio.inputPreset
+        AAudio only. Explicitly sets the type of recording your program will be doing. When left
+        unset, the input preset will be left unchanged.
 
 
 Once initialized, the device's config is immutable. If you need to change the config you will need to initialize a new device.
@@ -7933,7 +7996,7 @@ MA_API ma_device_state ma_device_get_state(const ma_device* pDevice);
 /*
 Sets the master volume factor for the device.
 
-The volume factor must be between 0 (silence) and 1 (full volume). Use `ma_device_set_master_gain_db()` to use decibel notation, where 0 is full volume and
+The volume factor must be between 0 (silence) and 1 (full volume). Use `ma_device_set_master_volume_db()` to use decibel notation, where 0 is full volume and
 values less than 0 decreases the volume.
 
 
@@ -7943,14 +8006,14 @@ pDevice (in)
     A pointer to the device whose volume is being set.
 
 volume (in)
-    The new volume factor. Must be within the range of [0, 1].
+    The new volume factor. Must be >= 0.
 
 
 Return Value
 ------------
 MA_SUCCESS if the volume was set successfully.
 MA_INVALID_ARGS if pDevice is NULL.
-MA_INVALID_ARGS if the volume factor is not within the range of [0, 1].
+MA_INVALID_ARGS if volume is negative.
 
 
 Thread Safety
@@ -7973,8 +8036,8 @@ This does not change the operating system's volume. It only affects the volume f
 See Also
 --------
 ma_device_get_master_volume()
-ma_device_set_master_volume_gain_db()
-ma_device_get_master_volume_gain_db()
+ma_device_set_master_volume_db()
+ma_device_get_master_volume_db()
 */
 MA_API ma_result ma_device_set_master_volume(ma_device* pDevice, float volume);
 
@@ -8066,7 +8129,7 @@ ma_device_get_master_volume_gain_db()
 ma_device_set_master_volume()
 ma_device_get_master_volume()
 */
-MA_API ma_result ma_device_set_master_gain_db(ma_device* pDevice, float gainDB);
+MA_API ma_result ma_device_set_master_volume_db(ma_device* pDevice, float gainDB);
 
 /*
 Retrieves the master gain in decibels.
@@ -8105,11 +8168,11 @@ If an error occurs, `*pGainDB` will be set to 0.
 
 See Also
 --------
-ma_device_set_master_volume_gain_db()
+ma_device_set_master_volume_db()
 ma_device_set_master_volume()
 ma_device_get_master_volume()
 */
-MA_API ma_result ma_device_get_master_gain_db(ma_device* pDevice, float* pGainDB);
+MA_API ma_result ma_device_get_master_volume_db(ma_device* pDevice, float* pGainDB);
 
 
 /*
@@ -9880,6 +9943,7 @@ typedef struct
 
 MA_API ma_result ma_splitter_node_init(ma_node_graph* pNodeGraph, const ma_splitter_node_config* pConfig, const ma_allocation_callbacks* pAllocationCallbacks, ma_splitter_node* pSplitterNode);
 MA_API void ma_splitter_node_uninit(ma_splitter_node* pSplitterNode, const ma_allocation_callbacks* pAllocationCallbacks);
+
 
 /*
 Biquad Node
@@ -38582,7 +38646,7 @@ MA_API ma_result ma_device_set_master_volume(ma_device* pDevice, float volume)
         return MA_INVALID_ARGS;
     }
 
-    if (volume < 0.0f || volume > 1.0f) {
+    if (volume < 0.0f) {
         return MA_INVALID_ARGS;
     }
 
@@ -38607,7 +38671,7 @@ MA_API ma_result ma_device_get_master_volume(ma_device* pDevice, float* pVolume)
     return MA_SUCCESS;
 }
 
-MA_API ma_result ma_device_set_master_gain_db(ma_device* pDevice, float gainDB)
+MA_API ma_result ma_device_set_master_volume_db(ma_device* pDevice, float gainDB)
 {
     if (gainDB > 0) {
         return MA_INVALID_ARGS;
@@ -38616,7 +38680,7 @@ MA_API ma_result ma_device_set_master_gain_db(ma_device* pDevice, float gainDB)
     return ma_device_set_master_volume(pDevice, ma_volume_db_to_linear(gainDB));
 }
 
-MA_API ma_result ma_device_get_master_gain_db(ma_device* pDevice, float* pGainDB)
+MA_API ma_result ma_device_get_master_volume_db(ma_device* pDevice, float* pGainDB)
 {
     float factor;
     ma_result result;
@@ -69993,6 +70057,18 @@ MA_API ma_result ma_engine_init(const ma_engine_config* pConfig, ma_engine* pEng
     for (iListener = 0; iListener < engineConfig.listenerCount; iListener += 1) {
         listenerConfig = ma_spatializer_listener_config_init(ma_node_graph_get_channels(&pEngine->nodeGraph));
 
+        /*
+        If we're using a device, use the device's channel map for the listener. Otherwise just use
+        miniaudio's default channel map.
+        */
+        #if !defined(MA_NO_DEVICE_IO)
+        {
+            if (pEngine->pDevice != NULL) {
+                listenerConfig.pChannelMapOut = pEngine->pDevice->playback.channelMap;
+            }
+        }
+        #endif
+
         result = ma_spatializer_listener_init(&listenerConfig, &pEngine->allocationCallbacks, &pEngine->listeners[iListener]);  /* TODO: Change this to a pre-allocated heap. */
         if (result != MA_SUCCESS) {
             goto on_error_2;
@@ -88716,6 +88792,76 @@ issues with certain devices and configurations. These can be individually enable
 /*
 REVISION HISTORY
 ================
+v0.11.0 - TBD
+  - Add a node graph system for advanced mixing and effect processing.
+  - Add a resource manager for loading and streaming sounds.
+  - Add a high level engine API for sound management and mixing. This wraps around the node graph
+    and resource manager.
+  - Add support for custom resmplers.
+  - Add ma_decoder_get_data_format().
+  - Add support for disabling denormals on the audio thread.
+  - Add a delay/echo effect called ma_delay.
+  - Add a stereo pan effect called ma_panner.
+  - Add a spataializer effect called ma_spatializer.
+  - Add support for amplification for device master volume.
+  - Remove dependency on MA_MAX_CHANNELS from filters and data conversion.
+  - Increase MA_MAX_CHANNELS from 32 to 254.
+  - API CHANGE: Changes have been made to the way custom data sources are made. See documentation
+    on how to implement custom data sources.
+  - API CHANGE: Remove ma_data_source_map() and ma_data_source_unmap()
+  - API CHANGE: Remove the `loop` parameter from ma_data_source_read_pcm_frames(). Use
+    ma_data_source_set_looping() to enable or disable looping.
+  - API CHANGE: Remove ma_channel_mix_mode_planar_blend. Use ma_channel_mix_mode_rectangular instead.
+  - API CHANGE: Remove MA_MIN_SAMPLE_RATE and MA_MAX_SAMPLE_RATE. Use ma_standard_sample_rate_min
+    and ma_standard_sample_rate_max instead.
+  - API CHANGE: Changes have been made to the ma_device_info structure. See documentation for
+    details of these changes.
+  - API CHANGE: Remove the `shareMode` parameter from ma_context_get_device_info().
+  - API CHANGE: Rename noPreZeroedOutputBuffer to noPreSilencedOutputBuffer in the device config.
+  - API CHANGE: Remove pBufferOut parameter from ring buffer commit functions.
+  - API CHANGE: Remove ma_zero_pcm_frames(). Use ma_silence_pcm_frames() instead.
+  - API CHANGE: Change ma_clip_samples_f32() to take input and output buffers rather than working
+    exclusively in-place.
+  - API CHANGE: Remove ma_clip_pcm_frames_f32(). Use ma_clip_samples_f32() or ma_clip_pcm_frames()
+    instead.
+  - API CHANGE: Remove the onLog callback from the context config and replaced with a more
+    flexible system. See the documentation for how to use logging.
+  - API CHANGE: Remove MA_LOG_LEVEL_VERBOSE and add MA_LOG_LEVEL_DEBUG. Logs using the
+    MA_LOG_LEVEL_DEBUG logging level will only be output when miniaudio is compiled with the
+    MA_DEBUG_OUTPUT option.
+  - API CHANGE: MA_LOG_LEVEL has been removed. All log levels will be posted, except for
+    MA_LOG_LEVEL_DEBUG which will only be output when MA_DEBUG_OUTPUT is enabled.
+  - API CHANGE: Rename ma_resource_format to ma_encoding_format.
+  - API CHANGE: Remove all encoding-specific initialization routines for decoders. Use the
+    encodingFormat properties in the decoder config instead.
+  - API CHANGE: Change ma_decoder_get_length_in_pcm_frames() to return a result code and output the
+    number of frames read via an output parameter.
+  - API CHANGE: Allocation callbacks must now implement the onRealloc() callback.
+  - API CHANGE: Remove ma_get_standard_channel_map() and add ma_channel_map_init_standard().
+  - API CHANGE: Rename ma_channel_map_valid() to ma_channel_map_is_valid().
+  - API CHANGE: Rename ma_channel_map_equal() to ma_channel_map_is_equal().
+  - API CHANGE: Rename ma_channel_map_blank() to ma_channel_map_is_blank().
+  - API CHANGE: Remove the Speex resampler. Use a custom resampler instead.
+  - API CHANGE: Change the following resampler APIs to return a result code and output their result
+    via an output parameter:
+    - ma_linear_resampler_get_required_input_frame_count()
+    - ma_linear_resampler_get_expected_output_frame_count()
+    - ma_resampler_get_required_input_frame_count()
+    - ma_resampler_get_expected_output_frame_count()
+  - API CHANGE: Update relevant init/uninit functions to take a pointer to allocation callbacks.
+  - API CHANGE: Remove ma_scale_buffer_size()
+  - API CHANGE: Update ma_encoder_write_pcm_frames() to return a result code and output the number
+    of frames written via an output parameter.
+  - API CHANGE: Update ma_noise_read_pcm_frames() to return a result code and output the number of
+    frames read via an output parameter.
+  - API CHANGE: Update ma_waveform_read_pcm_frames() to return a result code and output the number
+    of frames read via an output parameter.
+  - API CHANGE: Remove The MA_STATE_* and add ma_device_state_* enums.
+  - API CHANGE: Rename ma_factor_to_gain_db() to ma_volume_linear_to_db().
+  - API CHANGE: Rename ma_gain_db_to_factor() to ma_volume_db_to_linear().
+  - API CHANGE: Rename ma_device_set_master_gain_db() to ma_device_set_master_volume_db().
+  - API CHANGE: Rename ma_device_get_master_gain_db() to ma_device_get_master_volume_db()
+
 v0.10.43 - 2021-12-10
   - ALSA: Fix use of uninitialized variables.
   - ALSA: Fix enumeration of devices that support both playback and capture.
@@ -89160,7 +89306,7 @@ v0.9.8 - 2019-10-07
     the device config.
   - Add support for master volume control for devices.
     - Use ma_device_set_master_volume() to set the volume to a factor between 0 and 1, where 0 is silence and 1 is full volume.
-    - Use ma_device_set_master_gain_db() to set the volume in decibels where 0 is full volume and < 0 reduces the volume.
+    - Use ma_device_set_master_volume_db() to set the volume in decibels where 0 is full volume and < 0 reduces the volume.
   - Fix warnings emitted by GCC when `__inline__` is undefined or defined as nothing.
 
 v0.9.7 - 2019-08-28
