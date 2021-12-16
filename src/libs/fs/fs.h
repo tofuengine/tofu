@@ -38,6 +38,17 @@
 typedef struct FS_Mount_s FS_Mount_t;
 typedef struct FS_Handle_s FS_Handle_t;
 
+typedef struct FS_Cache_Callbacks_s {
+    bool   (*contains)(void *user_data, const char *name);
+    void * (*open)    (void *user_data, const char *name);
+    void   (*close)   (void *stream);
+    size_t (*size)    (void *stream);
+    size_t (*read)    (void *stream, void *buffer, size_t bytes_requested);
+    bool   (*seek)    (void *stream, long offset, int whence);
+    long   (*tell)    (void *stream);
+    bool   (*eof)     (void *stream);
+} FS_Cache_Callbacks_t;
+
 typedef struct FS_Context_s FS_Context_t;
 
 extern FS_Context_t *FS_create(void);
@@ -46,6 +57,7 @@ extern void FS_destroy(FS_Context_t *context);
 extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path);
 extern bool FS_attach_folder(FS_Context_t *context, const char *path);
 extern bool FS_attach_archive(FS_Context_t *context, const char *path);
+extern bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void *user_data);
 
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);

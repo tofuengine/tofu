@@ -29,6 +29,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
@@ -64,6 +65,21 @@ typedef struct Storage_Configuration_s {
     const char *path;
 } Storage_Configuration_t;
 
+typedef struct Storage_Cache_Entry_Value_s {
+    void *data;
+    size_t size;
+} Storage_Cache_Entry_Value_t;
+
+typedef struct Storage_Cache_Entry_s {
+    char *key;
+    Storage_Cache_Entry_Value_t value;
+} Storage_Cache_Entry_t;
+
+typedef struct Storage_Cache_Stream_s {
+    const uint8_t *ptr;
+    size_t size;
+    size_t position;
+} Storage_Cache_Stream_t;
 
 typedef struct Storage_s {
     Storage_Configuration_t configuration;
@@ -75,6 +91,8 @@ typedef struct Storage_s {
         // char shared[PLATFORM_PATH_MAX];
         char local[PLATFORM_PATH_MAX];
     } path;
+
+    Storage_Cache_Entry_t *cache;
 
     FS_Context_t *context;
 
@@ -91,6 +109,9 @@ typedef struct Storage_s {
 
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
+
+//extern void Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
+extern void Storage_inject(Storage_t *storage, const char *name, const char *encoded_data);
 
 extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 

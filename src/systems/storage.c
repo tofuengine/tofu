@@ -25,6 +25,7 @@
 #include "storage.h"
 
 #include <config.h>
+#include <libs/base64.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
@@ -38,6 +39,111 @@
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
+
+static bool _cache_contains(void *user_data, const char *name)
+{
+    Storage_t *storage = (Storage_t *)user_data;
+    Storage_Cache_Entry_t *cache = storage->cache;
+
+    return shgeti(cache, name) != -1;
+}
+
+static void *_cache_open(void *user_data, const char *name)
+{
+    Storage_t *storage = (Storage_t *)user_data;
+    Storage_Cache_Entry_t *cache = storage->cache;
+
+    int index = shgeti(cache, name);
+    if (index == -1) {
+        return NULL;
+    }
+
+    const Storage_Cache_Entry_Value_t *value = &cache[index].value;
+
+    Storage_Cache_Stream_t *stream = malloc(sizeof(Storage_Cache_Stream_t));
+    if (!stream) {
+        return NULL;
+    }
+
+    *stream = (Storage_Cache_Stream_t){
+        .ptr = (const uint8_t *)value->data,
+        .size = value->size,
+        .position = 0
+    };
+
+    return stream;
+}
+
+static void _cache_close(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    free(cache_stream);
+}
+
+static size_t _cache_size(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    return cache_stream->size;
+}
+
+static size_t _cache_read(void *stream, void *buffer, size_t bytes_requested)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    size_t bytes_available = cache_stream->size - cache_stream->position;
+
+    size_t bytes_to_copy = bytes_available > bytes_requested ? bytes_requested : bytes_available;
+
+    memcpy(buffer, cache_stream->ptr + cache_stream->position, bytes_to_copy);
+
+    cache_stream->position += bytes_to_copy;
+
+    return bytes_to_copy;
+}
+
+static bool _cache_seek(void *stream, long offset, int whence)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    long position;
+
+    switch (whence) {
+        default:
+        case SEEK_SET:
+            position = offset;
+            break;
+        case SEEK_CUR:
+            position = (long)cache_stream->position + offset;
+            break;
+        case SEEK_END:
+            position = (long)(cache_stream->size - 1) + offset;
+            break;
+    }
+
+    if (position < 0 || (size_t)position >= cache_stream->size) {
+        return false;
+    }
+
+    cache_stream->position = (size_t)position;
+
+    return true;
+}
+
+static long _cache_tell(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    return (long)cache_stream->position;
+}
+
+static bool _cache_eof(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    return cache_stream->position >= cache_stream->size;
+}
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
@@ -92,6 +198,17 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         return NULL;
     }
 
+    FS_attach_cache(storage->context, (FS_Cache_Callbacks_t){
+            .contains = _cache_contains,
+            .open = _cache_open,
+            .close = _cache_close,
+            .size = _cache_size,
+            .read = _cache_read,
+            .seek = _cache_seek,
+            .tell = _cache_tell,
+            .eof = _cache_eof
+        }, storage);
+
     return storage;
 }
 
@@ -133,8 +250,25 @@ void Storage_destroy(Storage_t *storage)
     FS_destroy(storage->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system context destroyed");
 
+    shfree(storage->cache);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache freed");
+
     free(storage);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
+}
+
+void Storage_inject(Storage_t *storage, const char *name, const char *encoded_data)
+{
+    size_t size = base64_decoded_size(encoded_data);
+    void *data = malloc(sizeof(char) * size);
+    if (!data) {
+        return;
+    }
+    
+    base64_decode(data, size, encoded_data);
+
+    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
+    shput(storage->cache, name, value);
 }
 
 bool Storage_set_identity(Storage_t *storage, const char *identity)
