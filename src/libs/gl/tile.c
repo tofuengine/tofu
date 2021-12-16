@@ -26,9 +26,6 @@
 
 #include <config.h>
 #include <libs/imath.h>
-#include <libs/sincos.h>
-
-#include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
@@ -44,22 +41,22 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    int skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = offset.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -69,8 +66,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -86,8 +83,8 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     const GL_Pixel_t *sptr = sdata + area.y * swidth + area.x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int ou = IMOD(skip_x + offset.x, area.width);
-    const int ov = IMOD(skip_y + offset.y, area.height);
+    const int ou = IMOD(skip_x, area.width);
+    const int ov = IMOD(skip_y, area.height);
 
     int v = ov;
     for (int i = height; i; --i) {
@@ -104,9 +101,9 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
             } else {
                 *(dptr++) = index;
             }
-            u = (u + 1) % area.width; // Prefer modulo over branch.
+            u = (u + 1) % (int)area.width; // Prefer modulo over branch.
         }
-        v = (v + 1) % area.height;
+        v = (v + 1) % (int)area.height;
         dptr += dskip;
     }
 }
@@ -121,14 +118,14 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
-    size_t skip_y = 0;
+    int skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
+    int skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)sw - 1,
-            .y1 = position.y + (int)sh - 1
+            .x1 = position.x + (int)sw,
+            .y1 = position.y + (int)sh
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -146,8 +143,8 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -176,8 +173,8 @@ void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const int ru0 = skip_x % su;
     const int rv0 = skip_y % sv;
 
-    const int ou0 = (int)skip_x / su;
-    const int ov0 = (int)skip_y / sv;
+    const int ou0 = skip_x / su;
+    const int ov0 = skip_y / sv;
     const int ou1 = (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
     const int ov1 = (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
     const int ou = IMOD(ou1 + offset.x, area.width); // Pre-add the offset (wrapping around). Negative offset is supported.

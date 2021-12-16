@@ -37,14 +37,14 @@ static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 {
     if (x < clipping_region->x0) {
         return;
+    } else
+    if (x >= clipping_region->x1) {
+        return;
     }
     if (y < clipping_region->y0) {
         return;
-    }
-    if (x > clipping_region->x1) {
-        return;
-    }
-    if (y > clipping_region->y1) {
+    } else
+    if (y >= clipping_region->y1) {
         return;
     }
 
@@ -58,13 +58,13 @@ static inline int _compute_code(const GL_Quad_t *clipping_region, int x, int y)
     if (x < clipping_region->x0) {
         code |= REGION_LEFT;
     } else
-    if (x > clipping_region->x1) {
+    if (x >= clipping_region->x1) {
         code |= REGION_RIGHT;
     }
     if (y < clipping_region->y0) {
         code |= REGION_ABOVE;
     } else
-    if (y > clipping_region->y1) {
+    if (y >= clipping_region->y1) {
         code |= REGION_BELOW;
     }
     return code;
@@ -105,7 +105,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
             if (code & REGION_BELOW) {
-                y = clipping_region->y1;
+                y = clipping_region->y1 - 1;
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
             if (code & REGION_LEFT) {
@@ -113,7 +113,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             } else
             if (code & REGION_RIGHT) {
-                x = clipping_region->x1;
+                x = clipping_region->x1 - 1;
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             }
 
@@ -130,7 +130,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         }
     }
 
-#ifdef __DDA__
+#ifndef __NON_DDA_LINES__
     GL_Pixel_t *ddata = surface->data;
 
     const int dwidth = (int)surface->width;
@@ -143,8 +143,8 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
     const float xin = (float)dx / (float)delta;
     const float yin = (float)dy / (float)delta;
 
-    float x = x0 + 0.5f;
-    float y = y0 + 0.5f;
+    float x = (float)x0 + 0.5f;
+    float y = (float)y0 + 0.5f;
     for (int i = delta + 1; i; --i) { // One more step, to reach and ending pixel.
         GL_Pixel_t *dptr = ddata + (int)y * dwidth + (int)x;
         *dptr = index;
@@ -186,13 +186,54 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
 #endif
 }
 
+#if 0
+static void _texture_line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1,
+                          const GL_Surface_t *texture, int sx0, int sy0, int sx1, int sy1)
+{
+    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = texture->data;
+
+    const int dwidth = (int)surface->width;
+    const int swidth = (int)texture->width;
+
+    const int dx = x1 - x0;
+    const int dy = y1 - y0;
+
+    const int sdx = sx1 - sx0;
+    const int sdy = sy1 - sy0;
+
+    const int delta = iabs(dx) >= iabs(dy) ? iabs(dx) : iabs(dy); // Move along the longest delta
+
+    const float xin = (float)dx / (float)delta;
+    const float yin = (float)dy / (float)delta;
+
+    const float sxin = (float)sdx / (float)delta;
+    const float syin = (float)sdy / (float)delta;
+
+    float x = x0 + 0.5f;
+    float y = y0 + 0.5f;
+    float sx = sx0 + 0.5f;
+    float sy = sy0 + 0.5f;
+    for (int i = delta + 1; i; --i) { // One more step, to reach and ending pixel.
+        const GL_Pixel_t *sptr = sdata + (int)sy * swidth + (int)sx;
+        GL_Pixel_t *dptr = ddata + (int)y * dwidth + (int)x;
+        *dptr = *sptr;
+
+        x += xin;
+        y += yin;
+        sx += sxin;
+        sy += syin;
+    }
+}
+#endif
+
 static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, size_t length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
             .y0 = y,
-            .x1 = x + (int)length - 1,
-            .y1 = y
+            .x1 = x + (int)length,
+            .y1 = y + 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -208,8 +249,8 @@ static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -230,8 +271,8 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
             .y0 = y,
-            .x1 = x,
-            .y1 = y + (int)length - 1
+            .x1 = x + 1,
+            .y1 = y + (int)length
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -247,8 +288,8 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -356,8 +397,8 @@ void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rec
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
             .y0 = rectangle.y,
-            .x1 = rectangle.x + (int)rectangle.width - 1,
-            .y1 = rectangle.y + (int)rectangle.height - 1
+            .x1 = rectangle.x + (int)rectangle.width,
+            .y1 = rectangle.y + (int)rectangle.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -373,8 +414,8 @@ void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rec
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -416,8 +457,8 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t v0, GL_P
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = imin(imin(v0.x, v1.x), v2.x),
             .y0 = imin(imin(v0.y, v1.y), v2.y),
-            .x1 = imax(imax(v0.x, v1.x), v2.x),
-            .y1 = imax(imax(v0.y, v1.y), v2.y)
+            .x1 = imax(imax(v0.x, v1.x), v2.x) + 1,
+            .y1 = imax(imax(v0.y, v1.y), v2.y) + 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -433,8 +474,8 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t v0, GL_P
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can be negative due to clipping region)
         return;
     }

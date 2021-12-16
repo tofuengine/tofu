@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Bank = require("tofu.graphics").Bank
+local Class = require("tofu.core.class")
+local Bank = require("tofu.graphics.bank")
 
 local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
@@ -84,8 +84,8 @@ function Camera:move_to(x, y)
 
   local scale = self.scale
   local cw, ch = self.bank:size(Bank.NIL)
-  local start_column = math.tointeger(map_x / cw)
-  local start_row = math.tointeger(map_y / ch)
+  local start_column = map_x // cw
+  local start_row = map_y // ch
   local column_offset = -math.tointeger((map_x % cw) * scale) -- In screen coordinates.
   local row_offset = -math.tointeger((map_y % ch) * scale)
 

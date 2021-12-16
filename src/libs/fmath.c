@@ -62,3 +62,17 @@ float fsmootherstep(float edge0, float edge1, float x)
     x = FCLAMP(e, 0.0f, 1.0f);
     return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 }
+
+#ifdef __FAST_INTEGER_MATH__
+float ffloor(float x)
+{
+    const int i = (int)x;
+    return (float)(i - ((float)i > x));
+}
+
+float fceil(float x)
+{
+    const int i = (int)x;
+    return (float)(i + (x > (float)i));
+}
+#endif

@@ -22,19 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Bank = require("tofu.graphics").Bank
-local Batch = require("tofu.graphics").Batch
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
-local Program = require("tofu.graphics").Program
-local Vector = require("tofu.util").Vector
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Bank = require("tofu.graphics.bank")
+local Batch = require("tofu.graphics.batch")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
+local Program = require("tofu.graphics.program")
+local Vector = require("tofu.util.vector")
 
-local Animation = require("lib.animation")
+local Animation = require("lib/animation")
 
 local WATER_DISPLACEMENT = 1.5
 
@@ -73,10 +73,8 @@ local function extra_half_brite(palette, target, ratio)
 end
 
 function Main:__ctor()
-  local palette = Palette.new("pico-8-ext")
+  local palette = Palette.default("pico-8-ext")
   Display.palette(palette)
-
-  Class.dump(System.args())
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
@@ -269,7 +267,7 @@ function Main:render(_)
 
   y = y + delta_y
 
-  local ox = math.tointeger(self.position.x / 16)
+  local ox = self.position.x // 16
   local dx = self.position.x % 16
   for i = 1, 5 do
     for j = 1, 15 + 1 do

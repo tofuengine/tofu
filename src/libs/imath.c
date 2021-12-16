@@ -43,3 +43,18 @@ int imax(int a, int b)
 {
     return IMAX(a, b);
 }
+
+#ifdef __FAST_INTEGER_MATH__
+#else
+int ifloor(float x)
+{
+    const int i = (int)x;
+    return i - ((float)i > x);
+}
+
+int iceil(float x)
+{
+    const int i = (int)x;
+    return i + (x > (float)i);
+}
+#endif

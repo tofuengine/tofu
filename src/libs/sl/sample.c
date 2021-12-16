@@ -46,7 +46,7 @@
 
 #define LOG_CONTEXT "sl-sample"
 
-typedef struct _Sample_t {
+typedef struct Sample_s {
     Source_VTable_t vtable;
 
     SL_Props_t *props;
@@ -147,6 +147,21 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
+static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.
+{
+    return malloc(sz);
+}
+
+static void *_realloc(void *ptr, size_t sz, void *pUserData)
+{
+    return realloc(ptr, sz);
+}
+
+static void  _free(void *ptr, void *pUserData)
+{
+    free(ptr);
+}
+
 static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Sample_t *sample = (Sample_t *)source;
@@ -162,7 +177,12 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
             .frames_completed = 0
         };
 
-    sample->decoder = drflac_open(_sample_read, _sample_seek, sample, NULL);
+    sample->decoder = drflac_open(_sample_read, _sample_seek, sample, &(drflac_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc  = _malloc,
+            .onRealloc = _realloc,
+            .onFree    = _free
+        });
     if (!sample->decoder) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create sample decoder");
         return false;
@@ -276,7 +296,9 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
-        ma_uint64 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
+
+        ma_uint64 frames_to_consume;
+        ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
 
         void *consumed_buffer;
         ma_audio_buffer_map(buffer, &consumed_buffer, &frames_to_consume); // No need to check the result, can't fail.

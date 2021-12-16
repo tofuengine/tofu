@@ -22,35 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Bank = require("tofu.graphics").Bank
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Font = require("tofu.graphics").Font
+local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Tweener = require("tofu.generators.tweener")
+local Bank = require("tofu.graphics.bank")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Palette = require("tofu.graphics.palette")
+local Font = require("tofu.graphics.font")
 
-local Sprite = require("lib.sprite")
+local Sprite = require("lib/sprite")
 
-local CHUNK_SIZE = 1
+local CHUNK_SIZE <const> = 1
 
-local TORQUE = 0.25
-local THROTTLE = 50.0
-local BRAKE = 25.0
+local TORQUE <const> = 0.25
+local THROTTLE <const> = 50.0
+local BRAKE <const> = 25.0
 
 local Game = Class.define()
 
 function Game:__ctor()
-  local palette = Palette.new("pico-8-ext")
+  local palette = Palette.default("pico-8-ext")
   Display.palette(palette)
 
   self.palette = palette
   self.bank = Bank.new(Canvas.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
 --  self.bank = Bank.new(Canvas.new("assets/images/racing-car-small-red.png", 0), 32, 32)
   self.font = Font.default(0, 31)
-  self.tweener = Math.tweener("sine_out")
+  self.tweener = Tweener.new("sine-out")
 
   self.sprites = {}
 

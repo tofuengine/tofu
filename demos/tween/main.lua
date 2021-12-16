@@ -22,27 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local System = require("tofu.core").System
-local Bank = require("tofu.graphics").Bank
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Tweener = require("tofu.generators.tweener")
+local Wave = require("tofu.generators.wave")
+local Bank = require("tofu.graphics.bank")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 
 local EASINGS = {
     "linear",
-    "quadratic_in", "quadratic_out", "quadratic_in_out",
-    "cubic_in", "cubic_out", "cubic_in_out",
-    "quartic_in", "quartic_out", "quartic_in_out",
-    "quintic_in", "quintic_out", "quintic_in_out",
-    "sine_in", "sine_out", "sine_in_out",
-    "circular_in", "circular_out", "circular_in_out",
-    "exponential_in", "exponential_out", "exponential_in_out",
-    "elastic_in", "elastic_out", "elastic_in_out",
-    "back_in", "back_out", "back_in_out",
-    "bounce_in", "bounce_out", "bounce_in_out",
+    "quadratic-in", "quadratic-out", "quadratic-in-out",
+    "cubic-in", "cubic-out", "cubic-in-out",
+    "quartic-in", "quartic-out", "quartic-in-out",
+    "quintic-in", "quintic-out", "quintic-in-out",
+    "sine-in", "sine-out", "sine-in-out",
+    "circular-in", "circular-out", "circular-in-out",
+    "exponential-in", "exponential-out", "exponential-in-out",
+    "elastic-in", "elastic-out", "elastic-in-out",
+    "back-in", "back-out", "back-in-out",
+    "bounce-in", "bounce-out", "bounce-in-out",
   }
 
 local PERIOD = 5.0
@@ -50,11 +51,11 @@ local PERIOD = 5.0
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new("pico-8"))
+  Display.palette(Palette.default("pico-8"))
 
   self.tweeners = {}
   for _, easing in ipairs(EASINGS) do
-    table.insert(self.tweeners, Math.tweener(easing))
+    table.insert(self.tweeners, Tweener.new(easing))
   end
 
   local canvas = Canvas.default()
@@ -64,7 +65,7 @@ function Main:__ctor()
 
   self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(0, 15)
-  self.wave = Math.wave("triangle", PERIOD)
+  self.wave = Wave.new("triangle", PERIOD)
 end
 
 function Main:process()

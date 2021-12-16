@@ -70,6 +70,8 @@ struct retrig_control {
 
 #define IS_VALID_INSTRUMENT(x) ((x) >= 0 && (x) < mod->ins && mod->xxi[(x)].nsm > 0)
 #define IS_VALID_INSTRUMENT_OR_SFX(x) ((x) >= 0 && (((x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (x) < mod->ins + smix->ins)))
+#define IS_VALID_SAMPLE(x) ((x) >= 0 && (x) < mod->smp && mod->xxs[(x)].len > 0)
+#define IS_VALID_NOTE(x) ((x) >= 0 && (x) < XMP_MAX_KEYS)
 
 struct instrument_vibrato {
 	int phase;
@@ -147,6 +149,7 @@ struct channel_data {
 		int val;		/* Retrig value */
 		int count;		/* Retrig counter */
 		int type;		/* Retrig type */
+		int limit;		/* Number of retrigs */
 	} retrig;
 
 	struct {

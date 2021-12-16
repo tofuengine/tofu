@@ -45,8 +45,8 @@ static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t
 
     for (size_t i = 0; i < count; ++i) {
         cells[i] = (GL_Rectangle_t){
-                .x = rectangles[i].x,
-                .y = rectangles[i].y,
+                .x = (int)rectangles[i].x,
+                .y = (int)rectangles[i].y,
                 .width = rectangles[i].width,
                 .height = rectangles[i].height
         };

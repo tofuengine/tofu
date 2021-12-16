@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Bank = require("tofu.graphics").Bank
-local Canvas = require("tofu.graphics").Canvas
-local Font = require("tofu.graphics").Font
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Bank = require("tofu.graphics.bank")
+local Canvas = require("tofu.graphics.canvas")
+local Font = require("tofu.graphics.font")
 
 local Main = Class.define()
 
 function Main:__ctor()
-  --Display.palette(Palette.new("pico-8"))
+  --Display.palette(Palette.default("pico-8"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()

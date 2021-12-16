@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
-local Vector = require("tofu.util").Vector
+local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
+local Vector = require("tofu.util.vector")
 
 local Sprite = Class.define()
 
@@ -53,7 +53,7 @@ end
 function Sprite:rotate(torque)
   -- When updating the angular velocity we should also take into account
   -- that steering is easier at higher speeds.
---  local dampening = self.velocity:clone():trim_if_not_zero(1):magnitude()
+--  local dampening = Vector.new(self.velocity):trim_if_not_zero(1):magnitude()
   local dampening = 1.0
   self.angular_velocity = self.angular_velocity + dampening * torque / self.inertia
 end

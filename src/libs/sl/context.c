@@ -70,7 +70,7 @@ static void _fire_on_group_changed(const SL_Context_t *context, size_t group_id)
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "context group #%d changed, firing event", group_id);
 
     SL_Source_t **current = context->sources;
-    for (size_t count = arrlen(context->sources); count; --count) {
+    for (size_t count = arrlenu(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
 
         SL_source_on_group_changed(source, group_id);
@@ -116,7 +116,7 @@ const SL_Group_t *SL_context_get_group(const SL_Context_t *context, size_t group
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 {
-    size_t count = arrlen(context->sources);
+    size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p already tracked for context %p", source, context);
@@ -130,7 +130,7 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 
 void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 {
-    size_t count = arrlen(context->sources);
+    size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
@@ -142,7 +142,7 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 
 bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source)
 {
-    size_t count = arrlen(context->sources);
+    size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             return true;
@@ -153,7 +153,7 @@ bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source)
 
 size_t SL_context_count_tracked(const SL_Context_t *context)
 {
-    return arrlen(context->sources);
+    return arrlenu(context->sources);
 }
 
 void SL_context_halt(SL_Context_t *context)
@@ -165,7 +165,7 @@ void SL_context_halt(SL_Context_t *context)
 bool SL_context_update(SL_Context_t *context, float delta_time)
 {
     SL_Source_t **current = context->sources;
-    for (size_t count = arrlen(context->sources); count; --count) {
+    for (size_t count = arrlenu(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
         bool result = source->vtable.update(source, delta_time);
         if (!result) {
@@ -178,7 +178,7 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
 void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested)
 {
     // Backward scan, to remove to-be-untracked sources.
-    for (int index = (int)arrlen(context->sources) - 1; index >= 0; --index) {
+    for (int index = arrlen(context->sources) - 1; index >= 0; --index) {
         SL_Source_t *source = context->sources[index];
         bool still_running = source->vtable.generate(source, output, frames_requested);
         if (!still_running) {

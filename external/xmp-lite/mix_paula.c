@@ -47,7 +47,7 @@ static void input_sample(struct paula_state *paula, int16_t sample)
 	if (sample != paula->global_output_level) {
 		/* Start a new blep: level is the difference, age (or phase) is 0 clocks. */
 		if (paula->active_bleps > MAX_BLEPS - 1) {
-			fprintf(stderr, "warning: active blep list truncated!\n");
+			D_(D_WARN "active blep list truncated!");
 			paula->active_bleps = MAX_BLEPS - 1;
 		}
 
@@ -125,6 +125,10 @@ static void do_clock(struct paula_state *paula, int cycles)
     unsigned int pos = vi->pos; \
     int frac = (1 << SMIX_SHIFT) * (vi->pos - (int)vi->pos)
 
+#define VAR_PAULA_MONO(x) \
+    VAR_NORM(x); \
+    vl <<= 8
+
 #define VAR_PAULA(x) \
     VAR_NORM(x); \
     vl <<= 8; \
@@ -132,14 +136,14 @@ static void do_clock(struct paula_state *paula, int cycles)
 
 MIXER(mono_a500)
 {
-	VAR_PAULA(int8_t);
+	VAR_PAULA_MONO(int8_t);
 
 	LOOP { PAULA_SIMULATION(0); MIX_MONO(); }
 }
 
 MIXER(mono_a500_filter)
 {
-	VAR_PAULA(int8_t);
+	VAR_PAULA_MONO(int8_t);
 
 	LOOP { PAULA_SIMULATION(1); MIX_MONO(); }
 }

@@ -69,8 +69,13 @@ static void do_toneporta(struct context_data *ctx,
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
-	int mapped = instrument->map[xc->key].ins;
 	struct xmp_subinstrument *sub;
+	int mapped_xpo = 0;
+	int mapped = 0;
+
+	if (IS_VALID_NOTE(xc->key)) {
+		mapped = instrument->map[xc->key].ins;
+	}
 
 	if (mapped >= instrument->nsm) {
 		mapped = 0;
@@ -78,11 +83,13 @@ static void do_toneporta(struct context_data *ctx,
 
 	sub = &instrument->sub[mapped];
 
-	if (note >= 1 && note <= 0x80 && xc->ins < m->mod.ins) {
+	if (IS_VALID_NOTE(note - 1) && xc->ins < m->mod.ins) {
 		note--;
+		if (IS_VALID_NOTE(xc->key_porta)) {
+			mapped_xpo = instrument->map[xc->key_porta].xpo;
+		}
 		xc->porta.target = libxmp_note_to_period(ctx, note + sub->xpo +
-			instrument->map[xc->key_porta].xpo, xc->finetune,
-			xc->per_adj);
+			mapped_xpo, xc->finetune, xc->per_adj);
 	}
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
 }
@@ -299,12 +306,10 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			xc->vol.memory = fxp;
 			h = MSN(fxp);
 			l = LSN(fxp);
-			if (fxp) {
-				if (HAS_QUIRK(QUIRK_VOLPDN)) {
-					xc->vol.slide = l ? -l : h;
-				} else {
-					xc->vol.slide = h ? h : -l;
-				}
+			if (HAS_QUIRK(QUIRK_VOLPDN)) {
+				xc->vol.slide = l ? -l : h;
+			} else {
+				xc->vol.slide = h ? h : -l;
 			}
 		}
 
@@ -411,6 +416,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			xc->retrig.val = fxp;
 			xc->retrig.count = LSN(xc->retrig.val) + 1;
 			xc->retrig.type = 0;
+			xc->retrig.limit = 0;
 			break;
 		case EX_F_VSLIDE_UP:	/* Fine volume slide up */
 			EFFECT_MEMORY(fxp, xc->fine_vol.up_memory);
@@ -658,6 +664,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		if (note) {
 			xc->retrig.count = LSN(xc->retrig.val) + 1;
 		}
+		xc->retrig.limit = 0;
 		SET(RETRIG);
 		break;
 	case FX_TREMOR:			/* Tremor */

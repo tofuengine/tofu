@@ -22,22 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Display = require("tofu.graphics").Display
-local Canvas = require("tofu.graphics").Canvas
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Display = require("tofu.graphics.display")
+local Canvas = require("tofu.graphics.canvas")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 
-local Map = require("lib.map")
+local Map = require("lib/map")
 
 local Main = Class.define()
 
 local CAMERA_SPEED = 128.0
 
 function Main:__ctor()
-  Display.palette(Palette.new("gameboy"))
+  Display.palette(Palette.default("gameboy"))
 
   self.font = Font.default(3, 1)
   self.map = Map.from_file("assets/world.map")

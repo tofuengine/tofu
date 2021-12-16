@@ -31,7 +31,7 @@
 
 #include <stdbool.h>
 
-typedef struct _GL_Batch_Sprite_t {
+typedef struct GL_Batch_Sprite_s {
     GL_Cell_t cell_id;
     GL_Point_t position;
     float scale_x, scale_y;
@@ -39,7 +39,7 @@ typedef struct _GL_Batch_Sprite_t {
     float anchor_x, anchor_y;
 } GL_Batch_Sprite_t;
 
-typedef struct _GL_Batch_t {
+typedef struct GL_Batch_s {
     const GL_Sheet_t *sheet;
     GL_Batch_Sprite_t *sprites;
 } GL_Batch_t;

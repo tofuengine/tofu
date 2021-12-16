@@ -32,7 +32,10 @@ extern bool path_exists(const char *path);
 extern bool path_mkdirs(const char *path);
 extern bool path_is_folder(const char *path);
 extern bool path_is_file(const char *path);
+extern bool path_is_absolute(const char *path);
+extern bool path_is_normalized(const char *path);
 extern void path_split(const char *path, char *folder, char *file);
 extern void path_join(char *path, const char *folder, const char *file);
+extern void path_lua_to_fs(char *path, const char *modname);
 
 #endif  /* __LIBS_PATH_H__ */

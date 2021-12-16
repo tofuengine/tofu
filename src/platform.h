@@ -38,34 +38,46 @@
 
 #if defined(_WIN32) || defined(_WIN64)
     #define PLATFORM_ID PLATFORM_WINDOWS // Windows
+    #define PLATFORM_NAME "Windows"
 #elif defined(__CYGWIN__) && !defined(_WIN32)
     #define PLATFORM_ID PLATFORM_WINDOWS // Windows (Cygwin POSIX under Microsoft Window)
+    #define PLATFORM_NAME "Cygwin"
 #elif defined(__ANDROID__)
     #define PLATFORM_ID PLATFORM_ANDROID // Android (implies Linux, so it must come first)
+    #define PLATFORM_NAME "Android"
 #elif defined(__linux__)
     #define PLATFORM_ID PLATFORM_LINUX // Debian, Ubuntu, Gentoo, Fedora, openSUSE, RedHat, CentOS and other
+    #define PLATFORM_NAME "Linux"
 #elif defined(__unix__) || defined(__APPLE__) && defined(__MACH__)
     #include <sys/param.h>
     #if defined(BSD)
         #define PLATFORM_ID PLATFORM_BSD // FreeBSD, NetBSD, OpenBSD, DragonFly BSD
+        #define PLATFORM_NAME "BSD"
     #endif
 #elif defined(__hpux)
     #define PLATFORM_ID PLATFORM_HP_UX // HP-UX
+    #define PLATFORM_NAME "HP-UX"
 #elif defined(_AIX)
     #define PLATFORM_ID PLATFORM_AIX // IBM AIX
+    #define PLATFORM_NAME "AIX"
 #elif defined(__APPLE__) && defined(__MACH__) // Apple OSX and iOS (Darwin)
     #include <TargetConditionals.h>
     #if TARGET_IPHONE_SIMULATOR == 1
         #define PLATFORM_ID PLATFORM_IOS // Apple iOS
+        #define PLATFORM_NAME "iOS"
     #elif TARGET_OS_IPHONE == 1
         #define PLATFORM_ID PLATFORM_IOS // Apple iOS
+        #define PLATFORM_NAME "iOS"
     #elif TARGET_OS_MAC == 1
         #define PLATFORM_ID PLATFORM_OSX // Apple OSX
+        #define PLATFORM_NAME "iOS"
     #endif
 #elif defined(__sun) && defined(__SVR4)
     #define PLATFORM_ID PLATFORM_SOLARIS // Oracle Solaris, Open Indiana
+    #define PLATFORM_NAME "Solaris"
 #else
     #define PLATFORM_ID PLATFORM_UNKNOWN
+    #define PLATFORM_NAME "Unknown"
 #endif
 
 #if PLATFORM_ID == PLATFORM_LINUX

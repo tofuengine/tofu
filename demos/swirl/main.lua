@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Font = require("tofu.graphics").Font
-local Vector = require("tofu.util").Vector
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Palette = require("tofu.graphics.palette")
+local Font = require("tofu.graphics.font")
+local Vector = require("tofu.util.vector")
 
 local function square(canvas, x, y, s, r, g, b)
 --  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
@@ -40,19 +40,29 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new("pico-8"))
+  Display.palette(Palette.default("pico-8"))
 
   local canvas = Canvas.default()
   canvas:transparent(0, false)
 
   local width, height = canvas:size()
   self.m = Vector.new(width - 1, height - 1)
-  self.c = self.m:clone():scale(0.5)
+  self.c = Vector.new(self.m)
+  self.c:scale(0.5)
   self.fan = false
 
   self.font = Font.default(0, 15)
 
   self.time = 0
+  self.running = true
+end
+
+function Main:on_focus_acquired()
+  self.running = true
+end
+
+function Main:on_focus_lost()
+  self.running = false
 end
 
 function Main:process()
@@ -62,7 +72,7 @@ function Main:process()
 end
 
 function Main:update(delta_time)
-  if not System.is_active() then
+  if not self.running then
     return
   end
   self.time = self.time + delta_time
@@ -79,13 +89,14 @@ function Main:render(_)
 
   for _ = 1, 250 do
     local p = Vector.new(math.random(0, m.x), math.random(0, m.y))
-    local v = p:clone():sub(c):div(c) -- Normalize and center in [-1, 1]
+    local v = Vector.from_points(c, p)
+    v:div(c) -- Normalize and center in [-1, 1]
     local d = 1.0 - v:magnitude()
     local angle = t * 3 + d * math.pi -- Angle increase as we reach the center.
-    local r = v:clone():rotate(angle)
+    v:rotate(angle)
 
     if self.fan then
-      local rad = r:angle_to() + math.pi -- Find the octant of the rotated point to pick the color.
+      local rad = v:angle_to() + math.pi -- Find the octant of the rotated point to pick the color.
       local deg = math.floor(rad * (180.0 / math.pi)) % 180
       if deg > 3 and deg < 87 then
         square(canvas, p.x, p.y, 5, 0.0, 0.5, 1.0)
@@ -95,10 +106,10 @@ function Main:render(_)
         square(canvas, p.x, p.y, 5, 0.0, 0.0, 0.0)
       end
     else
-      local l = math.min(1.0, r:magnitude())
+      local l = math.min(1.0, v:magnitude())
       l = 1.0 - l * l -- Tweak to smooth the color change differently.
 
-      square(canvas, p.x, p.y, 5, r.x, r.y, l)
+      square(canvas, p.x, p.y, 5, v.x, v.y, l)
     end
   end
 

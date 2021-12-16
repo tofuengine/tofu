@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
-#include <core/engine.h>
 #include <libs/log.h>
 
 #include <stdlib.h>
+
+#include "engine.h"
 
 #define LOG_CONTEXT "main"
 

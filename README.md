@@ -15,6 +15,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fully scripted in [Lua](https://www.lua.org/).
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
+* [x] Array of predefined common/famous resolutions (e.g. C64, Capcom's arcades, Nintendo DS, Sony PSP, etc...).
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
 * [x] Support for both proportional and non-proportional bitmap based fonts (alphabet subset can be specified, if required).
@@ -46,6 +47,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
+* [x] Noise generators (perlin, simple, and cellular).
 * [x] Logging facility (w/ selectable severity level).
 * [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom [RTTI](https://en.wikipedia.org/wiki/Run-time_type_information) implementation.
 * [x] Crash screen (debug build).
@@ -56,15 +58,18 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Dependencies
 
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.29, v0.6.27, v0.13.0
+* [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.31, v0.6.31, v0.13.3
+* [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
-* [GLFW](https://www.glfw.org/) v3.3.4
+* [GLFW](https://www.glfw.org/) v3.3.6
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.40
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
+* [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) libraries
 
 ## Inspirations
@@ -112,6 +117,8 @@ into a suitable work folder. Change directory into `tofu` folder you've just cre
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
 * `ARCHITECTURE`, can be either `x64` or `x32`. Please note that this is used only for the **Windows** build as the Linux one is 64-bit only, and the Raspberry-Pi is 32-bit only.
 
+The build artifacts will be placed in the `build` directory.
+
 ## Sample projects
 
 Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-folder and can be launched using `make`, passing the name of the project as a target (e.g. `make bunnymark`).
@@ -121,14 +128,14 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ## Desiderata
 
 * [ ] Physics-engine.
-* [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading?)
+* [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
+* [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
+* [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
-* [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Game state and display transitions (at which level? Engine or script?).
-* [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), [Perlin](https://github.com/stegu/perlin-noise), etc...).
 * [ ] Multiple players support.
 * [ ] Use a custom memory-management allocator.
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
@@ -144,6 +151,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ```bash
 make bunnymark BUILD=profile
-prof ./tofu  gmon.out > analysys.txt
-prof ./tofu  gmon.out | ./extras/gprof2dot.py | dot -Tpng -o analysys.png
+gprof ./tofu  gmon.out > analysys.txt
+gprof ./tofu  gmon.out | ./extras/gprof2dot.py | dot -Tpng -o analysys.png
 ```

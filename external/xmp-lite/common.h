@@ -1,6 +1,7 @@
 #ifndef LIBXMP_COMMON_H
 #define LIBXMP_COMMON_H
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -24,15 +25,24 @@
 #define LIBXMP_END_DECLS	}
 #endif
 
+#if defined(_MSC_VER) && !defined(__cplusplus)
+#define inline __inline
+#endif
+
+#if defined(_MSC_VER) ||  defined(__WATCOMC__) || defined(__EMX__)
+#define XMP_MAXPATH _MAX_PATH
+#elif defined(PATH_MAX)
+#define XMP_MAXPATH  PATH_MAX
+#else
+#define XMP_MAXPATH  1024
+#endif
+
 #if defined(__MORPHOS__) || defined(__AROS__) || defined(AMIGAOS) || \
     defined(__amigaos__) || defined(__amigaos4__) ||defined(__amigados__) || \
     defined(AMIGA) || defined(_AMIGA) || defined(__AMIGA__)
 #define LIBXMP_AMIGA	1	/* to identify amiga platforms. */
 #endif
 
-#if (defined(__GNUC__) || defined(__clang__)) && defined(XMP_SYM_VISIBILITY)
-#if !defined(_WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(LIBXMP_AMIGA) && !defined(__MSDOS__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__)
-#define USE_VERSIONED_SYMBOLS
 #ifdef HAVE_EXTERNAL_VISIBILITY
 #define LIBXMP_EXPORT_VERSIONED __attribute__((visibility("default"),externally_visible))
 #else
@@ -42,23 +52,6 @@
 #define LIBXMP_ATTRIB_SYMVER(_sym) __attribute__((__symver__(_sym)))
 #else
 #define LIBXMP_ATTRIB_SYMVER(_sym)
-#endif
-#endif
-#endif
-
-/* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
- */
-#if defined B_BEOS_VERSION
-#  include <SupportDefs.h>
-#elif defined __amigaos4__
-#  include <exec/types.h>
-#else
-typedef signed char int8;
-typedef signed short int int16;
-typedef signed int int32;
-typedef unsigned char uint8;
-typedef unsigned short int uint16;
-typedef unsigned int uint32;
 #endif
 
 #ifdef _MSC_VER				/* MSVC++6.0 has no long long */

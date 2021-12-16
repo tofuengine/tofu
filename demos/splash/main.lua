@@ -22,21 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Source = require("tofu.sound").Source
+local Class = require("tofu.core.class")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Palette = require("tofu.graphics.palette")
+local Source = require("tofu.sound.source")
 
-local Background = require("libs.background")
-local Logo = require("libs.logo")
-local Stars = require("libs.stars")
-local Wave = require("libs.wave")
+local Background = require("lib/background")
+local Logo = require("lib/logo")
+local Stars = require("lib/stars")
+local Wave = require("lib/wave")
 
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.new("famicube")
+  local palette = Palette.default("famicube")
   local background_index = palette:size() - 1 -- The background index is the last palette entry!
   Display.palette(palette)
 

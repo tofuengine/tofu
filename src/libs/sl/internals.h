@@ -40,14 +40,14 @@
   #error Wrong internal format.
 #endif
 
-typedef struct _Source_VTable_t {
+typedef struct Source_VTable_s {
     void (*dtor)(SL_Source_t *source);
     bool (*reset)(SL_Source_t *source);
     bool (*update)(SL_Source_t *source, float delta_time);
     bool (*generate)(SL_Source_t *source, void *output, size_t frames_requested); // Returns `false` when end-of-data.
 } Source_VTable_t;
 
-struct _SL_Source_t {
+struct SL_Source_s {
     Source_VTable_t vtable;
 
     SL_Props_t *props;

@@ -22,23 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
-local Input = require("tofu.events").Input
-local Grid = require("tofu.util").Grid
+local Class = require("tofu.core.class")
+local Log = require("tofu.core.log")
+local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
+local Input = require("tofu.events.input")
+local Source = require("tofu.sound.source")
+local Grid = require("tofu.util.grid")
 
-local INITIAL_LENGTH = 5
-local SPEED_RATIO = 5
-local CELL_SIZE = 8
-local LIFE = 1.0
-local SPEED = 5.0
+local INITIAL_LENGTH <const> = 5
+local SPEED_RATIO <const> = 5
+local CELL_SIZE <const> = 8
+local LIFE <const> = 1.0
+local SPEED <const> = 5.0
 
-local DELTA_X = { up = 0, down = 0, left = -1, right = 1 }
-local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
+local DELTA_X <const> = { up = 0, down = 0, left = -1, right = 1 }
+local DELTA_Y <const> = { up = -1, down = 1, left = 0, right = 0 }
 
 --[[
 ************************************************
@@ -71,22 +73,33 @@ local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
 ************************************************
 ]]
 
-local MAP = "48|28|49:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
+local MAP <const> = "48|28|49:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
   |2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
   |2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|49:-1"
+
+local SOURCES <const> = {
+    { id = "hit", name = "assets/sounds/hit.flac", type = "sample" },
+    { id = "eat", name = "assets/sounds/eat.flac", type = "sample" },
+    { id = "blip", name = "assets/sounds/blip.flac", type = "sample" },
+  }
 
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.new("gameboy")
+  local palette = Palette.default("gameboy")
   Display.palette(palette)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
   self.font = Font.default(palette:match(0, 0, 0), palette:match(255, 255, 255))
-  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), { 0 })
---  Class.dump(self)
+  self.grid = Grid.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
+
+  self.sources = {}
+  for _, source in ipairs(SOURCES) do
+    local instance = Source.new(source.name, source.type)
+    self.sources[source.id] = { instance = instance, pan = 0.0, balance = 0.0 }
+  end
 
   self:reset()
 end
@@ -177,24 +190,32 @@ function Main:update(delta_time)
     self.accumulator = self.accumulator - LIFE
 
     local gw, gh = self.grid:size()
-    self.position.x = (self.position.x + DELTA_X[self.direction]) % gw
-    self.position.y = (self.position.y + DELTA_Y[self.direction]) % gh
+    local x = (self.position.x + DELTA_X[self.direction]) % gw
+    local y = (self.position.y + DELTA_Y[self.direction]) % gh
 
-    local value = self.grid:peek(self.position.x, self.position.y)
-
-    self.grid:poke(self.position.x, self.position.y, self.length * LIFE)
+    local value = self.grid:peek(x, y)
 
     if value == -2 then
+      self.sources["eat"].instance:play()
       self.length = self.length + 1
       self:generate_food()
-    elseif value ~= 0 then
+    elseif value == 0 then
+      self.sources["blip"].instance:play()
+    else
+      self.sources["hit"].instance:play()
       self.state = "game-over"
+      break
     end
+
+    self.grid:poke(x, y, self.length * LIFE)
+    self.position.x = x
+    self.position.y = y
   end
 end
 
 function Main:render(_)
   local canvas = Canvas.default()
+  local width, height = canvas:size()
   canvas:clear()
 
   self.grid:scan(function(column, row, value)
@@ -208,6 +229,16 @@ function Main:render(_)
         canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
       end
     end)
+
+    if self.state == "game-over" then
+      local points <const> = (self.length - INITIAL_LENGTH) * 10
+      self.font:write(canvas, width * 0.5, height * 0.25,
+        "GAME OVER", "center", "middle", 4, 4)
+      self.font:write(canvas, width * 0.5, height * 0.50,
+        string.format("Your final score is %d", points), "center", "middle", 2, 2)
+      self.font:write(canvas, width * 0.5, height * 0.75,
+        "-- press start --", "center", "middle", 2, 2)
+    end
 
     self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end

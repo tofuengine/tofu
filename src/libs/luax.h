@@ -29,7 +29,7 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
-typedef enum _luaX_Const_Type {
+typedef enum luaX_Const_Type_e {
     LUA_CT_NIL,
     LUA_CT_BOOLEAN,
     LUA_CT_INTEGER,
@@ -37,7 +37,7 @@ typedef enum _luaX_Const_Type {
     LUA_CT_STRING
 } luaX_Const_Type;
 
-typedef struct _luaX_Const {
+typedef struct luaX_Const_s {
     const char *name;
     luaX_Const_Type type;
     union {
@@ -48,13 +48,18 @@ typedef struct _luaX_Const {
     } value;
 } luaX_Const;
 
-typedef struct _luaX_Script {
-    const char *buffer;
+typedef struct luaX_Script_s {
+    const char *data;
     size_t size;
     const char *name;
 } luaX_Script;
 
 typedef int luaX_Reference;
+
+typedef struct luaX_String_s {
+    const char *data;
+    size_t size;
+} luaX_String;
 
 //#define LUA_TNIL      0
 //#define LUA_TNONE     (-1)
@@ -124,6 +129,10 @@ typedef int luaX_Reference;
     #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                  (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_LSTRING(L, idx)                 (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), (luaX_String){ 0 } : luaX_tolstring((L), (idx)))
+    #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : lua_tolstring((L), (idx)))
+    #define LUAX_TABLE(L, idx)                   (!lua_istable((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_rawlen((L), (idx)))
+    #define LUAX_OPTIONAL_TABLE(L, idx, def)     (lua_isnoneornil((L), (idx)) ? (def) : lua_rawlen((L), (idx)))
     #define LUAX_USERDATA(L, idx)                (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
     #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)               (!luaX_isobject((L), (idx), (t)) ? luaL_error((L), "value at index #%d has wrong type (expected #%d)", (idx), (t)), NULL : luaX_toobject((L), (idx), (t)))
@@ -137,6 +146,10 @@ typedef int luaX_Reference;
     #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                  (lua_tostring((L), (idx)))
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_LSTRING(L, idx)                 (luaX_tolstring((L), (idx)))
+    #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : luaX_tolstring((L), (idx)))
+    #define LUAX_TABLE(L, idx)                   (lua_rawlen((L), (idx)))
+    #define LUAX_OPTIONAL_TABLE(L, idx, def)     (lua_isnoneornil((L), (idx)) ? (def) : lua_rawlen((L), (idx)))
     #define LUAX_USERDATA(L, idx)                (lua_touserdata((L), (idx)))
     #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)               (luaX_toobject((L), (idx), (t)))
@@ -146,6 +159,8 @@ typedef int luaX_Reference;
 #define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
+
+extern luaX_String luaX_tolstring(lua_State *L, int idx);
 
 extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);
@@ -157,7 +172,6 @@ extern int luaX_insisttable(lua_State *L, const char *name);
 extern int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
 extern void luaX_openlibs(lua_State *L);
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
-extern void luaX_requiref(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
 
 extern luaX_Reference luaX_ref(lua_State *L, int idx);
 extern void luaX_unref(lua_State *L, luaX_Reference ref);

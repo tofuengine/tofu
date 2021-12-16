@@ -29,13 +29,13 @@
 #include <libs/path.h>
 #include <libs/stb.h>
 
+#include <dirent.h>
+
 #include "internals.h"
 #include "pak.h"
 #include "std.h"
 
-#include <dirent.h>
-
-struct _FS_Context_t {
+struct FS_Context_s {
     FS_Mount_t **mounts;
 };
 
@@ -84,6 +84,33 @@ static inline bool _ends_with(const char *string, const char *suffix)
 }
 #endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
 
+static int _dirent_compare_by_name(const void *lhs, const void *rhs)
+{
+    const struct dirent *l = (const struct dirent *)lhs;
+    const struct dirent *r = (const struct dirent *)rhs;
+    return strcasecmp(l->d_name, r->d_name);
+}
+
+static struct dirent *_read_directory(const char *path, int (*compare)(const void *, const void *))
+{
+    DIR *dp = opendir(path);
+    if (!dp) { // Path is a folder, scan and mount all valid archives.
+        return NULL;
+    }
+
+    struct dirent *directory = NULL;
+
+    for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
+        arrpush(directory, *entry);
+    }
+
+    qsort(directory, arrlenu(directory), sizeof(struct dirent), compare);
+
+    closedir(dp);
+
+    return directory;
+}
+
 FS_Context_t *FS_create(const char *path)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
@@ -94,11 +121,26 @@ FS_Context_t *FS_create(const char *path)
 
     *context = (FS_Context_t){ 0 };
 
-    DIR *dp = opendir(path);
-    if (dp) { // Path is a folder, scan and mount all valid archives.
-        for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-            char subpath[PLATFORM_PATH_MAX];
+    if (path_is_folder(path)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is a folder", path);
+
+        struct dirent *directory = _read_directory(path, _dirent_compare_by_name); // Build the non-recursive sorted directory listing.
+        if (!directory) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't access directory `%s`", path);
+            free(context);
+            return NULL;
+        }
+
+        for (size_t i = 0; i < arrlenu(directory); ++i) {
+            const struct dirent *entry = &directory[i]; 
+
+            char subpath[PLATFORM_PATH_MAX] = { 0 };
             path_join(subpath, path, entry->d_name);
+
+            if (!path_is_file(subpath)) { // Discard non-regular files (e.g. folders).
+                continue;
+            }
+
 #ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
             if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
                 continue;
@@ -111,7 +153,14 @@ FS_Context_t *FS_create(const char *path)
             _attach(context, subpath);
         }
 
-        closedir(dp);
+        arrfree(directory);
+    } else
+    if (FS_pak_is_valid(path)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is an archive", path);
+    } else {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
+        free(context);
+        return NULL;
     }
 
     _attach(context, path); // Mount the resolved folder, as well (overriding archives).
@@ -122,7 +171,7 @@ FS_Context_t *FS_create(const char *path)
 void FS_destroy(FS_Context_t *context)
 {
     FS_Mount_t **current = context->mounts;
-    for (size_t count = arrlen(context->mounts); count; --count) {
+    for (size_t count = arrlenu(context->mounts); count; --count) {
         FS_Mount_t *mount = *(current++);
         _unmount(mount);
     }
@@ -139,38 +188,26 @@ bool FS_attach(FS_Context_t *context, const char *path)
     return _attach(context, path);
 }
 
-FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *name)
+FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 {
-    const FS_Mount_t *mount = FS_locate(context, name);
-    if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locate file `%s`", name);
-        return NULL;
-    }
-
-    return FS_open(mount, name);
-}
-
-const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *name)
-{
+    const FS_Mount_t *mount = NULL;
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
-    for (int index = (int)arrlen(context->mounts) - 1; index >= 0; --index) {
-        const FS_Mount_t *mount = context->mounts[index];
+    for (int index = arrlen(context->mounts) - 1; index >= 0; --index) {
 #else
-    FS_Mount_t **current = context->mounts;
-    for (size_t count = arrlen(context->mounts); count; --count) {
-        const FS_Mount_t *mount = *(current++);
+    for (int index = 0; index < arrlen(context->mounts); ++index) {
 #endif
-        if (mount->vtable.contains(mount, name)) {
-            return mount;
+        FS_Mount_t *current = context->mounts[index];
+        if (current->vtable.contains(current, name)) {
+            mount = current;
+            break;
         }
     }
 
-    return NULL;
-}
+    if (!mount) {
+        return NULL;
+    }
 
-FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *name)
-{
     return mount->vtable.open(mount, name);
 }
 

@@ -27,12 +27,12 @@
 
 #include <stddef.h>
 
-typedef struct _Blob_t {
+typedef struct Blob_s {
     const void *ptr;
     size_t size;
 } Blob_t;
 
-typedef struct _Image_t {
+typedef struct Image_s {
     size_t width, height;
     const void *pixels;
 } Image_t;

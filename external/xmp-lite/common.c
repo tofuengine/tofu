@@ -213,8 +213,8 @@ char *libxmp_copy_adjust(char *s, uint8_t *r, int n)
 	memset(s, 0, n + 1);
 	strncpy(s, (char *)r, n);
 
-	for (i = 0; s[i] && i < n; i++) {
-		if (!isprint((unsigned char)s[i]) || ((uint8)s[i] > 127))
+	for (i = 0; i < n && s[i]; i++) {
+		if (!isprint((unsigned char)s[i]) || ((uint8_t)s[i] > 127))
 			s[i] = '.';
 	}
 
@@ -313,7 +313,7 @@ int libxmp_copy_name_for_fopen(char *dest, const char *name, int n)
  * module players erroneously interpret as "newer-version-trackers commands".
  * Which they aren't.
  */
-void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8_t *mod_event)
+void libxmp_decode_noisetracker_event(struct xmp_event *event, const uint8_t *mod_event)
 {
 	int fxt;
 
@@ -330,7 +330,7 @@ void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8_t *mod_even
 	libxmp_disable_continue_fx(event);
 }
 
-void libxmp_decode_protracker_event(struct xmp_event *event, uint8_t *mod_event)
+void libxmp_decode_protracker_event(struct xmp_event *event, const uint8_t *mod_event)
 {
 	int fxt = LSN(mod_event[2]);
 

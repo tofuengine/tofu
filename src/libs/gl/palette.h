@@ -35,13 +35,13 @@
 #define GL_MAX_PALETTE_COLORS       256
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-typedef struct _color_pixel_pair_t {
+typedef struct color_pixel_pair_s {
     GL_Color_t key;
     GL_Pixel_t value;
 } color_pixel_pair_t;
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
-typedef struct _GL_Palette_t {
+typedef struct GL_Palette_s {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     size_t size;
 #ifdef __PALETTE_COLOR_MEMOIZATION__
@@ -52,24 +52,26 @@ typedef struct _GL_Palette_t {
 extern GL_Palette_t *GL_palette_create(void);
 extern void GL_palette_destroy(GL_Palette_t *palette);
 
+extern size_t GL_palette_get_colors(const GL_Palette_t *palette, GL_Color_t colors[GL_MAX_PALETTE_COLORS]);
+
 extern void GL_palette_set_colors(GL_Palette_t *palette, const GL_Color_t *colors, size_t size);
 extern void GL_palette_set_greyscale(GL_Palette_t *palette, size_t size);
-extern void GL_palette_set_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits);
+extern void GL_palette_set_quantized(GL_Palette_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits);
 
 extern GL_Color_t GL_palette_get(const GL_Palette_t *palette, GL_Pixel_t index);
 extern void GL_palette_set(GL_Palette_t *palette, GL_Pixel_t index, GL_Color_t color);
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-extern GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, const GL_Color_t color);
+extern GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, GL_Color_t color);
 #else
-extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
+extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, GL_Color_t color);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
-extern GL_Color_t GL_palette_mix(const GL_Color_t from, const GL_Color_t to, float ratio);
+extern GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio);
 
 extern void GL_palette_copy(GL_Palette_t *palette, const GL_Palette_t *source);
 extern void GL_palette_merge(GL_Palette_t *palette, const GL_Palette_t *other, bool remove_duplicates);
-extern void GL_palette_lerp(GL_Palette_t *palette, const GL_Color_t color, float ratio);
+extern void GL_palette_lerp(GL_Palette_t *palette, GL_Color_t color, float ratio);
 // TODO: add other functions, too...
 
 #endif  /* __GL_PALETTE_H__ */

@@ -25,6 +25,7 @@
 #include "blit.h"
 
 #include <config.h>
+#include <libs/fmath.h>
 #include <libs/imath.h>
 #include <libs/sincos.h>
 
@@ -46,22 +47,22 @@ void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
-    size_t skip_y = 0;
+    int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
+    int skip_y = area.y;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width - 1,
-            .y1 = position.y + (int)area.height - 1
+            .x1 = position.x + (int)area.width,
+            .y1 = position.y + (int)area.height
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -71,8 +72,8 @@ void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -86,7 +87,7 @@ void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *sptr = sdata + skip_y * swidth + skip_x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
@@ -122,22 +123,22 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const size_t drawing_width = (size_t)ITRUNC(area.width * fabsf(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
     const size_t drawing_height = (size_t)ITRUNC(area.height * fabsf(scale_y));
 
-    size_t skip_x = 0; // Offset into the (target) surface/texture, updated during clipping.
-    size_t skip_y = 0;
+    float skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
+    float skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)drawing_width - 1,
-            .y1 = position.y + (int)drawing_height - 1,
+            .x1 = position.x + (int)drawing_width,
+            .y1 = position.y + (int)drawing_height,
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x += clipping_region->x0 - drawing_region.x0;
+        skip_x += (float)(clipping_region->x0 - drawing_region.x0);
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y += clipping_region->y0 - drawing_region.y0;
+        skip_y += (float)(clipping_region->y0 - drawing_region.y0);
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -147,8 +148,8 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
@@ -171,9 +172,9 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     // Notice that we need to work in the mid-center of the pixels. We can also rewrite the
     // formula in a recurring fashion if we increment and accumulate by `1 / S_x` and `1 / S_y` steps.
     const float ou0 = (skip_x + 0.5f) / scale_x;
-    const float ov0 = (skip_y + 0.5f) / scale_y; // `skip_*` is never zero, so we can check the sign!
-    const float ou = area.x + (ou0 < 0.0f ? (float)area.width + ou0 : ou0); // Offset to the correct margin, according to flipping.
-    const float ov = area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
+    const float ov0 = (skip_y + 0.5f) / scale_y; // `skip_*` is never negative, so we can check the sign!
+    const float ou = (float)area.x + (ou0 < 0.0f ? (float)area.width + ou0 : ou0); // Offset to the correct margin, according to flipping.
+    const float ov = (float)area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
 
     const float du = 1.0f / scale_x; // Retain sign of the scaling to move according to a "vector" along the scaling.
     const float dv = 1.0f / scale_y;
@@ -218,8 +219,8 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
-    const float dw = sw * fabs(scale_x);
-    const float dh = sh * fabs(scale_y);
+    const float dw = sw * FABS(scale_x);
+    const float dh = sh * FABS(scale_y);
 
     const float sax = (sw - 1.0f) * anchor_x; // Anchor points, relative to the source and destination areas.
     const float say = (sh - 1.0f) * anchor_y;
@@ -272,8 +273,8 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = ICEILF(aabb_x0 + dx), // To include every fractionally occupied pixel.
             .y0 = ICEILF(aabb_y0 + dy),
-            .x1 = ICEILF(aabb_x1 + dx),
-            .y1 = ICEILF(aabb_y1 + dy)
+            .x1 = ICEILF(aabb_x1 + dx) + 1,
+            .y1 = ICEILF(aabb_y1 + dy) + 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -291,16 +292,16 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = drawing_region.x1 - drawing_region.x0;
+    const int height = drawing_region.y1 - drawing_region.y0;
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
     const int sminx = area.x;
     const int sminy = area.y;
-    const int smaxx = sminx + (int)area.width - 1;
-    const int smaxy = sminy + (int)area.height - 1;
+    const int smaxx = sminx + (int)area.width;
+    const int smaxy = sminy + (int)area.height;
 
     const float M11 = c / scale_x;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling *and* flip (TRSF -> FSRT).
     const float M12 = s / scale_x;  // | fx  0 | | 1/sx    0 | |  c s |
@@ -343,7 +344,7 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
                 int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
                 int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
-                if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+                if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #ifdef __DEBUG_GRAPHICS__
                     _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
@@ -364,9 +365,9 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
     }
 #ifdef __DEBUG_GRAPHICS__
     _pixel(surface, dx, dy, 7);
-    _pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    _pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
+    _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
+    _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);
+    _pixel(surface, drawing_region.x0    , drawing_region.y1 - 1, 7);
 #endif
 }

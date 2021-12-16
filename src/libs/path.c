@@ -50,9 +50,19 @@
 
 #define LOG_CONTEXT "path"
 
+static inline bool _path_is_trailed(const char *path)
+{
+    return path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR;
+}
+
+static inline void _path_chop(char *path)
+{
+    path[strlen(path) - 1] = '\0';
+}
+
 void path_expand(const char *path, char *expanded)
 {
-    char resolved[PLATFORM_PATH_MAX];
+    char resolved[PLATFORM_PATH_MAX] = { 0 };
 #if PLATFORM_ID == PLATFORM_LINUX
     if (path[0] == '~') {
         const char *home = getenv("HOME");
@@ -61,7 +71,7 @@ void path_expand(const char *path, char *expanded)
 #elif PLATFORM_ID == PLATFORM_WINDOWS
     if (strncasecmp(path, "%AppData%", 9) == 0) {
   #ifdef __USE_OS_NATIVE_API__
-        char appdata[PLATFORM_PATH_MAX];
+        char appdata[PLATFORM_PATH_MAX] = { 0 };
         SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
   #else
         const char *appdata = getenv("APPDATA"); // https://pureinfotech.com/list-environment-variables-windows-10/
@@ -76,6 +86,11 @@ void path_expand(const char *path, char *expanded)
     char *ptr = realpath(resolved, expanded);
     if (!ptr) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve path `%s`", resolved);
+        return;
+    }
+
+    if (_path_is_trailed(expanded)) {
+        _path_chop(expanded);
     }
 }
 
@@ -110,26 +125,16 @@ bool path_mkdirs(const char *path)
     return true;
 }
 
-static inline bool _path_is_trailed(const char *path)
-{
-    return path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR;
-}
-
-static inline void _path_chop(char *path)
-{
-    path[strlen(path) - 1] = '\0';
-}
-
 #if PLATFORM_ID == PLATFORM_WINDOWS
 static inline bool _path_is_root(const char *path)
 {
-    return path[1] == ':' && strlen(path) < 4; // e.g. `C:` or `C:\`)
+    return strlen(path) >= 2 && strlen(path) <= 3 && path[1] == ':'; // e.g. `C:` or `C:\`)
 }
 #endif
 
 static int _path_stat(const char *pathname, struct stat *statbuf)
 {
-    char path[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX] = { 0 };
     strcpy(path, pathname);
 #if PLATFORM_ID == PLATFORM_WINDOWS
     bool is_root = _path_is_root(path);
@@ -176,6 +181,23 @@ bool path_is_file(const char *path)
     return true;
 }
 
+bool path_is_absolute(const char *path)
+{
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    return strlen(path) >= 3 && path[1] == ':' && path[2] == PLATFORM_PATH_SEPARATOR; // e.g. `C:\`
+#else
+    return strlen(path) >= 1 && path[0] == PLATFORM_PATH_SEPARATOR;
+#endif
+}
+
+bool path_is_normalized(const char *path)
+{
+    return strncmp(path, "." PLATFORM_PATH_SEPARATOR_SZ, 2) != 0
+        || strncmp(path, ".." PLATFORM_PATH_SEPARATOR_SZ, 3) != 0
+        || !strstr(path, PLATFORM_PATH_SEPARATOR_SZ "." PLATFORM_PATH_SEPARATOR_SZ)
+        || !strstr(path, PLATFORM_PATH_SEPARATOR_SZ ".." PLATFORM_PATH_SEPARATOR_SZ);
+}
+
 void path_split(const char *path, char *folder, char *file)
 {
     if (path_is_folder(path)) {
@@ -204,11 +226,25 @@ void path_split(const char *path, char *folder, char *file)
 void path_join(char *path, const char *folder, const char *file)
 {
     strcpy(path, folder);
-    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    if (!_path_is_trailed(path)) {
+        strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    }
     strcat(path, file);
     for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace virtual file-system separator `/` with the actual one.
         if (*ptr == FS_PATH_SEPARATOR) {
             *ptr = PLATFORM_PATH_SEPARATOR;
         }
     }
+}
+
+void path_lua_to_fs(char *path, const char *modname)
+{
+    strcpy(path, "@"); // Prepend a `@`, required by Lua to track files.
+    strcat(path, modname);
+    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
+        if (*ptr == '.') {
+            *ptr = FS_PATH_SEPARATOR;
+        }
+    }
+    strcat(path, ".lua");
 }

@@ -31,7 +31,7 @@ char *libxmp_adjust_string(char *s)
 	size_t i;
 
 	for (i = 0; i < strlen(s); i++) {
-		if (!isprint((unsigned char)s[i]) || ((uint8) s[i] > 127))
+		if (!isprint((unsigned char)s[i]) || ((uint8_t) s[i] > 127))
 			s[i] = ' ';
 	}
 
@@ -54,9 +54,9 @@ static void check_envelope(struct xmp_envelope *env)
 		env->flg &= ~XMP_ENVELOPE_LOOP;
 	}
 
-	/* Disable envelope loop if invalid sustain */
-	if (env->sus >= env->npt) {
-		env->flg &= ~XMP_ENVELOPE_ON;
+	/* Disable envelope sustain if invalid sustain */
+	if (env->sus >= env->npt || env->sue >= env->npt) {
+		env->flg &= ~XMP_ENVELOPE_SUS;
 	}
 }
 

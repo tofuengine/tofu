@@ -57,7 +57,7 @@ Blob_t decoder_as_blob(const char *encoded_data)
         };
 }
 
-typedef struct _Cursor_t {
+typedef struct Cursor_s {
     uint8_t *data;
     size_t size;
     size_t index;
@@ -66,7 +66,7 @@ typedef struct _Cursor_t {
 static int _stbi_io_read(void *user_data, char *data, int size)
 {
     Cursor_t *cursor = (Cursor_t *)user_data;
-    int count = imin(size, cursor->size - cursor->index);
+    int count = imin(size, (int)cursor->size - cursor->index);
     memcpy(data, cursor->data + cursor->index, count);
     cursor->index += count;
     return count;

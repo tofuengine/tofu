@@ -22,20 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Bank = require("tofu.graphics").Bank
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
-local Program = require("tofu.graphics").Program
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Bank = require("tofu.graphics.bank")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
+local Program = require("tofu.graphics.program")
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new("pico-8-ext"))
+  Display.palette(Palette.default("pico-8-ext"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
@@ -113,7 +113,7 @@ function Main:update(delta_time)
   program:color(1, 0x00, 0x11, 0x44)
   program:color(31, 0x00, 0x11, 0x44)
   program:modulo(-width * 2)
-  for i = math.tointeger(height * 0.5), height - 1 do
+  for i = height // 2, height - 1 do
     program:wait(0, i)
     program:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
   end

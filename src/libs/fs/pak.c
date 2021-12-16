@@ -41,7 +41,7 @@
 
 #define PAK_VERSION             0
 
-#define PAK_FLAG_ENCRYPTED      0x0001
+// TODO: no in-memory directory?
 
 /*
 +---------+
@@ -57,7 +57,7 @@
 +---------+
 | BLOB n  |
 +---------+
-| ENTRY 0 | sizeof(Pak_Entry_t)
+| ENTRY 0 | sizeof(uint16_t) + N * sizeof(char) + sizeof(uint32_t) + sizeof(uint32_t)
 +---------+
 | ENTRY 1 |
 +---------+
@@ -75,34 +75,55 @@
 #define PAK_ID_LENGTH_SZ    (MD5_SIZE * 2 + 1)
 
 #pragma pack(push, 1)
-typedef struct _Pak_Header_t {
+typedef struct Pak_Header_s {
     char signature[PAK_SIGNATURE_LENGTH];
     uint8_t version;
-    uint8_t flags;
+    struct { // Bit ordering is implementation dependent, il LE machines lower bits are the first.
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        uint8_t encrypted : 1;
+        uint8_t __padding : 7;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        uint8_t __padding : 7;
+        uint8_t encrypted : 1;
+#else
+#    error unsupported endianness
+#endif
+    } flags;
     uint16_t __reserved;
 } Pak_Header_t;
 
-typedef struct _Pak_Entry_t {
-    uint8_t id[PAK_ID_LENGTH]; // The entry name is hashed and hex-expanded.
+typedef struct Pak_Entry_Header_s {
+    uint32_t offset;
+    uint32_t size;
+    uint16_t chars;
+} Pak_Entry_Header_t;
+
+typedef struct Pak_Entry_s {
+    char *name;
+    uint8_t id[PAK_ID_LENGTH];
     uint32_t offset;
     uint32_t size;
 } Pak_Entry_t;
 
-typedef struct _Pak_Index_t {
+typedef struct Pak_Index_s {
     uint32_t offset;
     uint32_t entries; // Redundant, we could check file offsets, but it's quicker that way.
 } Pak_Index_t;
 #pragma pack(pop)
 
-typedef struct _Pak_Mount_t {
+typedef struct Pak_Flags_s {
+    bool encrypted;
+} Pak_Flags_t;
+
+typedef struct Pak_Mount_s {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
-    uint8_t flags;
+    Pak_Flags_t flags;
 } Pak_Mount_t;
 
-typedef struct _Pak_Handle_t {
+typedef struct Pak_Handle_s {
     Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
     size_t stream_size;
@@ -112,7 +133,7 @@ typedef struct _Pak_Handle_t {
     xor_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, Pak_Flags_t flags);
 static void _pak_mount_dtor(FS_Mount_t *mount);
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
@@ -125,7 +146,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence);
 static long _pak_handle_tell(FS_Handle_t *handle);
 static bool _pak_handle_eof(FS_Handle_t *handle);
 
-static bool _pak_validate_archive(FILE *stream, const char *path, uint8_t *flags)
+static bool _pak_validate_archive(FILE *stream, const char *path, Pak_Flags_t *flags)
 {
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
@@ -142,7 +163,7 @@ static bool _pak_validate_archive(FILE *stream, const char *path, uint8_t *flags
         return false;
     }
     if (flags) {
-        *flags = header.flags;
+        flags->encrypted = header.flags.encrypted;
     }
     return true;
 }
@@ -171,11 +192,66 @@ bool FS_pak_is_valid(const char *path)
     return true;
 }
 
+static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
+{
+    md5_context_t context;
+    md5_init(&context);
+    for (size_t i = 0; i < strlen(name); ++i) {
+        uint8_t c = tolower(name[i]); // Treat file names as lowercase/case-insensitive.
+        md5_update(&context, &c, 1);
+    }
+    md5_final(&context, id);
+    for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
+        sprintf(sz + i * 2, "%02x", id[i]);
+    }
+}
+
+static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
+{
+    Pak_Entry_Header_t header;
+    size_t entries_read = fread(&header, sizeof(Pak_Entry_Header_t), 1, stream);
+    if (entries_read != 1) {
+        return false;
+    }
+
+    char *name = malloc(header.chars + 1);
+    entries_read = fread(name, sizeof(char), header.chars, stream);
+    if (entries_read != header.chars) {
+        free(name);
+        return false;
+    }
+    name[header.chars] = '\0';
+
+    *entry = (Pak_Entry_t){
+            .name = name,
+            .id = { 0 },
+            .offset = header.offset,
+            .size = header.size
+        };
+
+    char id[PAK_ID_LENGTH_SZ] = { 0 };
+    _hash_file(name, entry->id, id);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
+
+    return true;
+}
+
+static void _free_directory(Pak_Entry_t *directory)
+{
+    if (!directory) { // Corner case, array empty.
+        return;
+    }
+    for (size_t i = 0; i < arrlenu(directory); ++i) {
+        free(directory[i].name);
+    }
+    arrfree(directory);
+}
+
 static int _pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
     const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
-    return memcmp(l->id, r->id, PAK_ID_LENGTH);
+    return strcasecmp(l->name, r->name);
 }
 
 FS_Mount_t *FS_pak_mount(const char *path)
@@ -186,7 +262,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    uint8_t flags;
+    Pak_Flags_t flags;
     bool validated = _pak_validate_archive(stream, path, &flags);
     if (!validated) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't validate file `%s` as archive", path);
@@ -216,19 +292,17 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * index.entries);
-    if (!directory) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate #%d directory entries", index.entries);
-        fclose(stream);
-        return NULL;
-    }
-
-    entries_read = fread(directory, sizeof(Pak_Entry_t), index.entries, stream);
-    if (entries_read != index.entries) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d entries (%d read) from archive `%s`", index.entries, entries_read, path);
-        free(directory);
-        fclose(stream);
-        return NULL;
+    Pak_Entry_t *directory = NULL;
+    for (uint32_t i = 0; i < index.entries; ++i) {
+        Pak_Entry_t entry = { 0 };
+        bool read = _read_entry(&entry, stream);
+        if (!read) {
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read entry #%d (%d total) from archive `%s`", i, index.entries, entries_read, path);
+            _free_directory(directory);
+            fclose(stream);
+            return NULL;
+        }
+        arrpush(directory, entry);
     }
 
     fclose(stream);
@@ -239,19 +313,18 @@ FS_Mount_t *FS_pak_mount(const char *path)
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for archive `%s`", path);
-        free(directory);
+        _free_directory(directory);
         return NULL;
     }
 
     _pak_mount_ctor(mount, path, index.entries, directory, flags);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized w/ %d entries (flags 0x%02x) for archive `%s`",
-        index.entries, flags, path);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized w/ %d entries (flags 0x%02x) for archive `%s`", index.entries, flags, path);
 
     return mount;
 }
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, Pak_Flags_t flags)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -267,41 +340,22 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
             .flags = flags
         };
 
-    strcpy(pak_mount->path, path);
+    strncpy(pak_mount->path, path, PLATFORM_PATH_MAX - 1);
 }
 
 static void _pak_mount_dtor(FS_Mount_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
-    free(pak_mount->directory);
-}
-
-static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
-{
-    md5_context_t context;
-    md5_init(&context);
-    for (size_t i = 0; i < strlen(name); ++i) {
-        uint8_t c = tolower(name[i]); // Treat file names as lowercase/case-insensitive.
-        md5_update(&context, &c, 1);
-    }
-    md5_final(&context, id);
-    for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
-        sprintf(sz + i * 2, "%02x", id[i]);
-    }
+    _free_directory(pak_mount->directory);
 }
 
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t key = { 0 };
-    char id[PAK_ID_LENGTH_SZ] = { 0 };
-    _hash_file(name, key.id, id);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
-
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    Pak_Entry_t needle = { .name = (char *)name };
+    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
     Log_assert(!exists, LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
@@ -312,13 +366,8 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t key = { 0 };
-    char id[PAK_ID_LENGTH_SZ] = { 0 };
-    _hash_file(name, key.id, id);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
-
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    Pak_Entry_t needle = { .name = (char *)name };
+    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
@@ -345,7 +394,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         return NULL;
     }
 
-    _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->id);
+    _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags.encrypted, entry->id);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
 
@@ -368,15 +417,18 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, siz
             .stream = stream,
             .stream_size = size,
             .beginning_of_stream = offset,
-            .end_of_stream = offset + size - 1,
+            .end_of_stream = offset + (long)size - 1L,
             .encrypted = encrypted,
             .cipher_context = { { 0 } } // Uh! The first member of the structure is an array, need additional braces!
         };
 
     if (encrypted) {
         // Encryption is implemented throught a XOR stream cipher.
-        // The key is the entry name (which is an MD5 digest for encrypted archives).
+        // The key is the entry's MD5 digest of the name.
         xor_schedule(&pak_handle->cipher_context, id, PAK_ID_LENGTH);
+#ifdef __DEBUG_FS_CALLS__
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "cipher context initialized");
+#endif
     }
 }
 
@@ -459,8 +511,17 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
     bool seeked = fseek(pak_handle->stream, position, SEEK_SET) == 0;
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
+
+    if (pak_handle->encrypted) {
+        size_t index = position - pak_handle->beginning_of_stream;
+        xor_adjust(&pak_handle->cipher_context, index);
+#ifdef __DEBUG_FS_CALLS__
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "cipher context adjusted to %d", index);
+#endif
+    }
+
     return seeked;
 }
 

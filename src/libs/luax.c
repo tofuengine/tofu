@@ -40,8 +40,15 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
+luaX_String luaX_tolstring(lua_State *L, int idx)
+{
+    luaX_String s;
+    s.data = lua_tolstring(L, idx, &s.size);
+    return s;
+}
+
 #ifdef __LUAX_RTTI__
-typedef struct _luaX_Object {
+typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
 #endif  /* __LUAX_RTTI__ */
@@ -149,6 +156,18 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
     }
 }
 
+// Lua default searchers are stored as four entries in the `package.searchers` table, as follows:
+//
+//   - a searcher that looks for a loader in the `package.preload` table,
+//   - a searcher that looks for a loader as a Lua library,
+//   - a searcher that looks for a loader as a C library,
+//   - a searcher that looks for an all-in-one, combined, loader.
+//
+// This function modifies the table by clearing table entries #3 and #4. The first one is kept (to enable
+// module reuse), and the second one is overwritten with the given `searcher`. As a result the module loading
+// process is confined to the custom searcher only.
+//
+// See: https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers
 void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 {
     lua_getglobal(L, "package"); // Access the `package.searchers` table.
@@ -158,10 +177,10 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
     lua_pushcclosure(L, searcher, nup);
     lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
 
-    int n = lua_rawlen(L, -1);
-    for (int i = 3; i <= n; ++i) { // Discard the others (two) searchers.
+    size_t n = lua_rawlen(L, -1);
+    for (size_t i = 3; i <= n; ++i) { // Discard the others (two) searchers.
         lua_pushnil(L);
-        lua_rawseti(L, -2, i);
+        lua_rawseti(L, -2, (lua_Integer)i);
     }
 
     lua_pop(L, 2); // Pop the `package` and `searchers` table.
@@ -184,8 +203,8 @@ int luaX_insisttable(lua_State *L, const char *name)
 // Both `f` and `c` can't be `NULL`, but need to be "empty" arrays (which is easy, thanks to compound-literals)
 int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script.buffer && script.size > 0) {
-        luaL_loadbuffer(L, script.buffer, script.size, script.name);
+    if (script.data && script.size > 0) {
+        luaL_loadbuffer(L, script.data, script.size, script.name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);
@@ -262,30 +281,6 @@ void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nu
     lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are consumed)
     lua_setfield(L, -2, modname);
     lua_pop(L, 1); // Pop the `_PRELOAD` table
-}
-
-void luaX_requiref(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb)
-{
-    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
-    lua_getfield(L, -1, modname); /* LOADED[modname] */
-    if (!lua_toboolean(L, -1)) { /* package not already loaded? */
-        lua_pop(L, 1); /* remove field */
-        for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
-            lua_pushvalue(L, -(nup + 1));
-        }
-        lua_pushcclosure(L, openf, nup); // Closure with those upvalues (the one just pushed will be removed)
-        lua_pushstring(L, modname);      /* argument to open function */
-        lua_call(L, 1, 1);               /* call 'openf' to open module */
-        lua_pushvalue(L, -1);            /* make copy of module (call result) */
-        lua_setfield(L, -3, modname);    /* LOADED[modname] = module */
-    }
-    lua_remove(L, -2); /* remove LOADED table */
-    lua_insert(L, -(nup + 1)); // Move the module table above the upvalues.
-    lua_pop(L, nup); // Pop the upvalues
-    if (glb) {
-        lua_pushvalue(L, -1);      /* copy of module */
-        lua_setglobal(L, modname); /* _G[modname] = module */
-    }
 }
 
 luaX_Reference luaX_ref(lua_State *L, int idx)

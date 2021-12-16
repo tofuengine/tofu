@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TOFU_CONFIG_H__
-#define __TOFU_CONFIG_H__
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
 
 // Constant MACROs have no prefix.
 #define FPS_AVERAGE_SAMPLES         128
@@ -70,12 +70,16 @@
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __OPENGL_STATE_CLEANUP__
+#define __VM_READER_BUFFER_SIZE__ 1024U
 #define __VM_USE_CUSTOM_TRACEBACK__
 #define __VM_GARBAGE_COLLECTOR_TYPE__ GC_INCREMENTAL
 #define __VM_GARBAGE_COLLECTOR_MODE__ GC_CONTINUOUS
 #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #define __AUDIO_START_AND_STOP__
-#define __STORAGE_CACHE_ENTRIES_LIMIT__ 32
+#define __AUDIO_START_AND_STOP_GRACE_PERIOD__ 30.0
+#undef  __AUDIO_MULTITHREAD_SUPPORT__
+#define __STORAGE_CHECK_ABSOLUTE_PATHS__
+#define __STORAGE_CACHE_ENTRIES_LIMIT__ 32U
 // The capture support is darn slow!!!
 #undef  __GRAPHICS_CAPTURE_SUPPORT__
 #define __FS_ENFORCE_ARCHIVE_EXTENSION__
@@ -88,21 +92,24 @@
 #undef  __GL_XFORM_TRANSPARENCY__
 #define __GL_OPTIMIZED_ROTATIONS__
 #define __DISPLAY_FOCUS_SUPPORT__
+#undef  __DISPLAY_DEFAULT_QUANTIZED_PALETTE__
 #define __PALETTE_COLOR_MEMOIZATION__
 #define __ENGINE_PERFORMANCE_STATISTICS__
 #define __ENGINE_PERFORMANCES_PERIOD__ 10.0f
+#define __ENGINE_KERNAL_NAME__ "kernal.pak"
 #define __SYSTEM_HEAP_STATISTICS__
 #define __SYSTEM_HEAP_PERIOD__  5.0f
 
 // In release build, disable VM calls debug and periodic collection for better performance.
-#ifdef RELEASE
+#ifdef NDEBUG
   #undef __LUAX_RTTI__
   #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
+  #undef __SYSTEM_HEAP_STATISTICS__
   #undef __ENGINE_PERFORMANCE_STATISTICS__
   #undef __DEBUG_VM_CALLS__
   #undef __DEBUG_GARBAGE_COLLECTOR__
   #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #endif
 
-#endif  /* __TOFU_CONFIG_H__ */
+#endif  /* __CONFIG_H__ */

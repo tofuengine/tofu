@@ -34,18 +34,18 @@ SOFTWARE.
 - also, reworked canvas.
 ]]
 
-local Class = require("tofu.core").Class
-local System = require("tofu.core").System
-local Input = require("tofu.events").Input
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Font = require("tofu.graphics").Font
-local Palette = require("tofu.graphics").Palette
+local Class = require("tofu.core.class")
+local System = require("tofu.core.system")
+local Input = require("tofu.events.input")
+local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
+local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.new("famicube")
+  local palette = Palette.default("famicube")
 --  local palette = Palette.new(PALETTE)
   Display.palette(palette)
 
@@ -65,7 +65,7 @@ function Main:__ctor()
     }
   self.step = 4
   self.lines = {}
-  self.a = { x = width * 0.5, y = height * 0.5 }
+  self.a = { x = width * 0, y = height * 0.5 }
   self.b = { x = width - 1, y = height * 0.5 }
   self.c = { x = width * 0.5, y = height * 0.5 }
   self.changed = true
@@ -93,7 +93,7 @@ function Main:update(_) -- delta_time
 
     local dx = self.b.x - self.a.x
     local dy = self.b.y - self.a.y
-    local d = math.sqrt((dx * dx) + (dy * dy))
+    local d = ((dx * dx) + (dy * dy)) ^ 0.5
     self.v = { x = dx / d, y = dy / d }
     self.d = d
   end

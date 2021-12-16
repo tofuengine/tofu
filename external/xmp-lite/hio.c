@@ -22,6 +22,7 @@
 
 #include "hio.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -340,7 +341,10 @@ int hio_seek(HIO_HANDLE *h, long offset, int whence)
 {
 	int result = h->vtable.seek(h->user_data, offset, whence);
 	if (result < 0) {
-		h->error = EOF;
+		h->error = EINVAL;
+	} else
+	if (h->error == EOF) {
+		h->error = 0;
 	}
 	return result;
 }
