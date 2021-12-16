@@ -40,10 +40,12 @@ typedef struct FS_Handle_s FS_Handle_t;
 
 typedef struct FS_Context_s FS_Context_t;
 
-extern FS_Context_t *FS_create(const char *path);
+extern FS_Context_t *FS_create(void);
 extern void FS_destroy(FS_Context_t *context);
 
-extern bool FS_attach(FS_Context_t *context, const char *path);
+extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path);
+extern bool FS_attach_folder(FS_Context_t *context, const char *path);
+extern bool FS_attach_archive(FS_Context_t *context, const char *path);
 
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);

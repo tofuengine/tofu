@@ -66,13 +66,15 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependend folder.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user path is `%s`", storage->path.user);
 
-    storage->context = FS_create(path);
+    storage->context = FS_create();
     if (!storage->context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
         free(storage);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
+
+    FS_attach_folder_or_archive(storage->context, path);
 
     // FIXME: move to a separate function.
     char executable_path[PATH_MAX];
@@ -83,7 +85,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_join(kernal_path, executable_path, __ENGINE_KERNAL_NAME__);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal path is `%s`", kernal_path);
 
-    bool attached = FS_attach(storage->context, kernal_path);
+    bool attached = FS_attach_folder_or_archive(storage->context, kernal_path);
     if (!attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach `%s`", kernal_path);
         free(storage);
@@ -150,7 +152,7 @@ bool Storage_set_identity(Storage_t *storage, const char *identity)
         return false;
     }
 
-    bool attached = FS_attach(storage->context, storage->path.local);
+    bool attached = FS_attach_folder(storage->context, storage->path.local);
     if (!attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach user-dependent path path `%s`", storage->path.local);
         return false;

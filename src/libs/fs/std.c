@@ -61,6 +61,7 @@ bool FS_std_is_valid(const char *path)
     return path_is_folder(path);
 }
 
+// Precondition: the path need to be pre-validated as being a folder.
 FS_Mount_t *FS_std_mount(const char *path)
 {
     FS_Mount_t *mount = malloc(sizeof(Std_Mount_t));
@@ -182,7 +183,6 @@ static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
-
 #ifdef __DEBUG_FS_CALLS__
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
