@@ -53,4 +53,3 @@ options_t options_parse_command_line(int argc, const char *argv[])
 
     return options;
 }
-
