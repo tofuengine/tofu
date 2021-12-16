@@ -67,6 +67,10 @@ LUACHECKFLAGS=--no-self --std lua53 -q
 VALGRIND=valgrind
 VALGRINDFLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
 
+# ------------------------------------------------------------------------------
+# --- Compiler -----------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		COMPILER=x86_64-w64-mingw32-gcc
@@ -76,12 +80,39 @@ ifeq ($(PLATFORM),windows)
 else
 	COMPILER=gcc
 endif
-CWARNINGS=-std=c99 -Wall -Wextra -Werror -Winline -Wlogical-op -Wno-unused-parameter -Wpedantic -Wpointer-arith -Wstrict-prototypes -Wshadow -Wunreachable-code -Wwrite-strings
-#CWARNINGS+=-Wfloat-equal
-CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DGIF_FLIP_VERT -DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DLIBXMP_BUILDING_STATIC -I$(srcdir) -I$(externaldir)
+
+CWARNINGS=-std=c99 \
+	-Wall \
+	-Wextra \
+	-Werror \
+	-Winline \
+	-Wlogical-op \
+	-Wno-unused-parameter \
+	-Wpedantic \
+	-Wpointer-arith \
+	-Wstrict-prototypes \
+	-Wshadow \
+	-Wunreachable-code \
+	-Wwrite-strings
+#	-Wfloat-equal
+
+CFLAGS=-D_DEFAULT_SOURCE \
+	-DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor \
+	-DGIF_FLIP_VERT \
+	-DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
+	-DDR_FLAC_NO_STDIO \
+	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION \
+	-DLIBXMP_BUILDING_STATIC \
+	-I$(srcdir) -I$(externaldir)
 ifneq ($(PLATFORM),windows)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
+ifeq ($(PLATFORM),windows)
+	CFLAGS+=-D_GLFW_WIN32
+else
+	CFLAGS+=-D_GLFW_X11
+endif
+
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
@@ -96,22 +127,20 @@ else
 	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG
 endif
 
+# ------------------------------------------------------------------------------
+# --- Linker -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+LINKER=$(COMPILER)
+
 ifeq ($(PLATFORM),windows)
-	ifeq ($(ARCHITECTURE),x64)
-		LINKER=x86_64-w64-mingw32-gcc
-		LFLAGS=-L$(externaldir)/GLFW/windows/x64 -lglfw3 -lgdi32 -lpsapi
-	else
-		LINKER=i686-w64-mingw32-gcc
-		LFLAGS=-L$(externaldir)/GLFW/windows/x32 -lglfw3 -lgdi32 -lpsapi
-	endif
-else ifeq ($(PLATFORM),rpi)
-	LINKER=gcc
-	LFLAGS=-L$(externaldir)/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-lgdi32 -lpsapi
 else
-	LINKER=gcc
-	LFLAGS=-L$(externaldir)/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-lm -lpthread -lX11 -ldl
 endif
+
 LWARNINGS=-Wall -Wextra -Werror
+
 ifeq ($(BUILD),release)
 	LOPTS=-fomit-frame-pointer
 else ifeq ($(BUILD),profile)
@@ -121,6 +150,10 @@ else ifeq ($(BUILD),sanitize)
 else
 	LOPTS=
 endif
+
+# ------------------------------------------------------------------------------
+# --- Files --------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Source files list (src)
 SOURCES:=$(wildcard $(srcdir)/*.c) \
@@ -158,7 +191,6 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/gif-h/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
-	$(wildcard $(externaldir)/GLFW/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
@@ -168,12 +200,33 @@ INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h)
+
+# Prepare GLFW flags according to the target platform.
+depends_from = $(shell cat $(1) | sed 's|^|$(2)|g' | tr '\n' ' ')
+
+SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/common_c.in,$(externaldir)/GLFW/)
+INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/common_h.in,$(externaldir)/GLFW/)
+ifeq ($(PLATFORM),windows)
+	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/win32_c.in,$(externaldir)/GLFW/)
+	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/win32_h.in,$(externaldir)/GLFW/)
+else
+	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/x11_c.in,$(externaldir)/GLFW/)
+	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/x11_h.in,$(externaldir)/GLFW/)
+endif
+
+#$(info SOURCES="$(SOURCES)")
+#$(info INCLUDES="$(INCLUDES)")
+
 # Output files
 OBJECTS:=$(SOURCES:%.c=%.o)
+
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
 RESOURCES:=$(shell find $(srcdir)/kernal -type f -name '*.*')
 
-# Build rules.
+# ------------------------------------------------------------------------------
+# --- Build Rules --------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 all: engine
 
 .PHONY: check
