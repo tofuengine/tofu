@@ -115,7 +115,7 @@ function Main:update(_)
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
-    local palette = _sort_palette(Palette.new(PALETTES[index]))
+    local palette = _sort_palette(Palette.default(PALETTES[index]))
     Display.palette(_sort_palette(palette))
   end
 end
