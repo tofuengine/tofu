@@ -161,6 +161,8 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             }
         };
 
+    sh_new_arena(storage->cache); // Use `sh_new_arena()` for string hashmaps that you never delete from.
+
     char path[PLATFORM_PATH_MAX] = { 0 };
     path_expand(configuration->path, path);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path is `%s`", path);
@@ -249,6 +251,9 @@ void Storage_destroy(Storage_t *storage)
     FS_destroy(storage->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system context destroyed");
 
+    for (size_t i = 0; i < shlenu(storage->cache); ++i) {
+        free(storage->cache[i].value.data);
+    }
     shfree(storage->cache);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache freed");
 
