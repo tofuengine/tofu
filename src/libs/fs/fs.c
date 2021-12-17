@@ -101,7 +101,7 @@ bool FS_attach_folder(FS_Context_t *context, const char *path)
         return false;
     }
 
-    FS_Mount_t *mount = FS_pak_mount(path); // Path need to be already resolved.
+    FS_Mount_t *mount = FS_std_mount(path); // Path need to be already resolved.
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
         return false;
