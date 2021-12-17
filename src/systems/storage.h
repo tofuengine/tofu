@@ -111,7 +111,7 @@ extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
 //extern void Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
-extern void Storage_inject(Storage_t *storage, const char *name, const char *encoded_data);
+extern bool Storage_inject(Storage_t *storage, const char *name, const char *encoded_data);
 
 extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 

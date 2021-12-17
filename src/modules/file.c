@@ -60,11 +60,10 @@ static int file_inject_2s_0(lua_State *L)
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    Storage_inject(storage, name, encoded_data);
-//    if (!resource) {
-//        return luaL_error(L, "can't load file `%s`", name);
-//    }
-//    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
+    bool injected = Storage_inject(storage, name, encoded_data);
+    if (!injected) {
+        return luaL_error(L, "can't inject data `%s`", name);
+    }
 
     return 0;
 }
