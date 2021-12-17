@@ -30,6 +30,7 @@
 
 #include "udt.h"
 
+static int file_inject_2s_0(lua_State *L);
 static int file_load_1s_1s(lua_State *L);
 static int file_store_2ss_0(lua_State *L);
 
@@ -38,6 +39,7 @@ int file_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            { "inject", file_inject_2s_0 },
             { "load", file_load_1s_1s },
             { "store", file_store_2ss_0 },
             { NULL, NULL }
@@ -45,6 +47,26 @@ int file_loader(lua_State *L)
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, NULL);
+}
+
+static int file_inject_2s_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+    const char *encoded_data = LUAX_STRING(L, 2);
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+
+    Storage_inject(storage, name, encoded_data);
+//    if (!resource) {
+//        return luaL_error(L, "can't load file `%s`", name);
+//    }
+//    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
+
+    return 0;
 }
 
 static int file_load_1s_1s(lua_State *L)

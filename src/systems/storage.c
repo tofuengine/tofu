@@ -29,7 +29,6 @@
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-#include <resources/decoder.h>
 
 #include <stdint.h>
 
@@ -478,78 +477,6 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return loaded;
 }
 
-static bool _resource_decode(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
-{
-    if (!decoder_is_valid(name)) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` is not valid for decode", name);
-        return false;
-    }
-
-    if (type == STORAGE_RESOURCE_STRING) {
-        const Blob_t blob = decoder_as_blob(name);
-        if (!BLOB_IS_VALID(blob)) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as string", resource);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_STRING,
-                .var = {
-                    .string = {
-                        .chars = (char *)blob.ptr,
-                        .length = blob.size
-                    }
-                },
-                .age = 0.0,
-                .allocated = true
-            };
-    } else
-    if (type == STORAGE_RESOURCE_BLOB) {
-        const Blob_t blob = decoder_as_blob(name);
-        if (!BLOB_IS_VALID(blob)) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as blob", resource);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_BLOB,
-                .var = {
-                    .blob = {
-                        .ptr = (void *)blob.ptr,
-                        .size = blob.size
-                    }
-                },
-                .age = 0.0,
-                .allocated = true
-            };
-    } else
-    if (type == STORAGE_RESOURCE_IMAGE) {
-        const Image_t image = decoder_as_image(name);
-        if (!IMAGE_IS_VALID(image)) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as image", resource);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_IMAGE,
-                .var = {
-                    .image = {
-                        .width = image.width,
-                        .height = image.height,
-                        .pixels = (void *)image.pixels
-                    }
-                },
-                .age = 0.0,
-                .allocated = true
-            };
-    }
-
-    return true;
-}
-
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
 #ifdef __STORAGE_CHECK_ABSOLUTE_PATHS__
@@ -576,9 +503,6 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     if (_resource_load(resource, name, type, storage->context)) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
-    } else
-    if (_resource_decode(resource, name, type)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` decoded", name);
     } else {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load resource `%s`", name);
         free(resource);
