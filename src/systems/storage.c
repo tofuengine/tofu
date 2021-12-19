@@ -261,7 +261,7 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
-bool Storage_inject(Storage_t *storage, const char *name, const char *encoded_data)
+bool Storage_inject_encoded(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
     size_t size = base64_decoded_size(encoded_data);
     void *data = malloc(sizeof(char) * size);
@@ -271,6 +271,19 @@ bool Storage_inject(Storage_t *storage, const char *name, const char *encoded_da
     
     base64_decode(data, size, encoded_data);
 
+    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
+    shput(storage->cache, name, value);
+
+    return true;
+}
+
+bool Storage_inject_raw(Storage_t *storage, const char *name, const void *raw_data, size_t size)
+{
+    void *data = memdup(raw_data, size);
+    if (!data) {
+        return false;
+    }
+    
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
     shput(storage->cache, name, value);
 

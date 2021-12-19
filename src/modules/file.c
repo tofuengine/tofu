@@ -30,7 +30,7 @@
 
 #include "udt.h"
 
-static int file_inject_2s_0(lua_State *L);
+static int file_inject_3ssS_0(lua_State *L);
 static int file_load_1s_1s(lua_State *L);
 static int file_store_2ss_0(lua_State *L);
 
@@ -39,7 +39,7 @@ int file_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "inject", file_inject_2s_0 },
+            { "inject", file_inject_3ssS_0 },
             { "load", file_load_1s_1s },
             { "store", file_store_2ss_0 },
             { NULL, NULL }
@@ -49,18 +49,22 @@ int file_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static int file_inject_2s_0(lua_State *L)
+static int file_inject_3ssS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    const char *encoded_data = LUAX_STRING(L, 2);
+    luaX_String data = LUAX_LSTRING(L, 2);
+    const char *mode = LUAX_OPTIONAL_STRING(L, 3, "encoded");
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    bool injected = Storage_inject(storage, name, encoded_data);
+    bool injected = mode[0] == 'e'
+        ? Storage_inject_encoded(storage, name, data.data, data.size)
+        : Storage_inject_raw(storage, name, data.data, data.size);
     if (!injected) {
         return luaL_error(L, "can't inject data `%s`", name);
     }
