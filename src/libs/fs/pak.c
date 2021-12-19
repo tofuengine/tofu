@@ -133,7 +133,7 @@ typedef struct Pak_Handle_s {
     xor_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, Pak_Flags_t flags);
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, bool encrypted);
 static void _pak_mount_dtor(FS_Mount_t *mount);
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
@@ -146,7 +146,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence);
 static long _pak_handle_tell(FS_Handle_t *handle);
 static bool _pak_handle_eof(FS_Handle_t *handle);
 
-static bool _pak_validate_archive(FILE *stream, const char *path, Pak_Flags_t *flags)
+static bool _pak_validate_archive(FILE *stream, const char *path)
 {
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
@@ -161,9 +161,6 @@ static bool _pak_validate_archive(FILE *stream, const char *path, Pak_Flags_t *f
     if (header.version != PAK_VERSION) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
         return false;
-    }
-    if (flags) {
-        flags->encrypted = header.flags.encrypted;
     }
     return true;
 }
@@ -180,7 +177,7 @@ bool FS_pak_is_valid(const char *path)
         return false;
     }
 
-    bool validated = _pak_validate_archive(stream, path, NULL);
+    bool validated = _pak_validate_archive(stream, path);
     if (!validated) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't validate file `%s` as archive", path);
         fclose(stream);
@@ -254,6 +251,7 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
     return strcasecmp(l->name, r->name);
 }
 
+// Precondition: the path need to be pre-validated as being an archive.
 FS_Mount_t *FS_pak_mount(const char *path)
 {
     FILE *stream = fopen(path, "rb");
@@ -262,10 +260,10 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    Pak_Flags_t flags;
-    bool validated = _pak_validate_archive(stream, path, &flags);
-    if (!validated) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't validate file `%s` as archive", path);
+    Pak_Header_t header;
+    size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
+    if (entries_read != 1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read header from file `%s`", path);
         fclose(stream);
         return NULL;
     }
@@ -278,7 +276,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
     }
 
     Pak_Index_t index;
-    size_t entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
+    entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
     if (entries_read != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read directory-header from archive `%s`", path);
         fclose(stream);
@@ -317,14 +315,14 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    _pak_mount_ctor(mount, path, index.entries, directory, flags);
+    _pak_mount_ctor(mount, path, index.entries, directory, header.flags.encrypted);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized w/ %d entries (flags 0x%02x) for archive `%s`", index.entries, flags, path);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized w/ %d entries (encrypted is %d) for archive `%s`", index.entries, header.flags.encrypted, path);
 
     return mount;
 }
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, Pak_Flags_t flags)
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, bool encrypted)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -337,7 +335,9 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
             .path = { 0 },
             .entries = entries,
             .directory = directory,
-            .flags = flags
+            .flags = (Pak_Flags_t){
+                .encrypted = encrypted
+            }
         };
 
     strncpy(pak_mount->path, path, PLATFORM_PATH_MAX - 1);

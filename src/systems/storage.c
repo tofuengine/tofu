@@ -25,10 +25,10 @@
 #include "storage.h"
 
 #include <config.h>
+#include <libs/base64.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-#include <resources/decoder.h>
 
 #include <stdint.h>
 
@@ -38,6 +38,111 @@
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
+
+static bool _cache_contains(void *user_data, const char *name)
+{
+    Storage_t *storage = (Storage_t *)user_data;
+    Storage_Cache_Entry_t *cache = storage->cache;
+
+    return shgeti(cache, name) != -1;
+}
+
+static void *_cache_open(void *user_data, const char *name)
+{
+    Storage_t *storage = (Storage_t *)user_data;
+    Storage_Cache_Entry_t *cache = storage->cache;
+
+    int index = shgeti(cache, name);
+    if (index == -1) {
+        return NULL;
+    }
+
+    const Storage_Cache_Entry_Value_t *value = &cache[index].value;
+
+    Storage_Cache_Stream_t *stream = malloc(sizeof(Storage_Cache_Stream_t));
+    if (!stream) {
+        return NULL;
+    }
+
+    *stream = (Storage_Cache_Stream_t){
+        .ptr = (const uint8_t *)value->data,
+        .size = value->size,
+        .position = 0
+    };
+
+    return stream;
+}
+
+static void _cache_close(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    free(cache_stream);
+}
+
+static size_t _cache_size(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    return cache_stream->size;
+}
+
+static size_t _cache_read(void *stream, void *buffer, size_t bytes_requested)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    size_t bytes_available = cache_stream->size - cache_stream->position;
+
+    size_t bytes_to_copy = bytes_available > bytes_requested ? bytes_requested : bytes_available;
+
+    memcpy(buffer, cache_stream->ptr + cache_stream->position, bytes_to_copy);
+
+    cache_stream->position += bytes_to_copy;
+
+    return bytes_to_copy;
+}
+
+static bool _cache_seek(void *stream, long offset, int whence)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    long position;
+
+    switch (whence) {
+        default:
+        case SEEK_SET:
+            position = offset;
+            break;
+        case SEEK_CUR:
+            position = (long)cache_stream->position + offset;
+            break;
+        case SEEK_END:
+            position = (long)(cache_stream->size - 1) + offset;
+            break;
+    }
+
+    if (position < 0 || (size_t)position >= cache_stream->size) {
+        return false;
+    }
+
+    cache_stream->position = (size_t)position;
+
+    return true;
+}
+
+static long _cache_tell(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    return (long)cache_stream->position;
+}
+
+static bool _cache_eof(void *stream)
+{
+    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+
+    return cache_stream->position >= cache_stream->size;
+}
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
@@ -56,6 +161,8 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             }
         };
 
+    sh_new_arena(storage->cache); // Use `sh_new_arena()` for string hashmaps that you never delete from.
+
     char path[PLATFORM_PATH_MAX] = { 0 };
     path_expand(configuration->path, path);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path is `%s`", path);
@@ -66,13 +173,15 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependend folder.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user path is `%s`", storage->path.user);
 
-    storage->context = FS_create(path);
+    storage->context = FS_create();
     if (!storage->context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
         free(storage);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
+
+    FS_attach_folder_or_archive(storage->context, path);
 
     // FIXME: move to a separate function.
     char executable_path[PATH_MAX];
@@ -83,12 +192,23 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_join(kernal_path, executable_path, __ENGINE_KERNAL_NAME__);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal path is `%s`", kernal_path);
 
-    bool attached = FS_attach(storage->context, kernal_path);
+    bool attached = FS_attach_folder_or_archive(storage->context, kernal_path);
     if (!attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach `%s`", kernal_path);
         free(storage);
         return NULL;
     }
+
+    FS_attach_cache(storage->context, (FS_Cache_Callbacks_t){
+            .contains = _cache_contains,
+            .open = _cache_open,
+            .close = _cache_close,
+            .size = _cache_size,
+            .read = _cache_read,
+            .seek = _cache_seek,
+            .tell = _cache_tell,
+            .eof = _cache_eof
+        }, storage);
 
     return storage;
 }
@@ -131,8 +251,43 @@ void Storage_destroy(Storage_t *storage)
     FS_destroy(storage->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system context destroyed");
 
+    for (size_t i = 0; i < shlenu(storage->cache); ++i) {
+        free(storage->cache[i].value.data);
+    }
+    shfree(storage->cache);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache freed");
+
     free(storage);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
+}
+
+bool Storage_inject_encoded(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
+{
+    size_t size = base64_decoded_size(encoded_data);
+    void *data = malloc(sizeof(char) * size);
+    if (!data) {
+        return false;
+    }
+    
+    base64_decode(data, size, encoded_data);
+
+    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
+    shput(storage->cache, name, value);
+
+    return true;
+}
+
+bool Storage_inject_raw(Storage_t *storage, const char *name, const void *raw_data, size_t size)
+{
+    void *data = memdup(raw_data, size);
+    if (!data) {
+        return false;
+    }
+    
+    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
+    shput(storage->cache, name, value);
+
+    return true;
 }
 
 bool Storage_set_identity(Storage_t *storage, const char *identity)
@@ -150,7 +305,7 @@ bool Storage_set_identity(Storage_t *storage, const char *identity)
         return false;
     }
 
-    bool attached = FS_attach(storage->context, storage->path.local);
+    bool attached = FS_attach_folder(storage->context, storage->path.local);
     if (!attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach user-dependent path path `%s`", storage->path.local);
         return false;
@@ -342,78 +497,6 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return loaded;
 }
 
-static bool _resource_decode(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
-{
-    if (!decoder_is_valid(name)) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` is not valid for decode", name);
-        return false;
-    }
-
-    if (type == STORAGE_RESOURCE_STRING) {
-        const Blob_t blob = decoder_as_blob(name);
-        if (!BLOB_IS_VALID(blob)) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as string", resource);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_STRING,
-                .var = {
-                    .string = {
-                        .chars = (char *)blob.ptr,
-                        .length = blob.size
-                    }
-                },
-                .age = 0.0,
-                .allocated = true
-            };
-    } else
-    if (type == STORAGE_RESOURCE_BLOB) {
-        const Blob_t blob = decoder_as_blob(name);
-        if (!BLOB_IS_VALID(blob)) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as blob", resource);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_BLOB,
-                .var = {
-                    .blob = {
-                        .ptr = (void *)blob.ptr,
-                        .size = blob.size
-                    }
-                },
-                .age = 0.0,
-                .allocated = true
-            };
-    } else
-    if (type == STORAGE_RESOURCE_IMAGE) {
-        const Image_t image = decoder_as_image(name);
-        if (!IMAGE_IS_VALID(image)) {
-            return false;
-        }
-
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as image", resource);
-
-        *resource = (Storage_Resource_t){
-                .type = STORAGE_RESOURCE_IMAGE,
-                .var = {
-                    .image = {
-                        .width = image.width,
-                        .height = image.height,
-                        .pixels = (void *)image.pixels
-                    }
-                },
-                .age = 0.0,
-                .allocated = true
-            };
-    }
-
-    return true;
-}
-
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
 #ifdef __STORAGE_CHECK_ABSOLUTE_PATHS__
@@ -440,9 +523,6 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     if (_resource_load(resource, name, type, storage->context)) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
-    } else
-    if (_resource_decode(resource, name, type)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` decoded", name);
     } else {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load resource `%s`", name);
         free(resource);

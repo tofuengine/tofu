@@ -22,16 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_DECODER_H__
-#define __RESOURCES_DECODER_H__
+#ifndef __FS_CACHE_H__
+#define __FS_CACHE_H__
 
-#include <stdbool.h>
+#include "fs.h"
 
-#include "common.h"
+extern FS_Mount_t *FS_cache_mount(FS_Cache_Callbacks_t callbacks, void *user_data);
 
-extern bool decoder_is_valid(const char *encoded_data);
-
-extern Blob_t decoder_as_blob(const char *encoded_data);
-extern Image_t decoder_as_image(const char *encoded_data);
-
-#endif  /* __RESOURCES_DECODER_H__ */
+#endif /* __FS_CACHE_H__ */
