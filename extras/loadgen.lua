@@ -141,8 +141,6 @@ for name, lumps in pairs(FILES) do
   end
   File.inject(name, bytes)
 end
-
-return require("main")
 ]])
 end
 
