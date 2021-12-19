@@ -103,7 +103,8 @@ CFLAGS=-D_DEFAULT_SOURCE \
 	-DDR_FLAC_NO_STDIO \
 	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION \
 	-DLIBXMP_BUILDING_STATIC \
-	-I$(srcdir) -I$(externaldir)
+	-I$(srcdir) \
+	-I$(externaldir)
 ifneq ($(PLATFORM),windows)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
@@ -163,7 +164,6 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/libs/sl/*.c) \
 	$(wildcard $(srcdir)/modules/*.c) \
 	$(wildcard $(srcdir)/modules/utils/*.c) \
-	$(wildcard $(srcdir)/resources/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
 	$(wildcard $(srcdir)/utils/*.c)
 # Source files list (external)
@@ -184,7 +184,6 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/libs/sl/*.h) \
 	$(wildcard $(srcdir)/modules/*.h) \
 	$(wildcard $(srcdir)/modules/utils/*.h) \
-	$(wildcard $(srcdir)/resources/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
 	$(wildcard $(srcdir)/utils/*.h)
 # Include files list (external)
@@ -434,7 +433,7 @@ demo: engine
 valgrind: engine
 	@echo "Valgrind *$(DEMO)* application!"
 	@export LIBGL_ALWAYS_SOFTWARE=1
-	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) ./demos/$(DEMO)
+	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --path=./demos/$(DEMO)
 	@export LIBGL_ALWAYS_SOFTWARE=0
 
 .PHONY: clean
