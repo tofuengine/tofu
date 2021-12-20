@@ -55,9 +55,6 @@ endif
 
 KERNAL=kernal.pak
 
-# CppCheck
-# 	cppcheck --force --enable=all $(srcdir) > /dev/null
-
 PACKER=$(extrasdir)/pakgen.lua
 PACKERFLAGS=--encrypted
 
@@ -231,6 +228,7 @@ all: engine
 .PHONY: check
 check:
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
+	@cppcheck --force --enable=all $(srcdir) > /dev/null
 	@echo "Checking complete!"
 
 engine: $(builddir) $(builddir)/$(TARGET) $(builddir)/$(KERNAL)

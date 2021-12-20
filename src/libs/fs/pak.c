@@ -81,9 +81,9 @@ typedef struct Pak_Header_s {
     struct { // Bit ordering is implementation dependent, il LE machines lower bits are the first.
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         uint8_t encrypted : 1;
-        uint8_t __padding : 7;
+        uint8_t : 7;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-        uint8_t __padding : 7;
+        uint8_t : 7;
         uint8_t encrypted : 1;
 #else
 #    error unsupported endianness

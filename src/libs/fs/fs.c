@@ -40,18 +40,6 @@ struct FS_Context_s {
 
 #define LOG_CONTEXT "fs"
 
-#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
-static inline bool _ends_with(const char *string, const char *suffix)
-{
-    size_t string_length = strlen(string);
-    size_t suffix_length = strlen(suffix);
-    if (string_length < suffix_length) {
-        return false;
-    }
-    return strcasecmp(string + string_length - suffix_length, suffix) == 0;
-}
-#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
-
 FS_Context_t *FS_create(void)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
