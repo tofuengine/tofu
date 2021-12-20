@@ -263,9 +263,18 @@ void Storage_destroy(Storage_t *storage)
 
 bool Storage_inject_encoded(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
+    bool valid = base64_is_valid(encoded_data);
+    if (!valid) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s`is not base64 encoded");
+        return false;
+    }
+
     size_t size = base64_decoded_size(encoded_data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "encoded data `%.32s` is %d byte(s) long", encoded_data, size);
+
     void *data = malloc(sizeof(char) * size);
     if (!data) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", size, encoded_data);
         return false;
     }
     
@@ -281,6 +290,7 @@ bool Storage_inject_raw(Storage_t *storage, const char *name, const void *raw_da
 {
     void *data = memdup(raw_data, size);
     if (!data) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for data %p", size, data);
         return false;
     }
     
