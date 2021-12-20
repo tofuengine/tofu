@@ -69,6 +69,7 @@
 #include "program.h"
 #include "source.h"
 #include "speakers.h"
+#include "storage.h"
 #include "system.h"
 #include "tweener.h"
 #include "wave.h"
@@ -118,6 +119,7 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.graphics.program", program_loader },
             { "tofu.graphics.xform", xform_loader },
             { "tofu.io.file", file_loader },
+            { "tofu.io.storage", storage_loader },
             { "tofu.physics.body", body_loader },
             { "tofu.physics.world", world_loader },
             { "tofu.sound.source", source_loader },

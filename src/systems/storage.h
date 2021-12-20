@@ -110,7 +110,8 @@ typedef struct Storage_s {
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
-extern bool Storage_inject_encoded(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
+extern bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
+extern bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
 
 extern bool Storage_set_identity(Storage_t *storage, const char *identity);

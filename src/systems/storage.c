@@ -25,6 +25,7 @@
 #include "storage.h"
 
 #include <config.h>
+#include <libs/ascii85.h>
 #include <libs/base64.h>
 #include <libs/log.h>
 #include <libs/path.h>
@@ -261,16 +262,16 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
-bool Storage_inject_encoded(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
+bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
     bool valid = base64_is_valid(encoded_data);
     if (!valid) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s`is not base64 encoded");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` is not Base64 encoded");
         return false;
     }
 
     size_t size = base64_decoded_size(encoded_data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "encoded data `%.32s` is %d byte(s) long", encoded_data, size);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Base64 data `%.32s` is %d byte(s) long", encoded_data, size);
 
     void *data = malloc(sizeof(char) * size);
     if (!data) {
@@ -281,6 +282,30 @@ bool Storage_inject_encoded(Storage_t *storage, const char *name, const char *en
     base64_decode(data, size, encoded_data);
 
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
+    shput(storage->cache, name, value);
+
+    return true;
+}
+
+bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
+{
+    int32_t max_size = ascii85_get_max_decoded_length(strlen(encoded_data));
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Ascii85 data `%.32s` is %d byte(s) long", encoded_data, max_size);
+
+    void *data = malloc(sizeof(char) * max_size);
+    if (!data) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", max_size, encoded_data);
+        return false;
+    }
+
+    int32_t size = ascii85_decode(encoded_data, length, data, max_size);
+    if (size < 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` can't be decoded");
+        free(data);
+        return false;
+    }
+
+    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = (size_t)size };
     shput(storage->cache, name, value);
 
     return true;

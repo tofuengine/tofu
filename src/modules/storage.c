@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "file.h"
+#include "storage.h"
 
 #include <config.h>
 #include <libs/luax.h>
@@ -30,16 +30,14 @@
 
 #include "udt.h"
 
-static int file_load_1s_1s(lua_State *L);
-static int file_store_2ss_0(lua_State *L);
+static int storage_inject_3ssS_0(lua_State *L);
 
-int file_loader(lua_State *L)
+int storage_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "load", file_load_1s_1s },
-            { "store", file_store_2ss_0 },
+            { "inject", storage_inject_3ssS_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -47,49 +45,41 @@ int file_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static int file_load_1s_1s(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-
-    const Storage_Resource_t *resource = Storage_load(storage, name, STORAGE_RESOURCE_BLOB);
-    if (!resource) {
-        return luaL_error(L, "can't load file `%s`", name);
-    }
-    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
-
-    return 1;
-}
-
-static int file_store_2ss_0(lua_State *L)
+static int storage_inject_3ssS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
     luaX_String data = LUAX_LSTRING(L, 2);
+    const char *mode = LUAX_OPTIONAL_STRING(L, 3, "base64");
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    Storage_Resource_t resource = (Storage_Resource_t){
-            // .name = name,
-            .type = STORAGE_RESOURCE_BLOB,
-            .var = {
-                .blob = {
-                    .ptr = (void *)data.data,
-                    .size = data.size
-                }
-            }
-        };
+    bool injected;
+    switch (mode[0]) {
+        case 'a': {
+            injected = Storage_inject_ascii85(storage, name, data.data, data.size);
+            break;
+        }
+        case 'b': {
+            injected = Storage_inject_base64(storage, name, data.data, data.size);
+            break;
+        }
+        case 'r': {
+            injected = Storage_inject_raw(storage, name, data.data, data.size);
+            break;
+        }
+        default: {
+            injected = false;
+            break;
+        }
+    }
 
-    bool stored = Storage_store(storage, name, &resource);
-    if (!stored) {
-        return luaL_error(L, "can't store file `%s`", name);
+    if (!injected) {
+        return luaL_error(L, "can't inject data `%.32s` as `%s`", data, name);
     }
 
     return 0;
