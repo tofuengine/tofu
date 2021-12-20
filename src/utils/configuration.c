@@ -279,7 +279,7 @@ Configuration_t *Configuration_create(const char *data)
                 .scale = 0,
                 .fullscreen = false,
                 .vertical_sync = false,
-                .effect = "assets/glsl/effect.glsl"
+                .effect = "assets/glsl/passthru.glsl"
             },
             .audio = {
                 .device_index = -1, // Pick the default device.

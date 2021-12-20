@@ -90,11 +90,6 @@ typedef enum Uniforms_t {
     "}\n" \
     "\n"
 
-#define EFFECT_PASSTHRU \
-    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
-    "    return texture2D(texture, texture_coords) * color;\n" \
-    "}\n"
-
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
     "u_texture_size",
@@ -301,17 +296,18 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
 
 static bool _shader_initialize(Display_t *display, const char *effect)
 {
+    if (!effect) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "shader is null");
+        return false;
+    }
+
     display->shader = shader_create();
     if (!display->shader) {
         return false;
     }
 
-    if (effect) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading custom shader");
-    } else {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading pass-thru shader");
-        effect = EFFECT_PASSTHRU;
-    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading shader %p", display->shader);
+
     const size_t length = strlen(FRAGMENT_SHADER) + strlen(effect);
     char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
     strcpy(code, FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
