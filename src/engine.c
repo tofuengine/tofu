@@ -154,11 +154,34 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
 
     const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
+    if (!icon) {
+        Configuration_destroy(engine->configuration);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
+
     const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
-    Log_assert(!effect, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
+    if (!effect) {
+        Configuration_destroy(engine->configuration);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
+
+    const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
+    if (!mappings) {
+        Configuration_destroy(engine->configuration);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
+
     engine->display = Display_create(&(const Display_Configuration_t){
-            .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 0 },
+            .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
             .window = {
                 .title = engine->configuration->display.title,
                 .width = engine->configuration->display.width,
@@ -168,7 +191,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
             .quit_on_close = engine->configuration->system.quit_on_close,
-            .effect = effect ? S_SCHARS(effect) : NULL
+            .effect = S_SCHARS(effect)
         });
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
@@ -178,10 +201,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
-    Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     engine->input = Input_create(&(const Input_Configuration_t){
-            .mappings = mappings ? S_SCHARS(mappings) : NULL,
+            .mappings = S_SCHARS(mappings),
             .keyboard = {
                 .enabled = engine->configuration->keyboard.enabled,
                 .exit_key = engine->configuration->keyboard.exit_key,
