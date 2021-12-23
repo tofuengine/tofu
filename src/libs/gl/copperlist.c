@@ -131,7 +131,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
     GL_Color_t *colors = aux.colors;
     GL_Pixel_t *shifting = aux.shifting;
 
-    size_t wait_y = 0, wait_x = 0;
+    size_t wait = 0;
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->size;
 #endif
@@ -145,33 +145,36 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
     const size_t dwidth = surface->width;
     const size_t dheight = surface->height;
 
-    for (size_t y = 0; y < dheight; ++y) {
+    size_t i = 0;
+    for (size_t h = dheight; h; --h) {
         GL_Color_t *dst_eod = dst_sod + dwidth;
         GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
 
-        for (size_t x = 0; x < dwidth; ++x) {
+        for (size_t w = dwidth; w; --w) {
             // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
             // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
             // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
             // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
             // is used to mark the end of the copperlist.
 #ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
-            if (y >= wait_y && x >= wait_x) {
+            if (i >= wait) {
 #else
-            while (y >= wait_y && x >= wait_x) {
+            while (i >= wait) {
 #endif
                 switch (entry->command) {
                     case GL_PROGRAM_COMMAND_NOP: {
                         break;
                     }
                     case GL_PROGRAM_COMMAND_WAIT: {
-                        wait_x = entry->args[0].size;
-                        wait_y = entry->args[1].size;
+                        size_t x = entry->args[0].size;
+                        size_t y = entry->args[1].size;
+                        wait = y * dwidth + x;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_SKIP: {
-                        wait_x += entry->args[0].size;
-                        wait_y += entry->args[1].size;
+                        size_t x = entry->args[0].size;
+                        size_t y = entry->args[1].size;
+                        wait += y * dwidth + x;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_MODULO: {
@@ -219,6 +222,8 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
             if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
                 dst = dst_sod;
             }
+
+            ++i;
         }
 
         src += modulo;
