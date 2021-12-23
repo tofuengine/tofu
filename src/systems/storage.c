@@ -313,7 +313,7 @@ bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *en
 
 bool Storage_inject_raw(Storage_t *storage, const char *name, const void *raw_data, size_t size)
 {
-    void *data = memdup(raw_data, size);
+    void *data = stb_memdup(raw_data, size);
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for data %p", size, data);
         return false;
@@ -563,7 +563,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         free(resource);
         return NULL;
     }
-    resource->name = memdup(name, strlen(name) + 1);
+    resource->name = stb_memdup(name, strlen(name) + 1);
 
     arrpush(storage->resources, resource);
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__

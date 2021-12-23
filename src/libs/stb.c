@@ -36,7 +36,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-void *memdup(const void *ptr, size_t size)
+void *stb_memdup(const void *ptr, size_t size)
 {
     void *copy = malloc(size);
     if (copy) {
