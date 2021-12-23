@@ -37,17 +37,6 @@ typedef struct Audio_Configuration_s {
     float master_volume;
 } Audio_Configuration_t;
 
-typedef enum Audio_Queue_Action_e {
-    AUDIO_QUEUE_ACTION_TRACK,
-    AUDIO_QUEUE_ACTION_RESET,
-    AUDIO_QUEUE_ACTION_UNTRACK,
-} Audio_Queue_Action_t;
-
-typedef struct Audio_Queue_Entry_s {
-    SL_Source_t *source;
-    Audio_Queue_Action_t action;
-} Audio_Queue_Entry_t;
-
 typedef struct Audio_s {
     Audio_Configuration_t configuration;
 
@@ -59,8 +48,6 @@ typedef struct Audio_s {
     } driver;
 
     // TODO: should the audio voices be limited?
-
-    Audio_Queue_Entry_t *queue; // Incoming and outgoing source, handled in the `Audio_update()` function.
 
     SL_Context_t *context;
 

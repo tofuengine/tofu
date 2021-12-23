@@ -247,9 +247,6 @@ void Audio_destroy(Audio_t *audio)
     ma_mutex_uninit(&audio->driver.lock);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
 
-    arrfree(audio->queue);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio queue freed");
-
     SL_context_destroy(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");
 
@@ -330,72 +327,37 @@ float Audio_get_gain(const Audio_t *audio, size_t group_id)
 
 void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 {
-    // There's no need to mutually-exclude access to the array content. `Audio_[un]track()` is called on a separate
-    // step *before* `Audio_update()` (unless the engine become multi-threaded).
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     if (reset) {
-        Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_RESET };
-        arrpush(audio->queue, entry);
+        bool success = SL_source_reset(source);
+        Log_assert(success, LOG_LEVELS_WARNING, LOG_CONTEXT, "can't reset source %p", source);
     }
-    Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_TRACK };
-    arrpush(audio->queue, entry);
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
-    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    if (!SL_context_is_tracked(audio->context, source)) {
+        SL_context_track(audio->context, source);
+    }
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 {
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
-    Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_UNTRACK };
-    arrpush(audio->queue, entry);
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
-    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    if (SL_context_is_tracked(audio->context, source)) {
+        SL_context_untrack(audio->context, source);
+    }
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
 {
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
-    ma_mutex_lock(&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    ma_mutex_lock((ma_mutex *)&audio->driver.lock);
     bool is_tracked = SL_context_is_tracked(audio->context, source);
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     return is_tracked;
 }
 
 bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->driver.lock);
-
-    Audio_Queue_Entry_t *current = audio->queue;
-    for (size_t count = arrlenu(audio->queue); count; --count) {
-        Audio_Queue_Entry_t entry = *(current++);
-        if (entry.action == AUDIO_QUEUE_ACTION_RESET) {
-            bool success = SL_source_reset(entry.source);
-            Log_assert(success, LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p", entry.source);
-        } else
-        if (entry.action == AUDIO_QUEUE_ACTION_TRACK) {
-            if (SL_context_is_tracked(audio->context, entry.source)) {
-                continue;
-            }
-            SL_context_track(audio->context, entry.source);
-        } else
-        if (entry.action == AUDIO_QUEUE_ACTION_UNTRACK) {
-            if (!SL_context_is_tracked(audio->context, entry.source)) {
-                continue;
-            }
-            SL_context_untrack(audio->context, entry.source);
-        }
-    }
-    arrsetlen(audio->queue, 0); // Don't free, just force length to `0` to save time.
-
     bool updated = SL_context_update(audio->context, delta_time);
 #ifdef __AUDIO_START_AND_STOP__
     size_t count = SL_context_count_tracked(audio->context);
