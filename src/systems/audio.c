@@ -30,6 +30,12 @@
 
 #ifdef DEBUG
   #define MA_DEBUG_OUTPUT
+
+  #ifndef SANITIZE
+    #define MA_MALLOC(sz)     stb_leakcheck_malloc((sz), __FILE__, __LINE__)
+    #define MA_REALLOC(p, sz) stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
+    #define MA_FREE(p)        stb_leakcheck_free((p))
+  #endif
 #endif
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>

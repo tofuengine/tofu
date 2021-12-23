@@ -25,8 +25,9 @@
 #ifndef __LIBS_STB_H__
 #define __LIBS_STB_H__
 
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(SANITIZE)
   #include <stb/stb_leakcheck.h>
+  #define STB_LEAKCHECK_INCLUDED
 #endif
 #include <stb/stb_ds.h>
 #include <stb/stb_image.h>

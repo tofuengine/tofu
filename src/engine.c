@@ -303,7 +303,7 @@ void Engine_destroy(Engine_t *engine)
     free(engine);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "engine freed");
 
-#ifdef DEBUG
+#ifdef STB_LEAKCHECK_INCLUDED
     stb_leakcheck_dumpmem();
 #endif
 }

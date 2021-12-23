@@ -22,9 +22,12 @@
  * SOFTWARE.
  */
 
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(SANITIZE)
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
+
+  #define STBDS_REALLOC(c,p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+  #define STBDS_FREE(c,p)      stb_leakcheck_free((p))
 #endif
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
