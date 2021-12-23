@@ -117,8 +117,10 @@ ifeq ($(BUILD),release)
 	COPTS=-O3 -ffast-math -DNDEBUG -fomit-frame-pointer
 else ifeq ($(BUILD),profile)
 	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DPROFILE -pg
-else ifeq ($(BUILD),sanitize)
+else ifeq ($(BUILD),sanitize-address)
 	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DSANITIZE -fsanitize=address -fno-omit-frame-pointer
+else ifeq ($(BUILD),sanitize-leak)
+	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DSANITIZE -fsanitize=leak -fno-omit-frame-pointer
 else
 #	COPTS=-Og -ggdb3 -DDEBUG
 #	COPTS=-O0 -ggdb3 -DDEBUG
@@ -145,8 +147,10 @@ ifeq ($(BUILD),release)
 	LOPTS=-fomit-frame-pointer
 else ifeq ($(BUILD),profile)
 	LOPTS=-pg
-else ifeq ($(BUILD),sanitize)
+else ifeq ($(BUILD),sanitize-address)
 	LOPTS=-fsanitize=address -fno-omit-frame-pointer
+else ifeq ($(BUILD),sanitize-leak)
+	LOPTS=-fsanitize=leak -fno-omit-frame-pointer
 else
 	LOPTS=
 endif
