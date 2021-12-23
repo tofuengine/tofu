@@ -44,7 +44,7 @@ local CAMERA_NEAR <const> = config.camera.near or 1
 local CAMERA_FAR <const> = config.camera.far or 1000
 
 function Main:__ctor()
-  local palette <const> = Palette.new(config.display.palette)
+  local palette <const> = Palette.default(config.display.palette)
   Display.palette(palette)
 
   local canvas <const> = Canvas.default()

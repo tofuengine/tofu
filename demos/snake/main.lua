@@ -23,7 +23,6 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Log = require("tofu.core.log")
 local System = require("tofu.core.system")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")

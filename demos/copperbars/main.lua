@@ -38,6 +38,10 @@ function Main:__ctor()
   local palette = Palette.default("famicube")
   Display.palette(palette)
 
+  local canvas = Canvas.default()
+  local width, _ = canvas:size()
+  local half_width = width * 0.5
+
   self.font = Font.default(0, 11)
 
   local step = 255 / SHADES
@@ -49,16 +53,16 @@ function Main:__ctor()
   for i = SHADES, 0, -1 do
     local v = step * (SHADES - i)
     program:color(0, v, 0x00, 0x00)
-    program:skip(240, 0)
+    program:skip(half_width, 0) -- Wait half-width on the same raster-line...
     program:color(0, 0x00, 0x00, v)
-    program:skip(-240, 1)
+    program:skip(-half_width, 1) --- ... then rewind back to the beginning of the next line.
   end
   for i = 0, SHADES do
     local v = step * (SHADES - i)
     program:color(0, v, 0x00, v)
-    program:skip(240, 0)
+    program:skip(half_width, 0)
     program:color(0, 0x00, v, 0x00)
-    program:skip(-240, 1)
+    program:skip(-half_width, 1)
   end
   program:color(0, 0x00, 0x00, 0x00)
   self.program = program
