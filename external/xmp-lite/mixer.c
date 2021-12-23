@@ -47,6 +47,18 @@
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
+struct loop_data
+{
+	void *sptr;
+	int start;
+	int end;
+	int first_loop;
+	int _16bit;
+	int active;
+	uint32_t prologue[1];
+	uint32_t epilogue[2];
+};
+
 #define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int)
 
 #define ANTICLICK_FPSHIFT	24
@@ -279,25 +291,109 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	}
 }
 
+/* Back up sample data before and after loop and replace it for interpolation.
+ * TODO: use an overlap buffer like OpenMPT? This is easier, but a little dirty. */
+static void init_sample_wraparound(struct mixer_data *s, struct loop_data *ld,
+				   struct mixer_voice *vi, struct xmp_sample *xxs)
+{
+	int i;
+
+	if (s->interp == XMP_INTERP_NEAREST || (~xxs->flg & XMP_SAMPLE_LOOP)) {
+		ld->active = 0;
+		return;
+	}
+
+	ld->sptr = vi->sptr;
+	ld->start = vi->start;
+	ld->end = vi->end;
+	ld->first_loop = !(vi->flags & SAMPLE_LOOP);
+	ld->_16bit = (xxs->flg & XMP_SAMPLE_16BIT);
+	ld->active = 1;
+
+	if (ld->_16bit) {
+		uint16_t *start = (uint16_t *)vi->sptr + vi->start;
+		uint16_t *end = (uint16_t *)vi->sptr + vi->end;
+
+		if (!ld->first_loop) {
+			for (i = 0; i < 1; i++) {
+				ld->prologue[i] = start[i - 1];
+				start[i - 1] = end[i - 1];
+			}
+		}
+		for (i = 0; i < 2; i++) {
+			ld->epilogue[i] = end[i];
+			end[i] = start[i];
+		}
+	} else {
+		uint8_t *start = (uint8_t *)vi->sptr + vi->start;
+		uint8_t *end = (uint8_t *)vi->sptr + vi->end;
+
+		if (!ld->first_loop) {
+			for (i = 0; i < 1; i++) {
+				ld->prologue[i] = start[i - 1];
+				start[i - 1] = end[i - 1];
+			}
+		}
+		for (i = 0; i < 2; i++) {
+			ld->epilogue[i] = end[i];
+			end[i] = start[i];
+		}
+	}
+}
+
+/* Restore old sample data from before and after loop. */
+static void reset_sample_wraparound(struct loop_data *ld)
+{
+	int i;
+
+	if (!ld->active)
+		return;
+
+	if (ld->_16bit) {
+		uint16_t *start = (uint16_t *)ld->sptr + ld->start;
+		uint16_t *end = (uint16_t *)ld->sptr + ld->end;
+
+		if (!ld->first_loop) {
+			for (i = 0; i < 1; i++)
+				start[i - 1] = ld->prologue[i];
+		}
+		for (i = 0; i < 2; i++)
+			end[i] = ld->epilogue[i];
+	} else {
+		uint8_t *start = (uint8_t *)ld->sptr + ld->start;
+		uint8_t *end = (uint8_t *)ld->sptr + ld->end;
+
+		if (!ld->first_loop) {
+			for (i = 0; i < 1; i++)
+				start[i - 1] = ld->prologue[i];
+		}
+		for (i = 0; i < 2; i++)
+			end[i] = ld->epilogue[i];
+	}
+}
+
 static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
 {
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		vi->start = xxs->lps;
 		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && (~vi->flags & SAMPLE_LOOP)) {
 			vi->end = xxs->len;
 		} else {
 			vi->end = xxs->lpe;
 		}
 	} else {
+		vi->start = 0;
 		vi->end = xxs->len;
 	}
 }
 
-static void loop_reposition(struct context_data *ctx, struct mixer_voice *vi, struct xmp_sample *xxs)
+static int loop_reposition(struct context_data *ctx, struct mixer_voice *vi, struct xmp_sample *xxs)
 {
 #ifndef LIBXMP_CORE_DISABLE_IT
 	struct module_data *m = &ctx->m;
 #endif
 	int loop_size = xxs->lpe - xxs->lps;
+	int loop_changed = !(vi->flags & SAMPLE_LOOP);
 
 	/* Reposition for next loop */
 	vi->pos -= loop_size;		/* forward loop */
@@ -318,6 +414,7 @@ static void loop_reposition(struct context_data *ctx, struct mixer_voice *vi, st
 		}
 #endif
 	}
+	return loop_changed;
 }
 
 
@@ -351,6 +448,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
+	struct loop_data loop_data;
 	double step;
 	int samples, size;
 	int vol_l, vol_r, voc, usmp;
@@ -468,6 +566,8 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 #endif
 		}
 
+		init_sample_wraparound(s, &loop_data, vi, xxs);
+
 		rampsize = s->ticksize >> ANTICLICK_SHIFT;
 		delta_l = (vol_l - vi->old_vl) / rampsize;
 		delta_r = (vol_r - vi->old_vr) / rampsize;
@@ -519,7 +619,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 #ifndef LIBXMP_CORE_DISABLE_IT
 				/* See OpenMPT env-flt-max.it */
 				if (vi->filter.cutoff >= 0xfe &&
-                                    vi->filter.resonance == 0) {
+                    vi->filter.resonance == 0) {
 					mixer_id &= ~FLAG_FILTER;
 				}
 #endif
@@ -568,7 +668,10 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 				if (xxs->flg & XMP_SAMPLE_LOOP) {
 					if (vi->pos + step > vi->end) {
 						vi->pos += step;
-						loop_reposition(ctx, vi, xxs);
+						if (loop_reposition(ctx, vi, xxs)) {
+							reset_sample_wraparound(&loop_data);
+							init_sample_wraparound(s, &loop_data, vi, xxs);
+						}
 					}
 				}
 				continue;
@@ -582,9 +685,13 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 				continue;
 			}
 
-			loop_reposition(ctx, vi, xxs);
+			if (loop_reposition(ctx, vi, xxs)) {
+				reset_sample_wraparound(&loop_data);
+				init_sample_wraparound(s, &loop_data, vi, xxs);
+			}
 		}
 
+		reset_sample_wraparound(&loop_data);
 		vi->old_vl = vol_l;
 		vi->old_vr = vol_r;
 	}
