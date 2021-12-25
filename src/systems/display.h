@@ -62,8 +62,7 @@ typedef struct Display_s {
     struct {
         GL_Size_t size;
         GL_Surface_t *surface;
-        GL_Palette_t *palette; // Explicit palette, used to support color-indexing and such.
-        GL_Copperlist_t *copperlist; // The copperlist holds the palette and shifting logic.
+        GL_Copperlist_t *copperlist; // The Copper(tm) holds the display-wise palette and shifting logic.
     } canvas;
 
     struct {

@@ -35,12 +35,14 @@ typedef struct Copperlist_State_s {
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
 } Copperlist_State_t;
 
-typedef void (*GL_Copperlist_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries);
+typedef void (*GL_Copperlist_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_t *program);
 
 typedef struct GL_Copperlist_s { // FIXME: rename to something better!!!
-    Copperlist_State_t state;
-    GL_Program_Entry_t *entries;
+    GL_Palette_t *palette; // Explicit palette, used to support color-indexing and such.
 
+    GL_Program_t *program;
+
+    Copperlist_State_t state;
     GL_Copperlist_Surface_To_Rgba_t surface_to_rgba;
 } GL_Copperlist_t;
 
@@ -48,6 +50,8 @@ extern GL_Copperlist_t *GL_copperlist_create(void);
 extern void GL_copperlist_destroy(GL_Copperlist_t *copperlist);
 
 extern void GL_copperlist_reset(GL_Copperlist_t *copperlist);
+
+extern GL_Palette_t *GL_copperlist_get_palette(GL_Copperlist_t *copperlist);
 
 extern void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette);
 extern void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
