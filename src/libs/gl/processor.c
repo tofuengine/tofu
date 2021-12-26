@@ -139,7 +139,7 @@ void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const Processor_State_t *state, GL_Program_t *program)
+static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Processor_State_t *state, GL_Program_t *program)
 {
     const GL_Color_t *colors = state->colors;
     const GL_Pixel_t *shifting = state->shifting;
@@ -172,9 +172,9 @@ static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, co
 
 // TODO: use array of function pointers instead of mega-switch?
 // TODO: ditch wait-x? processor operations changes only once per scanline?
-void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const Processor_State_t *state, GL_Program_t *program)
+void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Processor_State_t *state, GL_Program_t *program)
 {
-    Processor_State_t aux = *state; // Make a local copy, the processor could change it.
+    GL_Processor_State_t aux = *state; // Make a local copy, the processor could change it.
     GL_Color_t *colors = aux.colors;
     GL_Pixel_t *shifting = aux.shifting;
 

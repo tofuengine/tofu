@@ -33,16 +33,16 @@
 typedef struct Processor_State_s {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-} Processor_State_t;
+} GL_Processor_State_t;
 
-typedef void (*GL_Processor_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Processor_State_t *state, GL_Program_t *program);
+typedef void (*GL_Processor_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Processor_State_t *state, GL_Program_t *program);
 
 typedef struct GL_Processor_s {
     GL_Palette_t *palette; // Explicit palette, used to support color-indexing and such.
 
     GL_Program_t *program;
 
-    Processor_State_t state;
+    GL_Processor_State_t state;
     GL_Processor_Surface_To_Rgba_t surface_to_rgba;
 } GL_Processor_t;
 
