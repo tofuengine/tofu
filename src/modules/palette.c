@@ -391,22 +391,14 @@ static int palette_match_4onnn_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-#else
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
 
     const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    GL_Palette_t *palette = self->palette;
-#else
     const GL_Palette_t *palette = self->palette;
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
     const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
 
     lua_pushinteger(L, (lua_Integer)index);

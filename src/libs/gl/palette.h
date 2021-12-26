@@ -34,18 +34,14 @@
 
 #define GL_MAX_PALETTE_COLORS       256
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-typedef struct color_pixel_pair_s {
-    GL_Color_t key;
-    GL_Pixel_t value;
-} color_pixel_pair_t;
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-
 typedef struct GL_Palette_s {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     size_t size;
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-    color_pixel_pair_t *cache; // Stores past executed colors matches.
+    struct {
+        GL_Color_t key;
+        GL_Pixel_t value;
+    } *cache; // Stores past executed colors matches.
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 } GL_Palette_t;
 
@@ -61,11 +57,7 @@ extern void GL_palette_set_quantized(GL_Palette_t *palette, size_t red_bits, siz
 extern GL_Color_t GL_palette_get(const GL_Palette_t *palette, GL_Pixel_t index);
 extern void GL_palette_set(GL_Palette_t *palette, GL_Pixel_t index, GL_Color_t color);
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-extern GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, GL_Color_t color);
-#else
 extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, GL_Color_t color);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
 extern GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio);
 
