@@ -281,18 +281,19 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
 // FIXME: make a copy or track the reference? (also for xform and palettes)
 void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program)
 {
-    if (program) {
-        processor->program = GL_program_clone(program);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
-#endif  /* VERBOSE_DEBUG */
-    } else
-    if (processor->program) {
+    if (processor->program) { // Deallocate current program, is present.
        GL_program_destroy(processor->program);
 #ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
         processor->program = NULL;
+    }
+
+    if (program) {
+        processor->program = GL_program_clone(program);
+#ifdef VERBOSE_DEBUG
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
+#endif  /* VERBOSE_DEBUG */
     }
     processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
 }
