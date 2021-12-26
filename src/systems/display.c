@@ -380,22 +380,22 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     GL_surface_clear(display->canvas.surface, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p cleared", display->canvas.surface);
 
-    display->canvas.copperlist = GL_copperlist_create();
-    if (!display->canvas.copperlist) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create copperlist");
+    display->canvas.processor = GL_processor_create();
+    if (!display->canvas.processor) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create processor");
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p created", display->canvas.copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p created", display->canvas.processor);
 
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_copperlist_destroy(display->canvas.copperlist);
+        GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -408,7 +408,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     if (display->vram.texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram.pixels);
-        GL_copperlist_destroy(display->canvas.copperlist);
+        GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -438,7 +438,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
-        GL_copperlist_destroy(display->canvas.copperlist);
+        GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -453,7 +453,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         shader_destroy(display->shader);
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
-        GL_copperlist_destroy(display->canvas.copperlist);
+        GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -497,8 +497,8 @@ void Display_destroy(Display_t *display)
     free(display->vram.pixels);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
 
-    GL_copperlist_destroy(display->canvas.copperlist);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p destroyed", display->canvas.copperlist);
+    GL_processor_destroy(display->canvas.processor);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p destroyed", display->canvas.processor);
 
     GL_surface_destroy(display->canvas.surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p destroyed", display->canvas.surface);
@@ -553,11 +553,11 @@ void Display_present(const Display_t *display)
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Convert the offscreen surface to a texture. The actual function changes when a copperlist is defined.
+    // Convert the offscreen surface to a texture. The actual function changes when a processor is defined.
     const GL_Surface_t *surface = display->canvas.surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    GL_copperlist_surface_to_rgba(display->canvas.copperlist, surface, pixels);
+    GL_processor_surface_to_rgba(display->canvas.processor, surface, pixels);
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
@@ -617,7 +617,7 @@ void Display_present(const Display_t *display)
 void Display_reset(Display_t *display)
 {
     display->vram.offset = (GL_Point_t){ 0, 0 };
-    GL_copperlist_reset(display->canvas.copperlist);
+    GL_processor_reset(display->canvas.processor);
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)
@@ -627,17 +627,17 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
 
 void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    GL_copperlist_set_palette(display->canvas.copperlist, palette);
+    GL_processor_set_palette(display->canvas.processor, palette);
 }
 
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
-    GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
+    GL_processor_set_shifting(display->canvas.processor, from, to, count);
 }
 
 void Display_set_program(Display_t *display, const GL_Program_t *program)
 {
-    GL_copperlist_set_program(display->canvas.copperlist, program);
+    GL_processor_set_program(display->canvas.processor, program);
 }
 
 GLFWwindow *Display_get_window(const Display_t *display)
@@ -657,7 +657,7 @@ GL_Surface_t *Display_get_surface(const Display_t *display)
 
 GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return GL_copperlist_get_palette(display->canvas.copperlist);
+    return GL_processor_get_palette(display->canvas.processor);
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)

@@ -22,15 +22,15 @@
  * SOFTWARE.
  */
 
-#include "copperlist.h"
+#include "processor.h"
 
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#define LOG_CONTEXT "gl-copperlist"
+#define LOG_CONTEXT "gl-processor"
 
-GL_Copperlist_t *GL_copperlist_create(void)
+GL_Processor_t *GL_processor_create(void)
 {
     GL_Palette_t *palette = GL_palette_create();
     if (!palette) {
@@ -39,7 +39,7 @@ GL_Copperlist_t *GL_copperlist_create(void)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p created", palette);
 
-#ifdef __DISPLAY_DEFAULT_QUANTIZED_PALETTE__
+#ifdef __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
     Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
   #if GL_MAX_PALETTE_COLORS == 256
     GL_palette_set_quantized(palette, 3, 3, 2);
@@ -61,85 +61,85 @@ GL_Copperlist_t *GL_copperlist_create(void)
     GL_palette_set_greyscale(palette, GL_MAX_PALETTE_COLORS);
 #endif
 
-    GL_Copperlist_t *copperlist = malloc(sizeof(GL_Copperlist_t));
-    if (!copperlist) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate copperlist");
+    GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
+    if (!processor) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
         GL_palette_destroy(palette);
         return NULL;
     }
 
-    *copperlist = (GL_Copperlist_t){
+    *processor = (GL_Processor_t){
             .palette = palette
         };
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
 #endif  /* VERBOSE_DEBUG */
 
-    GL_copperlist_reset(copperlist);
+    GL_processor_reset(processor);
 
-    return copperlist;
+    return processor;
 }
 
-void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
+void GL_processor_destroy(GL_Processor_t *processor)
 {
-    if (copperlist->program) {
-        GL_program_destroy(copperlist->program);
+    if (processor->program) {
+        GL_program_destroy(processor->program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program %p destroyed", copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
     }
 
-    GL_palette_destroy(copperlist->palette);
+    GL_palette_destroy(processor->palette);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", copperlist->palette);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", processor->palette);
 #endif  /* VERBOSE_DEBUG */
 
-    free(copperlist);
+    free(processor);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p freed", processor);
 #endif  /* VERBOSE_DEBUG */
 }
 
-void GL_copperlist_reset(GL_Copperlist_t *copperlist)
+void GL_processor_reset(GL_Processor_t *processor)
 {
     // Palette is not part of the "reset" operation.
-    GL_copperlist_set_shifting(copperlist, NULL, NULL, 0);
-    GL_copperlist_set_program(copperlist, NULL);
+    GL_processor_set_shifting(processor, NULL, NULL, 0);
+    GL_processor_set_program(processor, NULL);
 }
 
-GL_Palette_t *GL_copperlist_get_palette(GL_Copperlist_t *copperlist)
+GL_Palette_t *GL_processor_get_palette(GL_Processor_t *processor)
 {
-    return copperlist->palette;
+    return processor->palette;
 }
 
-void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette)
+void GL_processor_set_palette(GL_Processor_t *processor, const GL_Palette_t *palette)
 {
-    GL_palette_copy(copperlist->palette, palette);
+    GL_palette_copy(processor->palette, palette);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette copied");
 #endif  /* VERBOSE_DEBUG */
 
-    GL_palette_get_colors(palette, copperlist->state.colors);
+    GL_palette_get_colors(palette, processor->state.colors);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "state palette copied");
 #endif  /* VERBOSE_DEBUG */
 }
 
 // TODO: change API, accepting a single array with successive from/to pairs.
-void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
+void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            copperlist->state.shifting[i] = (GL_Pixel_t)i;
+            processor->state.shifting[i] = (GL_Pixel_t)i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
-            copperlist->state.shifting[from[i]] = to[i];
+            processor->state.shifting[from[i]] = to[i];
         }
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_t *program)
+static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const Processor_State_t *state, GL_Program_t *program)
 {
     const GL_Color_t *colors = state->colors;
     const GL_Pixel_t *shifting = state->shifting;
@@ -171,10 +171,10 @@ static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, co
 }
 
 // TODO: use array of function pointers instead of mega-switch?
-// TODO: ditch wait-x? copperlist operations changes only once per scanline?
-void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_t *program)
+// TODO: ditch wait-x? processor operations changes only once per scanline?
+void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const Processor_State_t *state, GL_Program_t *program)
 {
-    Copperlist_State_t aux = *state; // Make a local copy, the copperlist could change it.
+    Processor_State_t aux = *state; // Make a local copy, the processor could change it.
     GL_Color_t *colors = aux.colors;
     GL_Pixel_t *shifting = aux.shifting;
 
@@ -198,12 +198,12 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
         GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
 
         for (size_t w = dwidth; w; --w) {
-            // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
+            // Note: there's no length indicator for the processor program. That means that the interpreter would run
             // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
             // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
             // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
-            // is used to mark the end of the copperlist.
-#ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
+            // is used to mark the end of the processor.
+#ifdef __PROCESSOR_ONE_COMMAND_PER_PIXEL__
             if (i >= wait) {
 #else
             while (i >= wait) {
@@ -279,25 +279,25 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
 }
 
 // FIXME: make a copy or track the reference? (also for xform and palettes)
-void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
+void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program)
 {
     if (program) {
-        copperlist->program = GL_program_clone(program);
+        processor->program = GL_program_clone(program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p copied at %p", program, copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
 #endif  /* VERBOSE_DEBUG */
     } else
-    if (copperlist->program) {
-       GL_program_destroy(copperlist->program);
+    if (processor->program) {
+       GL_program_destroy(processor->program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program %p destroyed", copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
-        copperlist->program = NULL;
+        processor->program = NULL;
     }
-    copperlist->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
+    processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
 }
 
-void GL_copperlist_surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels)
+void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    copperlist->surface_to_rgba(surface, pixels, &copperlist->state, copperlist->program);
+    processor->surface_to_rgba(surface, pixels, &processor->state, processor->program);
 }

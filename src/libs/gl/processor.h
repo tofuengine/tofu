@@ -22,41 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_COPPERLIST_H__
-#define __GL_COPPERLIST_H__
+#ifndef __GL_PROCESSOR_H__
+#define __GL_PROCESSOR_H__
 
 #include "common.h"
 #include "palette.h"
 #include "program.h"
 #include "surface.h"
 
-typedef struct Copperlist_State_s {
+typedef struct Processor_State_s {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-} Copperlist_State_t;
+} Processor_State_t;
 
-typedef void (*GL_Copperlist_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_t *program);
+typedef void (*GL_Processor_Surface_To_Rgba_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Processor_State_t *state, GL_Program_t *program);
 
-typedef struct GL_Copperlist_s { // FIXME: rename to something better!!!
+typedef struct GL_Processor_s {
     GL_Palette_t *palette; // Explicit palette, used to support color-indexing and such.
 
     GL_Program_t *program;
 
-    Copperlist_State_t state;
-    GL_Copperlist_Surface_To_Rgba_t surface_to_rgba;
-} GL_Copperlist_t;
+    Processor_State_t state;
+    GL_Processor_Surface_To_Rgba_t surface_to_rgba;
+} GL_Processor_t;
 
-extern GL_Copperlist_t *GL_copperlist_create(void);
-extern void GL_copperlist_destroy(GL_Copperlist_t *copperlist);
+extern GL_Processor_t *GL_processor_create(void);
+extern void GL_processor_destroy(GL_Processor_t *processor);
 
-extern void GL_copperlist_reset(GL_Copperlist_t *copperlist);
+extern void GL_processor_reset(GL_Processor_t *processor);
 
-extern GL_Palette_t *GL_copperlist_get_palette(GL_Copperlist_t *copperlist);
+extern GL_Palette_t *GL_processor_get_palette(GL_Processor_t *processor);
 
-extern void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette);
-extern void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
-extern void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program);
+extern void GL_processor_set_palette(GL_Processor_t *processor, const GL_Palette_t *palette);
+extern void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
+extern void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program);
 
-extern void GL_copperlist_surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels);
+extern void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels);
 
-#endif  /* __GL_COPPERLIST_H__ */
+#endif  /* __GL_PROCESSOR_H__ */

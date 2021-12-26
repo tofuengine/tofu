@@ -46,7 +46,7 @@ function Background:__ctor(camera, index)
   self.program = Program.new()
 end
 
--- Rebuild sky and ground (copperlist) program.
+-- Rebuild sky and ground (processor) program.
 local function _compile_program(program, camera, index)
   local x <const> = camera.x
   local far <const> = camera.far + camera.z

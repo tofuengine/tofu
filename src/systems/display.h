@@ -62,7 +62,7 @@ typedef struct Display_s {
     struct {
         GL_Size_t size;
         GL_Surface_t *surface;
-        GL_Copperlist_t *copperlist; // The Copper(tm) holds the display-wise palette and shifting logic.
+        GL_Processor_t *processor; // The processor holds the display-wise palette and shifting logic.
     } canvas;
 
     struct {
@@ -93,7 +93,7 @@ extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
 extern void Display_present(const Display_t *display);
 
-extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `copperlist` field directly?
+extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `processor` field directly?
 
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);

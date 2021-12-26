@@ -98,7 +98,7 @@ function Main:update(delta_time)
   player:update(delta_time)
   camera:move(player:position())
 
-  -- Rebuild sky and ground (copperlist) program.
+  -- Rebuild sky and ground (processor) program.
   self.background:update(delta_time)
 
   self.scene:update(delta_time)
