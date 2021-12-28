@@ -296,12 +296,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
 		mod->len = sfh.ordnum;
-		if (hio_read(mod->xxo, sizeof(unsigned char), mod->len, f) != (size_t)mod->len) {
+		if (hio_read(mod->xxo, sizeof(uint8_t), mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 	} else {
 		mod->len = XMP_MAX_MOD_LENGTH;
-		if (hio_read(mod->xxo, sizeof(unsigned char), mod->len, f) != (size_t)mod->len) {
+		if (hio_read(mod->xxo, sizeof(uint8_t), mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 		if (hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR) < 0) {

@@ -89,10 +89,6 @@ void libxmp_load_prologue(struct context_data *ctx)
 	m->mod.len = 0;
 	m->mod.rst = 0;
 
-#ifndef LIBXMP_CORE_DISABLE_IT
-	m->xsmp = NULL;
-#endif
-
 	m->time_factor = DEFAULT_TIME_FACTOR;
 
 	for (i = 0; i < 64; i++) {

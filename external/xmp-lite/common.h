@@ -296,6 +296,8 @@ struct smix_data {
 /* This will be added to the sample structure in the next API revision */
 struct extra_sample_data {
 	double c5spd;
+	int sus;
+	int sue;
 };
 
 struct module_data {
@@ -335,9 +337,6 @@ struct module_data {
 	void *extra;			/* format-specific extra fields */
 	uint8_t **scan_cnt;		/* scan counters */
 	struct extra_sample_data *xtra;
-#ifndef LIBXMP_CORE_DISABLE_IT
-	struct xmp_sample *xsmp;	/* sustain loop samples */
-#endif
 };
 
 
@@ -435,12 +434,13 @@ struct mixer_data {
 	int mix;		/* percentage of channel separation */
 	int interp;		/* interpolation type */
 	int dsp;		/* dsp effect flags */
-	char* buffer;		/* output buffer */
-	int32_t* buf32;	/* temporary buffer for 32 bit samples */
+	char *buffer;		/* output buffer */
+	int32_t *buf32;	/* temporary buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
+	int bidir_adjust;	/* adjustment for IT bidirectional loops */
 	double pbase;		/* period base */
 };
 

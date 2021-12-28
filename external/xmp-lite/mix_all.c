@@ -139,6 +139,16 @@
     old_vl += delta_l; \
 } while (0)
 
+/* For "nearest" to be nearest neighbor (instead of floor), the position needs
+ * to be rounded. This only needs to be done once at the start of mixing, and
+ * is required for reverse samples to round the same as forward samples.
+ */
+#define NEAREST_ROUND() do { \
+    frac += (1 << (SMIX_SHIFT - 1)); \
+    pos += frac >> SMIX_SHIFT; \
+    frac &= SMIX_MASK; \
+} while (0)
+
 #define VAR_NORM(x) \
     register int smp_in; \
     x *sptr = (x *)vi->sptr; \
@@ -197,6 +207,7 @@
 MIXER(mono_8bit_nearest)
 {
     VAR_NORM(int8_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR(); MIX_MONO(); UPDATE_POS(); }
 }
@@ -207,6 +218,7 @@ MIXER(mono_8bit_nearest)
 MIXER(mono_16bit_nearest)
 {
     VAR_NORM(int16_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR_16BIT(); MIX_MONO(); UPDATE_POS(); }
 }
@@ -216,6 +228,7 @@ MIXER(mono_16bit_nearest)
 MIXER(stereo_8bit_nearest)
 {
     VAR_NORM(int8_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR(); MIX_STEREO(); UPDATE_POS(); }
 }
@@ -225,6 +238,7 @@ MIXER(stereo_8bit_nearest)
 MIXER(stereo_16bit_nearest)
 {
     VAR_NORM(int16_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR_16BIT(); MIX_STEREO(); UPDATE_POS(); }
 }

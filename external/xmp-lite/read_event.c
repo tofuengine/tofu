@@ -68,7 +68,7 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
-static void reset_envelopes_volume(struct context_data *ctx,
+static void reset_envelope_volume(struct context_data *ctx,
 				struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
@@ -333,6 +333,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	if (e->vol) {
 		xc->volume = e->vol - 1;
 		SET(NEW_VOL);
+		RESET_PER(VOL_SLIDE); /* FIXME: should this be for FAR only? */
 	}
 
 	/* Secondary effect handled first */
@@ -1261,7 +1262,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	 */
 	if (ev.ins && TEST_NOTE(NOTE_ENV_END)) {
 		if (check_fadeout(ctx, xc, candidate_ins)) {
-			reset_envelopes_volume(ctx, xc);
+			reset_envelope_volume(ctx, xc);
 		} else {
 			reset_env = 0;
 		}
