@@ -30,7 +30,6 @@
 #endif
 
 #include "format.h"
-#include "list.h"
 #include "hio.h"
 #include "loader.h"
 #include "load_helpers.h"
