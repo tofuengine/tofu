@@ -428,6 +428,11 @@ copperbars: engine
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/copperbars
 	@$(builddir)/$(TARGET) --path=./demos/copperbars
 
+scroller: engine
+	@echo "Launching *scroller* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/scroller
+	@$(builddir)/$(TARGET) --path=./demos/scroller
+
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
