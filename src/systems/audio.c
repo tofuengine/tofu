@@ -94,9 +94,9 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     ma_mutex_unlock(&audio->driver.lock);
 }
 
-static void _stop_callback(ma_device* device)
+static void _notification_callback(const ma_device_notification *notification)
 {
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p has been stopped", device);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p notified for event #%d", notification->pDevice, notification->type);
 }
 
 static void *_malloc(size_t sz, void *pUserData)
@@ -201,7 +201,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     device_config.playback.channels         = SL_CHANNELS_PER_FRAME;
     device_config.sampleRate                = SL_FRAMES_PER_SECOND;
     device_config.dataCallback              = _data_callback;
-    device_config.stopCallback              = _stop_callback;
+    device_config.notificationCallback      = _notification_callback;
     device_config.pUserData                 = (void *)audio;
     device_config.noPreSilencedOutputBuffer = MA_FALSE;
 
