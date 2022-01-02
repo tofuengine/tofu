@@ -1,6 +1,6 @@
 /*
 Audio playback and capture library. Choice of public domain or MIT-0. See license statements at the end of this file.
-miniaudio - v0.11.1 - 2021-12-27
+miniaudio - v0.11.2 - 2021-12-31
 
 David Reid - mackron@gmail.com
 
@@ -2214,12 +2214,11 @@ The volume of an output bus can be configured on a per-bus basis:
 In the code above we're using the splitter node from before and changing the volume of each of the
 copied streams.
 
-You can start, stop and mute a node with the following:
+You can start and stop a node with the following:
 
     ```c
     ma_node_set_state(&splitterNode, ma_node_state_started);    // The default state.
     ma_node_set_state(&splitterNode, ma_node_state_stopped);
-    ma_node_set_state(&splitterNode, ma_node_state_muted);
     ```
 
 By default the node is in a started state, but since it won't be connected to anything won't
@@ -2448,12 +2447,12 @@ count, sample rate and channel map:
 When passing in `NULL` for decoder config in `ma_decoder_init*()`, the output format will be the
 same as that defined by the decoding backend.
 
-Data is read from the decoder as PCM frames. This will return the number of PCM frames actually
-read. If the return value is less than the requested number of PCM frames it means you've reached
-the end:
+Data is read from the decoder as PCM frames. This will output the number of PCM frames actually
+read. If this is less than the requested number of PCM frames it means you've reached the end. The
+return value will be `MA_AT_END` if no samples have been read and the end has been reached.
 
     ```c
-    ma_uint64 framesRead = ma_decoder_read_pcm_frames(pDecoder, pFrames, framesToRead);
+    ma_result result = ma_decoder_read_pcm_frames(pDecoder, pFrames, framesToRead, &framesRead);
     if (framesRead < framesToRead) {
         // Reached the end.
     }
@@ -3627,7 +3626,7 @@ extern "C" {
 
 #define MA_VERSION_MAJOR    0
 #define MA_VERSION_MINOR    11
-#define MA_VERSION_REVISION 1
+#define MA_VERSION_REVISION 2
 #define MA_VERSION_STRING   MA_XSTRINGIFY(MA_VERSION_MAJOR) "." MA_XSTRINGIFY(MA_VERSION_MINOR) "." MA_XSTRINGIFY(MA_VERSION_REVISION)
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -3654,29 +3653,42 @@ extern "C" {
 #include <stddef.h> /* For size_t. */
 
 /* Sized types. */
-typedef   signed char           ma_int8;
-typedef unsigned char           ma_uint8;
-typedef   signed short          ma_int16;
-typedef unsigned short          ma_uint16;
-typedef   signed int            ma_int32;
-typedef unsigned int            ma_uint32;
-#if defined(_MSC_VER) && !defined(__clang__)
-    typedef   signed __int64    ma_int64;
-    typedef unsigned __int64    ma_uint64;
+#if defined(MA_USE_STDINT)
+    #include <stdint.h>
+    typedef int8_t   ma_int8;
+    typedef uint8_t  ma_uint8;
+    typedef int16_t  ma_int16;
+    typedef uint16_t ma_uint16;
+    typedef int32_t  ma_int32;
+    typedef uint32_t ma_uint32;
+    typedef int64_t  ma_int64;
+    typedef uint64_t ma_uint64;
 #else
-    #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wlong-long"
-        #if defined(__clang__)
-            #pragma GCC diagnostic ignored "-Wc++11-long-long"
+    typedef   signed char           ma_int8;
+    typedef unsigned char           ma_uint8;
+    typedef   signed short          ma_int16;
+    typedef unsigned short          ma_uint16;
+    typedef   signed int            ma_int32;
+    typedef unsigned int            ma_uint32;
+    #if defined(_MSC_VER) && !defined(__clang__)
+        typedef   signed __int64    ma_int64;
+        typedef unsigned __int64    ma_uint64;
+    #else
+        #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wlong-long"
+            #if defined(__clang__)
+                #pragma GCC diagnostic ignored "-Wc++11-long-long"
+            #endif
+        #endif
+        typedef   signed long long  ma_int64;
+        typedef unsigned long long  ma_uint64;
+        #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+            #pragma GCC diagnostic pop
         #endif
     #endif
-    typedef   signed long long  ma_int64;
-    typedef unsigned long long  ma_uint64;
-    #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
-        #pragma GCC diagnostic pop
-    #endif
-#endif
+#endif  /* MA_USE_STDINT */
+
 #if MA_SIZEOF_PTR == 8
     typedef ma_uint64           ma_uintptr;
 #else
@@ -5750,6 +5762,84 @@ typedef enum
 #define MA_BACKEND_COUNT (ma_backend_null+1)
 
 
+/* Device notification types. */
+typedef enum
+{
+    ma_device_notification_type_started,
+    ma_device_notification_type_stopped,
+    ma_device_notification_type_rerouted,
+    ma_device_notification_type_interruption_began,
+    ma_device_notification_type_interruption_ended
+} ma_device_notification_type;
+
+typedef struct
+{
+    ma_device* pDevice;
+    ma_device_notification_type type;
+    union
+    {
+        struct
+        {
+            int _unused;
+        } started;
+        struct
+        {
+            int _unused;
+        } stopped;
+        struct
+        {
+            int _unused;
+        } rerouted;
+        struct
+        {
+            int _unused;
+        } interruption;
+    } data;
+} ma_device_notification;
+
+/*
+The notification callback for when the application should be notified of a change to the device.
+
+This callback is used for notifying the application of changes such as when the device has started,
+stopped, rerouted or an interruption has occurred. Note that not all backends will post all
+notification types. For example, some backends will perform automatic stream routing without any
+kind of notification to the host program which means miniaudio will never know about it and will
+never be able to fire the rerouted notification. You should keep this in mind when designing your
+program.
+
+The stopped notification will *not* get fired when a device is rerouted.
+
+
+Parameters
+----------
+pNotification (in)
+    A pointer to a structure containing information about the event. Use the `pDevice` member of
+    this object to retrieve the relevant device. The `type` member can be used to discriminate
+    against each of the notification types.
+
+
+Remarks
+-------
+Do not restart or uninitialize the device from the callback.
+
+Not all notifications will be triggered by all backends, however the started and stopped events
+should be reliable for all backends. Some backends do not have a good way to detect device
+stoppages due to unplugging the device which may result in the stopped callback not getting
+fired. This has been observed with at least one BSD variant.
+
+The rerouted notification is fired *after* the reroute has occurred. The stopped notification will
+*not* get fired when a device is rerouted. The following backends are known to do automatic stream
+rerouting, but do not have a way to be notified of the change:
+
+  * DirectSound
+
+The interruption notifications are used on mobile platforms for detecting when audio is interrupted
+due to things like an incoming phone call. Currently this is only implemented on iOS. None of the
+Android backends will report this notification.
+*/
+typedef void (* ma_device_notification_proc)(const ma_device_notification* pNotification);
+
+
 /*
 The callback for processing audio data from the device.
 
@@ -5792,7 +5882,12 @@ The proper way to stop the device is to call `ma_device_stop()` from a different
 */
 typedef void (* ma_device_data_proc)(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 
+
+
+
 /*
+DEPRECATED. Use ma_device_notification_proc instead.
+
 The callback for when the device has been stopped.
 
 This will be called when the device is stopped explicitly with `ma_device_stop()` and also called implicitly when the device is stopped through external forces
@@ -5809,7 +5904,7 @@ Remarks
 -------
 Do not restart or uninitialize the device from the callback.
 */
-typedef void (* ma_stop_proc)(ma_device* pDevice);
+typedef void (* ma_stop_proc)(ma_device* pDevice);  /* DEPRECATED. Use ma_device_notification_proc instead. */
 
 typedef enum
 {
@@ -5988,6 +6083,7 @@ struct ma_device_config
     ma_bool8 noClip;                    /* When set to true, the contents of the output buffer passed into the data callback will be clipped after returning. Only applies when the playback sample format is f32. */
     ma_bool8 noDisableDenormals;        /* Do not disable denormals when firing the data callback. */
     ma_device_data_proc dataCallback;
+    ma_device_notification_proc notificationCallback;
     ma_stop_proc stopCallback;
     void* pUserData;
     ma_resampler_config resampling;
@@ -6419,6 +6515,7 @@ struct ma_context
             ma_proc pa_stream_set_write_callback;
             ma_proc pa_stream_set_read_callback;
             ma_proc pa_stream_set_suspended_callback;
+            ma_proc pa_stream_set_moved_callback;
             ma_proc pa_stream_is_suspended;
             ma_proc pa_stream_flush;
             ma_proc pa_stream_drain;
@@ -6434,6 +6531,8 @@ struct ma_context
 
             /*pa_mainloop**/ ma_ptr pMainLoop;
             /*pa_context**/ ma_ptr pPulseContext;
+            char* pApplicationName; /* Set when the context is initialized. Used by devices for their local pa_context objects. */
+            char* pServerName;      /* Set when the context is initialized. Used by devices for their local pa_context objects. */
         } pulse;
 #endif
 #ifdef MA_SUPPORT_JACK
@@ -6644,21 +6743,22 @@ struct ma_device
     ma_device_type type;
     ma_uint32 sampleRate;
     MA_ATOMIC(4, ma_device_state) state;        /* The state of the device is variable and can change at any time on any thread. Must be used atomically. */
-    ma_device_data_proc onData;             /* Set once at initialization time and should not be changed after. */
-    ma_stop_proc onStop;                    /* Set once at initialization time and should not be changed after. */
-    void* pUserData;                        /* Application defined data. */
+    ma_device_data_proc onData;                 /* Set once at initialization time and should not be changed after. */
+    ma_device_notification_proc onNotification; /* Set once at initialization time and should not be changed after. */
+    ma_stop_proc onStop;                        /* DEPRECATED. Use the notification callback instead. Set once at initialization time and should not be changed after. */
+    void* pUserData;                            /* Application defined data. */
     ma_mutex startStopLock;
     ma_event wakeupEvent;
     ma_event startEvent;
     ma_event stopEvent;
     ma_thread thread;
-    ma_result workResult;                   /* This is set by the worker thread after it's finished doing a job. */
-    ma_bool8 isOwnerOfContext;              /* When set to true, uninitializing the device will also uninitialize the context. Set to true when NULL is passed into ma_device_init(). */
+    ma_result workResult;                       /* This is set by the worker thread after it's finished doing a job. */
+    ma_bool8 isOwnerOfContext;                  /* When set to true, uninitializing the device will also uninitialize the context. Set to true when NULL is passed into ma_device_init(). */
     ma_bool8 noPreSilencedOutputBuffer;
     ma_bool8 noClip;
     ma_bool8 noDisableDenormals;
     MA_ATOMIC(4, float) masterVolumeFactor;     /* Linear 0..1. Can be read and written simultaneously by different threads. Must be used atomically. */
-    ma_duplex_rb duplexRB;                  /* Intermediary buffer for duplex device on asynchronous backends. */
+    ma_duplex_rb duplexRB;                      /* Intermediary buffer for duplex device on asynchronous backends. */
     struct
     {
         ma_resample_algorithm algorithm;
@@ -6787,6 +6887,8 @@ struct ma_device
 #ifdef MA_SUPPORT_PULSEAUDIO
         struct
         {
+            /*pa_mainloop**/ ma_ptr pMainLoop;
+            /*pa_context**/ ma_ptr pPulseContext;
             /*pa_stream**/ ma_ptr pStreamPlayback;
             /*pa_stream**/ ma_ptr pStreamCapture;
         } pulse;
@@ -6819,7 +6921,7 @@ struct ma_device
             ma_bool32 isDefaultCaptureDevice;
             ma_bool32 isSwitchingPlaybackDevice;   /* <-- Set to true when the default device has changed and miniaudio is in the process of switching. */
             ma_bool32 isSwitchingCaptureDevice;    /* <-- Set to true when the default device has changed and miniaudio is in the process of switching. */
-            void* pRouteChangeHandler;             /* Only used on mobile platforms. Obj-C object for handling route changes. */
+            void* pNotificationHandler;             /* Only used on mobile platforms. Obj-C object for handling route changes. */
         } coreaudio;
 #endif
 #ifdef MA_SUPPORT_SNDIO
@@ -7535,9 +7637,8 @@ then be set directly on the structure. Below are the members of the `ma_device_c
     dataCallback
         The callback to fire whenever data is ready to be delivered to or from the device.
 
-    stopCallback
-        The callback to fire whenever the device has stopped, either explicitly via `ma_device_stop()`, or implicitly due to things like the device being
-        disconnected.
+    notificationCallback
+        The callback to fire when something has changed with the device, such as whether or not it has been started or stopped.
 
     pUserData
         The user data pointer to use with the device. You can access this directly from the device object like `device.pUserData`.
@@ -11858,6 +11959,10 @@ MA_API int ma_strappend(char* dst, size_t dstSize, const char* srcA, const char*
 
 MA_API char* ma_copy_string(const char* src, const ma_allocation_callbacks* pAllocationCallbacks)
 {
+    if (src == NULL) {
+        return NULL;
+    }
+
     size_t sz = strlen(src)+1;
     char* dst = (char*)ma_malloc(sz, pAllocationCallbacks);
     if (dst == NULL) {
@@ -16618,6 +16723,57 @@ static MA_INLINE void ma_device_restore_denormals(ma_device* pDevice, unsigned i
     }
 }
 
+static ma_device_notification ma_device_notification_init(ma_device* pDevice, ma_device_notification_type type)
+{
+    ma_device_notification notification;
+
+    MA_ZERO_OBJECT(&notification);
+    notification.pDevice = pDevice;
+    notification.type    = type;
+
+    return notification;
+}
+
+static void ma_device__on_notification(ma_device_notification notification)
+{
+    MA_ASSERT(notification.pDevice != NULL);
+
+    if (notification.pDevice->onNotification != NULL) {
+        notification.pDevice->onNotification(&notification);
+    }
+
+    /* TEMP FOR COMPATIBILITY: If it's a stopped notification, fire the onStop callback as well. This is only for backwards compatibility and will be removed. */
+    if (notification.pDevice->onStop != NULL && notification.type == ma_device_notification_type_stopped) {
+        notification.pDevice->onStop(notification.pDevice);
+    }
+}
+
+void ma_device__on_notification_started(ma_device* pDevice)
+{
+    ma_device__on_notification(ma_device_notification_init(pDevice, ma_device_notification_type_started));
+}
+
+void ma_device__on_notification_stopped(ma_device* pDevice)
+{
+    ma_device__on_notification(ma_device_notification_init(pDevice, ma_device_notification_type_stopped));
+}
+
+void ma_device__on_notification_rerouted(ma_device* pDevice)
+{
+    ma_device__on_notification(ma_device_notification_init(pDevice, ma_device_notification_type_rerouted));
+}
+
+void ma_device__on_notification_interruption_began(ma_device* pDevice)
+{
+    ma_device__on_notification(ma_device_notification_init(pDevice, ma_device_notification_type_interruption_began));
+}
+
+void ma_device__on_notification_interruption_ended(ma_device* pDevice)
+{
+    ma_device__on_notification(ma_device_notification_init(pDevice, ma_device_notification_type_interruption_ended));
+}
+
+
 static void ma_device__on_data(ma_device* pDevice, void* pFramesOut, const void* pFramesIn, ma_uint32 frameCount)
 {
     float masterVolumeFactor;
@@ -20525,6 +20681,8 @@ static ma_result ma_device_reroute__wasapi(ma_device* pDevice, ma_device_type de
 
     ma_device__post_init_setup(pDevice, deviceType);
 
+    ma_device__on_notification_rerouted(pDevice);
+
     return MA_SUCCESS;
 }
 
@@ -21549,9 +21707,9 @@ struct ma_IDirectSoundCapture
 {
     ma_IDirectSoundCaptureVtbl* lpVtbl;
 };
-static MA_INLINE HRESULT ma_IDirectSoundCapture_QueryInterface(ma_IDirectSoundCapture* pThis, const IID* const riid, void** ppObject) { return pThis->lpVtbl->QueryInterface(pThis, riid, ppObject); }
-static MA_INLINE ULONG   ma_IDirectSoundCapture_AddRef(ma_IDirectSoundCapture* pThis)                                                 { return pThis->lpVtbl->AddRef(pThis); }
-static MA_INLINE ULONG   ma_IDirectSoundCapture_Release(ma_IDirectSoundCapture* pThis)                                                { return pThis->lpVtbl->Release(pThis); }
+static MA_INLINE HRESULT ma_IDirectSoundCapture_QueryInterface     (ma_IDirectSoundCapture* pThis, const IID* const riid, void** ppObject) { return pThis->lpVtbl->QueryInterface(pThis, riid, ppObject); }
+static MA_INLINE ULONG   ma_IDirectSoundCapture_AddRef             (ma_IDirectSoundCapture* pThis)                                    { return pThis->lpVtbl->AddRef(pThis); }
+static MA_INLINE ULONG   ma_IDirectSoundCapture_Release            (ma_IDirectSoundCapture* pThis)                                    { return pThis->lpVtbl->Release(pThis); }
 static MA_INLINE HRESULT ma_IDirectSoundCapture_CreateCaptureBuffer(ma_IDirectSoundCapture* pThis, const MA_DSCBUFFERDESC* pDSCBufferDesc, ma_IDirectSoundCaptureBuffer** ppDSCBuffer, void* pUnkOuter) { return pThis->lpVtbl->CreateCaptureBuffer(pThis, pDSCBufferDesc, ppDSCBuffer, pUnkOuter); }
 static MA_INLINE HRESULT ma_IDirectSoundCapture_GetCaps            (ma_IDirectSoundCapture* pThis, MA_DSCCAPS* pDSCCaps)              { return pThis->lpVtbl->GetCaps(pThis, pDSCCaps); }
 static MA_INLINE HRESULT ma_IDirectSoundCapture_Initialize         (ma_IDirectSoundCapture* pThis, const GUID* pGuidDevice)           { return pThis->lpVtbl->Initialize(pThis, pGuidDevice); }
@@ -23278,10 +23436,10 @@ static ma_result ma_context_get_device_info_from_WAVECAPS(ma_context* pContext, 
             if (((MA_PFN_RegOpenKeyExA)pContext->win32.RegOpenKeyExA)(HKEY_LOCAL_MACHINE, keyStr, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
                 BYTE nameFromReg[512];
                 DWORD nameFromRegSize = sizeof(nameFromReg);
-                result = ((MA_PFN_RegQueryValueExA)pContext->win32.RegQueryValueExA)(hKey, "Name", 0, NULL, (LPBYTE)nameFromReg, (LPDWORD)&nameFromRegSize);
+                LONG resultWin32 = ((MA_PFN_RegQueryValueExA)pContext->win32.RegQueryValueExA)(hKey, "Name", 0, NULL, (LPBYTE)nameFromReg, (LPDWORD)&nameFromRegSize);
                 ((MA_PFN_RegCloseKey)pContext->win32.RegCloseKey)(hKey);
 
-                if (result == ERROR_SUCCESS) {
+                if (resultWin32 == ERROR_SUCCESS) {
                     /* We have the value from the registry, so now we need to construct the name string. */
                     char name[1024];
                     if (ma_strcpy_s(name, sizeof(name), pDeviceInfo->name) == 0) {
@@ -26830,6 +26988,7 @@ typedef const char*              (* ma_pa_stream_get_device_name_proc)         (
 typedef void                     (* ma_pa_stream_set_write_callback_proc)      (ma_pa_stream* s, ma_pa_stream_request_cb_t cb, void* userdata);
 typedef void                     (* ma_pa_stream_set_read_callback_proc)       (ma_pa_stream* s, ma_pa_stream_request_cb_t cb, void* userdata);
 typedef void                     (* ma_pa_stream_set_suspended_callback_proc)  (ma_pa_stream* s, ma_pa_stream_notify_cb_t cb, void* userdata);
+typedef void                     (* ma_pa_stream_set_moved_callback_proc)      (ma_pa_stream* s, ma_pa_stream_notify_cb_t cb, void* userdata);
 typedef int                      (* ma_pa_stream_is_suspended_proc)            (const ma_pa_stream* s);
 typedef ma_pa_operation*         (* ma_pa_stream_flush_proc)                   (ma_pa_stream* s, ma_pa_stream_success_cb_t cb, void* userdata);
 typedef ma_pa_operation*         (* ma_pa_stream_drain_proc)                   (ma_pa_stream* s, ma_pa_stream_success_cb_t cb, void* userdata);
@@ -27024,7 +27183,7 @@ static ma_pa_channel_position_t ma_channel_position_to_pulse(ma_channel position
 }
 #endif
 
-static ma_result ma_wait_for_operation__pulse(ma_context* pContext, ma_pa_operation* pOP)
+static ma_result ma_wait_for_operation__pulse(ma_context* pContext, ma_ptr pMainLoop, ma_pa_operation* pOP)
 {
     int resultPA;
     ma_pa_operation_state_t state;
@@ -27038,7 +27197,7 @@ static ma_result ma_wait_for_operation__pulse(ma_context* pContext, ma_pa_operat
             break;  /* Done. */
         }
 
-        resultPA = ((ma_pa_mainloop_iterate_proc)pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pContext->pulse.pMainLoop, 1, NULL);
+        resultPA = ((ma_pa_mainloop_iterate_proc)pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pMainLoop, 1, NULL);
         if (resultPA < 0) {
             return ma_result_from_pulse(resultPA);
         }
@@ -27047,7 +27206,7 @@ static ma_result ma_wait_for_operation__pulse(ma_context* pContext, ma_pa_operat
     return MA_SUCCESS;
 }
 
-static ma_result ma_wait_for_operation_and_unref__pulse(ma_context* pContext, ma_pa_operation* pOP)
+static ma_result ma_wait_for_operation_and_unref__pulse(ma_context* pContext, ma_ptr pMainLoop, ma_pa_operation* pOP)
 {
     ma_result result;
 
@@ -27055,19 +27214,19 @@ static ma_result ma_wait_for_operation_and_unref__pulse(ma_context* pContext, ma
         return MA_INVALID_ARGS;
     }
 
-    result = ma_wait_for_operation__pulse(pContext, pOP);
+    result = ma_wait_for_operation__pulse(pContext, pMainLoop, pOP);
     ((ma_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
 
     return result;
 }
 
-static ma_result ma_context_wait_for_pa_context_to_connect__pulse(ma_context* pContext)
+static ma_result ma_wait_for_pa_context_to_connect__pulse(ma_context* pContext, ma_ptr pMainLoop, ma_ptr pPulseContext)
 {
     int resultPA;
     ma_pa_context_state_t state;
 
     for (;;) {
-        state = ((ma_pa_context_get_state_proc)pContext->pulse.pa_context_get_state)((ma_pa_context*)pContext->pulse.pPulseContext);
+        state = ((ma_pa_context_get_state_proc)pContext->pulse.pa_context_get_state)((ma_pa_context*)pPulseContext);
         if (state == MA_PA_CONTEXT_READY) {
             break;  /* Done. */
         }
@@ -27077,7 +27236,7 @@ static ma_result ma_context_wait_for_pa_context_to_connect__pulse(ma_context* pC
             return MA_ERROR;
         }
 
-        resultPA = ((ma_pa_mainloop_iterate_proc)pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pContext->pulse.pMainLoop, 1, NULL);
+        resultPA = ((ma_pa_mainloop_iterate_proc)pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pMainLoop, 1, NULL);
         if (resultPA < 0) {
             return ma_result_from_pulse(resultPA);
         }
@@ -27087,13 +27246,13 @@ static ma_result ma_context_wait_for_pa_context_to_connect__pulse(ma_context* pC
     return MA_SUCCESS;
 }
 
-static ma_result ma_context_wait_for_pa_stream_to_connect__pulse(ma_context* pContext, ma_pa_stream* pStream)
+static ma_result ma_wait_for_pa_stream_to_connect__pulse(ma_context* pContext, ma_ptr pMainLoop, ma_ptr pStream)
 {
     int resultPA;
     ma_pa_stream_state_t state;
 
     for (;;) {
-        state = ((ma_pa_stream_get_state_proc)pContext->pulse.pa_stream_get_state)(pStream);
+        state = ((ma_pa_stream_get_state_proc)pContext->pulse.pa_stream_get_state)((ma_pa_stream*)pStream);
         if (state == MA_PA_STREAM_READY) {
             break;  /* Done. */
         }
@@ -27103,11 +27262,57 @@ static ma_result ma_context_wait_for_pa_stream_to_connect__pulse(ma_context* pCo
             return MA_ERROR;
         }
 
-        resultPA = ((ma_pa_mainloop_iterate_proc)pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pContext->pulse.pMainLoop, 1, NULL);
+        resultPA = ((ma_pa_mainloop_iterate_proc)pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pMainLoop, 1, NULL);
         if (resultPA < 0) {
             return ma_result_from_pulse(resultPA);
         }
     }
+
+    return MA_SUCCESS;
+}
+
+
+static ma_result ma_init_pa_mainloop_and_pa_context__pulse(ma_context* pContext, const char* pApplicationName, const char* pServerName, ma_bool32 tryAutoSpawn, ma_ptr* ppMainLoop, ma_ptr* ppPulseContext)
+{
+    ma_result result;
+    ma_ptr pMainLoop;
+    ma_ptr pPulseContext;
+
+    MA_ASSERT(ppMainLoop     != NULL);
+    MA_ASSERT(ppPulseContext != NULL);
+
+    /* The PulseAudio context maps well to miniaudio's notion of a context. The pa_context object will be initialized as part of the ma_context. */
+    pMainLoop = ((ma_pa_mainloop_new_proc)pContext->pulse.pa_mainloop_new)();
+    if (pMainLoop == NULL) {
+        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to create mainloop.");
+        return MA_FAILED_TO_INIT_BACKEND;
+    }
+
+    pPulseContext = ((ma_pa_context_new_proc)pContext->pulse.pa_context_new)(((ma_pa_mainloop_get_api_proc)pContext->pulse.pa_mainloop_get_api)((ma_pa_mainloop*)pMainLoop), pApplicationName);
+    if (pPulseContext == NULL) {
+        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to create PulseAudio context.");
+        ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)(pMainLoop));
+        return MA_FAILED_TO_INIT_BACKEND;
+    }
+
+    /* Now we need to connect to the context. Everything is asynchronous so we need to wait for it to connect before returning. */
+    result = ma_result_from_pulse(((ma_pa_context_connect_proc)pContext->pulse.pa_context_connect)((ma_pa_context*)pPulseContext, pServerName, (tryAutoSpawn) ? 0 : MA_PA_CONTEXT_NOAUTOSPAWN, NULL));
+    if (result != MA_SUCCESS) {
+        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to connect PulseAudio context.");
+        ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)(pMainLoop));
+        return result;
+    }
+
+    /* Since ma_context_init() runs synchronously we need to wait for the PulseAudio context to connect before we return. */
+    result = ma_wait_for_pa_context_to_connect__pulse(pContext, pMainLoop, pPulseContext);
+    if (result != MA_SUCCESS) {
+        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Waiting for connection failed.");
+        ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)(pMainLoop));
+        return result;
+    }
+
+    *ppMainLoop     = pMainLoop;
+    *ppPulseContext = pPulseContext;
 
     return MA_SUCCESS;
 }
@@ -27145,6 +27350,7 @@ static void ma_device_source_info_callback(ma_pa_context* pPulseContext, const m
     (void)pPulseContext; /* Unused. */
 }
 
+#if 0
 static void ma_device_sink_name_callback(ma_pa_context* pPulseContext, const ma_pa_sink_info* pInfo, int endOfList, void* pUserData)
 {
     ma_device* pDevice;
@@ -27176,7 +27382,7 @@ static void ma_device_source_name_callback(ma_pa_context* pPulseContext, const m
 
     (void)pPulseContext; /* Unused. */
 }
-
+#endif
 
 static ma_result ma_context_get_sink_info__pulse(ma_context* pContext, const char* pDeviceName, ma_pa_sink_info* pSinkInfo)
 {
@@ -27187,7 +27393,7 @@ static ma_result ma_context_get_sink_info__pulse(ma_context* pContext, const cha
         return MA_ERROR;
     }
 
-    return ma_wait_for_operation_and_unref__pulse(pContext, pOP);
+    return ma_wait_for_operation_and_unref__pulse(pContext, pContext->pulse.pMainLoop, pOP);
 }
 
 static ma_result ma_context_get_source_info__pulse(ma_context* pContext, const char* pDeviceName, ma_pa_source_info* pSourceInfo)
@@ -27199,7 +27405,7 @@ static ma_result ma_context_get_source_info__pulse(ma_context* pContext, const c
         return MA_ERROR;
     }
 
-    return ma_wait_for_operation_and_unref__pulse(pContext, pOP);;
+    return ma_wait_for_operation_and_unref__pulse(pContext, pContext->pulse.pMainLoop, pOP);
 }
 
 static ma_result ma_context_get_default_device_index__pulse(ma_context* pContext, ma_device_type deviceType, ma_uint32* pIndex)
@@ -27343,7 +27549,7 @@ static ma_result ma_context_enumerate_devices__pulse(ma_context* pContext, ma_en
             goto done;
         }
 
-        result = ma_wait_for_operation__pulse(pContext, pOP);
+        result = ma_wait_for_operation__pulse(pContext, pContext->pulse.pMainLoop, pOP);
         ((ma_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
 
         if (result != MA_SUCCESS) {
@@ -27360,7 +27566,7 @@ static ma_result ma_context_enumerate_devices__pulse(ma_context* pContext, ma_en
             goto done;
         }
 
-        result = ma_wait_for_operation__pulse(pContext, pOP);
+        result = ma_wait_for_operation__pulse(pContext, pContext->pulse.pMainLoop, pOP);
         ((ma_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
 
         if (result != MA_SUCCESS) {
@@ -27481,7 +27687,7 @@ static ma_result ma_context_get_device_info__pulse(ma_context* pContext, ma_devi
     }
 
     if (pOP != NULL) {
-        ma_wait_for_operation_and_unref__pulse(pContext, pOP);
+        ma_wait_for_operation_and_unref__pulse(pContext, pContext->pulse.pMainLoop, pOP);
     } else {
         result = MA_ERROR;
         goto done;
@@ -27519,6 +27725,10 @@ static ma_result ma_device_uninit__pulse(ma_device* pDevice)
         ma_duplex_rb_uninit(&pDevice->duplexRB);
     }
 
+    ((ma_pa_context_disconnect_proc)pContext->pulse.pa_context_disconnect)((ma_pa_context*)pDevice->pulse.pPulseContext);
+    ((ma_pa_context_unref_proc)pContext->pulse.pa_context_unref)((ma_pa_context*)pDevice->pulse.pPulseContext);
+    ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)pDevice->pulse.pMainLoop);
+
     return MA_SUCCESS;
 }
 
@@ -27534,7 +27744,7 @@ static ma_pa_buffer_attr ma_device__pa_buffer_attr_new(ma_uint32 periodSizeInFra
     return attr;
 }
 
-static ma_pa_stream* ma_context__pa_stream_new__pulse(ma_context* pContext, const char* pStreamName, const ma_pa_sample_spec* ss, const ma_pa_channel_map* cmap)
+static ma_pa_stream* ma_device__pa_stream_new__pulse(ma_device* pDevice, const char* pStreamName, const ma_pa_sample_spec* ss, const ma_pa_channel_map* cmap)
 {
     static int g_StreamCounter = 0;
     char actualStreamName[256];
@@ -27547,7 +27757,7 @@ static ma_pa_stream* ma_context__pa_stream_new__pulse(ma_context* pContext, cons
     }
     g_StreamCounter += 1;
 
-    return ((ma_pa_stream_new_proc)pContext->pulse.pa_stream_new)((ma_pa_context*)pContext->pulse.pPulseContext, actualStreamName, ss, cmap);
+    return ((ma_pa_stream_new_proc)pDevice->pContext->pulse.pa_stream_new)((ma_pa_context*)pDevice->pulse.pPulseContext, actualStreamName, ss, cmap);
 }
 
 
@@ -27729,13 +27939,21 @@ static void ma_device_on_suspended__pulse(ma_pa_stream* pStream, void* pUserData
 
     if (suspended == 1) {
         ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[Pulse] Device suspended state changed. Suspended.\n");
-
-        if (pDevice->onStop) {
-            pDevice->onStop(pDevice);
-        }
+        ma_device__on_notification_stopped(pDevice);
     } else {
         ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[Pulse] Device suspended state changed. Resumed.\n");
+        ma_device__on_notification_started(pDevice);
     }
+}
+
+static void ma_device_on_rerouted__pulse(ma_pa_stream* pStream, void* pUserData)
+{
+    ma_device* pDevice = (ma_device*)pUserData;
+
+    (void)pStream;
+    (void)pUserData;
+
+    ma_device__on_notification_rerouted(pDevice);
 }
 
 static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_config* pConfig, ma_device_descriptor* pDescriptorPlayback, ma_device_descriptor* pDescriptorCapture)
@@ -27777,6 +27995,8 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
     MA_ASSERT(pDevice != NULL);
     MA_ZERO_OBJECT(&pDevice->pulse);
 
+    printf("TESTING\n");
+
     if (pConfig->deviceType == ma_device_type_loopback) {
         return MA_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -27805,6 +28025,14 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
         format     = pDescriptorCapture->format;
         channels   = pDescriptorCapture->channels;
         sampleRate = pDescriptorCapture->sampleRate;
+    }
+
+    
+
+    result = ma_init_pa_mainloop_and_pa_context__pulse(pDevice->pContext, pDevice->pContext->pulse.pApplicationName, pDevice->pContext->pulse.pServerName, MA_FALSE, &pDevice->pulse.pMainLoop, &pDevice->pulse.pPulseContext);
+    if (result != MA_SUCCESS) {
+        ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to initialize PA mainloop and context for device.\n");
+        return result;
     }
 
     if (pConfig->deviceType == ma_device_type_capture || pConfig->deviceType == ma_device_type_duplex) {
@@ -27840,7 +28068,7 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
         attr = ma_device__pa_buffer_attr_new(pDescriptorCapture->periodSizeInFrames, pDescriptorCapture->periodCount, &ss);
         ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[PulseAudio] Capture attr: maxlength=%d, tlength=%d, prebuf=%d, minreq=%d, fragsize=%d; periodSizeInFrames=%d\n", attr.maxlength, attr.tlength, attr.prebuf, attr.minreq, attr.fragsize, pDescriptorCapture->periodSizeInFrames);
 
-        pDevice->pulse.pStreamCapture = ma_context__pa_stream_new__pulse(pDevice->pContext, pConfig->pulse.pStreamNameCapture, &ss, &cmap);
+        pDevice->pulse.pStreamCapture = ma_device__pa_stream_new__pulse(pDevice, pConfig->pulse.pStreamNameCapture, &ss, &cmap);
         if (pDevice->pulse.pStreamCapture == NULL) {
             ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to create PulseAudio capture stream.");
             result = MA_ERROR;
@@ -27853,6 +28081,9 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
 
         /* State callback for checking when the device has been corked. */
         ((ma_pa_stream_set_suspended_callback_proc)pDevice->pContext->pulse.pa_stream_set_suspended_callback)((ma_pa_stream*)pDevice->pulse.pStreamCapture, ma_device_on_suspended__pulse, pDevice);
+
+        /* Rerouting notification. */
+        ((ma_pa_stream_set_moved_callback_proc)pDevice->pContext->pulse.pa_stream_set_moved_callback)((ma_pa_stream*)pDevice->pulse.pStreamCapture, ma_device_on_rerouted__pulse, pDevice);
 
 
         /* Connect after we've got all of our internal state set up. */
@@ -27868,7 +28099,7 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
             goto on_error1;
         }
 
-        result = ma_context_wait_for_pa_stream_to_connect__pulse(pDevice->pContext, (ma_pa_stream*)pDevice->pulse.pStreamCapture);
+        result = ma_wait_for_pa_stream_to_connect__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, (ma_pa_stream*)pDevice->pulse.pStreamCapture);
         if (result != MA_SUCCESS) {
             goto on_error2;
         }
@@ -27905,13 +28136,14 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
 
         ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[PulseAudio] Capture actual attr: maxlength=%d, tlength=%d, prebuf=%d, minreq=%d, fragsize=%d; periodSizeInFrames=%d\n", attr.maxlength, attr.tlength, attr.prebuf, attr.minreq, attr.fragsize, pDescriptorCapture->periodSizeInFrames);
 
-
+#if 0
         /* Name. */
         devCapture = ((ma_pa_stream_get_device_name_proc)pDevice->pContext->pulse.pa_stream_get_device_name)((ma_pa_stream*)pDevice->pulse.pStreamCapture);
         if (devCapture != NULL) {
-            ma_pa_operation* pOP = ((ma_pa_context_get_source_info_by_name_proc)pDevice->pContext->pulse.pa_context_get_source_info_by_name)((ma_pa_context*)pDevice->pContext->pulse.pPulseContext, devCapture, ma_device_source_name_callback, pDevice);
-            ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pOP);
+            ma_pa_operation* pOP = ((ma_pa_context_get_source_info_by_name_proc)pDevice->pContext->pulse.pa_context_get_source_info_by_name)((ma_pa_context*)pDevice->pulse.pPulseContext, devCapture, ma_device_source_name_callback, pDevice);
+            ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, pOP);
         }
+#endif
     }
 
     if (pConfig->deviceType == ma_device_type_playback || pConfig->deviceType == ma_device_type_duplex) {
@@ -27948,7 +28180,7 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
 
         ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[PulseAudio] Playback attr: maxlength=%d, tlength=%d, prebuf=%d, minreq=%d, fragsize=%d; periodSizeInFrames=%d\n", attr.maxlength, attr.tlength, attr.prebuf, attr.minreq, attr.fragsize, pDescriptorPlayback->periodSizeInFrames);
 
-        pDevice->pulse.pStreamPlayback = ma_context__pa_stream_new__pulse(pDevice->pContext, pConfig->pulse.pStreamNamePlayback, &ss, &cmap);
+        pDevice->pulse.pStreamPlayback = ma_device__pa_stream_new__pulse(pDevice, pConfig->pulse.pStreamNamePlayback, &ss, &cmap);
         if (pDevice->pulse.pStreamPlayback == NULL) {
             ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to create PulseAudio playback stream.");
             result = MA_ERROR;
@@ -27965,6 +28197,9 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
         /* State callback for checking when the device has been corked. */
         ((ma_pa_stream_set_suspended_callback_proc)pDevice->pContext->pulse.pa_stream_set_suspended_callback)((ma_pa_stream*)pDevice->pulse.pStreamPlayback, ma_device_on_suspended__pulse, pDevice);
 
+        /* Rerouting notification. */
+        ((ma_pa_stream_set_moved_callback_proc)pDevice->pContext->pulse.pa_stream_set_moved_callback)((ma_pa_stream*)pDevice->pulse.pStreamPlayback, ma_device_on_rerouted__pulse, pDevice);
+
 
         /* Connect after we've got all of our internal state set up. */
         streamFlags = MA_PA_STREAM_START_CORKED | MA_PA_STREAM_ADJUST_LATENCY | MA_PA_STREAM_FIX_FORMAT | MA_PA_STREAM_FIX_RATE | MA_PA_STREAM_FIX_CHANNELS;
@@ -27979,7 +28214,7 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
             goto on_error3;
         }
 
-        result = ma_context_wait_for_pa_stream_to_connect__pulse(pDevice->pContext, (ma_pa_stream*)pDevice->pulse.pStreamPlayback);
+        result = ma_wait_for_pa_stream_to_connect__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, (ma_pa_stream*)pDevice->pulse.pStreamPlayback);
         if (result != MA_SUCCESS) {
             goto on_error3;
         }
@@ -28016,13 +28251,14 @@ static ma_result ma_device_init__pulse(ma_device* pDevice, const ma_device_confi
         pDescriptorPlayback->periodSizeInFrames = attr.maxlength / ma_get_bytes_per_frame(pDescriptorPlayback->format, pDescriptorPlayback->channels) / pDescriptorPlayback->periodCount;
         ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[PulseAudio] Playback actual attr: maxlength=%d, tlength=%d, prebuf=%d, minreq=%d, fragsize=%d; internalPeriodSizeInFrames=%d\n", attr.maxlength, attr.tlength, attr.prebuf, attr.minreq, attr.fragsize, pDescriptorPlayback->periodSizeInFrames);
 
-
+#if 0
         /* Name. */
         devPlayback = ((ma_pa_stream_get_device_name_proc)pDevice->pContext->pulse.pa_stream_get_device_name)((ma_pa_stream*)pDevice->pulse.pStreamPlayback);
         if (devPlayback != NULL) {
-            ma_pa_operation* pOP = ((ma_pa_context_get_sink_info_by_name_proc)pDevice->pContext->pulse.pa_context_get_sink_info_by_name)((ma_pa_context*)pDevice->pContext->pulse.pPulseContext, devPlayback, ma_device_sink_name_callback, pDevice);
-            ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pOP);
+            ma_pa_operation* pOP = ((ma_pa_context_get_sink_info_by_name_proc)pDevice->pContext->pulse.pa_context_get_sink_info_by_name)((ma_pa_context*)pDevice->pulse.pPulseContext, devPlayback, ma_device_sink_name_callback, pDevice);
+            ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, pOP);
         }
+#endif
     }
 
 
@@ -28102,7 +28338,7 @@ static ma_result ma_device__cork_stream__pulse(ma_device* pDevice, ma_device_typ
         return MA_ERROR;
     }
 
-    result = ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pOP);
+    result = ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, pOP);
     if (result != MA_SUCCESS) {
         ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[PulseAudio] An error occurred while waiting for the PulseAudio stream to cork.");
         return result;
@@ -28162,7 +28398,7 @@ static ma_result ma_device_stop__pulse(ma_device* pDevice)
     if (pDevice->type == ma_device_type_playback || pDevice->type == ma_device_type_duplex) {
         /* The stream needs to be drained if it's a playback device. */
         ma_pa_operation* pOP = ((ma_pa_stream_drain_proc)pDevice->pContext->pulse.pa_stream_drain)((ma_pa_stream*)pDevice->pulse.pStreamPlayback, ma_pulse_operation_complete_callback, &wasSuccessful);
-        ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pOP);
+        ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, pOP);
 
         result = ma_device__cork_stream__pulse(pDevice, ma_device_type_playback, 1);
         if (result != MA_SUCCESS) {
@@ -28186,7 +28422,7 @@ static ma_result ma_device_data_loop__pulse(ma_device* pDevice)
     the callbacks deal with it.
     */
     while (ma_device_get_state(pDevice) == ma_device_state_started) {
-        resultPA = ((ma_pa_mainloop_iterate_proc)pDevice->pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pDevice->pContext->pulse.pMainLoop, 1, NULL);
+        resultPA = ((ma_pa_mainloop_iterate_proc)pDevice->pContext->pulse.pa_mainloop_iterate)((ma_pa_mainloop*)pDevice->pulse.pMainLoop, 1, NULL);
         if (resultPA < 0) {
             break;
         }
@@ -28200,7 +28436,7 @@ static ma_result ma_device_data_loop_wakeup__pulse(ma_device* pDevice)
 {
     MA_ASSERT(pDevice != NULL);
 
-    ((ma_pa_mainloop_wakeup_proc)pDevice->pContext->pulse.pa_mainloop_wakeup)((ma_pa_mainloop*)pDevice->pContext->pulse.pMainLoop);
+    ((ma_pa_mainloop_wakeup_proc)pDevice->pContext->pulse.pa_mainloop_wakeup)((ma_pa_mainloop*)pDevice->pulse.pMainLoop);
 
     return MA_SUCCESS;
 }
@@ -28213,6 +28449,9 @@ static ma_result ma_context_uninit__pulse(ma_context* pContext)
     ((ma_pa_context_disconnect_proc)pContext->pulse.pa_context_disconnect)((ma_pa_context*)pContext->pulse.pPulseContext);
     ((ma_pa_context_unref_proc)pContext->pulse.pa_context_unref)((ma_pa_context*)pContext->pulse.pPulseContext);
     ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)pContext->pulse.pMainLoop);
+
+    ma_free(pContext->pulse.pServerName, &pContext->allocationCallbacks);
+    ma_free(pContext->pulse.pApplicationName, &pContext->allocationCallbacks);
 
 #ifndef MA_NO_RUNTIME_LINKING
     ma_dlclose(pContext, pContext->pulse.pulseSO);
@@ -28290,6 +28529,7 @@ static ma_result ma_context_init__pulse(ma_context* pContext, const ma_context_c
     pContext->pulse.pa_stream_set_write_callback       = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_set_write_callback");
     pContext->pulse.pa_stream_set_read_callback        = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_set_read_callback");
     pContext->pulse.pa_stream_set_suspended_callback   = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_set_suspended_callback");
+    pContext->pulse.pa_stream_set_moved_callback       = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_set_moved_callback");
     pContext->pulse.pa_stream_is_suspended             = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_is_suspended");
     pContext->pulse.pa_stream_flush                    = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_flush");
     pContext->pulse.pa_stream_drain                    = (ma_proc)ma_dlsym(pContext, pContext->pulse.pulseSO, "pa_stream_drain");
@@ -28352,6 +28592,7 @@ static ma_result ma_context_init__pulse(ma_context* pContext, const ma_context_c
     ma_pa_stream_set_write_callback_proc       _pa_stream_set_write_callback      = pa_stream_set_write_callback;
     ma_pa_stream_set_read_callback_proc        _pa_stream_set_read_callback       = pa_stream_set_read_callback;
     ma_pa_stream_set_suspended_callback_proc   _pa_stream_set_suspended_callback  = pa_stream_set_suspended_callback;
+    ma_pa_stream_set_moved_callback_proc       _pa_stream_set_moved_callback      = pa_stream_set_moved_callback;
     ma_pa_stream_is_suspended_proc             _pa_stream_is_suspended            = pa_stream_is_suspended;
     ma_pa_stream_flush_proc                    _pa_stream_flush                   = pa_stream_flush;
     ma_pa_stream_drain_proc                    _pa_stream_drain                   = pa_stream_drain;
@@ -28413,6 +28654,7 @@ static ma_result ma_context_init__pulse(ma_context* pContext, const ma_context_c
     pContext->pulse.pa_stream_set_write_callback       = (ma_proc)_pa_stream_set_write_callback;
     pContext->pulse.pa_stream_set_read_callback        = (ma_proc)_pa_stream_set_read_callback;
     pContext->pulse.pa_stream_set_suspended_callback   = (ma_proc)_pa_stream_set_suspended_callback;
+    pContext->pulse.pa_stream_set_moved_callback       = (ma_proc)_pa_stream_set_moved_callback;
     pContext->pulse.pa_stream_is_suspended             = (ma_proc)_pa_stream_is_suspended;
     pContext->pulse.pa_stream_flush                    = (ma_proc)_pa_stream_flush;
     pContext->pulse.pa_stream_drain                    = (ma_proc)_pa_stream_drain;
@@ -28427,47 +28669,27 @@ static ma_result ma_context_init__pulse(ma_context* pContext, const ma_context_c
     pContext->pulse.pa_stream_readable_size            = (ma_proc)_pa_stream_readable_size;
 #endif
 
-    /* The PulseAudio context maps well to miniaudio's notion of a context. The pa_context object will be initialized as part of the ma_context. */
-    pContext->pulse.pMainLoop = ((ma_pa_mainloop_new_proc)pContext->pulse.pa_mainloop_new)();
-    if (pContext->pulse.pMainLoop == NULL) {
-        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to create mainloop.");
-    #ifndef MA_NO_RUNTIME_LINKING
-        ma_dlclose(pContext, pContext->pulse.pulseSO);
-    #endif
-        return MA_FAILED_TO_INIT_BACKEND;
+    /* We need to make a copy of the application and server names so we can pass them to the pa_context of each device. */
+    pContext->pulse.pApplicationName = ma_copy_string(pConfig->pulse.pApplicationName, &pContext->allocationCallbacks);
+    if (pContext->pulse.pApplicationName == NULL && pConfig->pulse.pApplicationName != NULL) {
+        return MA_OUT_OF_MEMORY;
     }
 
-    pContext->pulse.pPulseContext = ((ma_pa_context_new_proc)pContext->pulse.pa_context_new)(((ma_pa_mainloop_get_api_proc)pContext->pulse.pa_mainloop_get_api)((ma_pa_mainloop*)pContext->pulse.pMainLoop), pConfig->pulse.pApplicationName);
-    if (pContext->pulse.pPulseContext == NULL) {
-        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to create PulseAudio context.");
-        ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)(pContext->pulse.pMainLoop));
-    #ifndef MA_NO_RUNTIME_LINKING
-        ma_dlclose(pContext, pContext->pulse.pulseSO);
-    #endif
-        return MA_FAILED_TO_INIT_BACKEND;
+    pContext->pulse.pServerName = ma_copy_string(pConfig->pulse.pServerName, &pContext->allocationCallbacks);
+    if (pContext->pulse.pServerName == NULL && pConfig->pulse.pServerName != NULL) {
+        ma_free(pContext->pulse.pApplicationName, &pContext->allocationCallbacks);
+        return MA_OUT_OF_MEMORY;
     }
 
-    /* Now we need to connect to the context. Everything is asynchronous so we need to wait for it to connect before returning. */
-    result = ma_result_from_pulse(((ma_pa_context_connect_proc)pContext->pulse.pa_context_connect)((ma_pa_context*)pContext->pulse.pPulseContext, pConfig->pulse.pServerName, (pConfig->pulse.tryAutoSpawn) ? 0 : MA_PA_CONTEXT_NOAUTOSPAWN, NULL));
+    result = ma_init_pa_mainloop_and_pa_context__pulse(pContext, pConfig->pulse.pApplicationName, pConfig->pulse.pServerName, pConfig->pulse.tryAutoSpawn, &pContext->pulse.pMainLoop, &pContext->pulse.pPulseContext);
     if (result != MA_SUCCESS) {
-        ma_log_postf(ma_context_get_log(pContext), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to connect PulseAudio context.");
-        ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)(pContext->pulse.pMainLoop));
+        ma_free(pContext->pulse.pServerName, &pContext->allocationCallbacks);
+        ma_free(pContext->pulse.pApplicationName, &pContext->allocationCallbacks);
     #ifndef MA_NO_RUNTIME_LINKING
         ma_dlclose(pContext, pContext->pulse.pulseSO);
     #endif
         return result;
     }
-
-    /* Since ma_context_init() runs synchronously we need to wait for the PulseAudio context to connect before we return. */
-    result = ma_context_wait_for_pa_context_to_connect__pulse(pContext);
-    if (result != MA_SUCCESS) {
-        ((ma_pa_mainloop_free_proc)pContext->pulse.pa_mainloop_free)((ma_pa_mainloop*)(pContext->pulse.pMainLoop));
-    #ifndef MA_NO_RUNTIME_LINKING
-        ma_dlclose(pContext, pContext->pulse.pulseSO);
-    #endif
-        return result;
-    }
-
 
     /* With pa_mainloop we run a synchronous backend, but we implement our own main loop. */
     pCallbacks->onContextInit             = ma_context_init__pulse;
@@ -29007,17 +29229,13 @@ static ma_result ma_device_start__jack(ma_device* pDevice)
 static ma_result ma_device_stop__jack(ma_device* pDevice)
 {
     ma_context* pContext = pDevice->pContext;
-    ma_stop_proc onStop;
 
     if (((ma_jack_deactivate_proc)pContext->jack.jack_deactivate)((ma_jack_client_t*)pDevice->jack.pClient) != 0) {
         ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[JACK] An error occurred when deactivating the JACK client.");
         return MA_ERROR;
     }
 
-    onStop = pDevice->onStop;
-    if (onStop) {
-        onStop(pDevice);
-    }
+    ma_device__on_notification_stopped(pDevice);
 
     return MA_SUCCESS;
 }
@@ -30742,7 +30960,7 @@ static ma_result ma_device_realloc_AudioBufferList__coreaudio(ma_device* pDevice
         AudioBufferList* pNewAudioBufferList;
 
         pNewAudioBufferList = ma_allocate_AudioBufferList__coreaudio(sizeInFrames, format, channels, layout, &pDevice->pContext->allocationCallbacks);
-        if (pNewAudioBufferList != NULL) {
+        if (pNewAudioBufferList == NULL) {
             return MA_OUT_OF_MEMORY;
         }
 
@@ -30872,6 +31090,9 @@ static OSStatus ma_on_input__coreaudio(void* pUserData, AudioUnitRenderActionFla
         ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "Failed to allocate AudioBufferList for capture.");
         return noErr;
     }
+    
+    pRenderedBufferList = (AudioBufferList*)pDevice->coreaudio.pAudioBufferList;
+    MA_ASSERT(pRenderedBufferList);
 
     /*
     When you call AudioUnitRender(), Core Audio tries to be helpful by setting the mDataByteSize to the number of bytes
@@ -30981,11 +31202,7 @@ static void on_start_stop__coreaudio(void* pUserData, AudioUnit audioUnit, Audio
     Audio APIs in the callback when the device has been stopped or uninitialized.
     */
     if (ma_device_get_state(pDevice) == ma_device_state_uninitialized || ma_device_get_state(pDevice) == ma_device_state_stopping || ma_device_get_state(pDevice) == ma_device_state_stopped) {
-        ma_stop_proc onStop = pDevice->onStop;
-        if (onStop) {
-            onStop(pDevice);
-        }
-
+        ma_device__on_notification_stopped(pDevice);
         ma_event_signal(&pDevice->coreaudio.stopEvent);
     } else {
         UInt32 isRunning;
@@ -30996,8 +31213,6 @@ static void on_start_stop__coreaudio(void* pUserData, AudioUnit audioUnit, Audio
         }
 
         if (!isRunning) {
-            ma_stop_proc onStop;
-
             /*
             The stop event is a bit annoying in Core Audio because it will be called when we automatically switch the default device. Some scenarios to consider:
 
@@ -31011,7 +31226,7 @@ static void on_start_stop__coreaudio(void* pUserData, AudioUnit audioUnit, Audio
                 /*
                 It looks like the device is switching through an external event, such as the user unplugging the device or changing the default device
                 via the operating system's sound settings. If we're re-initializing the device, we just terminate because we want the stopping of the
-                device to be seamless to the client (we don't want them receiving the onStop event and thinking that the device has stopped when it
+                device to be seamless to the client (we don't want them receiving the stopped event and thinking that the device has stopped when it
                 hasn't!).
                 */
                 if (((audioUnit == pDevice->coreaudio.audioUnitPlayback) && pDevice->coreaudio.isSwitchingPlaybackDevice) ||
@@ -31024,16 +31239,13 @@ static void on_start_stop__coreaudio(void* pUserData, AudioUnit audioUnit, Audio
                 will try switching to the new default device seamlessly. We need to somehow find a way to determine whether or not Core Audio will most
                 likely be successful in switching to the new device.
 
-                TODO: Try to predict if Core Audio will switch devices. If not, the onStop callback needs to be posted.
+                TODO: Try to predict if Core Audio will switch devices. If not, the stopped callback needs to be posted.
                 */
                 return;
             }
 
             /* Getting here means we need to stop the device. */
-            onStop = pDevice->onStop;
-            if (onStop) {
-                onStop(pDevice);
-            }
+            ma_device__on_notification_stopped(pDevice);
         }
     }
 
@@ -31108,6 +31320,8 @@ static OSStatus ma_default_device_changed__coreaudio(AudioObjectID objectID, UIn
                             }
                         }
                     }
+
+                    ma_device__on_notification_rerouted(pDevice);
                 }
             }
         }
@@ -31253,18 +31467,22 @@ static ma_result ma_device__untrack__coreaudio(ma_device* pDevice)
 #endif
 
 #if defined(MA_APPLE_MOBILE)
-@interface ma_router_change_handler:NSObject {
+@interface ma_ios_notification_handler:NSObject {
     ma_device* m_pDevice;
 }
 @end
 
-@implementation ma_router_change_handler
+@implementation ma_ios_notification_handler
 -(id)init:(ma_device*)pDevice
 {
     self = [super init];
     m_pDevice = pDevice;
 
+    /* For route changes. */
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handle_route_change:) name:AVAudioSessionRouteChangeNotification object:[AVAudioSession sharedInstance]];
+
+    /* For interruptions. */
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handle_interruption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
 
     return self;
 }
@@ -31272,12 +31490,31 @@ static ma_result ma_device__untrack__coreaudio(ma_device* pDevice)
 -(void)dealloc
 {
     [self remove_handler];
-    [super dealloc];
 }
 
 -(void)remove_handler
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
+}
+
+-(void)handle_interruption:(NSNotification*)pNotification
+{
+    NSInteger type = [[[pNotification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey] integerValue];
+    switch (type)
+    {
+        case AVAudioSessionInterruptionTypeBegan:
+        {
+            ma_log_postf(ma_device_get_log(m_pDevice), MA_LOG_LEVEL_DEBUG, "[Core Audio] Interruption: AVAudioSessionInterruptionTypeBegan\n");
+            ma_device__on_notification_interruption_began(m_pDevice);
+        } break;
+        
+        case AVAudioSessionInterruptionTypeEnded:
+        {
+            ma_log_postf(ma_device_get_log(m_pDevice), MA_LOG_LEVEL_DEBUG, "[Core Audio] Interruption: AVAudioSessionInterruptionTypeEnded\n");
+            ma_device__on_notification_interruption_ended(m_pDevice);
+        } break;
+    }
 }
 
 -(void)handle_route_change:(NSNotification*)pNotification
@@ -31325,30 +31562,9 @@ static ma_result ma_device__untrack__coreaudio(ma_device* pDevice)
     }
 
     ma_log_postf(ma_device_get_log(m_pDevice), MA_LOG_LEVEL_DEBUG, "[Core Audio] Changing Route. inputNumberChannels=%d; outputNumberOfChannels=%d\n", (int)pSession.inputNumberOfChannels, (int)pSession.outputNumberOfChannels);
-
-    /* Temporarily disabling this section of code because it appears to be causing errors. */
-#if 0
-    ma_uint32 previousState = ma_device_get_state(m_pDevice);
-
-    if (previousState == ma_device_state_started) {
-        ma_device_stop(m_pDevice);
-    }
-
-    if (m_pDevice->type == ma_device_type_capture || m_pDevice->type == ma_device_type_duplex) {
-        m_pDevice->capture.internalChannels   = (ma_uint32)pSession.inputNumberOfChannels;
-        m_pDevice->capture.internalSampleRate = (ma_uint32)pSession.sampleRate;
-        ma_device__post_init_setup(m_pDevice, ma_device_type_capture);
-    }
-    if (m_pDevice->type == ma_device_type_playback || m_pDevice->type == ma_device_type_duplex) {
-        m_pDevice->playback.internalChannels   = (ma_uint32)pSession.outputNumberOfChannels;
-        m_pDevice->playback.internalSampleRate = (ma_uint32)pSession.sampleRate;
-        ma_device__post_init_setup(m_pDevice, ma_device_type_playback);
-    }
-
-    if (previousState == ma_device_state_started) {
-        ma_device_start(m_pDevice);
-    }
-#endif
+    
+    /* Let the application know about the route change. */
+    ma_device__on_notification_rerouted(m_pDevice);
 }
 @end
 #endif
@@ -31366,9 +31582,9 @@ static ma_result ma_device_uninit__coreaudio(ma_device* pDevice)
     ma_device__untrack__coreaudio(pDevice);
 #endif
 #if defined(MA_APPLE_MOBILE)
-    if (pDevice->coreaudio.pRouteChangeHandler != NULL) {
-        ma_router_change_handler* pRouteChangeHandler = (MA_BRIDGE_TRANSFER ma_router_change_handler*)pDevice->coreaudio.pRouteChangeHandler;
-        [pRouteChangeHandler remove_handler];
+    if (pDevice->coreaudio.pNotificationHandler != NULL) {
+        ma_ios_notification_handler* pNotificationHandler = (MA_BRIDGE_TRANSFER ma_ios_notification_handler*)pDevice->coreaudio.pNotificationHandler;
+        [pNotificationHandler remove_handler];
     }
 #endif
 
@@ -31428,8 +31644,6 @@ static ma_result ma_device_init_internal__coreaudio(ma_context* pContext, ma_dev
     AURenderCallbackStruct callbackInfo;
 #if defined(MA_APPLE_DESKTOP)
     AudioObjectID deviceObjectID;
-#else
-    UInt32 actualPeriodSizeInFramesSize = sizeof(actualPeriodSizeInFrames);
 #endif
 
     /* This API should only be used for a single device type: playback or capture. No full-duplex mode. */
@@ -31714,13 +31928,16 @@ static ma_result ma_device_init_internal__coreaudio(ma_context* pContext, ma_dev
     }
 #else
     /*
-    I don't know how to configure buffer sizes on iOS so for now we're not allowing it to be configured. Instead we're
-    just going to set it to the value of kAudioUnitProperty_MaximumFramesPerSlice.
+    On iOS, the size of the IO buffer needs to be specified in seconds and is a floating point
+    number. I don't trust any potential truncation errors due to converting from float to integer
+    so I'm going to explicitly set the actual period size to the next power of 2.
     */
-    status = ((ma_AudioUnitGetProperty_proc)pContext->coreaudio.AudioUnitGetProperty)(pData->audioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &actualPeriodSizeInFrames, &actualPeriodSizeInFramesSize);
-    if (status != noErr) {
-        ((ma_AudioComponentInstanceDispose_proc)pContext->coreaudio.AudioComponentInstanceDispose)(pData->audioUnit);
-        return ma_result_from_OSStatus(status);
+    @autoreleasepool {
+        AVAudioSession* pAudioSession = [AVAudioSession sharedInstance];
+        MA_ASSERT(pAudioSession != NULL);
+        
+        [pAudioSession setPreferredIOBufferDuration:((float)actualPeriodSizeInFrames / pAudioSession.sampleRate) error:nil];
+        actualPeriodSizeInFrames = ma_next_power_of_2((ma_uint32)(pAudioSession.IOBufferDuration * pAudioSession.sampleRate));
     }
 #endif
 
@@ -32041,7 +32258,7 @@ static ma_result ma_device_init__coreaudio(ma_device* pDevice, const ma_device_c
     differently on non-Desktop Apple platforms.
     */
 #if defined(MA_APPLE_MOBILE)
-    pDevice->coreaudio.pRouteChangeHandler = (MA_BRIDGE_RETAINED void*)[[ma_router_change_handler alloc] init:pDevice];
+    pDevice->coreaudio.pNotificationHandler = (MA_BRIDGE_RETAINED void*)[[ma_ios_notification_handler alloc] init:pDevice];
 #endif
 
     return MA_SUCCESS;
@@ -35360,8 +35577,6 @@ static ma_result ma_device_start__aaudio(ma_device* pDevice)
 
 static ma_result ma_device_stop__aaudio(ma_device* pDevice)
 {
-    ma_stop_proc onStop;
-
     MA_ASSERT(pDevice != NULL);
 
     if (pDevice->type == ma_device_type_capture || pDevice->type == ma_device_type_duplex) {
@@ -35378,10 +35593,7 @@ static ma_result ma_device_stop__aaudio(ma_device* pDevice)
         }
     }
 
-    onStop = pDevice->onStop;
-    if (onStop) {
-        onStop(pDevice);
-    }
+    ma_device__on_notification_stopped(pDevice);
 
     return MA_SUCCESS;
 }
@@ -36537,7 +36749,6 @@ static ma_result ma_device_drain__opensl(ma_device* pDevice, ma_device_type devi
 static ma_result ma_device_stop__opensl(ma_device* pDevice)
 {
     SLresult resultSL;
-    ma_stop_proc onStop;
 
     MA_ASSERT(pDevice != NULL);
 
@@ -36571,10 +36782,7 @@ static ma_result ma_device_stop__opensl(ma_device* pDevice)
     }
 
     /* Make sure the client is aware that the device has stopped. There may be an OpenSL|ES callback for this, but I haven't found it. */
-    onStop = pDevice->onStop;
-    if (onStop) {
-        onStop(pDevice);
-    }
+    ma_device__on_notification_stopped(pDevice);
 
     return MA_SUCCESS;
 }
@@ -37024,7 +37232,7 @@ static ma_result ma_device_init_by_type__webaudio(ma_device* pDevice, const ma_d
         how well this would work. Although ScriptProccessorNode is deprecated, in practice it seems to have pretty good browser support so I'm leaving it like
         this for now. If anyone knows how I could get raw PCM data using the MediaRecorder API please let me know!
         */
-        device.scriptNode = device.webaudio.createScriptProcessor(bufferSize, channels, channels);
+        device.scriptNode = device.webaudio.createScriptProcessor(bufferSize, (isCapture) ? channels : 0, (isCapture) ? 0 : channels);
 
         if (isCapture) {
             device.scriptNode.onaudioprocess = function(e) {
@@ -37032,7 +37240,7 @@ static ma_result ma_device_init_by_type__webaudio(ma_device* pDevice, const ma_d
                     return; /* This means the device has been uninitialized. */
                 }
 
-                if(device.intermediaryBufferView.length == 0) {
+                if (device.intermediaryBufferView.length == 0) {
                     /* Recreate intermediaryBufferView when losing reference to the underlying buffer, probably due to emscripten resizing heap. */
                     device.intermediaryBufferView = new Float32Array(Module.HEAPF32.buffer, device.intermediaryBuffer, device.intermediaryBufferSizeInBytes);
                 }
@@ -37130,8 +37338,10 @@ static ma_result ma_device_init_by_type__webaudio(ma_device* pDevice, const ma_d
                         }
                     } else {
                         for (var iChannel = 0; iChannel < e.outputBuffer.numberOfChannels; ++iChannel) {
+                            var outputBuffer = e.outputBuffer.getChannelData(iChannel);
+                            var intermediaryBuffer = device.intermediaryBufferView;
                             for (var iFrame = 0; iFrame < framesToProcess; ++iFrame) {
-                                e.outputBuffer.getChannelData(iChannel)[totalFramesProcessed + iFrame] = device.intermediaryBufferView[iFrame*channels + iChannel];
+                                outputBuffer[totalFramesProcessed + iFrame] = intermediaryBuffer[iFrame*channels + iChannel];
                             }
                         }
                     }
@@ -37253,10 +37463,7 @@ static ma_result ma_device_stop__webaudio(ma_device* pDevice)
         }, pDevice->webaudio.indexPlayback);
     }
 
-    ma_stop_proc onStop = pDevice->onStop;
-    if (onStop) {
-        onStop(pDevice);
-    }
+    ma_device__on_notification_stopped(pDevice);
 
     return MA_SUCCESS;
 }
@@ -37585,7 +37792,7 @@ static ma_thread_result MA_THREADCALL ma_worker_thread(void* pData)
 
     for (;;) {  /* <-- This loop just keeps the thread alive. The main audio loop is inside. */
         ma_result startResult;
-        ma_result stopResult;   /* <-- This will store the result from onDeviceStop(). If it returns an error, we don't fire the onStop callback. */
+        ma_result stopResult;   /* <-- This will store the result from onDeviceStop(). If it returns an error, we don't fire the stopped notification callback. */
 
         /* We wait on an event to know when something has requested that the device be started and the main loop entered. */
         ma_event_wait(&pDevice->wakeupEvent);
@@ -37621,6 +37828,8 @@ static ma_thread_result MA_THREADCALL ma_worker_thread(void* pData)
         ma_device__set_state(pDevice, ma_device_state_started);
         ma_event_signal(&pDevice->startEvent);
 
+        ma_device__on_notification_started(pDevice);
+
         if (pDevice->pContext->callbacks.onDeviceDataLoop != NULL) {
             pDevice->pContext->callbacks.onDeviceDataLoop(pDevice);
         } else {
@@ -37636,12 +37845,12 @@ static ma_thread_result MA_THREADCALL ma_worker_thread(void* pData)
         }
 
         /*
-        After the device has stopped, make sure an event is posted. Don't post an onStop event if
+        After the device has stopped, make sure an event is posted. Don't post a stopped event if
         stopping failed. This can happen on some backends when the underlying stream has been
         stopped due to the device being physically unplugged or disabled via an OS setting.
         */
-        if (pDevice->onStop && stopResult != MA_SUCCESS) {
-            pDevice->onStop(pDevice);
+        if (stopResult == MA_SUCCESS) {
+            ma_device__on_notification_stopped(pDevice);
         }
 
         /* A function somewhere is waiting for the device to have stopped for real so we need to signal an event to allow it to continue. */
@@ -38282,12 +38491,10 @@ MA_API ma_result ma_device_init(ma_context* pContext, const ma_device_config* pC
         return MA_INVALID_ARGS;
     }
 
-
     /* Check that we have our callbacks defined. */
     if (pContext->callbacks.onDeviceInit == NULL) {
         return MA_INVALID_OPERATION;
     }
-
 
     /* Basic config validation. */
     if (pConfig->deviceType == ma_device_type_capture || pConfig->deviceType == ma_device_type_duplex) {
@@ -38313,9 +38520,10 @@ MA_API ma_result ma_device_init(ma_context* pContext, const ma_device_config* pC
     pDevice->pContext = pContext;
 
     /* Set the user data and log callback ASAP to ensure it is available for the entire initialization process. */
-    pDevice->pUserData = pConfig->pUserData;
-    pDevice->onData    = pConfig->dataCallback;
-    pDevice->onStop    = pConfig->stopCallback;
+    pDevice->pUserData      = pConfig->pUserData;
+    pDevice->onData         = pConfig->dataCallback;
+    pDevice->onNotification = pConfig->notificationCallback;
+    pDevice->onStop         = pConfig->stopCallback;
 
     if (pConfig->playback.pDeviceID != NULL) {
         MA_COPY_MEMORY(&pDevice->playback.id, pConfig->playback.pDeviceID, sizeof(pDevice->playback.id));
@@ -38809,6 +39017,7 @@ MA_API ma_result ma_device_start(ma_device* pDevice)
 
             if (result == MA_SUCCESS) {
                 ma_device__set_state(pDevice, ma_device_state_started);
+                ma_device__on_notification_started(pDevice);
             }
         } else {
             /*
@@ -89126,6 +89335,14 @@ There have also been some other smaller changes added to this release.
 /*
 REVISION HISTORY
 ================
+v0.11.2 - 2021-12-31
+  - Add a new device notification system to replace the stop callback. The stop callback is still
+    in place, but will be removed in version 0.12. New code should use the notificationCallback
+    member in the device config instead of stopCallback.
+  - Fix a bug where the stopped notification doesn't get fired.
+  - iOS: The IO buffer size is now configured based on the device's configured period size.
+  - WebAudio: Optimizations to some JavaScript code.
+
 v0.11.1 - 2021-12-27
   - Result codes are now declared as an enum rather than #defines.
   - Channel positions (MA_CHANNEL_*) are now declared as an enum rather than #defines.
