@@ -97,9 +97,9 @@ typedef struct Storage_Scan_Closure_s {
 
 static void _scan_callback(void *user_data, const char *name)
 {
-    Storage_Scan_Closure_t *closure = (Storage_Scan_Closure_t *)user_data;
+    const Storage_Scan_Closure_t *closure = (const Storage_Scan_Closure_t *)user_data;
 
-    lua_pushvalue(closure->L, 1); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+    lua_pushvalue(closure->L, closure->index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
     lua_pushstring(closure->L, Storage_as_relative_path(closure->storage, name));
     Interpreter_call(closure->interpreter, 1, 0);
 }

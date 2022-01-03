@@ -756,7 +756,7 @@ typedef struct Canvas_Scan_Closure_s {
 // FIXME: use `lua_ref()` to optimize.
 static GL_Pixel_t _scan_callback(void *user_data, GL_Point_t position, GL_Pixel_t index)
 {
-    Canvas_Scan_Closure_t *closure = (Canvas_Scan_Closure_t *)user_data;
+    const Canvas_Scan_Closure_t *closure = (const Canvas_Scan_Closure_t *)user_data;
 
     lua_pushvalue(closure->L, closure->index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed, in the meanwhile)
     lua_pushinteger(closure->L, (lua_Integer)position.x);
@@ -980,7 +980,7 @@ typedef struct Canvas_Process_Closure_s {
 // FIXME: use `lua_ref()` to optimize.
 static GL_Pixel_t _process_callback(void *user_data, GL_Point_t position, GL_Pixel_t from, GL_Pixel_t to)
 {
-    Canvas_Process_Closure_t *closure = (Canvas_Process_Closure_t *)user_data;
+    const Canvas_Process_Closure_t *closure = (const Canvas_Process_Closure_t *)user_data;
 
     lua_pushvalue(closure->L, closure->index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed, in the meanwhile)
     lua_pushinteger(closure->L, (lua_Integer)position.x);
