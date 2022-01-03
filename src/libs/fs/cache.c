@@ -46,6 +46,7 @@ typedef struct Std_Handle_s {
 
 static void _cache_mount_ctor(FS_Mount_t *mount, FS_Cache_Callbacks_t callbacks, void *user_data);
 static void _cache_mount_dtor(FS_Mount_t *mount);
+static void _cache_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data);
 static bool _cache_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_cache_mount_open(const FS_Mount_t *mount, const char *name);
 
@@ -79,6 +80,7 @@ static void _cache_mount_ctor(FS_Mount_t *mount, FS_Cache_Callbacks_t callbacks,
     *cache_mount = (Cache_Mount_t){
             .vtable = (Mount_VTable_t){
                 .dtor = _cache_mount_dtor,
+                .scan = _cache_mount_scan,
                 .contains = _cache_mount_contains,
                 .open = _cache_mount_open
             },
@@ -92,6 +94,13 @@ static void _cache_mount_dtor(FS_Mount_t *mount)
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
     *cache_mount = (Cache_Mount_t){ 0 };
+}
+
+static void _cache_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data)
+{
+    Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
+
+    cache_mount->callbacks.scan(cache_mount->user_data, callback, user_data);
 }
 
 static bool _cache_mount_contains(const FS_Mount_t *mount, const char *name)

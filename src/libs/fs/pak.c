@@ -135,6 +135,7 @@ typedef struct Pak_Handle_s {
 
 static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, bool encrypted);
 static void _pak_mount_dtor(FS_Mount_t *mount);
+static void _pak_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data);
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
 
@@ -329,6 +330,7 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
     *pak_mount = (Pak_Mount_t){
             .vtable = (Mount_VTable_t){
                 .dtor = _pak_mount_dtor,
+                .scan = _pak_mount_scan,
                 .contains = _pak_mount_contains,
                 .open = _pak_mount_open
             },
@@ -348,6 +350,16 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
     _free_directory(pak_mount->directory);
+}
+
+static void _pak_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data)
+{
+    const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
+
+    for (size_t index = 0; index < pak_mount->entries; ++index) {
+        const Pak_Entry_t *entry = &pak_mount->directory[index];
+        callback(user_data, entry->name);
+    }
 }
 
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)

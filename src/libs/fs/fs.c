@@ -131,6 +131,14 @@ bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void
     return true;
 }
 
+void FS_scan(const FS_Context_t *context, FS_Scan_Callback_t callback, void *user_data)
+{
+    for (int index = 0; index < arrlen(context->mounts); ++index) {
+        FS_Mount_t *current = context->mounts[index];
+        current->vtable.scan(current, callback, user_data);
+    }
+}
+
 FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 {
     const FS_Mount_t *mount = NULL;

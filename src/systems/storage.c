@@ -40,6 +40,17 @@ typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_
 
 #define LOG_CONTEXT "storage"
 
+static void _cache_scan(void *user_data, FS_Scan_Callback_t callback, void *callback_user_data)
+{
+    Storage_t *storage = (Storage_t *)user_data;
+    Storage_Cache_Entry_t *cache = storage->cache;
+
+    for (size_t i = 0; i < shlenu(cache); ++i) {
+        const char *name = cache[i].key;
+        callback(callback_user_data, name);
+    }
+}
+
 static bool _cache_contains(void *user_data, const char *name)
 {
     Storage_t *storage = (Storage_t *)user_data;
@@ -201,6 +212,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     }
 
     FS_attach_cache(storage->context, (FS_Cache_Callbacks_t){
+            .scan = _cache_scan,
             .contains = _cache_contains,
             .open = _cache_open,
             .close = _cache_close,
@@ -262,6 +274,11 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
+void Storage_scan(const Storage_t *storage, Storage_Scan_Callback_t callback, void *user_data)
+{
+    FS_scan(storage->context, callback, user_data);
+}
+
 bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
     bool valid = base64_is_valid(encoded_data);
@@ -300,7 +317,7 @@ bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *en
 
     int32_t size = ascii85_decode(encoded_data, length, data, max_size);
     if (size < 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` can't be decoded");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` can't be decoded as Ascii85");
         free(data);
         return false;
     }
@@ -363,6 +380,20 @@ const char *Storage_get_user_path(const Storage_t *storage)
 const char *Storage_get_local_path(const Storage_t *storage)
 {
     return storage->path.local;
+}
+
+const char *Storage_as_relative_path(const Storage_t *storage, const char *name)
+{
+    if (strncasecmp(storage->path.base, name, strlen(storage->path.base)) == 0) {
+        return name + strlen(storage->path.base) + 1;
+    } else
+    if (strncasecmp(storage->path.user, name, strlen(storage->path.user)) == 0) {
+        return name + strlen(storage->path.user) + 1;
+    } else
+    if (strncasecmp(storage->path.local, name, strlen(storage->path.local)) == 0) {
+        return name + strlen(storage->path.local) + 1;
+    }
+    return name;
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)

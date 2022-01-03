@@ -38,7 +38,10 @@
 typedef struct FS_Mount_s FS_Mount_t;
 typedef struct FS_Handle_s FS_Handle_t;
 
+typedef void (*FS_Scan_Callback_t)(void *user_data, const char *name);
+
 typedef struct FS_Cache_Callbacks_s {
+    void   (*scan)    (void *user_data, FS_Scan_Callback_t callback, void *callback_user_data);
     bool   (*contains)(void *user_data, const char *name);
     void * (*open)    (void *user_data, const char *name);
     void   (*close)   (void *stream);
@@ -58,6 +61,8 @@ extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
 extern bool FS_attach_folder(FS_Context_t *context, const char *path);
 extern bool FS_attach_archive(FS_Context_t *context, const char *path);
 extern bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void *user_data);
+
+extern void FS_scan(const FS_Context_t *context, FS_Scan_Callback_t callback, void *user_data);
 
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);

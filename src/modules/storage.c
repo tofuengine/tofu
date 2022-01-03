@@ -26,11 +26,13 @@
 
 #include <config.h>
 #include <libs/luax.h>
+#include <systems/interpreter.h>
 #include <systems/storage.h>
 
 #include "udt.h"
 
 static int storage_inject_3ssS_0(lua_State *L);
+static int storage_scan_1f_0(lua_State *L);
 
 int storage_loader(lua_State *L)
 {
@@ -38,6 +40,7 @@ int storage_loader(lua_State *L)
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "inject", storage_inject_3ssS_0 },
+            { "scan", storage_scan_1f_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -81,6 +84,42 @@ static int storage_inject_3ssS_0(lua_State *L)
     if (!injected) {
         return luaL_error(L, "can't inject data `%.32s` as `%s`", data, name);
     }
+
+    return 0;
+}
+
+typedef struct Storage_Scan_Closure_s {
+    const Storage_t *storage;
+    const Interpreter_t *interpreter;
+    lua_State *L;
+    int index;
+} Storage_Scan_Closure_t;
+
+static void _scan_callback(void *user_data, const char *name)
+{
+    Storage_Scan_Closure_t *closure = (Storage_Scan_Closure_t *)user_data;
+
+    lua_pushvalue(closure->L, 1); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+    lua_pushstring(closure->L, Storage_as_relative_path(closure->storage, name));
+    Interpreter_call(closure->interpreter, 1, 0);
+}
+
+static int storage_scan_1f_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
+    LUAX_SIGNATURE_END
+//    luaX_Reference callback = luaX_tofunction(L, 1);
+
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+
+    Storage_scan(storage, _scan_callback, &(Storage_Scan_Closure_t){
+            .storage = storage,
+            .interpreter = interpreter,
+            .L = L,
+            .index = 1
+        });
 
     return 0;
 }

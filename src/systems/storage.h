@@ -99,6 +99,8 @@ typedef struct Storage_s {
     Storage_Resource_t **resources;
 } Storage_t;
 
+typedef void (*Storage_Scan_Callback_t)(void *user_data, const char *name);
+
 #define S_SCHARS(r)         ((r)->var.string.chars)
 #define S_SLENTGH(r)        ((r)->var.string.length)
 #define S_BPTR(r)           ((r)->var.blob.ptr)
@@ -110,6 +112,8 @@ typedef struct Storage_s {
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
+extern void Storage_scan(const Storage_t *storage, Storage_Scan_Callback_t callback, void *user_data);
+
 extern bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
@@ -119,6 +123,8 @@ extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 extern const char *Storage_get_base_path(const Storage_t *storage);
 extern const char *Storage_get_user_path(const Storage_t *storage);
 extern const char *Storage_get_local_path(const Storage_t *storage);
+
+extern const char *Storage_as_relative_path(const Storage_t *storage, const char *name);
 
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
