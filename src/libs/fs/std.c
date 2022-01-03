@@ -119,7 +119,7 @@ static void _read_directory(const char *path, FS_Scan_Callback_t callback, void 
         char subpath[PLATFORM_PATH_MAX] = { 0 };
         path_join(subpath, path, entry->d_name);
 
-        if (path_is_folder(subpath)) {
+        if (entry->d_type == DT_DIR) {
             _read_directory(subpath, callback, user_data);
         } else {
             callback(user_data, subpath);

@@ -384,16 +384,17 @@ const char *Storage_get_local_path(const Storage_t *storage)
 
 const char *Storage_as_relative_path(const Storage_t *storage, const char *name)
 {
+    const char *ptr = NULL;
     if (strncasecmp(storage->path.base, name, strlen(storage->path.base)) == 0) {
-        return name + strlen(storage->path.base) + 1;
+        ptr = name + strlen(storage->path.base);
     } else
     if (strncasecmp(storage->path.user, name, strlen(storage->path.user)) == 0) {
-        return name + strlen(storage->path.user) + 1;
+        ptr = name + strlen(storage->path.user);
     } else
     if (strncasecmp(storage->path.local, name, strlen(storage->path.local)) == 0) {
-        return name + strlen(storage->path.local) + 1;
+        ptr = name + strlen(storage->path.local);
     }
-    return name;
+    return ptr && ptr[0] == FS_PATH_SEPARATOR ? ptr + 1 : name;
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
