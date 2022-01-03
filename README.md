@@ -84,7 +84,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested. One can issue the following commands to install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, altought I've using Ubuntu for the development. One can issue the following commands to install all the required dependencies:
 
 ```bash
 sudo apt install git
@@ -111,7 +111,7 @@ Proceed in creating a local clone of the repository with the command
 git clone https://github.com/tofuengine/tofu.git
 ```
 
-into a suitable work folder. Change directory into `tofu` folder you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
+into a suitable work folder. Change directory into the `tofu` folder you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
