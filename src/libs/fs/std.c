@@ -104,7 +104,7 @@ static void _std_mount_dtor(FS_Mount_t *mount)
     *std_mount = (Std_Mount_t){ 0 };
 }
 
-static void _read_directory(const char *path, FS_Scan_Callback_t callback, void *user_data)
+static void _read_directory(const char *path, size_t skip, FS_Scan_Callback_t callback, void *user_data)
 {
     DIR *dp = opendir(path);
     if (!dp) {
@@ -120,9 +120,9 @@ static void _read_directory(const char *path, FS_Scan_Callback_t callback, void 
         path_join(subpath, path, entry->d_name);
 
         if (entry->d_type == DT_DIR) {
-            _read_directory(subpath, callback, user_data);
+            _read_directory(subpath, skip, callback, user_data);
         } else {
-            callback(user_data, subpath);
+            callback(user_data, subpath + skip + 1); // Skip base path and separator.
         }
     }
 
@@ -133,7 +133,7 @@ static void _std_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    _read_directory(std_mount->path, callback, user_data);
+    _read_directory(std_mount->path, strlen(std_mount->path), callback, user_data);
 }
 
 static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)

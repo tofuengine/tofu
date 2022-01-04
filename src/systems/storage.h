@@ -124,8 +124,6 @@ extern const char *Storage_get_base_path(const Storage_t *storage);
 extern const char *Storage_get_user_path(const Storage_t *storage);
 extern const char *Storage_get_local_path(const Storage_t *storage);
 
-extern const char *Storage_as_relative_path(const Storage_t *storage, const char *name);
-
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
 
