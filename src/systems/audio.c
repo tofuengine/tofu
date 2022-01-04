@@ -96,7 +96,15 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
 
 static void _notification_callback(const ma_device_notification *notification)
 {
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p notified for event #%d", notification->pDevice, notification->type);
+    static const char *types[] = {
+        "started",
+        "stopped",
+        "rerouted",
+        "interruption-began",
+        "interruption-ended"
+    };
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p notified for event `%s`", notification->pDevice, types[notification->type]);
 }
 
 static void *_malloc(size_t sz, void *pUserData)
