@@ -34,51 +34,6 @@
 
 #define LOG_CONTEXT "gl-palette"
 
-GL_Palette_t *GL_palette_create(void)
-{
-    GL_Palette_t *palette = malloc(sizeof(GL_Palette_t));
-    if (!palette) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate palette");
-        return NULL;
-    }
-
-    *palette = (GL_Palette_t){ 0 };
-
-    return palette;
-}
-
-void GL_palette_destroy(GL_Palette_t *palette)
-{
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-
-    free(palette);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p freed", palette);
-}
-
-size_t GL_palette_get_colors(const GL_Palette_t *palette, GL_Color_t colors[GL_MAX_PALETTE_COLORS])
-{
-    for (size_t i = 0; i < palette->size; ++i) {
-        colors[i] = palette->colors[i];
-    }
-    return palette->size;
-}
-
-void GL_palette_set_colors(GL_Palette_t *palette, const GL_Color_t *colors, size_t size)
-{
-    for (size_t i = 0; i < size; ++i) {
-        palette->colors[i] = colors[i];
-    }
-    palette->size = size;
-
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-}
-
 //
 // Due to the nature of the `GL_Palette_t` type, the total amount of bits for RGB components *cannot* be greater than
 // `sizeof(GL_Pixel_t) * 8` bits.
@@ -117,21 +72,19 @@ static inline uint8_t _quantize(size_t value, size_t values, size_t count)
     return (uint8_t)((value * (values - 1)) / (count - 1));
 }
 
-void GL_palette_set_greyscale(GL_Palette_t *palette, size_t size)
+void GL_palette_set_greyscale(GL_Color_t *palette, size_t size)
 {
     for (size_t i = 0; i < size; ++i) {
         uint8_t y = _quantize(i, 256, size);
-        palette->colors[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255 };
+        palette[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255 };
     }
-    palette->size = size;
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+    for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) {
+        palette[i] = (GL_Color_t){ .r = 0, .g = 0, .b = 0, .a = 255 };
+    }
 }
 
-void GL_palette_set_quantized(GL_Palette_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits)
+void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits)
 {
     const size_t red_values = 1 << red_bits;
     const size_t green_values = 1 << green_bits;
@@ -152,56 +105,22 @@ void GL_palette_set_quantized(GL_Palette_t *palette, size_t red_bits, size_t gre
             uint8_t g8 = (g << green_lower_bits) | _quantize(g, green_lower_values, green_values);
             for (size_t b = 0; b < blue_values; ++b) {
                 uint8_t b8 = (b << blue_lower_bits) | _quantize(b, blue_lower_values, blue_values);
-                palette->colors[size++] = (GL_Color_t){ .r = r8, .g = g8, .b = b8, .a = 255 };
+                palette[size++] = (GL_Color_t){ .r = r8, .g = g8, .b = b8, .a = 255 };
             }
         }
     }
-    palette->size = size;
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-}
-
-GL_Color_t GL_palette_get(const GL_Palette_t *palette, GL_Pixel_t index)
-{
-    return palette->colors[index];
-}
-
-void GL_palette_set(GL_Palette_t *palette, GL_Pixel_t index, GL_Color_t color)
-{
-    size_t size = palette->size;
-    palette->size = (size_t)imax((int)size, index + 1);
-    for (size_t i = size; i < palette->size; ++i) { // Expand palette if setting a color outside current range.
-        palette->colors[i] = (GL_Color_t){ .r = 0, .g = 0, .b = 0, .a = 255 };
+    for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) {
+        palette[i] = (GL_Color_t){ .r = 0, .g = 0, .b = 0, .a = 255 };
     }
-
-    palette->colors[index] = color;
-
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }
 
-GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, GL_Color_t color)
+GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Color_t color)
 {
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    const int position = hmgeti(((GL_Palette_t *)palette)->cache, color);
-    if (position != -1) {
-        const GL_Pixel_t index = palette->cache[position].value;
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> found into memoizing cache at #%d (index #%d)", color.r, color.g, color.b, position, index);
-#endif
-        return index;
-    }
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-
     GL_Pixel_t index = 0;
     float minimum = __FLT_MAX__;
-    for (size_t i = 0; i < palette->size; ++i) {
-        const GL_Color_t *current = &palette->colors[i];
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        const GL_Color_t *current = &palette[i];
 
         // https://www.compuphase.com/cmetric.htm
         const float r_mean = (float)(color.r + current->r) * 0.5f;
@@ -222,13 +141,6 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, GL_Color_t
         }
     }
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmput(((GL_Palette_t *)palette)->cache, color, index);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> stored into memoizing cache w/ index #%d", color.r, color.g, color.b, index);
-#endif
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-
     return index;
 }
 
@@ -242,49 +154,40 @@ GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio)
         };
 }
 
-void GL_palette_copy(GL_Palette_t *palette, const GL_Palette_t *source)
+void GL_palette_copy(GL_Color_t *palette, const GL_Color_t *source)
 {
-    GL_palette_set_colors(palette, source->colors, source->size);
+    memcpy(palette, source, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS);
 }
 
-static bool _contains(const GL_Palette_t *palette, GL_Color_t color)
+static bool _contains(const GL_Color_t *palette, GL_Color_t color)
 {
-    for (size_t i = 0; i < palette->size; ++i) {
-        if (memcmp(&palette->colors[i], &color, sizeof(GL_Color_t)) == 0) {
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        if (memcmp(&palette[i], &color, sizeof(GL_Color_t)) == 0) {
             return true;
         }
     }
     return false;
 }
 
-void GL_palette_merge(GL_Palette_t *palette, const GL_Palette_t *other, bool remove_duplicates)
+void GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates)
 {
-    for (size_t i = 0; i < other->size; ++i) {
-        if (palette->size == GL_MAX_PALETTE_COLORS) {
+    size_t to_i = to;
+    for (size_t i = 0; i < count; ++i) {
+        if (to_i == GL_MAX_PALETTE_COLORS) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "maximum palette size reached when merging palette %p w/ %p", palette, other);
             break;
         }
-        if (remove_duplicates && _contains(palette, other->colors[i])) {
+        size_t from_i = from + i;
+        if (remove_duplicates && _contains(palette, other[from_i])) {
             continue;
         }
-        palette->colors[palette->size++] = other->colors[i];
+        palette[to_i++] = other[from_i];
     }
-
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }
 
-void GL_palette_lerp(GL_Palette_t *palette, GL_Color_t color, float ratio)
+void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio)
 {
-    GL_Color_t *colors = palette->colors;
-    for (size_t i = 0; i < palette->size; ++i) {
-        colors[i] = GL_palette_mix(colors[i], color, ratio);
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        palette[i] = GL_palette_mix(palette[i], color, ratio);
     }
-
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(palette->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", palette->cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }
