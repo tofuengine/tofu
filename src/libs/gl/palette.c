@@ -28,7 +28,6 @@
 #include <libs/imath.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 
 #include <string.h>
 
