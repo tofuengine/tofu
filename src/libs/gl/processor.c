@@ -69,7 +69,10 @@ GL_Processor_t *GL_processor_create(void)
     }
 
     *processor = (GL_Processor_t){
-            .palette = palette
+            .state = (GL_Processor_State_t){
+                .palette = palette
+            },
+            .surface_to_rgba = NULL,
         };
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
@@ -82,16 +85,16 @@ GL_Processor_t *GL_processor_create(void)
 
 void GL_processor_destroy(GL_Processor_t *processor)
 {
-    if (processor->program) {
-        GL_program_destroy(processor->program);
+    if (processor->state.program) {
+        GL_program_destroy(processor->state.program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
 #endif  /* VERBOSE_DEBUG */
     }
 
-    GL_palette_destroy(processor->palette);
+    GL_palette_destroy(processor->state.palette);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", processor->palette);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", processor->state.palette);
 #endif  /* VERBOSE_DEBUG */
 
     free(processor);
@@ -107,21 +110,16 @@ void GL_processor_reset(GL_Processor_t *processor)
     GL_processor_set_program(processor, NULL);
 }
 
-GL_Palette_t *GL_processor_get_palette(GL_Processor_t *processor)
+const GL_Palette_t *GL_processor_get_palette(const GL_Processor_t *processor)
 {
-    return processor->palette;
+    return processor->state.palette;
 }
 
 void GL_processor_set_palette(GL_Processor_t *processor, const GL_Palette_t *palette)
 {
-    GL_palette_copy(processor->palette, palette);
+    GL_palette_copy(processor->state.palette, palette);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette copied");
-#endif  /* VERBOSE_DEBUG */
-
-    GL_palette_get_colors(palette, processor->state.colors);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "state palette copied");
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -139,13 +137,13 @@ void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Processor_State_t *state, GL_Program_t *program)
+static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    const GL_Color_t *colors = state->colors;
+    const GL_Color_t *colors = state->palette->colors;
     const GL_Pixel_t *shifting = state->shifting;
 
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
+    const int count = processor->palette->size;
 #endif
 
     const size_t data_size = surface->data_size;
@@ -172,20 +170,21 @@ static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, co
 
 // TODO: use array of function pointers instead of mega-switch?
 // TODO: ditch wait-x? processor operations changes only once per scanline?
-void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Processor_State_t *state, GL_Program_t *program)
+void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    GL_Processor_State_t aux = *state; // Make a local copy, the processor could change it.
-    GL_Color_t *colors = aux.colors;
-    GL_Pixel_t *shifting = aux.shifting;
+    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
+    memcpy(colors, state->palette->colors, sizeof(colors)); // Make a local copy, the processor could change it.
+    memcpy(shifting, state->shifting, sizeof(shifting));
 
     size_t wait = 0;
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
+    const int count = processor->palette->size;
 #endif
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
 
-    const GL_Program_Entry_t *entry = program->entries;
+    const GL_Program_Entry_t *entry = state->program->entries;
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = pixels;
 
@@ -281,16 +280,16 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
 // FIXME: make a copy or track the reference? (also for xform and palettes)
 void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program)
 {
-    if (processor->program) { // Deallocate current program, is present.
-       GL_program_destroy(processor->program);
+    if (processor->state.program) { // Deallocate current program, is present.
+       GL_program_destroy(processor->state.program);
 #ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
-        processor->program = NULL;
+        processor->state.program = NULL;
     }
 
     if (program) {
-        processor->program = GL_program_clone(program);
+        processor->state.program = GL_program_clone(program);
 #ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
 #endif  /* VERBOSE_DEBUG */
@@ -300,5 +299,5 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
 
 void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    processor->surface_to_rgba(surface, pixels, &processor->state, processor->program);
+    processor->surface_to_rgba(&processor->state, surface, pixels);
 }
