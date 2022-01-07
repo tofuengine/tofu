@@ -54,12 +54,6 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  local a = Palette.default("gameboy")
-  local b = Palette.default("pico-8-ext")
-  local c = Palette.default("pico-8-ext")
-  a:merge(b)
-  b:merge(c)
-
   PALETTE = Palette.new(3, 3, 2) --"famicube")
   STEPS = PALETTE:size()
   LEVELS = STEPS
