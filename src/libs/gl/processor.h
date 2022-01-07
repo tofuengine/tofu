@@ -31,7 +31,7 @@
 #include "surface.h"
 
 typedef struct GL_Processor_State_s {
-    GL_Palette_t *palette;
+    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Program_t *program;
 } GL_Processor_State_t;
@@ -48,9 +48,9 @@ extern void GL_processor_destroy(GL_Processor_t *processor);
 
 extern void GL_processor_reset(GL_Processor_t *processor);
 
-extern const GL_Palette_t *GL_processor_get_palette(const GL_Processor_t *processor);
+extern const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor);
 
-extern void GL_processor_set_palette(GL_Processor_t *processor, const GL_Palette_t *palette);
+extern void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette);
 extern void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program);
 

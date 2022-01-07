@@ -32,51 +32,38 @@
 
 GL_Processor_t *GL_processor_create(void)
 {
-    GL_Palette_t *palette = GL_palette_create();
-    if (!palette) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create palette");
+    GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
+    if (!processor) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p created", palette);
+
+    *processor = (GL_Processor_t){ 0 };
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
+#endif  /* VERBOSE_DEBUG */
 
 #ifdef __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
     Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
   #if GL_MAX_PALETTE_COLORS == 256
-    GL_palette_set_quantized(palette, 3, 3, 2);
+    GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
   #elif GL_MAX_PALETTE_COLORS == 128
-    GL_palette_set_quantized(palette, 2, 3, 2);
+    GL_palette_set_quantized(processor->state.palette, 2, 3, 2);
   #elif GL_MAX_PALETTE_COLORS == 64
-    GL_palette_set_quantized(palette, 2, 2, 2);
+    GL_palette_set_quantized(processor->state.palette, 2, 2, 2);
   #elif GL_MAX_PALETTE_COLORS == 32
-    GL_palette_set_quantized(palette, 2, 2, 1);
+    GL_palette_set_quantized(processor->state.palette, 2, 2, 1);
   #elif GL_MAX_PALETTE_COLORS == 16
-    GL_palette_set_quantized(palette, 1, 2, 1);
+    GL_palette_set_quantized(processor->state.palette, 1, 2, 1);
   #elif GL_MAX_PALETTE_COLORS == 8
-    GL_palette_set_quantized(palette, 1, 1, 1);
+    GL_palette_set_quantized(processor->state.palette, 1, 1, 1);
   #else
     #error "Too few palette entries!"
   #endif
 #else
     Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
-    GL_palette_set_greyscale(palette, GL_MAX_PALETTE_COLORS);
+    GL_palette_set_greyscale(processor->state.palette, GL_MAX_PALETTE_COLORS);
 #endif
-
-    GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
-    if (!processor) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
-        GL_palette_destroy(palette);
-        return NULL;
-    }
-
-    *processor = (GL_Processor_t){
-            .state = (GL_Processor_State_t){
-                .palette = palette
-            },
-            .surface_to_rgba = NULL,
-        };
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
-#endif  /* VERBOSE_DEBUG */
 
     GL_processor_reset(processor);
 
@@ -92,11 +79,6 @@ void GL_processor_destroy(GL_Processor_t *processor)
 #endif  /* VERBOSE_DEBUG */
     }
 
-    GL_palette_destroy(processor->state.palette);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", processor->state.palette);
-#endif  /* VERBOSE_DEBUG */
-
     free(processor);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p freed", processor);
@@ -110,12 +92,12 @@ void GL_processor_reset(GL_Processor_t *processor)
     GL_processor_set_program(processor, NULL);
 }
 
-const GL_Palette_t *GL_processor_get_palette(const GL_Processor_t *processor)
+const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor)
 {
     return processor->state.palette;
 }
 
-void GL_processor_set_palette(GL_Processor_t *processor, const GL_Palette_t *palette)
+void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette)
 {
     GL_palette_copy(processor->state.palette, palette);
 #ifdef VERBOSE_DEBUG
@@ -139,7 +121,7 @@ void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from
 
 static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    const GL_Color_t *colors = state->palette->colors;
+    const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
 
 #ifdef __DEBUG_GRAPHICS__
@@ -159,11 +141,11 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
             const int y = (index - 240) * 8;
             color = (GL_Color_t){ 0, 63 + y, 0, 255 };
         } else {
-            color = colors[index];
+            color = palette[index];
         }
         *(dst++) = color;
 #else
-        *(dst++) = colors[index];
+        *(dst++) = palette[index];
 #endif
     }
 }
@@ -172,10 +154,10 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
 // TODO: ditch wait-x? processor operations changes only once per scanline?
 void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
+    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    memcpy(colors, state->palette->colors, sizeof(colors)); // Make a local copy, the processor could change it.
-    memcpy(shifting, state->shifting, sizeof(shifting));
+    memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS); // Make a local copy, the processor could change it.
+    memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
     size_t wait = 0;
 #ifdef __DEBUG_GRAPHICS__
@@ -236,7 +218,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
                     case GL_PROGRAM_COMMAND_COLOR: {
                         const GL_Pixel_t index = entry->args[0].pixel;
                         const GL_Color_t color = entry->args[1].color;
-                        colors[index] = color;
+                        palette[index] = color;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_SHIFT: {
@@ -259,11 +241,11 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
                 const int v = (index - 240) * 8;
                 color = (GL_Color_t){ 0, 63 + v, 0, 255 };
             } else {
-                color = colors[index];
+                color = palette[index];
             }
             *(dst++) = color;
 #else
-            *(dst++) = colors[index];
+            *(dst++) = palette[index];
 #endif
             if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
                 dst = dst_sod;

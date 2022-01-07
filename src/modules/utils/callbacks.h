@@ -28,7 +28,7 @@
 #include <libs/gl/gl.h>
 
 typedef struct Callback_Palette_Closure_s {
-    const GL_Palette_t *palette;
+    const GL_Color_t *palette;
     GL_Pixel_t transparent;
     uint8_t threshold;
 } Callback_Palette_Closure_t;

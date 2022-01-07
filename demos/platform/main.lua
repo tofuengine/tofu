@@ -62,7 +62,7 @@ local function extra_half_brite(palette, target, ratio)
   local r, g, b = table.unpack(target)
   local tweaked = Palette.new(palette)
   tweaked:lerp(r, g, b, ratio)
-  palette:merge(tweaked, false) -- Just append.
+  palette:merge(32, tweaked, 0, 32, false) -- Just append.
 --  local size = palette:size()
 --  for index = 0, size - 1 do
 --    local ar, ag, ab = palette:get(index)

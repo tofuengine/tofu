@@ -625,7 +625,7 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
     display->vram.offset = offset;
 }
 
-void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
+void Display_set_palette(Display_t *display, const GL_Color_t *palette)
 {
     GL_processor_set_palette(display->canvas.processor, palette);
 }
@@ -655,7 +655,7 @@ GL_Surface_t *Display_get_surface(const Display_t *display)
     return display->canvas.surface;
 }
 
-GL_Palette_t *Display_get_palette(const Display_t *display)
+const GL_Color_t *Display_get_palette(const Display_t *display)
 {
     return GL_processor_get_palette(display->canvas.processor);
 }
