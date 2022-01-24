@@ -34,7 +34,6 @@ static int input_is_down_1s_1b(lua_State *L);
 static int input_is_up_1s_1b(lua_State *L);
 static int input_is_pressed_1s_1b(lua_State *L);
 static int input_is_released_1s_1b(lua_State *L);
-static int input_auto_repeat_v_v(lua_State *L);
 static int input_cursor_v_v(lua_State *L);
 static int input_cursor_area_v_v(lua_State *L);
 static int input_stick_1s_4nnnn(lua_State *L);
@@ -50,7 +49,6 @@ int input_loader(lua_State *L)
             { "is_up", input_is_up_1s_1b },
             { "is_pressed", input_is_pressed_1s_1b },
             { "is_released", input_is_released_1s_1b },
-            { "auto_repeat", input_auto_repeat_v_v },
             { "cursor", input_cursor_v_v },
             { "cursor_area", input_cursor_area_v_v },
             { "stick", input_stick_1s_4nnnn },
@@ -154,47 +152,6 @@ static int input_is_released_1s_1b(lua_State *L)
     lua_pushboolean(L, Input_get_button(input, (Input_Buttons_t)entry->value)->released);
 
     return 1;
-}
-
-static int input_auto_repeat_1s_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const char *id = LUAX_STRING(L, 1);
-
-    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
-
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    float period = Input_get_auto_repeat(input, (Input_Buttons_t)entry->value);
-    lua_pushnumber(L, (lua_Number)period);
-
-    return 1;
-}
-
-static int input_auto_repeat_2sn_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *id = LUAX_STRING(L, 1);
-    float period = LUAX_NUMBER(L, 2);
-
-    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
-
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_set_auto_repeat(input, (Input_Buttons_t)entry->value, period);
-
-    return 0;
-}
-
-static int input_auto_repeat_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, input_auto_repeat_1s_1n)
-        LUAX_OVERLOAD_ARITY(2, input_auto_repeat_2sn_0)
-    LUAX_OVERLOAD_END
 }
 
 static int input_cursor_0_2nn(lua_State *L)

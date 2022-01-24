@@ -429,12 +429,12 @@ void Engine_run(Engine_t *engine)
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-        const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
+        const Input_Button_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
         if (record_button->pressed) {
             Display_toggle_recording(engine->display, Storage_get_local_path(engine->storage));
         }
 
-        const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
+        const Input_Button_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
         if (capture_button->pressed) {
             Display_grab_snapshot(engine->display, Storage_get_local_path(engine->storage));
         }

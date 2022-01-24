@@ -38,8 +38,8 @@ static void _default_handler(Input_t *input)
     Input_Button_t *buttons = input->buttons;
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) { // Store current state and clear it.
         Input_Button_t *button = &buttons[i];
-        button->state.was = button->state.is;
-        button->state.is = false;
+        button->was = button->is;
+        button->is = false;
     }
 }
 
@@ -75,7 +75,7 @@ static void _keyboard_handler(Input_t *input)
     Input_Button_t *buttons = input->buttons;
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
-        button->state.is |= glfwGetKey(window, keys[i]) == GLFW_PRESS;
+        button->is |= glfwGetKey(window, keys[i]) == GLFW_PRESS;
     }
 }
 
@@ -133,7 +133,7 @@ static void _mouse_handler(Input_t *input)
             continue;
         }
         Input_Button_t *button = &buttons[i];
-        button->state.is |= glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
+        button->is |= glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
     }
 
     double x, y;
@@ -219,10 +219,10 @@ static void _gamepad_handler(Input_t *input)
         const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
         const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
         if (fabsf(x) > configuration->gamepad.sensitivity) {
-            buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].state.is = true;
+            buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].is = true;
         }
         if (fabsf(y) > configuration->gamepad.sensitivity) {
-            buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].state.is = true;
+            buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].is = true;
         }
     }
 
@@ -231,7 +231,7 @@ static void _gamepad_handler(Input_t *input)
             continue;
         }
         Input_Button_t *button = &buttons[i];
-        button->state.is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+        button->is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
     }
 
     const float deadzone = configuration->gamepad.deadzone;
@@ -373,30 +373,7 @@ static void _buttons_update(Input_t *input, float delta_time)
         return;
     }
 
-    Input_Button_t *buttons = input->buttons;
-
-    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
-        Input_Button_t *button = &buttons[i];
-
-        if (!button->state.triggered) {
-            continue;
-        }
-
-        button->state.pressed = false; // Clear the flags, will be eventually updated.
-        button->state.released = false;
-
-        button->time += delta_time;
-
-        while (button->time >= button->period) {
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs", i, button->time);
-            button->time -= button->period;
-
-            button->state.down = !button->state.down;
-            button->state.pressed = button->state.down;
-            button->state.released = !button->state.down;
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
-        }
-    }
+    // NOP.
 }
 
 static void _cursor_update(Input_t *input, float delta_time)
@@ -437,28 +414,12 @@ static void _buttons_process(Input_t *input)
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
 
-        bool was_down = button->state.was;
-        bool is_down = button->state.is;
+        bool was_down = button->was;
+        bool is_down = button->is;
 
-        if (!button->state.triggered) { // If not triggered use the current physical status.
-            button->state.down = is_down;
-            button->state.pressed = !was_down && is_down;
-            button->state.released = was_down && !is_down;
-
-            if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
-                button->state.triggered = true;
-                button->time = 0.0f;
-                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
-            }
-        } else
-        if (!is_down) {
-            button->state.down = false;
-            button->state.pressed = false;
-            button->state.released = was_down; // Track release is was previously down.
-
-            button->state.triggered = false;
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
-        }
+        button->down = is_down;
+        button->pressed = !was_down && is_down;
+        button->released = was_down && !is_down;
     }
 }
 
@@ -507,24 +468,15 @@ void Input_set_cursor_area(Input_t *input, int x, int y, size_t width, size_t he
     input->cursor.area.y1 = (float)y + (float)height - 0.5f;
 }
 
-void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period)
-{
-    input->buttons[button] = (Input_Button_t){
-            .period = period,
-            .time = 0.0f
-        };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, button);
-}
-
 void Input_set_mode(Input_t *input, int mode)
 {
     input->state.mode = mode;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mode set to 0x%04x", mode);
 }
 
-const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button)
+const Input_Button_t *Input_get_button(const Input_t *input, Input_Buttons_t button)
 {
-    return &input->buttons[button].state;
+    return &input->buttons[button];
 }
 
 const Input_Cursor_t *Input_get_cursor(const Input_t *input)
@@ -540,11 +492,6 @@ const Input_Triggers_t *Input_get_triggers(const Input_t *input)
 const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick)
 {
     return &input->sticks[stick];
-}
-
-float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button)
-{
-    return input->buttons[button].period;
 }
 
 int Input_get_mode(const Input_t *input)

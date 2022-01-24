@@ -58,20 +58,13 @@ typedef enum Input_Buttons_e {
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 
-typedef struct Input_Button_State_s {
+typedef struct Input_Button_s {
     uint8_t was : 1; // Transient buffer.
     uint8_t is : 1; // Ditto.
     uint8_t down : 1;
     uint8_t pressed : 1;
     uint8_t released : 1;
-    uint8_t triggered : 1;
-    uint8_t : 2;
-} Input_Button_State_t;
-
-typedef struct Input_Button_s {
-    Input_Button_State_t state;
-    float period;
-    float time;
+    uint8_t : 3;
 } Input_Button_t;
 
 typedef struct Input_Cursor_s {
@@ -177,14 +170,12 @@ extern const Input_State_t *Input_get_state(const Input_t *input);
 
 extern void Input_set_cursor_position(Input_t *input, int x, int y);
 extern void Input_set_cursor_area(Input_t *input, int x, int y, size_t width, size_t height);
-extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
 extern void Input_set_mode(Input_t *input, int mode);
 
-extern const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
+extern const Input_Button_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
 extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);
 extern const Input_Triggers_t *Input_get_triggers(const Input_t *input);
 extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick);
-extern float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button);
 extern int Input_get_mode(const Input_t *input);
 
 #endif  /* __SYSTEMS_INPUT_H__ */
