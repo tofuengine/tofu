@@ -82,7 +82,7 @@ static ma_bool32 _enum_callback(ma_context *context, ma_device_type device_type,
     return MA_TRUE;
 }
 
-// Note that output buffer is already pre-zeroed upon call.
+// Note that output buffer is already pre-silenced upon call.
 static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
     Audio_t *audio = (Audio_t *)device->pUserData;
