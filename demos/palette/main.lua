@@ -59,8 +59,6 @@ function Main:__ctor()
   self.noise = Noise.new("simplex", 1234, 0.02)
 
   Display.palette(Palette.default("pico-8"))
-
-  Input.auto_repeat("y", 0.5)
 end
 
 function Main:process()
@@ -77,8 +75,10 @@ function Main:process()
     self.scale_x = -1.0
     self.x = self.x - 1
   elseif Input.is_pressed("y") then
+    print("Y")
     self.mode = (self.mode + 1) % 10
   elseif Input.is_pressed("x") then
+    print("X")
     self.clipping = not self.clipping
     local canvas = Canvas.default()
     if self.clipping then
@@ -89,22 +89,12 @@ function Main:process()
   end
 end
 
-local function _sort_palette(palette) -- Sort the palette by increasing luminance.
-  local colors = palette:colors()
-  table.sort(colors, function(a, b)
-      local av = (a[1] + a[2] + a[3]) / 3
-      local bv = (b[1] + b[2] + b[3]) / 3
-      return av < bv
-    end);
-  return Palette.new(colors)
-end
-
 function Main:update(_)
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
-    local palette = _sort_palette(Palette.default(PALETTES[index]))
-    Display.palette(_sort_palette(palette))
+    local palette = Palette.default(PALETTES[index])
+    Display.palette(palette)
   end
 end
 

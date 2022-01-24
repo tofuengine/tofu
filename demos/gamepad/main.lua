@@ -57,8 +57,6 @@ function Main:__ctor()
   self.down = {}
   self.scale = {}
 
-  Input.auto_repeat("x", 0.25)
-  Input.auto_repeat("y", 0.5)
   Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!
 end
 
