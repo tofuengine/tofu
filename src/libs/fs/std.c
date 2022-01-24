@@ -29,6 +29,7 @@
 #include <libs/stb.h>
 
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "internals.h"
 
@@ -119,7 +120,14 @@ static void _read_directory(const char *path, size_t path_length, FS_Scan_Callba
         char subpath[PLATFORM_PATH_MAX] = { 0 };
         path_join(subpath, path, entry->d_name);
 
-        if (entry->d_type == DT_DIR) {
+        struct stat sb;
+        int result = stat(subpath, &sb);
+        if (result == -1) {
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't stat file `%s`", subpath);
+            continue;
+        }
+
+        if (S_ISDIR(sb.st_mode)) {
             _read_directory(subpath, path_length, callback, user_data);
         } else {
             callback(user_data, subpath + path_length + 1); // Skip base path and separator.
