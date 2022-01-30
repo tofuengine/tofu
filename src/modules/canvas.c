@@ -137,8 +137,8 @@ static int canvas_new_2nn_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t width = (size_t)LUAX_INTEGER(L, 1);
-    size_t height = (size_t)LUAX_INTEGER(L, 2);
+    size_t width = LUAX_UNSIGNED(L, 1);
+    size_t height = LUAX_UNSIGNED(L, 2);
 
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
@@ -353,8 +353,8 @@ static int canvas_clipping_5onnnn_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    size_t width = (size_t)LUAX_INTEGER(L, 4);
-    size_t height = (size_t)LUAX_INTEGER(L, 5);
+    size_t width = LUAX_UNSIGNED(L, 4);
+    size_t height = LUAX_UNSIGNED(L, 5);
 
     GL_surface_set_clipping(self->surface, &(GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
 

@@ -219,8 +219,8 @@ static int input_cursor_area_4nnnn_0(lua_State *L)
     LUAX_SIGNATURE_END
     int x = LUAX_INTEGER(L, 1);
     int y = LUAX_INTEGER(L, 2);
-    size_t width = (size_t)LUAX_INTEGER(L, 3);
-    size_t height = (size_t)LUAX_INTEGER(L, 4);
+    size_t width = LUAX_UNSIGNED(L, 3);
+    size_t height = LUAX_UNSIGNED(L, 4);
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 

@@ -110,7 +110,7 @@ static int shapes_hline_5onnnn_0(lua_State *L)
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    size_t width = (size_t)LUAX_INTEGER(L, 4);
+    size_t width = LUAX_UNSIGNED(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 5);
 
     GL_surface_hline(target->surface, (GL_Point_t){ .x = x, .y = y }, width, index);
@@ -130,7 +130,7 @@ static int shapes_vline_5onnnn_0(lua_State *L)
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    size_t height = (size_t)LUAX_INTEGER(L, 4);
+    size_t height = LUAX_UNSIGNED(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 5);
 
     GL_surface_vline(target->surface, (GL_Point_t){ .x = x, .y = y }, height, index);
@@ -282,8 +282,8 @@ static int shapes_rectangle_7osnnnnn_0(lua_State *L)
     const char *mode = LUAX_STRING(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
-    size_t width = (size_t)LUAX_INTEGER(L, 5);
-    size_t height = (size_t)LUAX_INTEGER(L, 6);
+    size_t width = LUAX_UNSIGNED(L, 5);
+    size_t height = LUAX_UNSIGNED(L, 6);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 7);
 
     if (mode[0] == 'f') {
@@ -320,7 +320,7 @@ static int shapes_circle_6osnnnn_0(lua_State *L)
     const char *mode = LUAX_STRING(L, 2);
     int cx = LUAX_INTEGER(L, 3);
     int cy = LUAX_INTEGER(L, 4);
-    size_t radius = (size_t)LUAX_INTEGER(L, 5);
+    size_t radius = LUAX_UNSIGNED(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 6);
 
     if (radius < 1) { // Null radius, just a point regardless mode!

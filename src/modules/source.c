@@ -238,7 +238,7 @@ static int source_group_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
-    size_t group_id = (size_t)LUAX_INTEGER(L, 2);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
 
     SL_source_set_group(self->source, group_id);
 

@@ -341,7 +341,7 @@ static int xform_project_4onnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    size_t height = (size_t)LUAX_INTEGER(L, 2);
+    size_t height = LUAX_UNSIGNED(L, 2);
     float angle = LUAX_NUMBER(L, 3);
     float elevation = LUAX_NUMBER(L, 4);
 
@@ -387,7 +387,7 @@ static int xform_warp_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    size_t height = (size_t)LUAX_INTEGER(L, 2);
+    size_t height = LUAX_UNSIGNED(L, 2);
     float factor = LUAX_NUMBER(L, 3);
 
     GL_XForm_Table_Entry_t *table = NULL;

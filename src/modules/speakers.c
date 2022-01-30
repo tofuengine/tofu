@@ -99,7 +99,7 @@ static int speakers_mix_1n_4nnnn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
 
     const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -122,7 +122,7 @@ static int speakers_mix_5nnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float left_to_left = LUAX_NUMBER(L, 2);
     float left_to_right = LUAX_NUMBER(L, 3);
     float right_to_left = LUAX_NUMBER(L, 4);
@@ -155,7 +155,7 @@ static int speakers_pan_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float pan = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -172,7 +172,7 @@ static int speakers_balance_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float balance = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -188,7 +188,7 @@ static int speakers_gain_1n_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
 
     const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -203,7 +203,7 @@ static int speakers_gain_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));

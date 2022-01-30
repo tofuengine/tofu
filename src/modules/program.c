@@ -150,8 +150,8 @@ static int program_wait_4onnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    size_t x = (size_t)LUAX_INTEGER(L, 2);
-    size_t y = (size_t)LUAX_INTEGER(L, 3);
+    size_t x = LUAX_UNSIGNED(L, 2);
+    size_t y = LUAX_UNSIGNED(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_wait(self->program, position, x, y);
@@ -168,8 +168,8 @@ static int program_skip_4onnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    size_t delta_x = (size_t)LUAX_INTEGER(L, 2);
-    size_t delta_y = (size_t)LUAX_INTEGER(L, 3);
+    size_t delta_x = LUAX_UNSIGNED(L, 2);
+    size_t delta_y = LUAX_UNSIGNED(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_skip(self->program, position, delta_x, delta_y);
@@ -316,7 +316,7 @@ static int program_gradient_4ontN_0(lua_State *L)
         lua_rawgeti(L, 5, 3); // O N T N T I I -> O N T N T I I I
         lua_rawgeti(L, 5, 4); // O N T N T I I -> O N T N T I I I I
 
-        const size_t wait_y = (size_t)LUAX_INTEGER(L, -4);
+        const size_t wait_y = LUAX_UNSIGNED(L, -4);
         const uint8_t wait_r = (uint8_t)LUAX_INTEGER(L, -3);
         const uint8_t wait_g = (uint8_t)LUAX_INTEGER(L, -2);
         const uint8_t wait_b = (uint8_t)LUAX_INTEGER(L, -1);
@@ -358,8 +358,8 @@ static int program_palette_5onntN_0(lua_State *L)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     // idx #2: LUA_TTABLE
-    size_t x = (size_t)LUAX_INTEGER(L, 3);
-    size_t y = (size_t)LUAX_INTEGER(L, 4);
+    size_t x = LUAX_UNSIGNED(L, 3);
+    size_t y = LUAX_UNSIGNED(L, 4);
     int position = LUAX_OPTIONAL_INTEGER(L, 5, -1);
 
     GL_program_wait(self->program, INC_IF_VALID(position), x, y);

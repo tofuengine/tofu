@@ -99,7 +99,7 @@ static int palette_new_1n_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t levels = (size_t)LUAX_INTEGER(L, 1);
+    size_t levels = LUAX_UNSIGNED(L, 1);
 
     if (levels == 0) {
         return luaL_error(L, "palette can't be empty!");
@@ -194,9 +194,9 @@ static int palette_new_3n_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t red_bits = (size_t)LUAX_INTEGER(L, 1);
-    size_t green_bits = (size_t)LUAX_INTEGER(L, 2);
-    size_t blue_bits = (size_t)LUAX_INTEGER(L, 3);
+    size_t red_bits = LUAX_UNSIGNED(L, 1);
+    size_t green_bits = LUAX_UNSIGNED(L, 2);
+    size_t blue_bits = LUAX_UNSIGNED(L, 3);
 
     size_t bits = red_bits + green_bits + blue_bits;
     if (bits == 0) {
@@ -257,7 +257,7 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
     uint8_t br = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t bg = (uint8_t)LUAX_INTEGER(L, 5);
     uint8_t bb = (uint8_t)LUAX_INTEGER(L, 6);
-    float ratio = (float)LUAX_OPTIONAL_NUMBER(L, 7, 0.5);
+    float ratio = LUAX_OPTIONAL_NUMBER(L, 7, 0.5f);
 
     const GL_Color_t a = (GL_Color_t){ .r = ar, .g = ag, .b = ab, .a = 255 };
     const GL_Color_t b = (GL_Color_t){ .r = br, .g = bg, .b = bb, .a = 255 };
@@ -386,7 +386,7 @@ static int palette_lerp_5onnnN_0(lua_State *L)
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
-    float ratio = (float)LUAX_OPTIONAL_NUMBER(L, 5, 0.5);
+    float ratio = LUAX_OPTIONAL_NUMBER(L, 5, 0.5f);
 
     const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
@@ -407,10 +407,10 @@ static int palette_merge_6ononnB_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    size_t to = (size_t)LUAX_INTEGER(L, 2);
+    size_t to = LUAX_UNSIGNED(L, 2);
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_PALETTE);
-    size_t from = (size_t)LUAX_INTEGER(L, 4);
-    size_t count = (size_t)LUAX_INTEGER(L, 5);
+    size_t from = LUAX_UNSIGNED(L, 4);
+    size_t count = LUAX_UNSIGNED(L, 5);
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
     GL_Color_t *palette = self->palette;

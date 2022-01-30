@@ -87,8 +87,8 @@ static int grid_new_3nnT_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    size_t width = (size_t)LUAX_INTEGER(L, 1);
-    size_t height = (size_t)LUAX_INTEGER(L, 2);
+    size_t width = LUAX_UNSIGNED(L, 1);
+    size_t height = LUAX_UNSIGNED(L, 2);
     size_t length = LUAX_OPTIONAL_TABLE(L, 3, 0);
 
     size_t data_size = width * height;
@@ -211,7 +211,7 @@ static int grid_peek_2on_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t offset = (size_t)LUAX_INTEGER(L, 2);
+    size_t offset = LUAX_UNSIGNED(L, 2);
 #ifdef DEBUG
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
@@ -233,8 +233,8 @@ static int grid_peek_3onn_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t column = (size_t)LUAX_INTEGER(L, 2);
-    size_t row = (size_t)LUAX_INTEGER(L, 3);
+    size_t column = LUAX_UNSIGNED(L, 2);
+    size_t row = LUAX_UNSIGNED(L, 3);
 #ifdef DEBUG
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
@@ -267,7 +267,7 @@ static int grid_poke_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t offset = (size_t)LUAX_INTEGER(L, 2);
+    size_t offset = LUAX_UNSIGNED(L, 2);
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 3);
 #ifdef DEBUG
     if (offset >= self->data_size) {
@@ -289,8 +289,8 @@ static int grid_poke_4onnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t column = (size_t)LUAX_INTEGER(L, 2);
-    size_t row = (size_t)LUAX_INTEGER(L, 3);
+    size_t column = LUAX_UNSIGNED(L, 2);
+    size_t row = LUAX_UNSIGNED(L, 3);
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 4);
 #ifdef DEBUG
     if (column >= self->width) {
@@ -366,8 +366,8 @@ static int grid_process_2of_0(lua_State *L)
             lua_pushnumber(L, (lua_Number)*(ptr++));
             Interpreter_call(interpreter, 3, 3);
 
-            size_t dcolumn = (size_t)LUAX_INTEGER(L, -3);
-            size_t drow = (size_t)LUAX_INTEGER(L, -2);
+            size_t dcolumn = LUAX_UNSIGNED(L, -3);
+            size_t drow = LUAX_UNSIGNED(L, -2);
             Cell_t dvalue = (Cell_t)LUAX_NUMBER(L, -1);
             data[drow * width + dcolumn] = dvalue;
 

@@ -134,8 +134,8 @@ static int font_new_4onnS_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    size_t glyph_width = (size_t)LUAX_INTEGER(L, 2);
-    size_t glyph_height = (size_t)LUAX_INTEGER(L, 3);
+    size_t glyph_width = LUAX_UNSIGNED(L, 2);
+    size_t glyph_height = LUAX_UNSIGNED(L, 3);
     const char *alphabeth = LUAX_OPTIONAL_STRING(L, 4, NULL);
 
     GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->surface, (GL_Size_t){ .width = glyph_width, .height = glyph_height });
@@ -286,7 +286,7 @@ static int font_blit_7oonnsnN_2nn(lua_State *L)
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     const char *text = LUAX_STRING(L, 5);
-    float scale_x = LUAX_NUMBER(L, 6); // FIXME: fix all casts to float?
+    float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
 
     const GL_Surface_t *surface = canvas->surface;
