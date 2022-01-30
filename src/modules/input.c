@@ -43,7 +43,8 @@ static int input_mode_v_v(lua_State *L);
 int input_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "is_down", input_is_down_1s_1b },
             { "is_up", input_is_up_1s_1b },

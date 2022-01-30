@@ -42,7 +42,8 @@ static int display_reset_0_0(lua_State *L);
 int display_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "palette", display_palette_1o_0 },
             { "offset", display_offset_2NN_0 },

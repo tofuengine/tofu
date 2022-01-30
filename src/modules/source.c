@@ -62,7 +62,8 @@ static int source_is_playing_1o_1b(lua_State *L);
 int source_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", source_new_2sn_1o },
             { "__gc", source_gc_1o_0 },

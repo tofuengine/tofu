@@ -45,7 +45,8 @@ static int bank_tile_v_0(lua_State *L);
 int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", bank_new_v_1o },
             { "__gc", bank_gc_1o_0 },

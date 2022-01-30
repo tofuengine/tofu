@@ -39,7 +39,8 @@ static int world_damping_v_v(lua_State *L);
 int world_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "gravity", world_gravity_v_v },
             { "damping", world_damping_v_v },

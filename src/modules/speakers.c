@@ -43,7 +43,8 @@ static int speakers_halt_0_0(lua_State *L);
 int speakers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "volume", speakers_volume_v_v },
             { "mix", speakers_mix_v_v },

@@ -44,7 +44,8 @@ static int wave_at_2on_1n(lua_State *L);
 int wave_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", wave_new_3sNN_1o },
             { "__gc", wave_gc_1o_0 },

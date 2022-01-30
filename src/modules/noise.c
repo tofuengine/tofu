@@ -44,7 +44,8 @@ static int noise_generate_3onNN_1n(lua_State *L);
 int noise_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", noise_new_1sNN_1o },
             { "__gc", noise_gc_1o_0 },

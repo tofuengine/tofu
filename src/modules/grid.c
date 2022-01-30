@@ -56,7 +56,8 @@ int grid_loader(lua_State *L)
     Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
 
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){
+    return luaX_newmodule(L,
+        (luaX_Script){
             .data = S_SCHARS(script),
             .size = S_SLENTGH(script),
             .name = file

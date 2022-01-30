@@ -44,7 +44,8 @@ static int batch_blit_3ooS_0(lua_State *L);
 int batch_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", batch_new_2on_1o },
             { "__gc", batch_gc_1o_0 },
