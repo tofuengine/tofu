@@ -33,8 +33,4 @@ function Canvas.default()
   return _default
 end
 
-function Canvas:square(mode, x, y, size, index)
-  self:rectangle(mode, x, y, size, size, index)
-end
-
 return Canvas
