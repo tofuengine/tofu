@@ -250,7 +250,7 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
     float scale_y = LUAX_NUMBER(L, 6);
-    int rotation = LUAX_OPTIONAL_NUMBER(L, 7, 0);
+    int rotation = LUAX_OPTIONAL_INTEGER(L, 7, 0);
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 
