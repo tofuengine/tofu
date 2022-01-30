@@ -286,7 +286,7 @@ static int font_blit_7oonnsnN_2nn(lua_State *L)
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     const char *text = LUAX_STRING(L, 5);
-    float scale_x = LUAX_NUMBER(L, 6);
+    float scale_x = LUAX_NUMBER(L, 6); // FIXME: fix all casts to float?
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
 
     const GL_Surface_t *surface = canvas->surface;
