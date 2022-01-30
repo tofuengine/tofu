@@ -41,9 +41,6 @@
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
 // FIXME: collapse meta and script name?
 
-#define CANVAS_DEFAULT_BACKGROUND   0
-#define CANVAS_DEFAULT_FOREGROUND   1
-
 static int canvas_new_v_1o(lua_State *L);
 static int canvas_gc_1o_0(lua_State *L);
 static int canvas_size_1o_2nn(lua_State *L);
@@ -126,11 +123,7 @@ static int canvas_new_0_1o(lua_State *L)
 
     Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .surface = surface,
-            .allocated = false,
-            .color = {
-                .background = CANVAS_DEFAULT_BACKGROUND,
-                .foreground = CANVAS_DEFAULT_FOREGROUND
-            }
+            .allocated = false
         }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", self);
@@ -155,11 +148,7 @@ static int canvas_new_2nn_1o(lua_State *L)
 
     Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .surface = surface,
-            .allocated = true,
-            .color = {
-                .background = CANVAS_DEFAULT_BACKGROUND,
-                .foreground = CANVAS_DEFAULT_FOREGROUND
-            }
+            .allocated = true
         }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
@@ -199,11 +188,7 @@ static int canvas_new_3sNO_1o(lua_State *L)
 
     Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .surface = surface,
-            .allocated = true,
-            .color = {
-                .background = CANVAS_DEFAULT_BACKGROUND,
-                .foreground = CANVAS_DEFAULT_FOREGROUND
-            }
+            .allocated = true
         }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
@@ -241,11 +226,7 @@ static int canvas_new_3snn_1o(lua_State *L)
 
     Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .surface = surface,
-            .allocated = true,
-            .color = {
-                .background = CANVAS_DEFAULT_BACKGROUND,
-                .foreground = CANVAS_DEFAULT_FOREGROUND
-            }
+            .allocated = true
         }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
