@@ -51,9 +51,7 @@ static int canvas_center_1o_2nn(lua_State *L);
 static int canvas_push_1o_0(lua_State *L);
 static int canvas_pop_2oN_0(lua_State *L);
 static int canvas_reset_1o_0(lua_State *L);
-static int canvas_background_2on_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
-static int canvas_foreground_2on_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
 static int canvas_clear_2oN_0(lua_State *L);
@@ -95,8 +93,6 @@ int canvas_loader(lua_State *L)
             { "push", canvas_push_1o_0 },
             { "pop", canvas_pop_2oN_0 },
             { "reset", canvas_reset_1o_0 },
-            { "background", canvas_background_2on_0 },
-            { "foreground", canvas_foreground_2on_0 },
             { "clipping", canvas_clipping_v_0 },
             { "shift", canvas_shift_v_0 },
             { "transparent", canvas_transparent_v_0 },
@@ -355,34 +351,6 @@ static int canvas_reset_1o_0(lua_State *L)
     return 0;
 }
 
-static int canvas_background_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-
-    self->color.background = index;
-
-    return 0;
-}
-
-static int canvas_foreground_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-
-    self->color.foreground = index;
-
-    return 0;
-}
-
 static int canvas_clipping_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -565,10 +533,10 @@ static int canvas_clear_2oN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, self->color.background);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
     const GL_Surface_t *surface = self->surface;
     GL_surface_clear(surface, index);
