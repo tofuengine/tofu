@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "shapes.h"
+#include "shape.h"
 
 #include <config.h>
 #include <libs/log.h>
@@ -34,21 +34,21 @@
 
 #include "udt.h"
 
-#define LOG_CONTEXT "shapes"
-#define MODULE_NAME "tofu.graphics.shapes"
+#define LOG_CONTEXT "shape"
+#define MODULE_NAME "tofu.graphics.shape"
 
-static int shapes_point_4onnn_0(lua_State *L);
-static int shapes_hline_5onnnn_0(lua_State *L);
-static int shapes_vline_5onnnn_0(lua_State *L);
-static int shapes_line_6onnnnn_0(lua_State *L);
-// static int shapes_tline_6onnnnonnnn_0(lua_State *L);
-static int shapes_polyline_3otn_0(lua_State *L);
-static int shapes_fill_4onnn_0(lua_State *L);
-static int shapes_triangle_9osnnnnnnn_0(lua_State *L);
-static int shapes_rectangle_7osnnnnn_0(lua_State *L);
-static int shapes_circle_6osnnnn_0(lua_State *L);
+static int shape_point_4onnn_0(lua_State *L);
+static int shape_hline_5onnnn_0(lua_State *L);
+static int shape_vline_5onnnn_0(lua_State *L);
+static int shape_line_6onnnnn_0(lua_State *L);
+// static int shape_tline_6onnnnonnnn_0(lua_State *L);
+static int shape_polyline_3otn_0(lua_State *L);
+static int shape_fill_4onnn_0(lua_State *L);
+static int shape_triangle_9osnnnnnnn_0(lua_State *L);
+static int shape_rectangle_7osnnnnn_0(lua_State *L);
+static int shape_circle_6osnnnn_0(lua_State *L);
 
-int shapes_loader(lua_State *L)
+int shape_loader(lua_State *L)
 {
     char file[PATH_MAX] = { 0 };
     path_lua_to_fs(file, MODULE_NAME);
@@ -64,15 +64,15 @@ int shapes_loader(lua_State *L)
             .name = file
         },
         (const struct luaL_Reg[]){
-            { "point", shapes_point_4onnn_0 },
-            { "hline", shapes_hline_5onnnn_0 },
-            { "vline", shapes_vline_5onnnn_0 },
-            { "line", shapes_line_6onnnnn_0 },
-            { "polyline", shapes_polyline_3otn_0 },
-            { "fill", shapes_fill_4onnn_0 },
-            { "triangle", shapes_triangle_9osnnnnnnn_0 },
-            { "rectangle", shapes_rectangle_7osnnnnn_0 },
-            { "circle", shapes_circle_6osnnnn_0 },
+            { "point", shape_point_4onnn_0 },
+            { "hline", shape_hline_5onnnn_0 },
+            { "vline", shape_vline_5onnnn_0 },
+            { "line", shape_line_6onnnnn_0 },
+            { "polyline", shape_polyline_3otn_0 },
+            { "fill", shape_fill_4onnn_0 },
+            { "triangle", shape_triangle_9osnnnnnnn_0 },
+            { "rectangle", shape_rectangle_7osnnnnn_0 },
+            { "circle", shape_circle_6osnnnn_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -80,7 +80,7 @@ int shapes_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static int shapes_point_4onnn_0(lua_State *L)
+static int shape_point_4onnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -91,14 +91,14 @@ static int shapes_point_4onnn_0(lua_State *L)
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
 
     GL_surface_point(target->surface, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
 }
 
-static int shapes_hline_5onnnn_0(lua_State *L)
+static int shape_hline_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -111,14 +111,14 @@ static int shapes_hline_5onnnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t width = LUAX_UNSIGNED(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 5);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
 
     GL_surface_hline(target->surface, (GL_Point_t){ .x = x, .y = y }, width, index);
 
     return 0;
 }
 
-static int shapes_vline_5onnnn_0(lua_State *L)
+static int shape_vline_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -131,14 +131,14 @@ static int shapes_vline_5onnnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t height = LUAX_UNSIGNED(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 5);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
 
     GL_surface_vline(target->surface, (GL_Point_t){ .x = x, .y = y }, height, index);
 
     return 0;
 }
 
-static int shapes_line_6onnnnn_0(lua_State *L)
+static int shape_line_6onnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -153,7 +153,7 @@ static int shapes_line_6onnnnn_0(lua_State *L)
     int y0 = LUAX_INTEGER(L, 3);
     int x1 = LUAX_INTEGER(L, 4);
     int y1 = LUAX_INTEGER(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 6);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
 
     GL_surface_polyline(target->surface, (GL_Point_t[]){
             (GL_Point_t){ .x = x0, .y = y0 },
@@ -184,7 +184,7 @@ static inline GL_Point_t *_fetch(lua_State *L, int idx)
     return vertices;
 }
 
-static int shapes_polyline_3otn_0(lua_State *L)
+static int shape_polyline_3otn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -193,7 +193,7 @@ static int shapes_polyline_3otn_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     // idx #2: LUA_TTABLE
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 3);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
 
     GL_Point_t *vertices = _fetch(L, 2);
 
@@ -210,7 +210,7 @@ static int shapes_polyline_3otn_0(lua_State *L)
     return 0;
 }
 
-static int shapes_fill_4onnn_0(lua_State *L)
+static int shape_fill_4onnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -221,14 +221,14 @@ static int shapes_fill_4onnn_0(lua_State *L)
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
 
     GL_surface_fill(target->surface, (GL_Point_t){ .x = x, .y = y }, index); // TODO: pass `GL_INDEX_COLOR` fake?
 
     return 0;
 }
 
-static int shapes_triangle_9osnnnnnnn_0(lua_State *L)
+static int shape_triangle_9osnnnnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -249,7 +249,7 @@ static int shapes_triangle_9osnnnnnnn_0(lua_State *L)
     int y1 = LUAX_INTEGER(L, 6);
     int x2 = LUAX_INTEGER(L, 7);
     int y2 = LUAX_INTEGER(L, 8);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 9);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 9);
 
     if (mode[0] == 'f') {
         GL_surface_filled_triangle(target->surface,
@@ -267,7 +267,7 @@ static int shapes_triangle_9osnnnnnnn_0(lua_State *L)
     return 0;
 }
 
-static int shapes_rectangle_7osnnnnn_0(lua_State *L)
+static int shape_rectangle_7osnnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -279,12 +279,12 @@ static int shapes_rectangle_7osnnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    const char *mode = LUAX_STRING(L, 2);
+    const char *mode = LUAX_STRING(L, 2); // FIXME: move `mode` as last optional argument.
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     size_t width = LUAX_UNSIGNED(L, 5);
     size_t height = LUAX_UNSIGNED(L, 6);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 7);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 7);
 
     if (mode[0] == 'f') {
         GL_surface_filled_rectangle(target->surface, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
@@ -306,7 +306,7 @@ static int shapes_rectangle_7osnnnnn_0(lua_State *L)
     return 0;
 }
 
-static int shapes_circle_6osnnnn_0(lua_State *L)
+static int shape_circle_6osnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -321,7 +321,7 @@ static int shapes_circle_6osnnnn_0(lua_State *L)
     int cx = LUAX_INTEGER(L, 3);
     int cy = LUAX_INTEGER(L, 4);
     size_t radius = LUAX_UNSIGNED(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 6);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
 
     if (radius < 1) { // Null radius, just a point regardless mode!
         GL_surface_point(target->surface, (GL_Point_t){ .x = cx, .y = cy }, index);

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_SHAPES_H__
-#define __MODULES_SHAPES_H__
+#ifndef __MODULES_SHAPE_H__
+#define __MODULES_SHAPE_H__
 
 #include <lua/lua.h>
 
-extern int shapes_loader(lua_State *L);
+extern int shape_loader(lua_State *L);
 
-#endif  /* __MODULES_SHAPES_H__ */
+#endif  /* __MODULES_SHAPE_H__ */

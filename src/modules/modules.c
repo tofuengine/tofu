@@ -67,7 +67,7 @@
 #include "noise.h"
 #include "palette.h"
 #include "program.h"
-#include "shapes.h"
+#include "shape.h"
 #include "source.h"
 #include "speakers.h"
 #include "storage.h"
@@ -118,7 +118,7 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.graphics.font", font_loader },
             { "tofu.graphics.palette", palette_loader },
             { "tofu.graphics.program", program_loader },
-            { "tofu.graphics.shapes", shapes_loader },
+            { "tofu.graphics.shape", shape_loader },
             { "tofu.graphics.xform", xform_loader },
             { "tofu.io.file", file_loader },
             { "tofu.io.storage", storage_loader },

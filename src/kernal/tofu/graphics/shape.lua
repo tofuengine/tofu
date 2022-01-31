@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Shapes = {}
+local Shape = {}
 
-function Shapes.square(target, mode, x, y, size, index)
-  Shapes.rectangle(target, mode, x, y, size, size, index)
+function Shape.square(target, mode, x, y, size, index)
+  Shape.rectangle(target, mode, x, y, size, size, index)
 end
 
-return Shapes
+return Shape
