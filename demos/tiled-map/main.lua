@@ -104,7 +104,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
   self.map:draw(canvas)
 
   local camera = self.map:camera_from_id("right")

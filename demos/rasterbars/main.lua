@@ -124,7 +124,7 @@ function Main:render(_)
   local canvas = Canvas.default()
   local _, height = canvas:size()
 
-  canvas:clear()
+  canvas:clear(0)
 
   local t = self.time
   local y = math.sin(t * 0.5) * height * 0.125 + height * 0.25

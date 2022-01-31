@@ -84,7 +84,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end

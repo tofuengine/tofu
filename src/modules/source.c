@@ -62,7 +62,8 @@ static int source_is_playing_1o_1b(lua_State *L);
 int source_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", source_new_2sn_1o },
             { "__gc", source_gc_1o_0 },
@@ -237,7 +238,7 @@ static int source_group_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
-    size_t group_id = (size_t)LUAX_INTEGER(L, 2);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
 
     SL_source_set_group(self->source, group_id);
 

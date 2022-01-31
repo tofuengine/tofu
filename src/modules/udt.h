@@ -68,9 +68,6 @@ typedef enum Object_Types_e {
 typedef struct Canvas_Object_s {
     GL_Surface_t *surface;
     bool allocated;
-    struct {
-        GL_Pixel_t background, foreground;
-    } color;
 } Canvas_Object_t;
 
 typedef struct Bank_Object_s {

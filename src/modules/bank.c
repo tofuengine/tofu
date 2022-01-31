@@ -45,7 +45,8 @@ static int bank_tile_v_0(lua_State *L);
 int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", bank_new_v_1o },
             { "__gc", bank_gc_1o_0 },
@@ -103,8 +104,8 @@ static int bank_new_3onn_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
-    size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
+    size_t cell_width = LUAX_UNSIGNED(L, 2);
+    size_t cell_height = LUAX_UNSIGNED(L, 3);
 
     GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->surface, (GL_Size_t){ .width = cell_width, .height = cell_height });
     if (!sheet) {

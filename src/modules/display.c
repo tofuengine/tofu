@@ -42,7 +42,8 @@ static int display_reset_0_0(lua_State *L);
 int display_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "palette", display_palette_1o_0 },
             { "offset", display_offset_2NN_0 },
@@ -110,8 +111,8 @@ static int display_shift_1t_0(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
-        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
+        arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
 
         lua_pop(L, 1);
     }
@@ -132,8 +133,8 @@ static int display_shift_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 1);
-    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 1);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 

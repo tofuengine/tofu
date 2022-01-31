@@ -37,7 +37,8 @@ static int storage_scan_1f_0(lua_State *L);
 int storage_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "inject", storage_inject_3ssS_0 },
             { "scan", storage_scan_1f_0 },

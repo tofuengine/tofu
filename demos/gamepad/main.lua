@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
+local Shape = require("tofu.graphics.shape")
 local Font = require("tofu.graphics.font")
 
 local Main = Class.define()
@@ -82,24 +83,24 @@ local function draw_stick(canvas, cx, cy, radius, _, _, angle, magnitude, presse
                  math.floor(math.sin(angle) * magnitude * radius + 0.5)
 --  local dx, dy = x * radius, y * radius
   if pressed then
-    canvas:circle("fill", cx, cy, radius, 2)
+    Shape.circle(canvas, "fill", cx, cy, radius, 2)
   end
-  canvas:circle("line", cx, cy, radius, 1)
-  canvas:line(cx, cy, cx + dx, cy + dy, 3)
+  Shape.circle(canvas, "line", cx, cy, radius, 1)
+  Shape.line(canvas, cx, cy, cx + dx, cy + dy, 3)
 end
 
 local function draw_trigger(canvas, cx, cy, radius, magnitude)
   if magnitude > 0.0 then
-    canvas:circle("fill", cx, cy, magnitude * radius, 2)
+    Shape.circle(canvas, "fill", cx, cy, magnitude * radius, 2)
   end
-  canvas:circle("line", cx, cy, radius, 1)
+  Shape.circle(canvas, "line", cx, cy, radius, 1)
 end
 
 function Main:render(_)
   local t = System.time()
 
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   local cw, ch = self.bank:size(Bank.NIL)
   local width, height = canvas:size()
@@ -131,10 +132,10 @@ function Main:render(_)
   draw_trigger(canvas, 232, cy + 12, 8, tr)
 
   local mx, my = Input.cursor()
-  canvas:line(mx - 3, my, mx - 1, my, 2)
-  canvas:line(mx + 1, my, mx + 3, my, 2)
-  canvas:line(mx, my - 3, mx, my - 1, 2)
-  canvas:line(mx, my + 1, mx, my + 3, 2)
+  Shape.line(canvas, mx - 3, my, mx - 1, my, 2)
+  Shape.line(canvas, mx + 1, my, mx + 3, my, 2)
+  Shape.line(canvas, mx, my - 3, mx, my - 1, 2)
+  Shape.line(canvas, mx, my + 1, mx, my + 3, 2)
 
   self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
   self.font:write(canvas, width, height, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),

@@ -215,7 +215,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, height = canvas:size()
-  canvas:clear()
+  canvas:clear(0)
 
   self.grid:scan(function(column, row, value)
       local x = column * CELL_SIZE

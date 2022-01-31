@@ -46,7 +46,6 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
-  canvas:background(0)
 
   self.bunnies = {}
   self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
@@ -101,7 +100,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, _ = canvas:size()
-  canvas:clear()
+  canvas:clear(0)
 
   self.batch:blit(canvas)
 

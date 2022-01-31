@@ -86,7 +86,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
 --  local time = System.time()
 

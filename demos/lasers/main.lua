@@ -127,7 +127,7 @@ end
 
 function Main:render(_) -- ratio
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   for _, line in ipairs(self.lines) do
     canvas:polyline(line.points, line.color)

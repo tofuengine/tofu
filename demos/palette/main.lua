@@ -101,7 +101,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, height = canvas:size()
-  canvas:clear()
+  canvas:clear(0)
 
   local time = System.time()
 

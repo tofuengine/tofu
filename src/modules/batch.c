@@ -44,7 +44,8 @@ static int batch_blit_3ooS_0(lua_State *L);
 int batch_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", batch_new_2on_1o },
             { "__gc", batch_gc_1o_0 },
@@ -67,7 +68,7 @@ static int batch_new_2on_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
-    size_t capacity = (size_t)LUAX_INTEGER(L, 2);
+    size_t capacity = LUAX_UNSIGNED(L, 2);
 
     GL_Batch_t *batch = GL_batch_create(bank->sheet, capacity);
     if (!batch) {
@@ -113,7 +114,7 @@ static int batch_resize_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    size_t capacity = (size_t)LUAX_INTEGER(L, 2);
+    size_t capacity = LUAX_UNSIGNED(L, 2);
 
     bool resized = GL_batch_resize(self->batch, capacity);
     if (!resized) {
@@ -130,7 +131,7 @@ static int batch_grow_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    size_t amount = (size_t)LUAX_INTEGER(L, 2);
+    size_t amount = LUAX_UNSIGNED(L, 2);
 
     bool grown = GL_batch_grow(self->batch, amount);
     if (!grown) {
@@ -249,7 +250,7 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
     float scale_y = LUAX_NUMBER(L, 6);
-    int rotation = LUAX_OPTIONAL_NUMBER(L, 7, 0);
+    int rotation = LUAX_OPTIONAL_INTEGER(L, 7, 0);
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 

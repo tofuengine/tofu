@@ -57,7 +57,8 @@ static int system_quit_0_0(lua_State *L);
 int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "args", system_args_0_1t },
             { "version", system_version_0_3nnn },

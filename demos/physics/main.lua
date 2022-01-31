@@ -48,7 +48,6 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
-  canvas:background(0)
 
   local width, height = canvas:size()
 
@@ -104,7 +103,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, _ = canvas:size()
-  canvas:clear()
+  canvas:clear(0)
 
   for _, bunny in ipairs(self.bunnies) do
     bunny:render(canvas)

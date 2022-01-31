@@ -22,15 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Canvas = {}
+local Shape = {}
 
-local _default = nil
-
-function Canvas.default()
-  if not _default then
-    _default = Canvas.new()
-  end
-  return _default
+function Shape.square(target, mode, x, y, size, index)
+  Shape.rectangle(target, mode, x, y, size, size, index)
 end
 
-return Canvas
+return Shape

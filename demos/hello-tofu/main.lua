@@ -89,7 +89,7 @@ function Main:render(_)
   local canvas = self.canvas
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
-  canvas:clear()
+  canvas:clear(0)
 
   -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.

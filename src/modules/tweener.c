@@ -45,7 +45,8 @@ static int tweener_evaluate_2on_1n(lua_State *L);
 int tweener_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", tweener_new_4sNNN_1o },
             { "__gc", tweener_gc_1o_0 },

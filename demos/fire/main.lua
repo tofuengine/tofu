@@ -29,6 +29,7 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
+local Shape = require("tofu.graphics.shape")
 local Grid = require("tofu.util.grid")
 
 local STEPS = 64
@@ -108,7 +109,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
   local width, _ = canvas:size()
 
   local w = self.x_size
@@ -117,7 +118,7 @@ function Main:render(_)
       local x = column * w
       local y = row * h
       if value > 0 then
-        canvas:rectangle("fill", x, y, w, h, value)
+        Shape.rectangle(canvas, "fill", x, y, w, h, value)
       end
     end)
 

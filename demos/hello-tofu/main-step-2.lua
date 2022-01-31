@@ -67,7 +67,7 @@ function Main:render(_)
   canvas:shift(15, index)
 
   -- Clear the virtual-screen with default background color (i.e. palette color #0).
-  canvas:clear()
+  canvas:clear(0)
 
   -- Ask for the center position, which the canvas can provide ready-to-be-used.
   local x, y = canvas:center()
