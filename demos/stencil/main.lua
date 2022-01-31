@@ -52,7 +52,7 @@ function Main:__ctor()
   self.bottom = Canvas.new("assets/bottom.png", 0, color)
   self.mask = Canvas.new("assets/gradient.png", 0, greyscale)
   self.comparator = 1
-  self.threshold = 64
+  self.threshold = 255
   self.mode = 0
 
   --  canvas:transparent(0, false)
@@ -68,7 +68,7 @@ function Main:process()
   elseif Input.is_pressed("down") then
     self.comparator = math.max(self.comparator - 1, 1)
   elseif Input.is_pressed("right") then
-    self.threshold = self.mode == 1 and self.threshold or math.min(self.threshold + 1, 64)
+    self.threshold = self.mode == 1 and self.threshold or math.min(self.threshold + 1, 255)
   elseif Input.is_pressed("left") then
     self.threshold = self.mode == 1 and self.threshold or math.max(self.threshold - 1, 0)
   end
@@ -77,13 +77,13 @@ end
 function Main:update(_)
   if self.mode == 1 then
     local t = System.time()
-    self.threshold = math.tointeger(((math.sin(t) + 1) * 0.5) * 64 + 0.5)
+    self.threshold = math.tointeger(((math.sin(t) + 1) * 0.5) * 255 + 0.5)
   end
 end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   canvas:copy(self.bottom)
   -- self.top:process(function(x, y, from, to)

@@ -42,7 +42,6 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ [0] = false, [13] = true })
-  canvas:background(63)
 
   self.sprites = {}
   self.bank = Bank.new(Canvas.new("assets/images/diamonds.png", 13), 16, 16)
@@ -81,7 +80,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, _ = canvas:size()
-  canvas:clear()
+  canvas:clear(63)
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end

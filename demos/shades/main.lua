@@ -82,7 +82,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, height = canvas:size()
-  canvas:clear()
+  canvas:clear(0)
 
   for i = 0, STEPS - 1 do
     local y = self.height * i

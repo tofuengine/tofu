@@ -78,7 +78,6 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
-  canvas:background(12)
 
   self.atlas = Canvas.new(1, 1)
   self.pixies = Bank.new(self.atlas, 1, 1)
@@ -257,7 +256,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, height = canvas:size()
-  canvas:clear()
+  canvas:clear(12)
 
   local x, y = (width - 16) * 0.5, height * 0.5
 

@@ -42,7 +42,7 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  canvas:background(palette:match(31, 31, 63))
+  self.background = palette:match(31, 31, 63)
 
   self.font = Font.default("5x8", 0, palette:match(0, 255, 0))
   self.surface = Canvas.new("assets/road.png", 0)
@@ -121,10 +121,10 @@ function Main:render(_)
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  canvas:clear()
+  canvas:clear(self.background)
 
 --  canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
-  self.xform:blit(canvas, 0, height * 0.25, self.surface)
+  self.surface:blit(canvas, self.xform, 0, height * 0.25)
 
   local cx, cy = width * 0.5, height * 0.5
   canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)

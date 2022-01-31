@@ -41,8 +41,9 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  canvas:background(background_index) -- Use it as background colour and transparent! :)
   canvas:transparent({ [0] = false, [background_index] = true })
+
+  self.background_index = background_index -- Use it as background colour and transparent! :)
 
   self.objects = {
       Background.new(canvas, background_index, palette),
@@ -67,7 +68,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(self.background_index)
 
   for _, object in ipairs(self.objects) do
     object:render(canvas)

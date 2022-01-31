@@ -65,7 +65,7 @@ end
 
 function Main:render(_) -- ratio
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   local width, height = canvas:size()
 

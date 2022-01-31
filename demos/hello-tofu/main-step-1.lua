@@ -67,7 +67,7 @@ function Main:render(_)
   canvas:shift(15, index)
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
-  canvas:clear()
+  canvas:clear(0)
 
   -- Get the canvas width and height.
   local canvas_width, canvas_height = canvas:size()

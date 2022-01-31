@@ -26,6 +26,7 @@ local Class = require("tofu.core.class")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Program = require("tofu.graphics.program")
+local Shape = require("tofu.graphics.shape")
 
 local config = require("config")
 
@@ -100,7 +101,7 @@ function Background:render(canvas)
   local wy = y - h
   local offset_x <const> = camera.x // 4
   for wx = 0, width, w do
-    canvas:tile(wx, wy, self.skyline, 0, 0, w, h, offset_x, 0)
+    self.skyline:tile(canvas, offset_x, 0, wx, wy, 0, 0, w, h)
   end
 
   -- Render the "road"
@@ -109,12 +110,12 @@ function Background:render(canvas)
   local _, _, _, sx2, sy2 = camera:project(-100, 0.0, near)
   local _, _, _, sx3, sy3 = camera:project( 100, 0.0, near)
 
-  canvas:triangle("fill", math.tointeger(sx0 + 0.5), math.tointeger(sy0 + 0.5),
+  Shape.triangle(canvas, "fill", math.tointeger(sx0 + 0.5), math.tointeger(sy0 + 0.5),
       math.tointeger(sx2 + 0.5), math.tointeger(sy2 + 0.5),
       math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5), self.index + 1)
-  canvas:triangle("fill", math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5),
+  Shape.triangle(canvas, "fill", math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5),
       math.tointeger(sx2 + 0.5), math.tointeger(sy2 + 0.5),
-      math.tointeger(sx3 + 0.5), math.tointeger(sy3 + 0.5)  , self.index + 1)
+      math.tointeger(sx3 + 0.5), math.tointeger(sy3 + 0.5), self.index + 1)
 --    print(">>", sx0, sy0)
 --    print("  ", sx1, sy1)
 --    print("  ", sx2, sy2)

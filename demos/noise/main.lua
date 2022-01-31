@@ -119,7 +119,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   local scale = (COLORS - 1) / (self.max - self.min)
   canvas:scan(function(x, y, _)

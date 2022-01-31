@@ -39,7 +39,6 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
-  canvas:background(12)
 
   self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
   self.batch = Batch.new(self.bank, 5000)
@@ -94,7 +93,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(12)
 
   local width, height = canvas:size()
   local x, y = self.x, self.y

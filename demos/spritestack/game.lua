@@ -118,7 +118,7 @@ end
 function Game:render(_)
   local canvas = Canvas.default()
   local width, _ = canvas:size()
-  canvas:clear()
+  canvas:clear(0)
 
   for _, sprite in ipairs(self.sprites) do
     sprite:render(canvas)

@@ -58,7 +58,7 @@ function Main:render(_)
   local canvas = Canvas.default()
 
   -- ... and clear it w/ default background palette colour (i.e. palette index #0).
-  canvas:clear()
+  canvas:clear(0)
 
   -- Get the canvas width and height.
   local canvas_width, canvas_height = canvas:size()

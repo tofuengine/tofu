@@ -82,7 +82,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
 
   local ratio = self:_evaluate(System.time()) -- The waves have values in the range [-1, +1].
 

@@ -61,7 +61,7 @@ end
 function Main:render(_)
   --local x = X.new()
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
   canvas:circle("fill", self.x, self.y, 5, 15)
 end
 
