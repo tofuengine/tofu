@@ -593,7 +593,7 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_surface_scan(self->surface, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height },
-        _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 6 });
+        _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 2 });
 
     return 0;
 }
@@ -658,7 +658,7 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
 
     GL_surface_process(target->surface, (GL_Point_t){ .x = x, .y = y },
         self->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 9 });
+        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 3 });
 
     return 0;
 }
