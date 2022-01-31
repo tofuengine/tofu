@@ -693,8 +693,8 @@ static int canvas_copy_8ooNNNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, self->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, self->surface->height);
 
-    GL_surface_copy(self->surface, (GL_Point_t){ .x = x, .y = y },
-        target->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+    GL_surface_copy(target->surface, (GL_Point_t){ .x = x, .y = y },
+        self->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -730,8 +730,8 @@ static int canvas_blit_8ooNNNNNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, self->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, self->surface->height);
 
-    GL_surface_blit(self->surface, (GL_Point_t){ .x = x, .y = y },
-        target->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+    GL_surface_blit(target->surface, (GL_Point_t){ .x = x, .y = y },
+        self->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -761,8 +761,8 @@ static int canvas_blit_9oooNNNNNNNN_0(lua_State *L)
 
     // FIXME: rename `GL_xform_blit` to `GL_surface_xblit`?
     GL_xform_blit(xform->xform,
-        self->surface, (GL_Point_t){ .x = x, .y = y },
-        target->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+        target->surface, (GL_Point_t){ .x = x, .y = y },
+        self->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -804,8 +804,8 @@ static int canvas_tile_10oonnNNNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 9, self->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 10, self->surface->height);
 
-    GL_surface_tile(self->surface, (GL_Point_t){ .x = x, .y = y },
-        target->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+    GL_surface_tile(target->surface, (GL_Point_t){ .x = x, .y = y },
+        self->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         (GL_Point_t){ .x = offset_x, .y = offset_y });
 
     return 0;
