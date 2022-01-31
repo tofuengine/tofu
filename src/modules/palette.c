@@ -316,7 +316,7 @@ int palette_get_2on_3nnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
 
     const GL_Color_t *palette = self->palette;
     GL_Color_t color = palette[index];
@@ -338,7 +338,7 @@ int palette_set_5onnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);

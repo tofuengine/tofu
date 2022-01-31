@@ -111,8 +111,8 @@ static int display_shift_1t_0(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
-        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
+        arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
 
         lua_pop(L, 1);
     }
@@ -133,8 +133,8 @@ static int display_shift_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 1);
-    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 1);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 

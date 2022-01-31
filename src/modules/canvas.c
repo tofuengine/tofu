@@ -164,7 +164,7 @@ static int canvas_new_3sNO_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
+    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_OBJECT(L, 3, OBJECT_TYPE_PALETTE, NULL);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
@@ -204,8 +204,8 @@ static int canvas_new_3snn_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    GL_Pixel_t background_index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-    GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_INTEGER(L, 3);
+    GL_Pixel_t background_index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
@@ -395,8 +395,8 @@ static int canvas_shift_2ot_0(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
-        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
+        arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
 
         lua_pop(L, 1);
     }
@@ -417,8 +417,8 @@ static int canvas_shift_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
 
     GL_surface_set_shifting(self->surface, &from, &to, 1);
 
@@ -460,7 +460,7 @@ static int canvas_transparent_2ot_0(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        arrpush(indexes, (GL_Pixel_t)LUAX_INTEGER(L, -2));
+        arrpush(indexes, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
         arrpush(transparent, LUAX_BOOLEAN(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE);
 
         lua_pop(L, 1);
@@ -482,7 +482,7 @@ static int canvas_transparent_3onb_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
     GL_Bool_t transparent = LUAX_BOOLEAN(L, 3) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 
     GL_surface_set_transparent(self->surface, &index, &transparent, 1);
@@ -506,7 +506,7 @@ static int canvas_clear_2oN_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
 
     GL_surface_clear(self->surface, index);
 
@@ -542,7 +542,7 @@ static int canvas_poke_4onnn_0(lua_State *L)
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
 
     GL_surface_poke(self->surface, (GL_Point_t){ .x = x, .y = y }, index);
 
@@ -566,7 +566,7 @@ static GL_Pixel_t _scan_callback(void *user_data, GL_Point_t position, GL_Pixel_
     lua_pushinteger(closure->L, (lua_Integer)index);
     Interpreter_call(closure->interpreter, 3, 1);
 
-    GL_Pixel_t pixel = (GL_Pixel_t)LUAX_INTEGER(closure->L, -1);
+    GL_Pixel_t pixel = (GL_Pixel_t)LUAX_UNSIGNED(closure->L, -1);
 
     lua_pop(closure->L, 1);
 
@@ -624,7 +624,7 @@ static GL_Pixel_t _process_callback(void *user_data, GL_Point_t position, GL_Pix
     lua_pushinteger(closure->L, (lua_Integer)to);
     Interpreter_call(closure->interpreter, 4, 1);
 
-    GL_Pixel_t pixel = (GL_Pixel_t)LUAX_INTEGER(closure->L, -1);
+    GL_Pixel_t pixel = (GL_Pixel_t)LUAX_UNSIGNED(closure->L, -1);
 
     lua_pop(closure->L, 1);
 
@@ -850,7 +850,7 @@ static int canvas_stencil_11ooosnNNNNNN_0(lua_State *L)
     const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     const Canvas_Object_t *mask = (const Canvas_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_CANVAS);
     const char *comparator = LUAX_STRING(L, 4);
-    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 5);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
     int x = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 7, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 8, 0);
