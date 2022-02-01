@@ -179,6 +179,7 @@ extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf,
 
 extern luaX_Reference luaX_ref(lua_State *L, int idx);
 extern void luaX_unref(lua_State *L, luaX_Reference ref);
+extern int luaX_pushref(lua_State *L, luaX_Reference ref);
 
 extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[]);
 

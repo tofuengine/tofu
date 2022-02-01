@@ -30,7 +30,7 @@ local _default = nil
 
 function Canvas.default()
   if not _default then
-    _default = Canvas.new(Image.default)
+    _default = Canvas.new(Image.default())
   end
   return _default
 end

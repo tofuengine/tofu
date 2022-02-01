@@ -78,7 +78,7 @@ function Tofu:__ctor()
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
-          local width, _ = canvas:size()
+          local width, _ = canvas:image():size()
 
           local title = {
               "Software Failure.",
@@ -125,7 +125,7 @@ function Tofu:__ctor()
       render = function(me, _)
           local on = (math.floor(System.time()) % 2) == 0
           local canvas = Canvas.default()
-          canvas:clear(0)
+          canvas:image():clear(0)
           Shape.rectangle(canvas, "line", 0, 0, me.width, me.height, on and 1 or 0)
           for _, line in ipairs(me.lines) do
             me.font:write(canvas, line.x, line.y, line.text)

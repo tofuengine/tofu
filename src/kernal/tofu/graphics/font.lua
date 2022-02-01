@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 
 local Font = {}
 
@@ -42,10 +42,10 @@ function Font.default(...)
   local args = { ... }
   if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]
-    return Font.new(Canvas.new(font.file, args[1], args[2]), font.width, font.height)
+    return Font.new(Image.new(font.file, args[1], args[2]), font.width, font.height)
   elseif #args == 3 then -- id, background_color, foreground_color
     local font = FONTS[args[1]]
-    return Font.new(Canvas.new(font.file, args[2], args[3]), font.width, font.height)
+    return Font.new(Image.new(font.file, args[2], args[3]), font.width, font.height)
   else
     error("invalid arguments for default font")
   end
