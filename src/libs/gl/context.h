@@ -38,7 +38,7 @@ typedef struct GL_State_s {
 } GL_State_t;
 
 typedef struct GL_Context_s {
-    GL_Surface_t *surface;
+    const GL_Surface_t *surface;
     struct {
         GL_State_t current;
         GL_State_t *stack;

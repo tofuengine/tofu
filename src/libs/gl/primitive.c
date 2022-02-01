@@ -308,7 +308,7 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
     }
 }
 
-void GL_surface_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
+void GL_context_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -325,7 +325,7 @@ void GL_surface_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel
     _point(surface, clipping_region, position.x, position.y, index);
 }
 
-void GL_surface_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index)
+void GL_context_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -342,7 +342,7 @@ void GL_surface_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, 
     _hline(surface, clipping_region, origin.x, origin.y, w, index);
 }
 
-void GL_surface_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
+void GL_context_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -359,7 +359,7 @@ void GL_surface_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, 
     _vline(surface, clipping_region, origin.x, origin.y, h, index);
 }
 
-void GL_surface_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index)
+void GL_context_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -385,7 +385,7 @@ void GL_surface_polyline(const GL_Context_t *context, const GL_Point_t *vertices
     }
 }
 
-void GL_surface_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
+void GL_context_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -446,7 +446,7 @@ void GL_surface_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rec
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
-void GL_surface_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_Point_t v1, GL_Point_t v2, GL_Pixel_t index)
+void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_Point_t v1, GL_Point_t v2, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -548,7 +548,7 @@ void GL_surface_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
 }
 
 // https://www.javatpoint.com/computer-graphics-bresenhams-circle-algorithm
-void GL_surface_filled_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index)
+void GL_context_filled_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -588,7 +588,7 @@ void GL_surface_filled_circle(const GL_Context_t *context, GL_Point_t center, si
     }
 }
 
-void GL_surface_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index)
+void GL_context_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;

@@ -113,7 +113,6 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
-    const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;

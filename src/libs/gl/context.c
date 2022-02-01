@@ -157,7 +157,7 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
 }
 
 // https://lodev.org/cgtutor/floodfill.html
-void GL_surface_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
+void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;

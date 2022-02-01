@@ -72,8 +72,6 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .is_power_of_two = _is_power_of_two((int)width) && _is_power_of_two((int)height)
         };
 
-    _reset(surface);
-
     return surface;
 }
 
@@ -84,11 +82,6 @@ void GL_surface_destroy(GL_Surface_t *surface)
 
     free(surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
-}
-
-void GL_surface_reset(GL_Surface_t *surface)
-{
-    _reset(surface);
 }
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)
