@@ -67,7 +67,7 @@ static int bank_new_2os_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     const char *cells_file = LUAX_STRING(L, 2);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
@@ -103,7 +103,7 @@ static int bank_new_3onn_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     size_t cell_width = LUAX_UNSIGNED(L, 2);
     size_t cell_height = LUAX_UNSIGNED(L, 3);
 
@@ -188,9 +188,9 @@ static int bank_blit_5oonnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = x, .y = y },
+    GL_sheet_blit(sheet, context, (GL_Point_t){ .x = x, .y = y },
         cell_id);
 
     return 0;
@@ -213,9 +213,9 @@ static int bank_blit_6oonnnn_0(lua_State *L)
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
     int rotation = LUAX_INTEGER(L, 6);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_sheet_blit_sr(sheet, surface, (GL_Point_t){ .x = x, .y = y },
+    GL_sheet_blit_sr(sheet, context, (GL_Point_t){ .x = x, .y = y },
         cell_id, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
 
     return 0;
@@ -240,9 +240,9 @@ static int bank_blit_7oonnnnnn_0(lua_State *L)
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_NUMBER(L, 7);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = x, .y = y },
+    GL_sheet_blit_s(sheet, context, (GL_Point_t){ .x = x, .y = y },
         cell_id, scale_x, scale_y);
 
     return 0;
@@ -273,9 +273,9 @@ static int bank_blit_10oonnnnnnNN_0(lua_State *L)
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 9, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 10, anchor_x);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_sheet_blit_sr(sheet, surface, (GL_Point_t){ .x = x, .y = y },
+    GL_sheet_blit_sr(sheet, context, (GL_Point_t){ .x = x, .y = y },
         cell_id, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
@@ -313,9 +313,9 @@ static int bank_tile_7oonnnnn_0(lua_State *L)
     int offset_x = LUAX_INTEGER(L, 6);
     int offset_y = LUAX_INTEGER(L, 7);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_sheet_tile(sheet, surface, (GL_Point_t){ .x = x, .y = y },
+    GL_sheet_tile(sheet, context, (GL_Point_t){ .x = x, .y = y },
         cell_id, (GL_Point_t){ .x = offset_x, .y = offset_y });
 
     return 0;
@@ -344,9 +344,9 @@ static int bank_tile_9oonnnnnnN_0(lua_State *L)
     int scale_x = LUAX_INTEGER(L, 8);
     int scale_y = LUAX_OPTIONAL_INTEGER(L, 9, scale_x);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_sheet_tile_s(sheet, surface, (GL_Point_t){ .x = x, .y = y },
+    GL_sheet_tile_s(sheet, context, (GL_Point_t){ .x = x, .y = y },
         cell_id, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
 
     return 0;

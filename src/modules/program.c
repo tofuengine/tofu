@@ -39,6 +39,7 @@
 static int program_new_0_1o(lua_State *L);
 static int program_gc_1o_0(lua_State *L);
 static int program_clear_1o_0(lua_State *L);
+static int program_erase_3oNN_0(lua_State *L);
 static int program_nop_2oN_0(lua_State *L);
 static int program_wait_4onnN_0(lua_State *L);
 static int program_skip_4onnN_0(lua_State *L);
@@ -60,6 +61,7 @@ int program_loader(lua_State *L)
             { "new", program_new_0_1o },
             { "__gc", program_gc_1o_0 },
             { "clear", program_clear_1o_0 },
+            { "erase", program_erase_3oNN_0 },
             { "nop", program_nop_2oN_0 },
             { "wait", program_wait_4onnN_0 },
             { "skip", program_skip_4onnN_0 },
@@ -123,6 +125,22 @@ static int program_clear_1o_0(lua_State *L)
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
 
     GL_program_clear(self->program);
+
+    return 0;
+}
+
+static int program_erase_3oNN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+    size_t position = (size_t)LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
+    size_t count = (size_t)LUAX_OPTIONAL_UNSIGNED(L, 3, 1);
+
+    GL_program_erase(self->program, position, count);
 
     return 0;
 }

@@ -93,7 +93,7 @@ static int font_new_3osS_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     const char *cells_file = LUAX_STRING(L, 2);
     const char *alphabeth = LUAX_OPTIONAL_STRING(L, 3, NULL);
 
@@ -133,7 +133,7 @@ static int font_new_4onnS_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     size_t glyph_width = LUAX_UNSIGNED(L, 2);
     size_t glyph_height = LUAX_UNSIGNED(L, 3);
     const char *alphabeth = LUAX_OPTIONAL_STRING(L, 4, NULL);
@@ -245,7 +245,7 @@ static int font_blit_5oonns_2nn(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     const char *text = LUAX_STRING(L, 5);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Cell_t *glyphs = self->glyphs;
 
@@ -257,7 +257,7 @@ static int font_blit_5oonns_2nn(lua_State *L)
             continue;
         }
         const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
-        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id);
+        GL_sheet_blit(sheet, context, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id);
         width += cell_size.width;
         if (height < cell_size.height) {
             height = cell_size.height;
@@ -289,7 +289,7 @@ static int font_blit_7oonnsnN_2nn(lua_State *L)
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
 
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Cell_t *glyphs = self->glyphs;
 
@@ -302,7 +302,7 @@ static int font_blit_7oonnsnN_2nn(lua_State *L)
             continue;
         }
         const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
-        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, context, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id, scale_x, scale_y);
         width += cell_size.width;
         if (height < cell_size.height) {
             height = cell_size.height;

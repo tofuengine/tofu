@@ -93,7 +93,7 @@ static int shape_point_4onnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
 
-    GL_surface_point(target->surface, (GL_Point_t){ .x = x, .y = y }, index);
+    GL_context_point(target->context, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
 }
@@ -113,7 +113,7 @@ static int shape_hline_5onnnn_0(lua_State *L)
     size_t width = LUAX_UNSIGNED(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
 
-    GL_surface_hline(target->surface, (GL_Point_t){ .x = x, .y = y }, width, index);
+    GL_context_hline(target->context, (GL_Point_t){ .x = x, .y = y }, width, index);
 
     return 0;
 }
@@ -133,7 +133,7 @@ static int shape_vline_5onnnn_0(lua_State *L)
     size_t height = LUAX_UNSIGNED(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
 
-    GL_surface_vline(target->surface, (GL_Point_t){ .x = x, .y = y }, height, index);
+    GL_context_vline(target->context, (GL_Point_t){ .x = x, .y = y }, height, index);
 
     return 0;
 }
@@ -155,7 +155,7 @@ static int shape_line_6onnnnn_0(lua_State *L)
     int y1 = LUAX_INTEGER(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
 
-    GL_surface_polyline(target->surface, (GL_Point_t[]){
+    GL_context_polyline(target->context, (GL_Point_t[]){
             (GL_Point_t){ .x = x0, .y = y0 },
             (GL_Point_t){ .x = x1, .y = y1 }
         }, 2, index);
@@ -203,7 +203,7 @@ static int shape_polyline_3otn_0(lua_State *L)
         return luaL_error(L, "polyline requires al least 2 points (provided %d)", count);
     }
 
-    GL_surface_polyline(target->surface, vertices, count, index);
+    GL_context_polyline(target->context, vertices, count, index);
 
     arrfree(vertices);
 
@@ -223,7 +223,7 @@ static int shape_fill_4onnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
 
-    GL_surface_fill(target->surface, (GL_Point_t){ .x = x, .y = y }, index); // TODO: pass `GL_INDEX_COLOR` fake?
+    GL_context_fill(target->context, (GL_Point_t){ .x = x, .y = y }, index); // TODO: pass `GL_INDEX_COLOR` fake?
 
     return 0;
 }
@@ -252,11 +252,11 @@ static int shape_triangle_9osnnnnnnn_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 9);
 
     if (mode[0] == 'f') {
-        GL_surface_filled_triangle(target->surface,
+        GL_context_filled_triangle(target->context,
             (GL_Point_t){ .x = x0, .y = y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 },
             index);
     } else {
-        GL_surface_polyline(target->surface, (GL_Point_t[4]){
+        GL_context_polyline(target->context, (GL_Point_t[4]){
                 (GL_Point_t){ .x = x0, .y = y0 },
                 (GL_Point_t){ .x = x1, .y = y1 },
                 (GL_Point_t){ .x = x2, .y = y2 },
@@ -287,14 +287,14 @@ static int shape_rectangle_7osnnnnn_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 7);
 
     if (mode[0] == 'f') {
-        GL_surface_filled_rectangle(target->surface, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
+        GL_context_filled_rectangle(target->context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
     } else {
         const int x0 = x;
         const int y0 = y;
         const int x1 = x0 + (int)width - 1;
         const int y1 = y0 + (int)height - 1;
 
-        GL_surface_polyline(target->surface, (GL_Point_t[5]){
+        GL_context_polyline(target->context, (GL_Point_t[5]){
                 (GL_Point_t){ .x = x0, .y = y0 },
                 (GL_Point_t){ .x = x0, .y = y1 },
                 (GL_Point_t){ .x = x1, .y = y1 },
@@ -324,12 +324,12 @@ static int shape_circle_6osnnnn_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
 
     if (radius < 1) { // Null radius, just a point regardless mode!
-        GL_surface_point(target->surface, (GL_Point_t){ .x = cx, .y = cy }, index);
+        GL_context_point(target->context, (GL_Point_t){ .x = cx, .y = cy }, index);
     } else
     if (mode[0] == 'f') {
-        GL_surface_filled_circle(target->surface, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
+        GL_context_filled_circle(target->context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     } else {
-        GL_surface_circle(target->surface, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
+        GL_context_circle(target->context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     }
 
     return 0;

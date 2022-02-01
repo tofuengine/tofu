@@ -289,15 +289,15 @@ static int batch_blit_3ooS_0(lua_State *L)
     const char *mode = LUAX_OPTIONAL_STRING(L, 3, "fast");
 
     const GL_Batch_t *batch = self->batch;
-    const GL_Surface_t *surface = canvas->surface;
+    const GL_Context_t *context = canvas->context;
     if (mode[0] == 'f') { // FIXME: translate all these into map-lookups?
-        GL_batch_blit(batch, surface);
+        GL_batch_blit(batch, context);
     } else
     if (mode[0] == 's') {
-        GL_batch_blit_s(batch, surface);
+        GL_batch_blit_s(batch, context);
     } else
     if (mode[0] == 'c') {
-        GL_batch_blit_sr(batch, surface);
+        GL_batch_blit_sr(batch, context);
     } else {
         return luaL_error(L, "unknown mode `%s`", mode);
     }

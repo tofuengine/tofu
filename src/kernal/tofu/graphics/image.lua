@@ -22,17 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Image = require("tofu.graphics.image")
-
-local Canvas = {}
+local Image = {}
 
 local _default = nil
 
-function Canvas.default()
+function Image.default()
   if not _default then
-    _default = Canvas.new(Image.default)
+    _default = Image.new()
   end
   return _default
 end
 
-return Canvas
+return Image

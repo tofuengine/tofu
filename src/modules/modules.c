@@ -61,6 +61,7 @@
 #include "file.h"
 #include "font.h"
 #include "grid.h"
+#include "image.h"
 #include "input.h"
 #include "log.h"
 #include "math.h"
@@ -116,6 +117,7 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.graphics.canvas", canvas_loader },
             { "tofu.graphics.display", display_loader },
             { "tofu.graphics.font", font_loader },
+            { "tofu.graphics.image", image_loader },
             { "tofu.graphics.palette", palette_loader },
             { "tofu.graphics.program", program_loader },
             { "tofu.graphics.shape", shape_loader },
