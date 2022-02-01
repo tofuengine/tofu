@@ -40,9 +40,10 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
+void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_Surface_t *surface = context->surface;
+    const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -113,9 +114,10 @@ void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
-void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y)
+void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_Surface_t *surface = context->surface;
+    const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -210,9 +212,10 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
 #endif
 }
 
-void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_Surface_t *surface = context->surface;
+    const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;

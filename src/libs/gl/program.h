@@ -58,6 +58,7 @@ extern void GL_program_destroy(GL_Program_t *program);
 
 extern void GL_program_copy(GL_Program_t *program, const GL_Program_t *other);
 extern void GL_program_clear(GL_Program_t *program);
+extern void GL_program_erase(GL_Program_t *program, size_t position, size_t length);
 
 extern void GL_program_nop(GL_Program_t *program, int position);
 extern void GL_program_wait(GL_Program_t *program, int position, size_t x, size_t y);

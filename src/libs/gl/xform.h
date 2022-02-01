@@ -26,7 +26,7 @@
 #define __GL_XFORM_H__
 
 #include "common.h"
-#include "surface.h"
+#include "context.h"
 
 typedef enum GL_XForm_Registers_e {
     GL_XForm_Registers_t_First,
@@ -76,6 +76,6 @@ extern void GL_xform_registers(GL_XForm_t *xform, const GL_XForm_State_Operation
 extern void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap);
 extern void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, size_t count);
 
-extern void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
+extern void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
 
 #endif  /* __GL_XFORM_H__ */
