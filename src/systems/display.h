@@ -90,7 +90,8 @@ extern void Display_destroy(Display_t *display);
 extern void Display_close(Display_t *display);
 extern bool Display_should_close(const Display_t *display);
 
-extern void Display_update(Display_t *display, float delta_time);
+extern bool Display_update(Display_t *display, float delta_time);
+
 extern void Display_present(const Display_t *display);
 
 extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `processor` field directly?

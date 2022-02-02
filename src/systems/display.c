@@ -523,7 +523,7 @@ bool Display_should_close(const Display_t *display)
     return glfwWindowShouldClose(display->window);
 }
 
-void Display_update(Display_t *display, float delta_time)
+bool Display_update(Display_t *display, float delta_time)
 {
     display->time += delta_time;
 
@@ -545,6 +545,8 @@ void Display_update(Display_t *display, float delta_time)
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
+
+    return true;
 }
 
 void Display_present(const Display_t *display)
