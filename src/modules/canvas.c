@@ -42,12 +42,15 @@
 static int canvas_new_3oOO_1o(lua_State *L);
 static int canvas_gc_1o_0(lua_State *L);
 static int canvas_image_1o_1o(lua_State *L);
+static int canvas_size_1o_2nn(lua_State *L);
+static int canvas_center_1o_2nn(lua_State *L);
 static int canvas_push_1o_0(lua_State *L);
 static int canvas_pop_2oN_0(lua_State *L);
 static int canvas_reset_1o_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
+static int canvas_clear_2oN_0(lua_State *L);
 static int canvas_scan_v_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
@@ -76,8 +79,10 @@ int canvas_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "new", canvas_new_3oOO_1o },
             { "__gc", canvas_gc_1o_0 },
-            // -- modifiers --
+            // -- observers --
             { "image", canvas_image_1o_1o },
+            { "size", canvas_size_1o_2nn },
+            { "center", canvas_center_1o_2nn },
             // -- modifiers --
             { "push", canvas_push_1o_0 },
             { "pop", canvas_pop_2oN_0 },
@@ -86,6 +91,7 @@ int canvas_loader(lua_State *L)
             { "shift", canvas_shift_v_0 },
             { "transparent", canvas_transparent_v_0 },
             // -- operations --
+            { "clear", canvas_clear_2oN_0 },
             { "scan", canvas_scan_v_0 },
             { "process", canvas_process_v_0 },
             { "copy", canvas_copy_v_0 },
@@ -171,6 +177,34 @@ static int canvas_image_1o_1o(lua_State *L)
     luaX_pushref(L, self->image.reference); // Push the actual Lua object/userdata, from the reference!
 
     return 1;
+}
+
+static int canvas_size_1o_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+
+    const GL_Surface_t *surface = self->image.instance->surface;
+    lua_pushinteger(L, (lua_Integer)surface->width);
+    lua_pushinteger(L, (lua_Integer)surface->height);
+
+    return 2;
+}
+
+static int canvas_center_1o_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+
+    const GL_Surface_t *surface = self->image.instance->surface;
+    lua_pushinteger(L, (lua_Integer)(surface->width / 2));
+    lua_pushinteger(L, (lua_Integer)(surface->height / 2));
+
+    return 2;
 }
 
 static int canvas_push_1o_0(lua_State *L)
@@ -379,6 +413,22 @@ static int canvas_transparent_v_0(lua_State *L)
         LUAX_OVERLOAD_ARITY(2, canvas_transparent_2ot_0)
         LUAX_OVERLOAD_ARITY(3, canvas_transparent_3onb_0)
     LUAX_OVERLOAD_END
+}
+
+static int canvas_clear_2oN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+
+    // TODO: implement a `GL_context_clear()` that does clipping and reindexing?
+    const GL_Surface_t *surface = self->image.instance->surface;
+    GL_surface_clear(surface, index);
+
+    return 0;
 }
 
 typedef struct Canvas_Scan_Closure_s {
