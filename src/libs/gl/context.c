@@ -156,13 +156,50 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
     }
 }
 
-// https://lodev.org/cgtutor/floodfill.html
-void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
+void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transparency)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+
+    const int width = clipping_region->x1 - clipping_region->x0;
+    const int height = clipping_region->y1 - clipping_region->y0;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
+        return;
+    }
+
+    index = shifting[index];
+
+    if (transparency && transparent[index]) {
+        return;
+    }
+
+    GL_Pixel_t *ddata = surface->data;
+
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth - width;
+
+    GL_Pixel_t *dptr = ddata + clipping_region->y0 * dwidth + clipping_region->x0;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+            *(dptr++) = index;
+        }
+        dptr += dskip;
+    }
+}
+
+// https://lodev.org/cgtutor/floodfill.html
+void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index, bool transparency)
+{
+    const GL_Surface_t *surface = context->surface;
+    const GL_State_t *state = &context->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     if (seed.x < clipping_region->x0 || seed.x >= clipping_region->x1
         || seed.y < clipping_region->y0 || seed.y >= clipping_region->y1) {
@@ -177,6 +214,10 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
     const GL_Pixel_t replacement = shifting[index];
+
+    if (transparency && transparent[replacement]) {
+        return;
+    }
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);

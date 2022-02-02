@@ -43,7 +43,6 @@ static int shape_vline_5onnnn_0(lua_State *L);
 static int shape_line_6onnnnn_0(lua_State *L);
 // static int shape_tline_6onnnnonnnn_0(lua_State *L);
 static int shape_polyline_3otn_0(lua_State *L);
-static int shape_fill_4onnn_0(lua_State *L);
 static int shape_triangle_9osnnnnnnn_0(lua_State *L);
 static int shape_rectangle_7osnnnnn_0(lua_State *L);
 static int shape_circle_6osnnnn_0(lua_State *L);
@@ -69,7 +68,6 @@ int shape_loader(lua_State *L)
             { "vline", shape_vline_5onnnn_0 },
             { "line", shape_line_6onnnnn_0 },
             { "polyline", shape_polyline_3otn_0 },
-            { "fill", shape_fill_4onnn_0 },
             { "triangle", shape_triangle_9osnnnnnnn_0 },
             { "rectangle", shape_rectangle_7osnnnnn_0 },
             { "circle", shape_circle_6osnnnn_0 },
@@ -206,24 +204,6 @@ static int shape_polyline_3otn_0(lua_State *L)
     GL_context_polyline(target->context, vertices, count, index);
 
     arrfree(vertices);
-
-    return 0;
-}
-
-static int shape_fill_4onnn_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Canvas_Object_t *target = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    int x = LUAX_INTEGER(L, 2);
-    int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
-
-    GL_context_fill(target->context, (GL_Point_t){ .x = x, .y = y }, index); // TODO: pass `GL_INDEX_COLOR` fake?
 
     return 0;
 }

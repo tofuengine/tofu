@@ -60,7 +60,8 @@ extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t 
 extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 
-extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
+extern void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transparency);
+extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index, bool transparency);
 extern void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, GL_Context_Scan_Callback_t callback, void *user_data);
 
 extern void GL_context_process(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Context_Process_Callback_t callback, void *user_data);
