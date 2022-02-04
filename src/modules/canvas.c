@@ -39,7 +39,7 @@
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
 // FIXME: collapse meta and script name?
 
-static int canvas_new_3oOO_1o(lua_State *L);
+static int canvas_new_1o_1o(lua_State *L);
 static int canvas_gc_1o_0(lua_State *L);
 static int canvas_image_1o_1o(lua_State *L);
 static int canvas_push_1o_0(lua_State *L);
@@ -76,7 +76,7 @@ int canvas_loader(lua_State *L)
             .name = file
         },
         (const struct luaL_Reg[]){
-            { "new", canvas_new_3oOO_1o },
+            { "new", canvas_new_1o_1o },
             { "__gc", canvas_gc_1o_0 },
             // -- observers --
             { "image", canvas_image_1o_1o },
@@ -104,16 +104,12 @@ int canvas_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int canvas_new_3oOO_1o(lua_State *L)
+static int canvas_new_1o_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
-    const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OPTIONAL_OBJECT(L, 2, OBJECT_TYPE_BANK, NULL);
-    const Font_Object_t *font = (const Font_Object_t *)LUAX_OPTIONAL_OBJECT(L, 3, OBJECT_TYPE_FONT, NULL);
 
     GL_Context_t *context = GL_context_create(image->surface);
     if (!context) {
@@ -125,18 +121,10 @@ static int canvas_new_3oOO_1o(lua_State *L)
             .image = {
                 .instance = image,
                 .reference = luaX_ref(L, 1)
-            },
-            .bank = {
-                .instance = bank,
-                .reference = bank ? luaX_ref(L, 2) : -1
-            },
-            .font = {
-                .instance = font,
-                .reference = font ? luaX_ref(L, 3) : -1
             }
         }, OBJECT_TYPE_CANVAS, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ image %p", self, image);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context %p for image %p", self, context, image);
 
     return 1;
 }
@@ -150,12 +138,6 @@ static int canvas_gc_1o_0(lua_State *L)
 
     luaX_unref(L, self->image.reference);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "image reference #%d released", self->image.reference);
-
-    luaX_unref(L, self->bank.reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
-
-    luaX_unref(L, self->font.reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font reference #%d released", self->font.reference);
 
     GL_context_destroy(self->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p destroyed", self->context);
@@ -459,8 +441,8 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
     // idx #2: LUA_TFUNCTION
     int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 5, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 6, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 5, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 6, self->context->surface->height);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -523,13 +505,13 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 7, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, self->context->surface->height);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_context_process(target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 3 });
 
     return 0;
@@ -562,11 +544,11 @@ static int canvas_copy_8ooNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 6, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, self->context->surface->height);
 
     GL_context_copy(target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -599,11 +581,11 @@ static int canvas_blit_8ooNNNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 6, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, self->context->surface->height);
 
     GL_context_blit(target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -628,13 +610,13 @@ static int canvas_blit_9oooNNNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 7, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, self->context->surface->height);
 
     // FIXME: rename `GL_xform_blit` to `GL_surface_xblit`?
     GL_xform_blit(xform->xform,
         target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -673,11 +655,11 @@ static int canvas_tile_10oonnNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 7, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 8, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 9, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 10, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 9, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 10, self->context->surface->height);
 
     GL_context_tile(target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         (GL_Point_t){ .x = offset_x, .y = offset_y });
 
     return 0;
@@ -727,13 +709,13 @@ static int canvas_stencil_11ooosnNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 7, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 8, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 9, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 10, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 11, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 10, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 11, self->context->surface->height);
 
     const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_context_stencil(target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
-        mask->image.instance->surface, (GL_Comparators_t)entry->value, threshold);
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
+        mask->context->surface, (GL_Comparators_t)entry->value, threshold);
 
     return 0;
 }
@@ -781,12 +763,12 @@ static int canvas_blend_9oosNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 7, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, self->image.instance->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, self->image.instance->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, self->context->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, self->context->surface->height);
 
     const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_context_blend(target->context, (GL_Point_t){ .x = x, .y = y },
-        self->image.instance->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+        self->context->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         (GL_Functions_t)entry->value);
 
     return 0;

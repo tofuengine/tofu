@@ -29,6 +29,7 @@
 #include "blit.h"
 #include "common.h"
 #include "context.h"
+#include "draw.h"
 #include "palette.h"
 #include "primitive.h"
 #include "processor.h"

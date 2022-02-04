@@ -114,14 +114,6 @@ typedef struct Canvas_Object_s {
         const Image_Object_t *instance;
         luaX_Reference reference;
     } image;
-    struct {
-        const Bank_Object_t *instance;
-        luaX_Reference reference;
-    } bank;
-    struct {
-        const Font_Object_t *instance;
-        luaX_Reference reference;
-    } font;
 } Canvas_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
