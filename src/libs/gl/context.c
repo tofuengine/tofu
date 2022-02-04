@@ -169,6 +169,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
+    // FIXME: remove this early bailing out everywhere? Null for-loop suffices and is better due to lack of branch?
 
     index = shifting[index];
 
