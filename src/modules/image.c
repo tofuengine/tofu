@@ -49,19 +49,9 @@ static int image_poke_4onnn_0(lua_State *L);
 
 int image_loader(lua_State *L)
 {
-    char file[PATH_MAX] = { 0 };
-    path_lua_to_fs(file, MODULE_NAME);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
-
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
-        (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
-            .name = file
-        },
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", image_new_v_1o },

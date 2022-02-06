@@ -30,7 +30,8 @@ local _default = nil
 
 function Canvas.default()
   if not _default then
-    _default = Canvas.new(Image.default())
+    local image = Image.new() -- Get a reference to the VRAM as an `Image`.
+    _default = Canvas.new(image)
   end
   return _default
 end
