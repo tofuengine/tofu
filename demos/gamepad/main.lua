@@ -27,6 +27,7 @@ local System = require("tofu.core.system")
 local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Shape = require("tofu.graphics.shape")
@@ -51,14 +52,13 @@ local INDICES <const> = {
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  local canvas = Canvas.default()
-
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 12, 12)
+  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 12, 12)
   self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
 
-  Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!
+  local canvas = Canvas.default()
+  Input.cursor_area(0, 0, canvas:image():size()) -- FIXME: painful!
 end
 
 function Main:process()
@@ -100,10 +100,10 @@ function Main:render(_)
   local t = System.time()
 
   local canvas = Canvas.default()
-  canvas:clear(0)
+  canvas:image():clear(0)
 
   local cw, ch = self.bank:size(Bank.NIL)
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
   local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5
   for index, id in ipairs(IDS) do
