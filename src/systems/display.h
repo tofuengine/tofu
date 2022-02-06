@@ -102,6 +102,7 @@ extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, con
 extern void Display_set_program(Display_t *display, const GL_Program_t *program);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
+extern GL_Size_t Display_get_size(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
 extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Color_t *Display_get_palette(const Display_t *display);

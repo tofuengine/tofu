@@ -652,6 +652,11 @@ float Display_get_scale(const Display_t *display)
     return (float)display->vram.rectangle.width / (float)display->canvas.size.width;
 }
 
+GL_Size_t Display_get_size(const Display_t *display)
+{
+    return (GL_Size_t){ .width = display->canvas.size.width, .height = display->canvas.size.height };
+}
+
 GL_Surface_t *Display_get_surface(const Display_t *display)
 {
     return display->canvas.surface;
