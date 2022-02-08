@@ -62,10 +62,11 @@ static int canvas_circle_6osnnnn_0(lua_State *L);
 static int canvas_scan_v_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
+static int canvas_blit_v_0(lua_State *L);
 static int canvas_xform_v_0(lua_State *L);
 static int canvas_stencil_v_0(lua_State *L);
 static int canvas_blend_v_0(lua_State *L);
-static int canvas_blit_v_0(lua_State *L);
+static int canvas_sprite_v_0(lua_State *L);
 static int canvas_tile_v_0(lua_State *L);
 static int canvas_flush_3ooS_0(lua_State *L);
 static int canvas_text_v_2nn(lua_State *L);
@@ -113,10 +114,11 @@ int canvas_loader(lua_State *L)
             { "scan", canvas_scan_v_0 }, // in-place
             { "process", canvas_process_v_0 },
             { "copy", canvas_copy_v_0 }, // canvas-to-canvas
+            { "blit", canvas_blit_v_0 },
             { "xform", canvas_xform_v_0 },
             { "stencil", canvas_stencil_v_0 },
             { "blend", canvas_blend_v_0 },
-            { "blit", canvas_blit_v_0 }, // bank-to-canvas
+            { "sprite", canvas_sprite_v_0 }, // bank-to-canvas
             { "tile", canvas_tile_v_0 },
             { "flush", canvas_flush_3ooS_0 }, // batch-to-canvas
             { "text", canvas_text_v_2nn }, // font-to-canvas
@@ -822,6 +824,42 @@ static int canvas_copy_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int canvas_blit_8ooNNNNNN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_IMAGE);
+    int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
+    int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
+    int ox = LUAX_OPTIONAL_INTEGER(L, 5, 0);
+    int oy = LUAX_OPTIONAL_INTEGER(L, 6, 0);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, image->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, image->surface->height);
+
+    GL_context_blit(self->context, (GL_Point_t){ .x = x, .y = y },
+        image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+
+    return 0;
+}
+
+static int canvas_blit_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_blit_8ooNNNNNN_0)
+        LUAX_OVERLOAD_ARITY(4, canvas_blit_8ooNNNNNN_0)
+        LUAX_OVERLOAD_ARITY(8, canvas_blit_8ooNNNNNN_0)
+    LUAX_OVERLOAD_END
+}
+
 static int canvas_xform_9oooNNNNNNNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -972,7 +1010,7 @@ static int canvas_blend_v_0(lua_State *L)
 }
 
 // FIXME: rename `surface` to source/target on arguments list where a surface appears twice.
-static int canvas_blit_5oonnn_0(lua_State *L)
+static int canvas_sprite_5oonnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -995,7 +1033,7 @@ static int canvas_blit_5oonnn_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_6oonnnn_0(lua_State *L)
+static int canvas_sprite_6oonnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -1020,7 +1058,7 @@ static int canvas_blit_6oonnnn_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_7oonnnnnn_0(lua_State *L)
+static int canvas_sprite_7oonnnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -1047,7 +1085,7 @@ static int canvas_blit_7oonnnnnn_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_10oonnnnnnNN_0(lua_State *L)
+static int canvas_sprite_10oonnnnnnNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -1080,15 +1118,15 @@ static int canvas_blit_10oonnnnnnNN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_v_0(lua_State *L)
+static int canvas_sprite_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_blit_5oonnn_0)
-        LUAX_OVERLOAD_ARITY(6, canvas_blit_6oonnnn_0)
-        LUAX_OVERLOAD_ARITY(7, canvas_blit_7oonnnnnn_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_blit_10oonnnnnnNN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_blit_10oonnnnnnNN_0)
-        LUAX_OVERLOAD_ARITY(10, canvas_blit_10oonnnnnnNN_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_sprite_5oonnn_0)
+        LUAX_OVERLOAD_ARITY(6, canvas_sprite_6oonnnn_0)
+        LUAX_OVERLOAD_ARITY(7, canvas_sprite_7oonnnnnn_0)
+        LUAX_OVERLOAD_ARITY(8, canvas_sprite_10oonnnnnnNN_0)
+        LUAX_OVERLOAD_ARITY(9, canvas_sprite_10oonnnnnnNN_0)
+        LUAX_OVERLOAD_ARITY(10, canvas_sprite_10oonnnnnnNN_0)
     LUAX_OVERLOAD_END
 }
 
@@ -1160,6 +1198,7 @@ static int canvas_tile_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+// TODO: are sprite-batches useful? Profile it...
 static int canvas_flush_3ooS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -1171,16 +1210,16 @@ static int canvas_flush_3ooS_0(lua_State *L)
     const Batch_Object_t *batch = (const Batch_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BATCH);
     const char *mode = LUAX_OPTIONAL_STRING(L, 3, "fast");
 
-    const GL_Batch_t *batch = batch->batch;
+    const GL_Batch_t *gl_batch = batch->batch;
     const GL_Context_t *context = self->context;
     if (mode[0] == 'f') { // FIXME: translate all these into map-lookups?
-        GL_batch_blit(batch, context);
+        GL_batch_blit(gl_batch, context);
     } else
     if (mode[0] == 's') {
-        GL_batch_blit_s(batch, context);
+        GL_batch_blit_s(gl_batch, context);
     } else
     if (mode[0] == 'c') {
-        GL_batch_blit_sr(batch, context);
+        GL_batch_blit_sr(gl_batch, context);
     } else {
         return luaL_error(L, "unknown mode `%s`", mode);
     }
