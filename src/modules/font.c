@@ -40,7 +40,6 @@
 static int font_new_v_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
 static int font_size_4osNN_2n(lua_State *L);
-static int font_blit_v_2nn(lua_State *L);
 
 int font_loader(lua_State *L)
 {
@@ -61,7 +60,6 @@ int font_loader(lua_State *L)
             { "new", font_new_v_1o },
             { "__gc", font_gc_1o_0 },
             { "size", font_size_4osNN_2n },
-            { "blit", font_blit_v_2nn },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -228,98 +226,4 @@ static int font_size_4osNN_2n(lua_State *L)
     lua_pushinteger(L, (lua_Integer)size.height);
 
     return 2;
-}
-
-static int font_blit_5oonns_2nn(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Font_Object_t *self = (const Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
-    const char *text = LUAX_STRING(L, 5);
-
-    const GL_Context_t *context = canvas->context;
-    const GL_Sheet_t *sheet = self->sheet;
-    const GL_Cell_t *glyphs = self->glyphs;
-
-    size_t width = 0, height = 0;
-    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
-        uint8_t c = *ptr;
-        const GL_Cell_t cell_id = glyphs[(size_t)c];
-        if (cell_id == GL_CELL_NIL) {
-            continue;
-        }
-        const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
-        GL_sheet_blit(sheet, context, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id);
-        width += cell_size.width;
-        if (height < cell_size.height) {
-            height = cell_size.height;
-        }
-    }
-
-    lua_pushinteger(L, (lua_Integer)width);
-    lua_pushinteger(L, (lua_Integer)height);
-
-    return 2;
-}
-
-static int font_blit_7oonnsnN_2nn(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Font_Object_t *self = (const Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
-    const char *text = LUAX_STRING(L, 5);
-    float scale_x = LUAX_NUMBER(L, 6);
-    float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
-
-    const GL_Context_t *context = canvas->context;
-    const GL_Sheet_t *sheet = self->sheet;
-    const GL_Cell_t *glyphs = self->glyphs;
-
-    size_t width = 0, height = 0;
-    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
-        uint8_t c = *ptr;
-        // TODO: add support for tabs and escape-commands.
-        const GL_Cell_t cell_id = glyphs[(size_t)c];
-        if (cell_id == GL_CELL_NIL) {
-            continue;
-        }
-        const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
-        GL_sheet_blit_s(sheet, context, (GL_Point_t){ .x = x + (int)width, .y = y }, cell_id, scale_x, scale_y);
-        width += cell_size.width;
-        if (height < cell_size.height) {
-            height = cell_size.height;
-        }
-    }
-
-    lua_pushinteger(L, (lua_Integer)width);
-    lua_pushinteger(L, (lua_Integer)height);
-
-    return 2;
-}
-
-static int font_blit_v_2nn(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, font_blit_5oonns_2nn)
-        LUAX_OVERLOAD_ARITY(6, font_blit_7oonnsnN_2nn)
-        LUAX_OVERLOAD_ARITY(7, font_blit_7oonnsnN_2nn)
-    LUAX_OVERLOAD_END
 }
