@@ -39,7 +39,6 @@ static int batch_resize_2on_0(lua_State *L);
 static int batch_grow_2on_0(lua_State *L);
 static int batch_clear_1o_0(lua_State *L);
 static int batch_add_v_0(lua_State *L);
-static int batch_blit_3ooS_0(lua_State *L);
 
 int batch_loader(lua_State *L)
 {
@@ -53,7 +52,6 @@ int batch_loader(lua_State *L)
             { "grow", batch_grow_2on_0 },
             { "clear", batch_clear_1o_0 },
             { "add", batch_add_v_0 },
-            { "blit", batch_blit_3ooS_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -275,32 +273,4 @@ static int batch_add_v_0(lua_State *L)
         LUAX_OVERLOAD_ARITY(8, batch_add_9onnnnnNNN_0)
         LUAX_OVERLOAD_ARITY(9, batch_add_9onnnnnNNN_0)
     LUAX_OVERLOAD_END
-}
-
-static int batch_blit_3ooS_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const Batch_Object_t *self = (const Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
-    const char *mode = LUAX_OPTIONAL_STRING(L, 3, "fast");
-
-    const GL_Batch_t *batch = self->batch;
-    const GL_Context_t *context = canvas->context;
-    if (mode[0] == 'f') { // FIXME: translate all these into map-lookups?
-        GL_batch_blit(batch, context);
-    } else
-    if (mode[0] == 's') {
-        GL_batch_blit_s(batch, context);
-    } else
-    if (mode[0] == 'c') {
-        GL_batch_blit_sr(batch, context);
-    } else {
-        return luaL_error(L, "unknown mode `%s`", mode);
-    }
-
-    return 0;
 }
