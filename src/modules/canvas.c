@@ -50,6 +50,15 @@ static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
 static int canvas_clear_2onB_0(lua_State *L);
 static int canvas_fill_4onnnB_0(lua_State *L);
+static int canvas_point_4onnn_0(lua_State *L);
+static int canvas_hline_5onnnn_0(lua_State *L);
+static int canvas_vline_5onnnn_0(lua_State *L);
+static int canvas_line_6onnnnn_0(lua_State *L);
+// static int canvas_tline_6onnnnonnnn_0(lua_State *L);
+static int canvas_polyline_3otn_0(lua_State *L);
+static int canvas_triangle_9osnnnnnnn_0(lua_State *L);
+static int canvas_rectangle_7osnnnnn_0(lua_State *L);
+static int canvas_circle_6osnnnn_0(lua_State *L);
 static int canvas_scan_v_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
@@ -93,7 +102,15 @@ int canvas_loader(lua_State *L)
             // -- operations --
             { "clear", canvas_clear_2onB_0 }, // canvas only
             { "fill", canvas_fill_4onnnB_0 },
-            { "scan", canvas_scan_v_0 },
+            { "point", canvas_point_4onnn_0 }, // primitives
+            { "hline", canvas_hline_5onnnn_0 },
+            { "vline", canvas_vline_5onnnn_0 },
+            { "line", canvas_line_6onnnnn_0 },
+            { "polyline", canvas_polyline_3otn_0 },
+            { "triangle", canvas_triangle_9osnnnnnnn_0 },
+            { "rectangle", canvas_rectangle_7osnnnnn_0 },
+            { "circle", canvas_circle_6osnnnn_0 },
+            { "scan", canvas_scan_v_0 }, // in-place
             { "process", canvas_process_v_0 },
             { "copy", canvas_copy_v_0 }, // canvas-to-canvas
             { "xform", canvas_xform_v_0 },
@@ -405,6 +422,243 @@ static int canvas_fill_4onnnB_0(lua_State *L)
     bool transparency = LUAX_OPTIONAL_BOOLEAN(L, 5, false);
 
     GL_context_fill(self->context, (GL_Point_t){ .x = x, .y = y }, index, transparency); // TODO: pass `GL_INDEX_COLOR` fake?
+
+    return 0;
+}
+
+static int canvas_point_4onnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
+
+    GL_context_point(self->context, (GL_Point_t){ .x = x, .y = y }, index);
+
+    return 0;
+}
+
+static int canvas_hline_5onnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    size_t width = LUAX_UNSIGNED(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
+
+    GL_context_hline(self->context, (GL_Point_t){ .x = x, .y = y }, width, index);
+
+    return 0;
+}
+
+static int canvas_vline_5onnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    size_t height = LUAX_UNSIGNED(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
+
+    GL_context_vline(self->context, (GL_Point_t){ .x = x, .y = y }, height, index);
+
+    return 0;
+}
+
+static int canvas_line_6onnnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x0 = LUAX_INTEGER(L, 2);
+    int y0 = LUAX_INTEGER(L, 3);
+    int x1 = LUAX_INTEGER(L, 4);
+    int y1 = LUAX_INTEGER(L, 5);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
+
+    GL_context_polyline(self->context, (GL_Point_t[]){
+            (GL_Point_t){ .x = x0, .y = y0 },
+            (GL_Point_t){ .x = x1, .y = y1 }
+        }, 2, index);
+
+    return 0;
+}
+
+static inline GL_Point_t *_fetch(lua_State *L, int idx)
+{
+    GL_Point_t *vertices = NULL;
+
+    int coords[2] = { 0 };
+
+    lua_pushnil(L);
+    for (size_t index = 0; lua_next(L, idx); ++index) {
+        coords[index % 2] = LUAX_INTEGER(L, -1);
+
+        if (index % 2) { // On odd positions, push into the array.
+            const GL_Point_t point = (GL_Point_t){ .x = coords[0], .y = coords[1] };
+            arrpush(vertices, point); // Can't pass compound-literal to macro. :(
+        }
+
+        lua_pop(L, 1);
+    }
+
+    return vertices;
+}
+
+static int canvas_polyline_3otn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    // idx #2: LUA_TTABLE
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
+
+    GL_Point_t *vertices = _fetch(L, 2);
+
+    size_t count = arrlenu(vertices);
+    if (count < 2) {
+        // TODO: free vertices!
+        return luaL_error(L, "polyline requires al least 2 points (provided %d)", count);
+    }
+
+    GL_context_polyline(self->context, vertices, count, index);
+
+    arrfree(vertices);
+
+    return 0;
+}
+
+static int canvas_triangle_9osnnnnnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const char *mode = LUAX_STRING(L, 2);
+    int x0 = LUAX_INTEGER(L, 3);
+    int y0 = LUAX_INTEGER(L, 4);
+    int x1 = LUAX_INTEGER(L, 5);
+    int y1 = LUAX_INTEGER(L, 6);
+    int x2 = LUAX_INTEGER(L, 7);
+    int y2 = LUAX_INTEGER(L, 8);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 9);
+
+    if (mode[0] == 'f') {
+        GL_context_filled_triangle(self->context,
+            (GL_Point_t){ .x = x0, .y = y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 },
+            index);
+    } else {
+        GL_context_polyline(self->context, (GL_Point_t[4]){
+                (GL_Point_t){ .x = x0, .y = y0 },
+                (GL_Point_t){ .x = x1, .y = y1 },
+                (GL_Point_t){ .x = x2, .y = y2 },
+                (GL_Point_t){ .x = x0, .y = y0 }
+            }, 4, index);
+    }
+
+    return 0;
+}
+
+static int canvas_rectangle_7osnnnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const char *mode = LUAX_STRING(L, 2); // FIXME: move `mode` as last optional argument.
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    size_t width = LUAX_UNSIGNED(L, 5);
+    size_t height = LUAX_UNSIGNED(L, 6);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 7);
+
+    if (mode[0] == 'f') {
+        GL_context_filled_rectangle(self->context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
+    } else {
+        const int x0 = x;
+        const int y0 = y;
+        const int x1 = x0 + (int)width - 1;
+        const int y1 = y0 + (int)height - 1;
+
+        GL_context_polyline(self->context, (GL_Point_t[5]){
+                (GL_Point_t){ .x = x0, .y = y0 },
+                (GL_Point_t){ .x = x0, .y = y1 },
+                (GL_Point_t){ .x = x1, .y = y1 },
+                (GL_Point_t){ .x = x1, .y = y0 },
+                (GL_Point_t){ .x = x0, .y = y0 }
+            }, 5, index);
+    }
+
+    return 0;
+}
+
+static int canvas_circle_6osnnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const char *mode = LUAX_STRING(L, 2);
+    int cx = LUAX_INTEGER(L, 3);
+    int cy = LUAX_INTEGER(L, 4);
+    size_t radius = LUAX_UNSIGNED(L, 5);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
+
+    if (radius < 1) { // Null radius, just a point regardless mode!
+        GL_context_point(self->context, (GL_Point_t){ .x = cx, .y = cy }, index);
+    } else
+    if (mode[0] == 'f') {
+        GL_context_filled_circle(self->context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
+    } else {
+        GL_context_circle(self->context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
+    }
 
     return 0;
 }

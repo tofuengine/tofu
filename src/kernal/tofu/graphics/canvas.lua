@@ -36,6 +36,9 @@ function Canvas.default()
   return _default
 end
 
+function Canvas:square(mode, x, y, size, index)
+  self:rectangle(mode, x, y, size, size, index)
+end
 
 -- Only `font`, `x`, `y`, and `text` are required. All the other arguments are optional.
 --
