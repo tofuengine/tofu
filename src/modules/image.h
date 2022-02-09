@@ -22,13 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_CONTEXT_TILE_H__
-#define __GL_CONTEXT_TILE_H__
+#ifndef __MODULES_IMAGE_H__
+#define __MODULES_IMAGE_H__
 
-#include "common.h"
-#include "context.h"
+#include <lua/lua.h>
 
-extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset);
-extern void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset, int scale_x, int scale_y);
+extern int image_loader(lua_State *L);
 
-#endif  /* __GL_CONTEXT_TILE_H__ */
+#endif  /* __MODULES_IMAGE_H__ */

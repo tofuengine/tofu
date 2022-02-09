@@ -46,7 +46,7 @@ function Main:__ctor()
   Display.palette(Palette.new(PALETTE))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
   self.font = Font.default(0, 15)
   self.x_size = width / STEPS
@@ -109,8 +109,11 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(0)
-  local width, _ = canvas:size()
+
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(0)
+
 
   local w = self.x_size
   local h = self.y_size

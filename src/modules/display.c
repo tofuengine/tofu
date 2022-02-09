@@ -33,6 +33,7 @@
 
 #define LOG_CONTEXT "display"
 
+static int display_size_0_2nn(lua_State *L);
 static int display_palette_1o_0(lua_State *L);
 static int display_offset_2NN_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
@@ -45,6 +46,7 @@ int display_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            { "size", display_size_0_2nn },
             { "palette", display_palette_1o_0 },
             { "offset", display_offset_2NN_0 },
             { "shift", display_shift_v_0 },
@@ -55,6 +57,20 @@ int display_loader(lua_State *L)
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, NULL);
+}
+
+static int display_size_0_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    GL_Size_t size = Display_get_size(display);
+    lua_pushinteger(L, (lua_Integer)size.width);
+    lua_pushinteger(L, (lua_Integer)size.height);
+
+    return 2;
 }
 
 static int display_palette_1o_0(lua_State *L)

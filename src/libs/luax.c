@@ -294,6 +294,11 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
+int luaX_pushref(lua_State *L, luaX_Reference ref)
+{
+    return lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+}
+
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[])
 {
     int actual_type = lua_type(L, idx);

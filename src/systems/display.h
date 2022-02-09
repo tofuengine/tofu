@@ -90,7 +90,8 @@ extern void Display_destroy(Display_t *display);
 extern void Display_close(Display_t *display);
 extern bool Display_should_close(const Display_t *display);
 
-extern void Display_update(Display_t *display, float delta_time);
+extern bool Display_update(Display_t *display, float delta_time);
+
 extern void Display_present(const Display_t *display);
 
 extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `processor` field directly?
@@ -101,6 +102,7 @@ extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, con
 extern void Display_set_program(Display_t *display, const GL_Program_t *program);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
+extern GL_Size_t Display_get_size(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
 extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Color_t *Display_get_palette(const Display_t *display);

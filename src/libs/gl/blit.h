@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_SURFACE_BLIT_H__
-#define __GL_SURFACE_BLIT_H__
+#ifndef __GL_CONTEXT_BLIT_H__
+#define __GL_CONTEXT_BLIT_H__
 
 #include "common.h"
-#include "surface.h"
+#include "context.h"
 
-extern void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
-extern void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
-extern void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
+extern void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
+extern void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
+extern void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
 
-#endif  /* __GL_SURFACE_BLIT_H__ */
+#endif  /* __GL_CONTEXT_BLIT_H__ */

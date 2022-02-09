@@ -30,6 +30,7 @@ local Wave = require("tofu.generators.wave")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -42,9 +43,9 @@ local PALETTES <const> = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 
 function Main:__ctor()
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0, 5), 8, 8)
+  self.bank = Bank.new(Image.new("assets/sheet.png", 0, 5), 8, 8)
   self.font = Font.default(0, 15)
   self.wave = Wave.new("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
@@ -52,7 +53,7 @@ function Main:__ctor()
   self.palette = 1
   self.scale_x = 1.0
   self.scale_y = -1.0
-  self.x, self.y = canvas:center()
+  self.x, self.y = canvas:image():center()
   self.mode = 0
   self.clipping = false
 
@@ -100,12 +101,14 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
-  canvas:clear(0)
+  local image = canvas:image()
+  local width, height = image:size()
+  image:clear(0)
 
   local time = System.time()
 
   if self.mode == 0 then
+    canvas:push()
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
       for j = 0, AMOUNT - 1 do
@@ -116,7 +119,9 @@ function Main:render(_)
         self.bank:blit(canvas, x, y, index)
       end
     end
+    canvas:pop()
   elseif self.mode == 1 then
+    canvas:push()
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
       for j = 0, AMOUNT - 1 do
@@ -127,7 +132,9 @@ function Main:render(_)
         self.bank:tile(canvas, x, y, index, 0, math.tointeger(time * 4))
       end
     end
+    canvas:pop()
   elseif self.mode == 2 then
+    canvas:push()
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
       for j = 0, AMOUNT - 1 do
@@ -138,6 +145,7 @@ function Main:render(_)
         self.bank:tile(canvas, x, y, index, math.tointeger(time * 4), 0)
       end
     end
+    canvas:pop()
   elseif self.mode == 3 then
     self.bank:tile(canvas, 0, 0, 5, 0, math.tointeger(time * 4), 4, -4)
   elseif self.mode == 4 then

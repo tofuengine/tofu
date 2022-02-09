@@ -22,11 +22,38 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_SHAPE_H__
-#define __MODULES_SHAPE_H__
+#ifndef __GL_CONTEXT_H__
+#define __GL_CONTEXT_H__
 
-#include <lua/lua.h>
+#include "common.h"
+#include "palette.h"
+#include "surface.h"
 
-extern int shape_loader(lua_State *L);
+#include <stdbool.h>
 
-#endif  /* __MODULES_SHAPE_H__ */
+typedef struct GL_State_s {
+    GL_Quad_t clipping_region;
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
+    GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
+} GL_State_t;
+
+typedef struct GL_Context_s {
+    const GL_Surface_t *surface;
+    struct {
+        GL_State_t current;
+        GL_State_t *stack;
+    } state;
+} GL_Context_t;
+
+extern GL_Context_t *GL_context_create(const GL_Surface_t *surface);
+extern void GL_context_destroy(GL_Context_t *context);
+
+extern void GL_context_reset(GL_Context_t *context);
+extern void GL_context_push(GL_Context_t *context);
+extern void GL_context_pop(GL_Context_t *context, size_t levels);
+
+extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
+extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
+extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+
+#endif  /* __GL_CONTEXT_H__ */

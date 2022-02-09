@@ -120,6 +120,14 @@ void GL_program_clear(GL_Program_t *program)
     arrpush(program->entries, end_of_data);
 }
 
+void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
+{
+    arrdeln(program->entries, position, length);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#endif  /* VERBOSE_DEBUG */
+}
+
 void GL_program_nop(GL_Program_t *program, int position)
 {
     program->entries = _insert(program->entries, position,

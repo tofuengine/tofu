@@ -53,6 +53,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_BODY,
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_FONT,
+    OBJECT_TYPE_IMAGE,
     OBJECT_TYPE_GRID,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
@@ -65,14 +66,14 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_WAVE
 } Object_Types_t;
 
-typedef struct Canvas_Object_s {
+typedef struct Image_Object_s {
     GL_Surface_t *surface;
     bool allocated;
-} Canvas_Object_t;
+} Image_Object_t;
 
 typedef struct Bank_Object_s {
     struct {
-        const Canvas_Object_t *instance;
+        const Image_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
@@ -80,7 +81,7 @@ typedef struct Bank_Object_s {
 
 typedef struct Font_Object_s {
     struct {
-        const Canvas_Object_t *instance;
+        const Image_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
@@ -92,7 +93,7 @@ typedef struct Batch_Object_s {
         const Bank_Object_t *instance;
         luaX_Reference reference;
     } bank;
-    GL_Batch_t *batch;
+    GL_Queue_t *queue;
 } Batch_Object_t;
 
 typedef struct XForm_Object_s {
@@ -106,6 +107,14 @@ typedef struct Palette_Object_s {
 typedef struct Program_Object_s {
     GL_Program_t *program;
 } Program_Object_t;
+
+typedef struct Canvas_Object_s {
+    GL_Context_t *context;
+    struct {
+        const Image_Object_t *instance;
+        luaX_Reference reference;
+    } image;
+} Canvas_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;

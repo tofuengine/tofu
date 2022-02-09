@@ -46,6 +46,7 @@ static int grid_peek_v_1n(lua_State *L);
 static int grid_poke_v_0(lua_State *L);
 static int grid_scan_2of_0(lua_State *L);
 static int grid_process_2of_0(lua_State *L);
+static int grid_path_5onnnn_1t(lua_State *L);
 
 int grid_loader(lua_State *L)
 {
@@ -72,7 +73,7 @@ int grid_loader(lua_State *L)
             { "poke", grid_poke_v_0 },
             { "scan", grid_scan_2of_0 },
             { "process", grid_process_2of_0 },
-//            { "path", grid_path }, // TODO: implmement Dijkstra/A* path-finding.
+            { "path", grid_path_5onnnn_1t },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -375,5 +376,11 @@ static int grid_process_2of_0(lua_State *L)
         }
     }
 
+    return 0;
+}
+
+// TODO: implmement Dijkstra/A* path-finding.
+static int grid_path_5onnnn_1t(lua_State *L)
+{
     return 0;
 }
