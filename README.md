@@ -65,7 +65,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.6
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
-* [Lua](https://lua.org/) v5.4.3
+* [Lua](https://lua.org/) v5.4.4
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.2
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
