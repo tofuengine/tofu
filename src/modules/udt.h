@@ -93,7 +93,7 @@ typedef struct Batch_Object_s {
         const Bank_Object_t *instance;
         luaX_Reference reference;
     } bank;
-    GL_Batch_t *batch;
+    GL_Queue_t *queue;
 } Batch_Object_t;
 
 typedef struct XForm_Object_s {

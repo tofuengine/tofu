@@ -25,7 +25,6 @@
 #ifndef __GL_H__
 #define __GL_H__
 
-#include "batch.h"
 #include "blit.h"
 #include "common.h"
 #include "context.h"
@@ -33,6 +32,7 @@
 #include "palette.h"
 #include "primitive.h"
 #include "processor.h"
+#include "queue.h"
 #include "sheet.h"
 #include "surface.h"
 #include "tile.h"

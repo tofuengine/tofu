@@ -68,18 +68,18 @@ static int batch_new_2on_1o(lua_State *L)
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
     size_t capacity = LUAX_UNSIGNED(L, 2);
 
-    GL_Batch_t *batch = GL_batch_create(bank->sheet, capacity);
-    if (!batch) {
-        return luaL_error(L, "can't create batch");
+    GL_Queue_t *queue = GL_queue_create(bank->sheet, capacity);
+    if (!queue) {
+        return luaL_error(L, "can't create queue");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created for bank %p w/ %d slots", batch, bank, capacity);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p created for bank %p w/ %d slots", queue, bank, capacity);
 
     Batch_Object_t *self = (Batch_Object_t *)luaX_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
             .bank = {
                 .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
-            .batch = batch
+            .queue = queue
         }, OBJECT_TYPE_BATCH, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
@@ -97,8 +97,8 @@ static int batch_gc_1o_0(lua_State *L)
     luaX_unref(L, self->bank.reference);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
 
-    GL_batch_destroy(self->batch);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p destroyed", self->batch);
+    GL_queue_destroy(self->queue);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p destroyed", self->queue);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p finalized", self);
 
@@ -114,7 +114,7 @@ static int batch_resize_2on_0(lua_State *L)
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     size_t capacity = LUAX_UNSIGNED(L, 2);
 
-    bool resized = GL_batch_resize(self->batch, capacity);
+    bool resized = GL_queue_resize(self->queue, capacity);
     if (!resized) {
         return luaL_error(L, "can't resize batch %p to %d slots", self, capacity);
     }
@@ -131,7 +131,7 @@ static int batch_grow_2on_0(lua_State *L)
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     size_t amount = LUAX_UNSIGNED(L, 2);
 
-    bool grown = GL_batch_grow(self->batch, amount);
+    bool grown = GL_queue_grow(self->queue, amount);
     if (!grown) {
         return luaL_error(L, "can't grow batch %p by %d slots", self, amount);
     }
@@ -146,7 +146,7 @@ static int batch_clear_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
 
-    GL_batch_clear(self->batch);
+    GL_queue_clear(self->queue);
 
     return 0;
 }
@@ -164,7 +164,7 @@ static int batch_add_4onNN_0(lua_State *L)
     int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
 
-    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+    GL_queue_add(self->queue, (GL_Queue_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = 1.0f, .scale_y = 1.0f,
@@ -190,7 +190,7 @@ static int batch_add_5onnnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     int rotation = LUAX_INTEGER(L, 5);
 
-    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+    GL_queue_add(self->queue, (GL_Queue_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = 1.0f, .scale_y = 1.0f,
@@ -218,7 +218,7 @@ static int batch_add_6onnnnn_0(lua_State *L)
     float scale_x = LUAX_NUMBER(L, 5);
     float scale_y = LUAX_NUMBER(L, 6);
 
-    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+    GL_queue_add(self->queue, (GL_Queue_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = scale_x, .scale_y = scale_y,
@@ -252,7 +252,7 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 
-    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+    GL_queue_add(self->queue, (GL_Queue_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = scale_x, .scale_y = scale_y,

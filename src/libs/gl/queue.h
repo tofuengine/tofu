@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_BATCH_H__
-#define __GL_BATCH_H__
+#ifndef __GL_QUEUE_H__
+#define __GL_QUEUE_H__
 
 #include "common.h"
 #include "sheet.h"
@@ -31,31 +31,31 @@
 
 #include <stdbool.h>
 
-typedef struct GL_Batch_Sprite_s {
+typedef struct GL_Queue_Sprite_s {
     GL_Cell_t cell_id;
     GL_Point_t position;
     float scale_x, scale_y;
     int rotation;
     float anchor_x, anchor_y;
-} GL_Batch_Sprite_t;
+} GL_Queue_Sprite_t;
 
-typedef struct GL_Batch_s {
+typedef struct GL_Queue_s {
     const GL_Sheet_t *sheet;
-    GL_Batch_Sprite_t *sprites;
-} GL_Batch_t;
+    GL_Queue_Sprite_t *sprites;
+} GL_Queue_t;
 
-extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t capacity);
-extern void GL_batch_destroy(GL_Batch_t *batch);
+extern GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity);
+extern void GL_queue_destroy(GL_Queue_t *queue);
 
-extern bool GL_batch_resize(GL_Batch_t *batch, size_t capacity);
-extern bool GL_batch_grow(GL_Batch_t *batch, size_t amount); // Can't shrink or references would be lost.
-extern void GL_batch_clear(GL_Batch_t *batch);
-extern void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite);
+extern bool GL_queue_resize(GL_Queue_t *queue, size_t capacity);
+extern bool GL_queue_grow(GL_Queue_t *queue, size_t amount); // Can't shrink or references would be lost.
+extern void GL_queue_clear(GL_Queue_t *queue);
+extern void GL_queue_add(GL_Queue_t *queue, GL_Queue_Sprite_t sprite);
 
-//extern GL_Batch_Sprite_t *GL_batch_get_sprite(const GL_Batch_t *batch, size_t index);
+//extern GL_Queue_Sprite_t *GL_queue_get_sprite(const GL_Queue_t *queue, size_t index);
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context); // FIXME: rename to `flush()`
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context);
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context);
+void GL_queue_blit(const GL_Queue_t *queue, const GL_Context_t *context); // FIXME: rename to `flush()`
+void GL_queue_blit_s(const GL_Queue_t *queue, const GL_Context_t *context);
+void GL_queue_blit_sr(const GL_Queue_t *queue, const GL_Context_t *context);
 
-#endif  /* __GL_BATCH_H__ */
+#endif  /* __GL_QUEUE_H__ */

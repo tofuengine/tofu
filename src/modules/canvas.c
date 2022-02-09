@@ -1210,16 +1210,16 @@ static int canvas_flush_3ooS_0(lua_State *L)
     const Batch_Object_t *batch = (const Batch_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BATCH);
     const char *mode = LUAX_OPTIONAL_STRING(L, 3, "fast");
 
-    const GL_Batch_t *gl_batch = batch->batch;
+    const GL_Queue_t *queue = batch->queue;
     const GL_Context_t *context = self->context;
     if (mode[0] == 'f') { // FIXME: translate all these into map-lookups?
-        GL_batch_blit(gl_batch, context);
+        GL_queue_blit(queue, context);
     } else
     if (mode[0] == 's') {
-        GL_batch_blit_s(gl_batch, context);
+        GL_queue_blit_s(queue, context);
     } else
     if (mode[0] == 'c') {
-        GL_batch_blit_sr(gl_batch, context);
+        GL_queue_blit_sr(queue, context);
     } else {
         return luaL_error(L, "unknown mode `%s`", mode);
     }
