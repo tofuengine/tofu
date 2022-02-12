@@ -59,7 +59,48 @@ function Main:__ctor()
 
   self.noise = Noise.new("simplex", 1234, 0.02)
 
-  Display.palette(Palette.default("pico-8"))
+  self:_change_palette(Palette.default("pico-8"))
+end
+
+local function _index_of(array, compare, from)
+  local length = #array
+  for index = from or 1, length do
+    local value = array[index]
+    if compare(value) then
+      return index
+    end
+  end
+  return nil
+end
+
+local function _chop(t, len)
+  for i = #t, len + 1, -1 do
+    t[i] = nil
+  end
+  return t
+end
+
+local function _to_luminance(color)
+  return color[1] * 0.30 + color[2] * 0.59 + color[3] * 0.11
+end
+
+function Main:_change_palette(palette)
+  local sorted = palette:colors() -- Sort the palette by increasing luminance value.
+  table.sort(_chop(sorted, 16), function(a, b)
+      return _to_luminance(a) < _to_luminance(b)
+    end);
+
+  local shifting = {} -- Ma each ordered color ([0, 15]) to the actual palette index, for shifting.
+  local colors = _chop(palette:colors(), 16)
+  for from, color in ipairs(sorted) do
+    local to = _index_of(colors, function(value)
+        return color[1] == value[1] and color[2] == value[2] and color[3] == value[3]
+      end)
+    shifting[from] = to
+  end
+  self.shifting = shifting
+
+  Display.palette(palette)
 end
 
 function Main:process()
@@ -95,7 +136,7 @@ function Main:update(_)
   if self.palette ~= index then
     self.palette = index
     local palette = Palette.default(PALETTES[index])
-    Display.palette(palette)
+    self:_change_palette(palette)
   end
 end
 
@@ -116,7 +157,7 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = (height - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
         canvas:shift(5, color)
-        self.bank:blit(canvas, x, y, index)
+        canvas:sprite(self.bank, x, y, index)
       end
     end
     canvas:pop()
@@ -129,7 +170,7 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
         canvas:shift(5, color)
-        self.bank:tile(canvas, x, y, index, 0, math.tointeger(time * 4))
+        canvas:tile(self.bank, x, y, index, 0, math.tointeger(time * 4))
       end
     end
     canvas:pop()
@@ -142,38 +183,42 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
         canvas:shift(5, color)
-        self.bank:tile(canvas, x, y, index, math.tointeger(time * 4), 0)
+        canvas:tile(self.bank, x, y, index, math.tointeger(time * 4), 0)
       end
     end
     canvas:pop()
   elseif self.mode == 3 then
-    self.bank:tile(canvas, 0, 0, 5, 0, math.tointeger(time * 4), 4, -4)
+    canvas:tile(self.bank, 0, 0, 5, 0, math.tointeger(time * 4), 4, -4)
   elseif self.mode == 4 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
 
-    self.bank:blit(canvas, width / 2, height / 2, 0, scale, scale, rotation)
-    self.font:write(canvas, width, height, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
+    canvas:sprite(self.bank, width / 2, height / 2, 0, scale, scale, rotation)
+    canvas:write(self.font, width, height, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
   elseif self.mode == 5 then
-    self.bank:blit(canvas, width / 2, height / 2, 0, 10, 10, 256 * 1)
+    canvas:sprite(self.bank, width / 2, height / 2, 0, 10, 10, 256 * 1)
   elseif self.mode == 6 then
-    self.bank:blit(canvas, width / 2, height / 2, 0, 10, 10, 128 * 1)
+    canvas:sprite(self.bank, width / 2, height / 2, 0, 10, 10, 128 * 1)
   elseif self.mode == 7 then
     local x = (width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
     local y = (height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
-    self.bank:blit(canvas, x - 4, y - 4, 0)
+    canvas:sprite(self.bank, x - 4, y - 4, 0)
   elseif self.mode == 8 then
-    self.bank:blit(canvas, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
+    canvas:sprite(self.bank, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   elseif self.mode == 9 then
+    canvas:push()
+    canvas:transparent({ [0] = false })
+    canvas:shift(self.shifting)
     local noise = self.noise
     canvas:scan(function(x, y, _)
         local v = noise:generate(x, y, time * 5.0)
         return math.tointeger(v * 15)
       end)
+    canvas:pop()
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()), 1.5)
-  self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
+  canvas:write(self.font, 0, 0, string.format("FPS: %d", System.fps()), 1.5)
+  canvas:write(self.font, width, 0, string.format("mode: %d", self.mode), "right")
 end
 
 return Main
