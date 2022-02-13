@@ -46,7 +46,7 @@ end
 -- << [...] A function call that is not the last element in the list always produces one
 -- result [...] When a function call is the last (or the only) argument to another call,
 -- all results from the first call go as arguments. >>
-function Canvas:write(font, x, y, text, h_align, v_align, scale_x, scale_y)
+function Canvas:write(x, y, font, text, h_align, v_align, scale_x, scale_y)
   local width, height = font:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
   local dx, dy
@@ -66,11 +66,11 @@ function Canvas:write(font, x, y, text, h_align, v_align, scale_x, scale_y)
   end
 
   if scale_y then
-    return self:text(font, x - dx, y - dy, text, scale_x, scale_y)
+    return self:text(x - dx, y - dy, font, text, scale_x, scale_y)
   elseif scale_x then
-    return self:text(font, x - dx, y - dy, text, scale_x)
+    return self:text(x - dx, y - dy, font, text, scale_x)
   else
-    return self:text(font, x - dx, y - dy, text)
+    return self:text(x - dx, y - dy, font, text)
   end
 end
 
