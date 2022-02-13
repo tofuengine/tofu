@@ -85,7 +85,9 @@ static int palette_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){ 0 },
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+            .size = GL_MAX_PALETTE_COLORS
+        },
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_set_greyscale(self->palette, GL_MAX_PALETTE_COLORS);
@@ -105,7 +107,9 @@ static int palette_new_1n_1o(lua_State *L)
         return luaL_error(L, "palette can't be empty!");
     }
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){ 0 },
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+            .size = levels
+        },
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_set_greyscale(self->palette, levels);
@@ -136,9 +140,9 @@ static int palette_new_1t_1o(lua_State *L)
     lua_pushnil(L); // T -> T N
     for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
 #ifdef __DEFENSIVE_CHECKS__
-        size_t count = lua_rawlen(L, 3);
-        if (count != 3) {
-            luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
+        size_t components = lua_rawlen(L, 3);
+        if (components != 3) {
+            luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, components);
         }
 #endif /* __DEFENSIVE_CHECKS__ */
         lua_rawgeti(L, 3, 1); // T N T -> T N T I
@@ -160,7 +164,9 @@ static int palette_new_1t_1o(lua_State *L)
         palette[i] = palette[size - 1];
     }
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){ 0 },
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+            .size = size
+        },
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_copy(self->palette, palette);
@@ -178,7 +184,9 @@ static int palette_new_1o_1o(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cloning palette %p", other);
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){ 0 },
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+            .size = other->size
+        },
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_copy(self->palette, other->palette);
@@ -199,22 +207,28 @@ static int palette_new_3n_1o(lua_State *L)
     size_t blue_bits = LUAX_UNSIGNED(L, 3);
 
     size_t bits = red_bits + green_bits + blue_bits;
-    if (bits == 0) {
+    const size_t size = 1 << bits;
+
+    if (size == 0) {
         return luaL_error(L, "at least one bit is required (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     } else
-    if (bits > (sizeof(GL_Pixel_t) * 8)) {
-        return luaL_error(L, "too many bits to fit a pixel (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
+    if (size > GL_MAX_PALETTE_COLORS) {
+        return luaL_error(L, "too many bits to fit palette (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, 1 << bits);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){ 0 },
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+            .size = size
+        },
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_set_quantized(self->palette, red_bits, green_bits, blue_bits);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d bit(s)", self, bits);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d colors(s)", self, size);
 
-    return 1;
+    lua_pushinteger(L, size);
+
+    return 2;
 }
 
 static int palette_new_v_1o(lua_State *L)
@@ -303,8 +317,9 @@ static int palette_size_1o_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
+    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
-    lua_pushinteger(L, (lua_Integer)GL_MAX_PALETTE_COLORS);
+    lua_pushinteger(L, (lua_Integer)self->size);
 
     return 1;
 }

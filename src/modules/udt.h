@@ -102,6 +102,7 @@ typedef struct XForm_Object_s {
 
 typedef struct Palette_Object_s {
     GL_Color_t palette[GL_MAX_PALETTE_COLORS];
+    size_t size;
 } Palette_Object_t;
 
 typedef struct Program_Object_s {
