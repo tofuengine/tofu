@@ -122,6 +122,8 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, GL_Contex
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = area.x,
@@ -161,8 +163,12 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, GL_Contex
     for (int i = height; i; --i) {
         int x = drawing_region.x0; // TODO: optimize?
         for (int j = width; j; --j) {
-            GL_Pixel_t index = *dptr;
-            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y }, index);
+            const GL_Pixel_t index = shifting[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
+            if (transparent[index]) {
+                ++dptr;
+            } else {
+                *(dptr++) = index;
+            }
             x += 1;
         }
         dptr += dskip;
@@ -175,6 +181,8 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = area.y;
@@ -223,9 +231,14 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
     for (int i = height; i; --i) {
         int x = drawing_region.x0; // TODO: optimize?
         for (int j = width; j; --j) {
-            GL_Pixel_t from = *dptr;
-            GL_Pixel_t to = *(sptr++);
-            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to);
+            const GL_Pixel_t from = *dptr;
+            const GL_Pixel_t to = *(sptr++);
+            const GL_Pixel_t index = shifting[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
+            if (transparent[index]) {
+                ++dptr;
+            } else {
+                *(dptr++) = index;
+            }
             x += 1;
         }
         sptr += sskip;
