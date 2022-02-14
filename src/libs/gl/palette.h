@@ -43,7 +43,7 @@ extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Co
 extern GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio);
 
 extern void GL_palette_copy(GL_Color_t *palette, const GL_Color_t *source);
-extern void GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates);
+extern size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates);
 extern void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio);
 // TODO: add other functions, too...
 

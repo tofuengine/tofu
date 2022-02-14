@@ -168,7 +168,7 @@ static bool _contains(const GL_Color_t *palette, GL_Color_t color)
     return false;
 }
 
-void GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates)
+size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates)
 {
     size_t to_i = to;
     for (size_t i = 0; i < count; ++i) {
@@ -182,6 +182,7 @@ void GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, s
         }
         palette[to_i++] = other[from_i];
     }
+    return to_i;
 }
 
 void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio)

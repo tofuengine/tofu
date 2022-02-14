@@ -429,7 +429,10 @@ static int palette_merge_6ononnB_0(lua_State *L)
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
     GL_Color_t *palette = self->palette;
-    GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
+    size_t size = GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
+
+    self->size = size;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p has now %d color(s)", self, size);
 
     return 0;
 }
