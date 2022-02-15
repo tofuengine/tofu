@@ -33,8 +33,6 @@ local Font = require("tofu.graphics.font")
 local Speakers = require("tofu.sound.speakers")
 local Pool = require("tofu.timers.pool")
 
-local Main = require("main")
-
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Tofu:__ctor()
@@ -42,6 +40,7 @@ function Tofu:__ctor()
     -- TODO: add an "splash" state that emulates Amiga's boot.
     ["normal"] = {
       enter = function(me)
+          local Main = require("main") -- Lazy require, to trap and display errors in the constructor!
           me.main = Main.new()
         end,
       leave = function(me)
