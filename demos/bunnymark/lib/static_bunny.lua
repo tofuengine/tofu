@@ -28,7 +28,7 @@ local Bunny = Class.define()
 
 local CELL_ID = 0
 
-function Bunny:__ctor(bank, batch, width, height)
+function Bunny:__ctor(bank, width, height)
   local cw, ch = bank:size(CELL_ID)
 
   local min_x = cw
@@ -36,15 +36,17 @@ function Bunny:__ctor(bank, batch, width, height)
   local max_x = width - cw * 2
   local max_y = height - ch * 2
 
-  self.batch = batch
   self.x = math.random() * (max_x - min_x) + cw
   self.y = math.random() * (max_y - min_y) + ch
 
-  self.batch:add(CELL_ID, self.x, self.y)
+  self.bank = bank
 end
 
 function Bunny:update(_)
-  self.batch:add(CELL_ID, self.x, self.y)
+end
+
+function Bunny:render(canvas)
+  canvas:sprite(self.x, self.y, self.bank, CELL_ID)
 end
 
 return Bunny

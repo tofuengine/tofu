@@ -30,7 +30,6 @@ local Canvas = require("tofu.graphics.canvas")
 local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
-local Shape = require("tofu.graphics.shape")
 local Font = require("tofu.graphics.font")
 
 local Main = Class.define()
@@ -83,27 +82,28 @@ local function draw_stick(canvas, cx, cy, radius, _, _, angle, magnitude, presse
                  math.floor(math.sin(angle) * magnitude * radius + 0.5)
 --  local dx, dy = x * radius, y * radius
   if pressed then
-    Shape.circle(canvas, "fill", cx, cy, radius, 2)
+    canvas:circle("fill", cx, cy, radius, 2)
   end
-  Shape.circle(canvas, "line", cx, cy, radius, 1)
-  Shape.line(canvas, cx, cy, cx + dx, cy + dy, 3)
+  canvas:circle("line", cx, cy, radius, 1)
+  canvas:line(cx, cy, cx + dx, cy + dy, 3)
 end
 
 local function draw_trigger(canvas, cx, cy, radius, magnitude)
   if magnitude > 0.0 then
-    Shape.circle(canvas, "fill", cx, cy, magnitude * radius, 2)
+    canvas:circle("fill", cx, cy, magnitude * radius, 2)
   end
-  Shape.circle(canvas, "line", cx, cy, radius, 1)
+  canvas:circle("line", cx, cy, radius, 1)
 end
 
 function Main:render(_)
   local t = System.time()
 
   local canvas = Canvas.default()
-  canvas:image():clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
   local cw, ch = self.bank:size(Bank.NIL)
-  local width, height = canvas:image():size()
+  local width, height = image:size()
 
   local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5
   for index, id in ipairs(IDS) do
@@ -118,7 +118,7 @@ function Main:render(_)
       ox = (cw * s - cw) * 0.5
       oy = (ch * s - ch) * 0.5
     end
-    self.bank:blit(canvas, x - ox, y - oy + dy, INDICES[index], s, s)
+    canvas:sprite(x - ox, y - oy + dy, self.bank, INDICES[index], s, s)
     x = x + cw
   end
 
@@ -132,13 +132,13 @@ function Main:render(_)
   draw_trigger(canvas, 232, cy + 12, 8, tr)
 
   local mx, my = Input.cursor()
-  Shape.line(canvas, mx - 3, my, mx - 1, my, 2)
-  Shape.line(canvas, mx + 1, my, mx + 3, my, 2)
-  Shape.line(canvas, mx, my - 3, mx, my - 1, 2)
-  Shape.line(canvas, mx, my + 1, mx, my + 3, 2)
+  canvas:line(mx - 3, my, mx - 1, my, 2)
+  canvas:line(mx + 1, my, mx + 3, my, 2)
+  canvas:line(mx, my - 3, mx, my - 1, 2)
+  canvas:line(mx, my + 1, mx, my + 3, 2)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, height, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, height, self.font, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
     "right", "bottom")
 end
 

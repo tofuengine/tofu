@@ -85,13 +85,15 @@ local function _to_luminance(color)
 end
 
 function Main:_change_palette(palette)
+  local count = palette:size()
+
   local sorted = palette:colors() -- Sort the palette by increasing luminance value.
-  table.sort(_chop(sorted, 16), function(a, b)
+  table.sort(_chop(sorted, count), function(a, b)
       return _to_luminance(a) < _to_luminance(b)
     end);
 
   local shifting = {} -- Ma each ordered color ([0, 15]) to the actual palette index, for shifting.
-  local colors = _chop(palette:colors(), 16)
+  local colors = _chop(palette:colors(), count)
   for from, color in ipairs(sorted) do
     local to = _index_of(colors, function(value)
         return color[1] == value[1] and color[2] == value[2] and color[3] == value[3]
@@ -135,8 +137,8 @@ function Main:update(_)
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
-    local palette = Palette.default(PALETTES[index])
-    self:_change_palette(palette)
+    local palette, count = Palette.default(PALETTES[index])
+    self:_change_palette(palette, count)
   end
 end
 
@@ -157,7 +159,7 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = (height - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
         canvas:shift(5, color)
-        canvas:sprite(self.bank, x, y, index)
+        canvas:sprite(x, y, self.bank, index)
       end
     end
     canvas:pop()
@@ -170,7 +172,7 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
         canvas:shift(5, color)
-        canvas:tile(self.bank, x, y, index, 0, math.tointeger(time * 4))
+        canvas:tile(x, y, self.bank, index, 0, math.tointeger(time * 4))
       end
     end
     canvas:pop()
@@ -183,28 +185,28 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
         canvas:shift(5, color)
-        canvas:tile(self.bank, x, y, index, math.tointeger(time * 4), 0)
+        canvas:tile(x, y, self.bank, index, math.tointeger(time * 4), 0)
       end
     end
     canvas:pop()
   elseif self.mode == 3 then
-    canvas:tile(self.bank, 0, 0, 5, 0, math.tointeger(time * 4), 4, -4)
+    canvas:tile(0, 0, self.bank, 5, 0, math.tointeger(time * 4), 4, -4)
   elseif self.mode == 4 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
 
-    canvas:sprite(self.bank, width / 2, height / 2, 0, scale, scale, rotation)
-    canvas:write(self.font, width, height, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
+    canvas:sprite(width / 2, height / 2, self.bank, 0, scale, scale, rotation)
+    canvas:write(width, height, self.font, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
   elseif self.mode == 5 then
-    canvas:sprite(self.bank, width / 2, height / 2, 0, 10, 10, 256 * 1)
+    canvas:sprite(width / 2, height / 2, self.bank, 0, 10, 10, 256 * 1)
   elseif self.mode == 6 then
-    canvas:sprite(self.bank, width / 2, height / 2, 0, 10, 10, 128 * 1)
+    canvas:sprite(width / 2, height / 2, self.bank, 0, 10, 10, 128 * 1)
   elseif self.mode == 7 then
     local x = (width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
     local y = (height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
-    canvas:sprite(self.bank, x - 4, y - 4, 0)
+    canvas:sprite(x - 4, y - 4, self.bank, 0)
   elseif self.mode == 8 then
-    canvas:sprite(self.bank, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
+    canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   elseif self.mode == 9 then
     canvas:push()
     canvas:transparent({ [0] = false })
@@ -217,8 +219,8 @@ function Main:render(_)
     canvas:pop()
   end
 
-  canvas:write(self.font, 0, 0, string.format("FPS: %d", System.fps()), 1.5)
-  canvas:write(self.font, width, 0, string.format("mode: %d", self.mode), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()), 1.5)
+  canvas:write(width, 0, self.font, string.format("mode: %d", self.mode), "right")
 end
 
 return Main

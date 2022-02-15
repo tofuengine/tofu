@@ -26,7 +26,6 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
-local Batch = require("tofu.graphics.batch")
 local Canvas = require("tofu.graphics.canvas")
 local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
@@ -52,7 +51,6 @@ function Main:__ctor()
 
   self.bunnies = {}
   self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
-  self.batch = Batch.new(self.bank, 5000)
   self.font = Font.default(11, 6)
   self.speed = 1.0
   self.running = true
@@ -60,7 +58,7 @@ function Main:__ctor()
 
   local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.bank, self.batch, WIDTH, HEIGHT))
+    table.insert(self.bunnies, Bunny.new(self.bank, WIDTH, HEIGHT))
   end
 end
 
@@ -68,7 +66,7 @@ function Main:process()
   if Input.is_pressed("start") then
     local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.bank, self.batch, WIDTH, HEIGHT))
+      table.insert(self.bunnies, Bunny.new(self.bank, WIDTH, HEIGHT))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
@@ -93,8 +91,6 @@ function Main:update(delta_time)
     return
   end
 
-  self.batch:clear()
-
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time * self.speed)
   end
@@ -104,10 +100,12 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:image():clear(0)
 
-  self.batch:blit(canvas)
+  for _, bunny in ipairs(self.bunnies) do
+    bunny:render(canvas)
+  end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, WIDTH, 0, string.format("#%d bunnies", #self.bunnies), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(WIDTH, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
 end
 
 return Main

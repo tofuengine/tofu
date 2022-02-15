@@ -79,7 +79,7 @@ function Sprite:render(canvas)
   for id = self.from, self.to, self.step do
     local i = math.abs((id - self.from)) * self.scale
     for j = i, i + self.scale - 1 do
-      self.bank:blit(canvas, x, y - j, id, self.scale, self.scale, rotation)
+      canvas:sprite(x, y - j, self.bank, id, self.scale, self.scale, rotation)
     end
   end
 

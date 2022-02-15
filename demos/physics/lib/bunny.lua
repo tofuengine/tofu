@@ -31,7 +31,7 @@ local Bunny = Class.define()
 
 local CELL_ID = 0
 local MIN_X, MIN_Y = 0, 0
-local MAX_X, MAX_Y = Canvas.default():size()
+local MAX_X, MAX_Y = Canvas.default():image():size()
 
 function Bunny:__ctor(font, bank)
   local cw, ch = bank:size(CELL_ID)
@@ -64,8 +64,8 @@ function Bunny:render(canvas)
   local x, y = self.body:position()
   local _, ch = self.bank:size(CELL_ID)
   local angle = self.body:angle()
-  self.bank:blit(canvas, x, y, CELL_ID, Math.angle_to_rotation(angle))
-  self.font:write(canvas, x, y - ch * 0.5, string.format("%d, %d", x, y), "center", "middle")
+  canvas:sprite(x, y, self.bank, CELL_ID, Math.angle_to_rotation(angle))
+  canvas:write(x, y - ch * 0.5, self.font, string.format("%d, %d", x, y), "center", "middle")
 end
 
 return Bunny

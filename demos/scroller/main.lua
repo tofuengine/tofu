@@ -28,6 +28,7 @@ local Input = require("tofu.events.input")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 
@@ -74,7 +75,7 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas <const> = Canvas.default()
-  local _, height <const> = canvas:size()
+  local _, height <const> = canvas:image():size()
   canvas:transparent({ [0] = false, [63] = true })
 
   local program = Program.new()
@@ -94,7 +95,7 @@ function Main:__ctor()
   end
   Display.program(program)
 
-  self.font = Font.new(Canvas.new("assets/images/font-8x8.png", 63, FONT_INDEX), FONT_WIDTH, FONT_HEIGHT)
+  self.font = Font.new(Image.new("assets/images/font-8x8.png", 63, FONT_INDEX), FONT_WIDTH, FONT_HEIGHT)
   self.offset = height
   self.current = 1
   self.running = true
@@ -120,9 +121,10 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
-  local width <const>, height <const> = canvas:size()
+  local width <const>, height <const> = image:size()
 
   local x <const> = width * 0.5
   local y <const> = self.offset
@@ -132,12 +134,12 @@ function Main:render(_)
 
   for i = 0, lines_to_render do
     local index <const> = self.current + i
-    self.font:write(canvas, x, y + i * FONT_HEIGHT, LINES[index], "center", "top")
+    canvas:write(x, y + i * FONT_HEIGHT, self.font, LINES[index], "center", "top")
   end
 
   canvas:push()
     canvas:shift(FONT_INDEX, 31)
-    self.font:write(canvas, 0, 0, System.fps())
+    canvas:write(0, 0, self.font, System.fps())
   canvas:pop()
 end
 

@@ -32,7 +32,7 @@ local GRAVITY = 981
 local X_DAMPENING = 0.95
 local Y_DAMPENING = 0.85
 
-function Bunny:__ctor(bank, batch, width, height)
+function Bunny:__ctor(bank, width, height)
   local cw, ch = bank:size(CELL_ID)
 
   self.min_x = 0
@@ -40,13 +40,11 @@ function Bunny:__ctor(bank, batch, width, height)
   self.max_x = width - cw
   self.max_y = height - ch
 
-  self.batch = batch
+  self.bank = bank
   self.x = (self.max_x - self.min_x) / 2 -- Spawn in the top-center part of the screen.
   self.y = (self.max_y - self.min_y) / 8
   self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED * 0.5)
   self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED * 0.5)
-
-  self.batch:add(CELL_ID, self.x, self.y)
 end
 
 function Bunny:update(delta_time)
@@ -75,8 +73,10 @@ function Bunny:update(delta_time)
     self.vy = 0.0 -- Bump on the ceiling!
     self.y = self.min_y
   end
+end
 
-  self.batch:add(CELL_ID, self.x, self.y)
+function Bunny:render(canvas)
+  canvas:sprite(self.x, self.y, self.bank, CELL_ID)
 end
 
 return Bunny

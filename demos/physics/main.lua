@@ -28,6 +28,7 @@ local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 local Body = require("tofu.physics.body")
@@ -35,9 +36,9 @@ local World = require("tofu.physics.world")
 
 local Bunny = require("lib/bunny")
 
-local INITIAL_BUNNIES = 1
-local LITTER_SIZE = 5
-local MAX_BUNNIES = 32768
+local INITIAL_BUNNIES <const> = 1
+local LITTER_SIZE <const> = 5
+local MAX_BUNNIES <const> = 32768
 
 local Main = Class.define()
 
@@ -49,10 +50,10 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
 
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
   self.bunnies = {}
-  self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
+  self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
 
   local left = Body.new()
@@ -102,15 +103,16 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
-  canvas:clear(0)
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(0)
 
   for _, bunny in ipairs(self.bunnies) do
     bunny:render(canvas)
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, 0, string.format("#%d bunnies", #self.bunnies), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
 end
 
 return Main

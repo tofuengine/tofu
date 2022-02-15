@@ -33,10 +33,10 @@ local Palette = require("tofu.graphics.palette")
 
 local bump = require("lib/bump")
 
-local _PALETTE <const> = Palette.default("famicube")
-local _FONT <const> = Font.default(63, 11)
+local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.default(63, 11)
 
-local _LIFE = 2.0
+local LIFE <const> = 2.0
 
 local Main = Class.define()
 
@@ -48,12 +48,12 @@ function Main:_add_block(x, y, w, h)
 end
 
 function Main:__ctor()
-  Display.palette(_PALETTE)
+  Display.palette(PALETTE)
 
   local canvas = Canvas.default()
   canvas:transparent({ [0] = false, [63] = true })
 
-  self.player = { x = 50,y = 50, w = 20, h = 20, speed = 80 }
+  self.player = { x = 50, y = 50, w = 20, h = 20, speed = 80 }
 
   -- World creation
   self.world = bump.newWorld()
@@ -105,7 +105,7 @@ function Main:update_player(delta_time)
       self.player.x + dx, self.player.y + dy, function(_, _) return "slide" end)
     for i = 1, cols_len do
       local col = cols[i]
-      col.other.life = _LIFE
+      col.other.life = LIFE
       Log.info(("c.other = %s, c.type = %s, c.normal = %d,%d"):format(col.other, col.type, col.normal.x, col.normal.y))
     end
   end
@@ -126,8 +126,8 @@ end
 
 -- helper function
 local function _box(canvas, box, r, g, b)
-  canvas:rectangle('fill', box.x, box.y, box.w, box.h, _PALETTE:match(r * 0.5, g * 0.5, b * 0.5))
-  canvas:rectangle('line', box.x, box.y, box.w, box.h, _PALETTE:match(r, g, b))
+  canvas:rectangle('fill', box.x, box.y, box.w, box.h, PALETTE:match(r * 0.5, g * 0.5, b * 0.5))
+  canvas:rectangle('line', box.x, box.y, box.w, box.h, PALETTE:match(r, g, b))
 end
 
 function Main:draw_blocks(canvas)
@@ -152,7 +152,7 @@ function Main:render(_)
   self:draw_blocks(canvas)
   self:draw_player(canvas)
 
-  canvas:write(0, 0, _FONT, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, FONT, string.format("FPS: %d", System.fps()))
 end
 
 return Main
