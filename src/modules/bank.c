@@ -57,6 +57,32 @@ int bank_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
+static int bank_new_1o_1o(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
+
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->surface, (GL_Size_t){ .width = atlas->surface->width, .height = atlas->surface->height });
+    if (!sheet) {
+        return luaL_error(L, "can't create sheet");
+    }
+
+    Bank_Object_t *self = (Bank_Object_t *)luaX_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
+            .atlas = {
+                .instance = atlas,
+                .reference = luaX_ref(L, 1),
+            },
+            .sheet = sheet
+        }, OBJECT_TYPE_BANK, META_TABLE);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+        self, sheet, atlas, self->atlas.reference);
+
+    return 1;
+}
+
 static int bank_new_2os_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -125,6 +151,7 @@ static int bank_new_3onn_1o(lua_State *L)
 static int bank_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, bank_new_1o_1o)
         LUAX_OVERLOAD_ARITY(2, bank_new_2os_1o)
         LUAX_OVERLOAD_ARITY(3, bank_new_3onn_1o)
     LUAX_OVERLOAD_END
