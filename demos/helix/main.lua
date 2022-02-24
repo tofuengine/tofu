@@ -58,8 +58,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
-  canvas:clear(0)
+  local image = canvas:image()
+  local width, height = image:size()
+  image:clear(0)
 
   local x = width * 0.5
 
@@ -89,7 +90,7 @@ function Main:render(_)
     canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:match(v2, v2, v2))
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

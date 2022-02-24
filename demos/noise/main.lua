@@ -47,7 +47,7 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
   self.current = 1
 
@@ -78,7 +78,8 @@ end
 -- https://www.redblobgames.com/maps/terrain-from-noise/
 function Main:update(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   local time <const> = System.time() * 0.1
   local nz = time
@@ -119,7 +120,8 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
   local scale = (COLORS - 1) / (self.max - self.min)
   canvas:scan(function(x, y, _)
@@ -127,7 +129,7 @@ function Main:render(_)
       return math.tointeger((v - self.min) * scale)
     end)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
+  canvas:write(0, 0, self.font, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
 end
 
 return Main

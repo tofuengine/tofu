@@ -51,7 +51,7 @@ function Bunny:__ctor(font, bank)
   body:shape("box", cw, ch)
   body:elasticity(0.75)
   body:type("dynamic")
-  body:mass(25)
+  body:mass(math.random(10, 50))
   body:momentum(10)
   body:position(x, y)
   self.body = body
@@ -65,7 +65,7 @@ function Bunny:render(canvas)
   local _, ch = self.bank:size(CELL_ID)
   local angle = self.body:angle()
   canvas:sprite(x, y, self.bank, CELL_ID, Math.angle_to_rotation(angle))
-  canvas:write(x, y - ch * 0.5, self.font, string.format("%d, %d", x, y), "center", "middle")
+  canvas:write(x, y - ch * 0.5, self.font, string.format("%d, %d, %d", x, y, self.body:mass()), "center", "middle")
 end
 
 return Bunny

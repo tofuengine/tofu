@@ -103,7 +103,7 @@ end
 
 function Animation:render(canvas, x, y)
   local frame = self.frame
-  self.bank:blit(canvas, x, y, frame.cell_id, frame.scale_x, frame.scale_y)
+  canvas:sprite(x, y, self.bank, frame.cell_id, frame.scale_x, frame.scale_y)
 end
 
 return Animation

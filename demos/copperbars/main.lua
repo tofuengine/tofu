@@ -39,10 +39,11 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
+  local image = canvas:image()
+  local width, _ = image:size()
   local half_width = width * 0.5
 
-  self.font = Font.default(0, 11)
+  self.font = Font.default(0, 1)
 
   local step = 255 / SHADES
 
@@ -52,6 +53,7 @@ function Main:__ctor()
   program:wait(0, 0)
   for i = SHADES, 0, -1 do
     local v = step * (SHADES - i)
+    print(v)
     program:color(0, v, 0x00, 0x00)
     program:skip(half_width, 0) -- Wait half-width on the same raster-line...
     program:color(0, 0x00, 0x00, v)
@@ -73,7 +75,8 @@ end
 
 function Main:update(_)
   local canvas = Canvas.default()
-  local _, height = canvas:size()
+  local image = canvas:image()
+  local _, height = image:size()
 
   local t = System.time() * 2.5
   local y = math.sin(t) * height * 0.25 + height * 0.5
@@ -84,9 +87,10 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

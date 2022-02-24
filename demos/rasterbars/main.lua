@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 
@@ -38,11 +39,12 @@ function Main:__ctor()
   Display.palette(Palette.default("pico-8-ext"))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
   canvas:transparent({ ["0"] = false, ["22"] = true })
 
   self.font = Font.default(0, 11)
-  self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
+  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
   self.big_font = Font.default("32x64", 1, 31)
   self.running = true
   self.time = 0
@@ -84,7 +86,8 @@ function Main:update(delta_time)
   self.y = self.y + self.dy * 64 * delta_time
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   local t = self.time
   local y = math.sin(t * 2.5) * height * 0.125 + height * 0.25
@@ -122,17 +125,18 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local _, height = canvas:size()
+  local image = canvas:image()
+  local _, height = image:size()
 
-  canvas:clear(0)
+  image:clear(0)
 
   local t = self.time
   local y = math.sin(t * 0.5) * height * 0.125 + height * 0.25
-  self.big_font:write(canvas, 0, y, "TOFU ENGINE")
+  canvas:write(0, y, self.big_font, "TOFU ENGINE")
 
-  self.bank:blit(canvas, self.x, self.y, 12, 4, 4, 0)
+  canvas:sprite(self.x, self.y, self.bank, 12, 4, 4, 0)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

@@ -45,7 +45,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:transparent(0, false)
 
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
   self.m = Vector.new(width - 1, height - 1)
   self.c = Vector.new(self.m)
   self.c:scale(0.5)
@@ -113,7 +114,7 @@ function Main:render(_)
     end
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

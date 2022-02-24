@@ -122,9 +122,10 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
-  local width, height = canvas:size()
+  local width, height = image:size()
 
   local x, y = 0, 0
   for index, source in ipairs(self.sources) do
@@ -132,11 +133,11 @@ function Main:render(_)
         self.current == index and "*" or " ",
         source.instance:is_playing() and "!" or " ",
         source.pan, source.instance:gain())
-    local _, th = self.font:write(canvas, x, y, text)
+    local _, th = canvas:write(x, y, self.font, text)
     y = y + th
   end
-  self.font:write(canvas, x, y, PROPERTIES[self.property])
-  self.font:write(canvas, width, height, System.fps(), "right", "bottom")
+  canvas:write(x, y, self.font, PROPERTIES[self.property])
+  canvas:write(width, height, self.font, System.fps(), "right", "bottom")
 end
 
 return Main

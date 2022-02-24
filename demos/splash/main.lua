@@ -45,11 +45,12 @@ function Main:__ctor()
 
   self.background_index = background_index -- Use it as background colour and transparent! :)
 
+  local width, height = canvas:image():size()
   self.objects = {
-      Background.new(canvas, background_index, palette),
-      Wave.new(canvas, background_index, palette),
-      Logo.new(canvas, background_index, palette),
-      Stars.new(canvas, background_index, palette)
+      Background.new(width, height, background_index, palette),
+      Wave.new(width, height, background_index, palette),
+      Logo.new(width, height, background_index, palette),
+      Stars.new(width, height, background_index, palette)
     }
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")

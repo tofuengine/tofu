@@ -29,7 +29,6 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
-local Shape = require("tofu.graphics.shape")
 local Grid = require("tofu.util.grid")
 
 local STEPS = 64
@@ -46,7 +45,8 @@ function Main:__ctor()
   Display.palette(Palette.new(PALETTE))
 
   local canvas = Canvas.default()
-  local width, height = canvas:image():size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.font = Font.default(0, 15)
   self.x_size = width / STEPS
@@ -109,11 +109,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-
   local image = canvas:image()
   local width, _ = image:size()
   image:clear(0)
-
 
   local w = self.x_size
   local h = self.y_size
@@ -121,12 +119,12 @@ function Main:render(_)
       local x = column * w
       local y = row * h
       if value > 0 then
-        Shape.rectangle(canvas, "fill", x, y, w, h, value)
+        canvas:rectangle("fill", x, y, w, h, value)
       end
     end)
 
-    self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-    self.font:write(canvas, width, 0, string.format("D: %.2f", self.damping), "right")
+    canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+    canvas:write(width, 0, self.font, string.format("D: %.2f", self.damping), "right")
 end
 
 return Main

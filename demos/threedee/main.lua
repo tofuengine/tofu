@@ -48,7 +48,8 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas <const> = Canvas.default()
-  local width <const>, height <const> = canvas:size()
+  local image <const> = canvas:image()
+  local width <const>, height <const> = image:size()
   canvas:transparent({ [0] = false, [63] = true })
 
   self.player = Player.new()
@@ -107,14 +108,15 @@ end
 function Main:render(_)
   local camera <const> = self.camera
 
-  local canvas = Canvas.default()
-  canvas:clear(59)
+  local canvas <const> = Canvas.default()
+  local image <const> = canvas:image()
+  image:clear(59)
 
   self.background:render(canvas)
   self.scene:render(canvas)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, 0, 10, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 10, self.font, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
 end
 
 return Main

@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local Sprite = require("lib/sprite")
@@ -44,7 +45,7 @@ function Main:__ctor()
   canvas:transparent({ [0] = false, [13] = true })
 
   self.sprites = {}
-  self.bank = Bank.new(Canvas.new("assets/images/diamonds.png", 13), 16, 16)
+  self.bank = Bank.new(Image.new("assets/images/diamonds.png", 13), 16, 16)
   self.font = Font.default(13, 0)
   self.speed = 1.0
   self.running = true
@@ -79,13 +80,14 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
-  canvas:clear(63)
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(63)
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end
-  self.font:write(canvas, 0,0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, 0, string.format("#%d sprites", #self.sprites), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Main

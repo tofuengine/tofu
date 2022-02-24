@@ -34,7 +34,8 @@ function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.timerA = Timer.new(0.5, 50, function()
       --local o = Object.new()
@@ -61,7 +62,9 @@ end
 function Main:render(_)
   --local x = X.new()
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
+
   canvas:circle("fill", self.x, self.y, 5, 15)
 end
 

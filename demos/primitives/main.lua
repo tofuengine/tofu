@@ -32,19 +32,18 @@ local Palette = require("tofu.graphics.palette")
 
 local Main = Class.define()
 
-local PALETTE = {
+local PALETTE <const> = {
     { 0x00, 0x00, 0x00 }, { 0x24, 0x00, 0x00 }, { 0x48, 0x00, 0x00 }, { 0x6D, 0x00, 0x00 },
     { 0x91, 0x00, 0x00 }, { 0xB6, 0x00, 0x00 }, { 0xDA, 0x00, 0x00 }, { 0xFF, 0x00, 0x00 },
     { 0xFF, 0x3F, 0x00 }, { 0xFF, 0x7F, 0x00 }, { 0xFF, 0xBF, 0x00 }, { 0xFF, 0xFF, 0x00 },
     { 0xFF, 0xFF, 0x3F }, { 0xFF, 0xFF, 0x7F }, { 0xFF, 0xFF, 0xBF }, { 0xFF, 0xFF, 0xFF }
   }
 
+local FOREGROUND <const> = 3
+
 function Main:__ctor()
   Display.palette(Palette.new(PALETTE)) -- "arne-16")
   Display.palette(Palette.default("arne-16"))
-
-  local canvas = Canvas.default()
-  canvas:foreground(3)
 
   self.font = Font.default(0, 1)
   self.mode = 0
@@ -65,25 +64,26 @@ end
 
 function Main:render(_) -- ratio
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
-  local width, height = canvas:size()
+  local width, height = image:size()
 
   if self.mode == 0 then
     local cx, cy = 8, 32
     for r = 0, 12 do
-      canvas:circle("fill", cx, cy, r)
-      canvas:circle("line", cx, cy + 64, r)
+      canvas:circle("fill", cx, cy, r, FOREGROUND)
+      canvas:circle("line", cx, cy + 64, r, FOREGROUND)
       cx = cx + 2 * r + 8
     end
 
-    canvas:polyline({ 64, 64, 64, 128, 128, 128 })
+    canvas:polyline({ 64, 64, 64, 128, 128, 128 }, FOREGROUND)
 
     local x0 = (math.random() * width * 2) - width * 0.5
     local y0 = (math.random() * width * 2) - width * 0.5
     local x1 = (math.random() * width * 2) - width * 0.5
     local y1 = (math.random() * width * 2) - width * 0.5
-    canvas:line(x0, y0, x1, y1)
+    canvas:line(x0, y0, x1, y1, FOREGROUND)
   elseif self.mode == 1 then
     local dx = math.cos(System.time()) * 32
     local dy = math.sin(System.time()) * 32
@@ -103,9 +103,9 @@ function Main:render(_) -- ratio
     canvas:triangle("line", x0, y0, x1, y1, x2, y2, 7)
     canvas:push()
       canvas:shift(1, 15)
-      self.font:write(canvas, x0, y0, "v0", "center", "middle")
-      self.font:write(canvas, x1, y1, "v1", "center", "middle")
-      self.font:write(canvas, x2, y2, "v2", "center", "middle")
+      canvas:write(x0, y0, self.font, "v0", "center", "middle")
+      canvas:write(x1, y1, self.font, "v1", "center", "middle")
+      canvas:write(x2, y2, self.font, "v2", "center", "middle")
     canvas:pop()
   elseif self.mode == 4 then
     local x = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
@@ -148,8 +148,8 @@ function Main:render(_) -- ratio
     canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, 0, self.font, string.format("mode: %d", self.mode), "right")
 end
 
 return Main

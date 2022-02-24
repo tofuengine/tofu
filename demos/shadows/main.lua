@@ -28,6 +28,7 @@ local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -45,9 +46,9 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:transparent(0, false)
 
-  self.background = Canvas.new("assets/background.png")
-  self.stamp = Canvas.new("assets/sphere.png", 0, greyscale)
-  self.bank = Bank.new(Canvas.new("assets/sheet.png",
+  self.background = Image.new("assets/background.png")
+  self.stamp = Image.new("assets/sphere.png", 0, greyscale)
+  self.bank = Bank.new(Image.new("assets/sheet.png",
     palette:match(0, 0, 0), palette:match(255, 255, 255)), 32, 32)
   self.font = Font.default(palette:match(255, 255, 255), palette:match(0, 0, 0))
   self.velocity = { x = 0, y = 0 }
@@ -86,7 +87,8 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
 --  local time = System.time()
 
@@ -99,8 +101,8 @@ function Main:render(_)
 
   canvas:push()
     canvas:transparent(255, true)
-    self.bank:blit(canvas, self.position.x, self.position.y, 0)
-    self.font:write(canvas, 0, 0,string.format("FPS: %.1f", System.fps()))
+    canvas:sprite(self.position.x, self.position.y, self.bank, 0)
+    canvas:write(0, 0, self.font, string.format("FPS: %.1f", System.fps()))
   canvas:pop()
 
   canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)

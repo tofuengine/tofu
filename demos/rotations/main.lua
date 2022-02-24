@@ -26,10 +26,10 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
-local Batch = require("tofu.graphics.batch")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local Main = Class.define()
@@ -40,8 +40,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
 
-  self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
-  self.batch = Batch.new(self.bank, 5000)
+  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
   self.font = Font.default(22, 2)
 
   self.anchor = 0.5
@@ -95,20 +94,21 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(12)
+  local image = canvas:image()
+  image:clear(12)
 
-  local width, height = canvas:size()
-  local x, y = canvas:center()
+  local width, height = image:size()
+  local x, y = image:center()
 
   for _ = 1, 1 do
-    self.bank:blit(canvas, x, y, 9,
+    canvas:sprite(x, y, self.bank, 9,
       self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale,
       self.rotation,
       self.anchor, self.anchor)
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
-  self.font:write(canvas, width, height, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
+  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(width, height, self.font, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
     "right", "bottom")
 end
 
