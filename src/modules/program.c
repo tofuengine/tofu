@@ -186,8 +186,8 @@ static int program_skip_4onnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    size_t delta_x = LUAX_UNSIGNED(L, 2);
-    size_t delta_y = LUAX_UNSIGNED(L, 3);
+    int delta_x = LUAX_INTEGER(L, 2);
+    int delta_y = LUAX_INTEGER(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_skip(self->program, position, delta_x, delta_y);

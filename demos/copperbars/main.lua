@@ -53,7 +53,6 @@ function Main:__ctor()
   program:wait(0, 0)
   for i = SHADES, 0, -1 do
     local v = step * (SHADES - i)
-    print(v)
     program:color(0, v, 0x00, 0x00)
     program:skip(half_width, 0) -- Wait half-width on the same raster-line...
     program:color(0, 0x00, 0x00, v)

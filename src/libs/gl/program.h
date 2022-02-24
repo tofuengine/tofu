@@ -62,7 +62,7 @@ extern void GL_program_erase(GL_Program_t *program, size_t position, size_t leng
 
 extern void GL_program_nop(GL_Program_t *program, int position);
 extern void GL_program_wait(GL_Program_t *program, int position, size_t x, size_t y);
-extern void GL_program_skip(GL_Program_t *program, int position, size_t delta_x, size_t delta_y);
+extern void GL_program_skip(GL_Program_t *program, int position, int delta_x, int delta_y);
 extern void GL_program_modulo(GL_Program_t *program, int position, int amount);
 extern void GL_program_offset(GL_Program_t *program, int position, int amount);
 extern void GL_program_color(GL_Program_t *program, int position, GL_Pixel_t index, GL_Color_t color);

@@ -200,9 +200,9 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
                         break;
                     }
                     case GL_PROGRAM_COMMAND_SKIP: {
-                        size_t x = entry->args[0].size;
-                        size_t y = entry->args[1].size;
-                        wait += y * dwidth + x;
+                        int dx = entry->args[0].integer;
+                        int dy = entry->args[1].integer;
+                        wait += dy * dwidth + dx;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_MODULO: {
