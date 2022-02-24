@@ -90,10 +90,13 @@ void GL_context_pop(GL_Context_t *context, size_t levels)
 {
     const size_t length = arrlenu(context->state.stack);
     if (length < 1) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no more states to pop from context");
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no states to pop from context");
         return;
     }
-    for (size_t i = imin((int)length, (int)levels); i; --i) {
+    if (levels > length) {
+        levels = length;
+    }
+    for (size_t i = levels; i; --i) {
         context->state.current = arrpop(context->state.stack);
     }
 }
