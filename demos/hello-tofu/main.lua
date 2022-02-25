@@ -29,6 +29,7 @@ local Input = require("tofu.events.input")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local XForm = require("tofu.graphics.xform")
 
@@ -36,7 +37,7 @@ local XForm = require("tofu.graphics.xform")
 local Main = Class.define()
 
 -- The message we are displaying, as a "constant".
-local MESSAGE = "Hello, Tofu!"
+local MESSAGE <const> = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
@@ -44,15 +45,19 @@ function Main:__ctor()
 
   self.factor = 0.0
 
+  -- Get the default image size. The image is bound the default canvas:
+  local canvas = Canvas.default()
+  local image = canvas:image()
+  local width, height = image:size()
+
   -- Load a custom 8x8 font from file, setting palette colour `0` as background
   -- and `15` as foreground.
   -- Please note that, as default, palette colour `0` is set as transparent. This
   -- means that the font background colour won't be drawn.
-  self.canvas = Canvas.new(Canvas.default():size())
-  self.font = Font.new(Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
-  self.font_digits = Font.new(Canvas.new("assets/digits.png", 0, 15), 8, 8, "0123456789")
+  self.canvas = Canvas.new(Image.new(width, height))
+  self.font = Font.new(Image.new("assets/font-8x8.png", 0, 15), 8, 8)
+  self.font_digits = Font.new(Image.new("assets/digits.png", 0, 15), 8, 8, "0123456789")
 
-  local width, height = self.canvas:size()
   self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:wrap("border")
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
@@ -73,7 +78,7 @@ function Main:process()
   end
 
   if recompute then
-    local _, height = self.canvas:size()
+    local _, height = self.canvas:image():size()
     self.xform:warp(height, self.factor)
   end
 end
@@ -89,11 +94,12 @@ function Main:render(_)
   local canvas = self.canvas
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
-  canvas:clear(0)
+  local image = canvas:image()
+  image:clear(0)
 
   -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.
-  local canvas_width, canvas_height = self.canvas:size()
+  local canvas_width, canvas_height = image:size()
   local text_width, text_height = self.font:size(MESSAGE)
   local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
@@ -119,14 +125,21 @@ function Main:render(_)
     canvas:shift(15, index)
 
     -- Draw the i-th character, accounting for vertical offset.
-    self.font:write(canvas, x + dx, y + dy, c)
+    canvas:write(x + dx, y + dy, self.font, c)
   end
 
-  self.font_digits:write(canvas, 0, 0, "9876543210")
+  canvas:write(0, 0, self.font_digits, "9876543210")
 
   -- Transfer to the virtual-screen canvas through transformation.
-  Canvas.default():clear()
-  self.xform:blit(Canvas.default(), canvas)
+  self:_flip()
+end
+
+function Main:_flip()
+  local canvas = Canvas.default()
+  local image = canvas:image()
+  image:clear(0)
+
+  canvas:xform(self.canvas:image(), self.xform)
 end
 
 return Main
