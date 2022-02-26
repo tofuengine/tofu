@@ -65,6 +65,9 @@
 #define FX_PANBRELLO_WF	0x8b
 #define FX_HIOFFSET	0x8c
 #define FX_IT_BREAK	0x8e	/* like FX_BREAK with hex parameter */
+#define FX_MACRO_SET	0xbd	/* Set active IT parametered MIDI macro */
+#define FX_MACRO	0xbe	/* Execute IT MIDI macro */
+#define FX_MACROSMOOTH	0xbf	/* Execute IT MIDI macro slide */
 #endif
 
 #define FX_SURROUND	0x8d	/* S3M/IT */
