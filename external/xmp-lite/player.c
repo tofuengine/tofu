@@ -561,7 +561,7 @@ static int tremor_s3m(struct context_data *ctx, int chn, int finalvol)
  * Update channel data
  */
 
-#define DOENV_RELEASE ((TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF))
+#define DOENV_RELEASE ((TEST_NOTE(NOTE_ENV_RELEASE) || act == VIRT_ACTION_OFF))
 
 static void process_volume(struct context_data *ctx, int chn, int act)
 {
@@ -585,7 +585,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		/* If IT, only apply fadeout on note release if we don't
 		 * have envelope, or if we have envelope loop
 		 */
-		if (TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF) {
+		if (TEST_NOTE(NOTE_ENV_RELEASE) || act == VIRT_ACTION_OFF) {
 			if ((~instrument->aei.flg & XMP_ENVELOPE_ON) ||
 			    (instrument->aei.flg & XMP_ENVELOPE_LOOP)) {
 				fade = 1;
@@ -593,12 +593,12 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		}
 	} else {
 		if (~instrument->aei.flg & XMP_ENVELOPE_ON) {
-			if (TEST_NOTE(NOTE_RELEASE)) {
+			if (TEST_NOTE(NOTE_ENV_RELEASE)) {
 				xc->fadeout = 0;
 			}
 		}
 
-		if (TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF) {
+		if (TEST_NOTE(NOTE_ENV_RELEASE) || act == VIRT_ACTION_OFF) {
 			fade = 1;
 		}
 	}
@@ -881,17 +881,21 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	if (cutoff > 0xff) {
 		cutoff = 0xff;
-	} else if (cutoff < 0xff) {
+	}
+	/* IT: cutoff 127 + resonance 0 turns off the filter, but this
+	 * is only applied when playing a new note without toneporta.
+	 * All other combinations take effect immediately.
+	 * See OpenMPT filter-reset.it, filter-reset-carry.it */
+	if (cutoff < 0xfe || resonance > 0 || xc->filter.can_disable) {
 		int a0, b0, b1;
 		libxmp_filter_setup(s->freq, cutoff, resonance, &a0, &b0, &b1);
 		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_A0, a0);
 		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, b0);
 		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, b1);
 		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, resonance);
+		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
+		xc->filter.can_disable = 0;
 	}
-
-	/* Always set cutoff */
-	libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 
 #endif
 }
@@ -1194,7 +1198,7 @@ static void play_channel(struct context_data *ctx, int chn)
 			SET_NOTE(NOTE_RELEASE);
 	}
 
-	libxmp_virt_release(ctx, chn, TEST_NOTE(NOTE_RELEASE));
+	libxmp_virt_release(ctx, chn, TEST_NOTE(NOTE_SAMPLE_RELEASE));
 
 	update_volume(ctx, chn);
 	update_frequency(ctx, chn);
@@ -1205,7 +1209,7 @@ static void play_channel(struct context_data *ctx, int chn)
 	process_pan(ctx, chn, act);
 
 	if (TEST_NOTE(NOTE_SUSEXIT)) {
-		SET_NOTE(NOTE_RELEASE);
+		SET_NOTE(NOTE_ENV_RELEASE);
 	}
 
 	xc->info_position = libxmp_virt_getvoicepos(ctx, chn);
@@ -1447,6 +1451,13 @@ LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 
 	/* Reset our buffer pointers */
 	xmp_play_buffer(opaque, NULL, 0, 0);
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+	for (i = 0; i < p->virt.virt_channels; i++) {
+		struct channel_data *xc = &p->xc_data[i];
+		xc->filter.cutoff = 0xff;
+	}
+#endif
 
 	reset_channels(ctx);
 

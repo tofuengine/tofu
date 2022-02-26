@@ -201,6 +201,20 @@ static int load_xm_pattern(struct module_data *m, int num, int version,
 					break;
 				}
 			}
+			if (event->fxt == FX_XF_PORTA && MSN(event->fxp) == 0x09) {
+				/* Translate MPT hacks */
+				switch (LSN(event->fxp)) {
+				case 0x0:	/* Surround off */
+				case 0x1:	/* Surround on */
+					event->fxt = FX_SURROUND;
+					event->fxp = LSN(event->fxp);
+					break;
+				case 0xe:	/* Play forward */
+				case 0xf:	/* Play reverse */
+					event->fxt = FX_REVERSE;
+					event->fxp = LSN(event->fxp) - 0xe;
+				}
+			}
 
 			if (!event->vol) {
 				continue;
@@ -524,7 +538,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			for (j = 12; j < 108; j++) {
 				xxi->map[j].ins = xi.sample[j - 12];
 				if (xxi->map[j].ins >= xxi->nsm)
-					xxi->map[j].ins = -1;
+					xxi->map[j].ins = 0xff;
 			}
 		}
 

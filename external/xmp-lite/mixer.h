@@ -33,6 +33,7 @@ struct mixer_voice {
 	int start;		/* loop start */
 	int end;		/* loop end */
 	int act;		/* nna info & status of voice */
+	int key;		/* key for DCA note check */
 	int old_vl;		/* previous volume, left channel */
 	int old_vr;		/* previous volume, right channel */
 	int sleft;		/* last left sample output, in 32bit */
@@ -77,5 +78,6 @@ double	libxmp_mixer_getvoicepos(struct context_data *, int);
 void	libxmp_mixer_setnote	(struct context_data *, int, int);
 void	libxmp_mixer_setperiod	(struct context_data *, int, double);
 void	libxmp_mixer_release	(struct context_data *, int, int);
+void	libxmp_mixer_reverse	(struct context_data *, int, int);
 
 #endif /* LIBXMP_MIXER_H */
