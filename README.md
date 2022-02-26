@@ -21,9 +21,9 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Support for both proportional and non-proportional bitmap based fonts (alphabet subset can be specified, if required).
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Tiles drawing with offset/scaling/flipping.
-* [x] Palette based graphics with up to 256 colors.
-* [x] Banked palette support w/ color bias during VRAM transfer.
+* [x] Palette based graphics w/ 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
+* [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] Multiple canvas, with drawing state stack support.
@@ -59,14 +59,14 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.33, v0.6.32, v0.13.3
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.37, v0.6.32, v0.13.5
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.6
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.4
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.2
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.8
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
