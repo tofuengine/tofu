@@ -137,6 +137,14 @@ typedef struct Input_Configuration_s {
 
 #define INPUT_MODES_COUNT   3
 
+typedef struct Input_Controller_s {
+    const char *id;
+} Input_Controller_t;
+
+typedef struct Input_Cursor_s {
+
+} Input_Cursor_t;
+
 typedef struct Input_State_s {
     int mode;
     struct {
@@ -160,22 +168,37 @@ typedef struct Input_s {
     Input_State_t state;
 } Input_t;
 
+typedef struct Input_Position_s {
+    int x, y;
+} Input_Position_t;
+
+typedef struct Input_Area_s {
+    int x, y;
+    size_t width, height;
+} Input_Area_t;
+
 extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
 extern void Input_destroy(Input_t *input);
 
 extern bool Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
+extern int Input_get_mode(const Input_t *input);
+extern void Input_set_mode(Input_t *input, int mode);
 extern const Input_State_t *Input_get_state(const Input_t *input);
 
-extern void Input_set_cursor_position(Input_t *input, int x, int y);
-extern void Input_set_cursor_area(Input_t *input, int x, int y, size_t width, size_t height);
-extern void Input_set_mode(Input_t *input, int mode);
+extern const Input_Controller_t *Input_get_controller(const Input_t *input, const char *id);
+extern const Input_Cursor_t *Input_get_cursor(const Input_t *input, const char *id);
 
-extern const Input_Button_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
-extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);
-extern const Input_Triggers_t *Input_get_triggers(const Input_t *input);
-extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick);
-extern int Input_get_mode(const Input_t *input);
+extern Input_Position_t Input_cursor_set_controller(const Input_Cursor_t *cursor, const char *id);
+extern Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor);
+extern void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position);
+extern Input_Area_t Input_cursor_get_area(const Input_Cursor_t *cursor);
+extern void Input_cursor_set_area(Input_Cursor_t *cursor, Input_Area_t area);
+
+extern Input_Stick_t Input_controller_set_keyset(Input_Controller_t *controller, const char *keyset);
+extern Input_Button_t Input_controller_get_button(Input_Controller_t *controller, Input_Buttons_t button);
+extern Input_Triggers_t Input_controller_get_triggers(Input_Controller_t *controller);
+extern Input_Stick_t Input_controller_get_stick(Input_Controller_t *controller, Input_Sticks_t stick);
 
 #endif  /* __SYSTEMS_INPUT_H__ */
