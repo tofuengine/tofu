@@ -67,32 +67,24 @@ typedef struct Input_Button_s {
     uint8_t : 3;
 } Input_Button_t;
 
-typedef struct Input_Cursor_s {
-    float x, y;
-    struct {
-        float x0, y0;
-        float x1, y1;
-    } area;
-} Input_Cursor_t;
+typedef enum Input_Controller_Sticks_e {
+    Input_Controller_Sticks_t_First = 0,
+    INPUT_CONTROLLER_STICK_LEFT = Input_Controller_Sticks_t_First,
+    INPUT_CONTROLLER_STICK_RIGHT,
+    Input_Controller_Sticks_t_Last = INPUT_CONTROLLER_STICK_RIGHT,
+    Input_Controller_Sticks_t_CountOf
+} Input_Controller_Sticks_t;
 
-typedef enum Input_Sticks_e {
-    Input_Sticks_t_First = 0,
-    INPUT_STICK_LEFT = Input_Sticks_t_First,
-    INPUT_STICK_RIGHT,
-    Input_Sticks_t_Last = INPUT_STICK_RIGHT,
-    Input_Sticks_t_CountOf
-} Input_Sticks_t;
-
-typedef struct Input_Stick_s {
+typedef struct Input_Controller_Stick_s {
     float x, y;
     float angle, magnitude;
-} Input_Stick_t;
+} Input_Controller_Stick_t;
 
-typedef struct Input_Triggers_s {
+typedef struct Input_Controller_Triggers_s {
     float left, right;
-} Input_Triggers_t;
+} Input_Controller_Triggers_t;
 
-#define INPUT_GAMEPADS_COUNT    (GLFW_JOYSTICK_LAST + 1)
+#define INPUT_CONTROLLERS_COUNT (GLFW_JOYSTICK_LAST + 1)
 
 typedef enum Input_Handlers_e {
     Input_Handlers_t_First = 0,
@@ -138,32 +130,32 @@ typedef struct Input_Configuration_s {
 #define INPUT_MODES_COUNT   3
 
 typedef struct Input_Controller_s {
-    const char *id;
+    size_t id;
+    bool available;
+    bool dpad_emulation;
+    Input_Button_t buttons[Input_Buttons_t_CountOf];
+    Input_Controller_Stick_t sticks[Input_Controller_Sticks_t_CountOf];
+    Input_Controller_Triggers_t triggers;
 } Input_Controller_t;
 
 typedef struct Input_Cursor_s {
-
+    float x, y;
+    struct {
+        float x0, y0;
+        float x1, y1;
+    } area;
 } Input_Cursor_t;
 
 typedef struct Input_State_s {
     int mode;
-    struct {
-        int id; // TODO: add multiple gamepads
-        bool available[INPUT_GAMEPADS_COUNT];
-        size_t count;
-        int delta;
-    } gamepad;
+    Input_Controller_t controllers[INPUT_CONTROLLERS_COUNT];
+    Input_Cursor_t cursor;
 } Input_State_t;
 
 typedef struct Input_s {
     Input_Configuration_t configuration;
 
     GLFWwindow *window;
-
-    Input_Button_t buttons[Input_Buttons_t_CountOf];
-    Input_Cursor_t cursor;
-    Input_Stick_t sticks[Input_Sticks_t_CountOf];
-    Input_Triggers_t triggers;
 
     Input_State_t state;
 } Input_t;

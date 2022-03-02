@@ -33,16 +33,6 @@
 
 typedef void (*Input_Handler_t)(Input_t *input);
 
-static void _default_handler(Input_t *input)
-{
-    Input_Button_t *buttons = input->buttons;
-    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) { // Store current state and clear it.
-        Input_Button_t *button = &buttons[i];
-        button->was = button->is;
-        button->is = false;
-    }
-}
-
 static void _keyboard_handler(Input_t *input)
 {
     static const int keys[Input_Buttons_t_CountOf] = {
@@ -146,16 +136,16 @@ static void _mouse_handler(Input_t *input)
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
 // http://blog.hypersect.com/interpreting-analog-sticks/
-static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone, float range)
+static inline Input_Controller_Stick_t _gamepad_stick(float x, float y, float deadzone, float range)
 {
     const float magnitude = sqrtf(x * x + y * y);
     if (magnitude < deadzone) {
-        return (Input_Stick_t){ .x = 0.0f, .y = 0.0f, .angle = 0.0f, .magnitude = 0.0f };
+        return (Input_Controller_Stick_t){ .x = 0.0f, .y = 0.0f, .angle = 0.0f, .magnitude = 0.0f };
     } else { // Rescale to ensure [0, 1] range. Response curve is left to the final user.
         const float angle = atan2f(y, x);
         const float normalized_magnitude = fminf(1.0f, (magnitude - deadzone) / range);
         const float scale = normalized_magnitude / magnitude;
-        return (Input_Stick_t){ .x = x * scale, .y = y * scale, .angle = angle, .magnitude = normalized_magnitude };
+        return (Input_Controller_Stick_t){ .x = x * scale, .y = y * scale, .angle = angle, .magnitude = normalized_magnitude };
     }
 }
 
@@ -199,93 +189,83 @@ static void _gamepad_handler(Input_t *input)
         return;
     }
 
-    if (state->gamepad.id == -1) {
-        return;
-    }
-
-    Input_Button_t *buttons = input->buttons;
-    Input_Stick_t *sticks = input->sticks;
-    Input_Triggers_t *triggers = &input->triggers;
     const Input_Configuration_t *configuration = &input->configuration;
+    Input_Controller_t *controllers = state->controllers;
 
-    GLFWgamepadstate gamepad;
-    int result = glfwGetGamepadState(state->gamepad.id, &gamepad);
-    if (result == GLFW_FALSE) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get gamepad #%d state", state->gamepad.id);
-        return;
-    }
+    for (size_t i = 0; i <= GLFW_JOYSTICK_LAST; ++i) {
+        Input_Controller_t *controller = &controllers[i];
+        Input_Button_t *buttons = controller->buttons;
+        Input_Controller_Stick_t *sticks = controller->sticks;
+        Input_Controller_Triggers_t *triggers = &controller->triggers;
 
-    if (configuration->gamepad.emulate_dpad) {
-        const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
-        const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-        if (fabsf(x) > configuration->gamepad.sensitivity) {
-            buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].is = true;
+        for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) { // Store current state and clear it.
+            Input_Button_t *button = &buttons[i];
+            button->was = button->is;
+            button->is = false;
         }
-        if (fabsf(y) > configuration->gamepad.sensitivity) {
-            buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].is = true;
-        }
-    }
 
-    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
-        if (gamepad_buttons[i] == -1) {
+        GLFWgamepadstate gamepad;
+        int result = glfwGetGamepadState(i, &gamepad);
+        if (result == GLFW_FALSE) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get gamepad #%d state", i);
             continue;
         }
-        Input_Button_t *button = &buttons[i];
-        button->is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+
+        if (controller->dpad_emulation) {
+            const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+            const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+            if (fabsf(x) > configuration->gamepad.sensitivity) {
+                buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].is = true;
+            }
+            if (fabsf(y) > configuration->gamepad.sensitivity) {
+                buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].is = true;
+            }
+        }
+
+        for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+            if (gamepad_buttons[i] == -1) {
+                continue;
+            }
+            Input_Button_t *button = &buttons[i];
+            button->is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+        }
+
+        const float deadzone = configuration->gamepad.deadzone;
+        const float range = configuration->gamepad.range;
+
+        sticks[INPUT_CONTROLLER_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
+        sticks[INPUT_CONTROLLER_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
+
+        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
+        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
     }
-
-    const float deadzone = configuration->gamepad.deadzone;
-    const float range = configuration->gamepad.range;
-
-    sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
-    sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
-
-    triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
-    triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
 }
 
-static void _gamepad_detect(Input_t *input)
+static size_t _controllers_detect(Input_t *input)
 {
     Input_State_t *state = &input->state;
-
-    bool changed = false;
+    Input_Controller_t *controllers = state->controllers;
 
     size_t count = 0U;
-    for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Detect the available gamepads.
+    for (int i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) { // Detect the available gamepads.
+        Input_Controller_t *controller = &controllers[i];
+
+        controller->id = i;
+
         bool available = glfwJoystickIsGamepad(i) == GLFW_TRUE;
-        if (state->gamepad.available[i] != available) {
-            state->gamepad.available[i] = available;
+
+        if (controller->available != available) {
+            controller->available = available;
             if (available) {
                 Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
                 ++count;
             } else {
                 Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d detached", i);
             }
-
-            changed = i == state->gamepad.id;
         }
     }
 
-    state->gamepad.delta = (int)count - (int)state->gamepad.count;
-    state->gamepad.count = count;
-
-    if (changed) {
-        int id = -1;
-        for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Find and use the first available gamepad (no multiple input).
-            if (state->gamepad.available[i]) {
-                id = i;
-                break;
-            }
-        }
-
-        if (id == -1) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "keyboard/mouse input active");
-        } else {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d input active (`%s`)", id, glfwGetGamepadName(id));
-        }
-
-        state->gamepad.id = id;
-    }
+    return count;
 }
 
 static inline int _compile_mode(const Input_Configuration_t *configuration)
@@ -323,12 +303,8 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
             .window = window,
             .state = {
                 .mode = _compile_mode(configuration),
-                .gamepad = {
-                    .id = -1,
-                    .available = { 0 },
-                    .count = 0,
-                    .delta = 0
-                }
+                .controllers = { { 0 } },
+                .cursor = { 0 }
             }
         };
 
@@ -339,11 +315,11 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->cursor.hide ? "hiding" : "showing");
     glfwSetInputMode(window, GLFW_CURSOR, configuration->cursor.hide ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    _gamepad_detect(input);
-    if (input->state.gamepad.count == 0) {
+    size_t count = _controllers_detect(input);
+    if (count == 0) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
     } else {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", input->state.gamepad.count);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", count);
     }
 
     return input;
@@ -355,7 +331,7 @@ void Input_destroy(Input_t *input)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
-static void _gamepad_update(Input_t *input, float delta_time)
+static void _controllers_update(Input_t *input, float delta_time)
 {
     Input_State_t *state = &input->state;
 
@@ -363,7 +339,7 @@ static void _gamepad_update(Input_t *input, float delta_time)
         return;
     }
 
-    _gamepad_detect(input);
+    (void)_controllers_detect(input);
 }
 
 static void _buttons_update(Input_t *input, float delta_time)
@@ -396,7 +372,7 @@ static void _cursor_update(Input_t *input, float delta_time)
 
 bool Input_update(Input_t *input, float delta_time)
 {
-    _gamepad_update(input, delta_time);
+    _controllers_update(input, delta_time);
     _buttons_update(input, delta_time);
     _cursor_update(input, delta_time);
 
