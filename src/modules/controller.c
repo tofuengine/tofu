@@ -79,12 +79,7 @@ static const Map_Entry_t _buttons[Input_Controller_Buttons_t_CountOf] = {
     { "b", INPUT_CONTROLLER_BUTTON_B },
     { "a", INPUT_CONTROLLER_BUTTON_A },
     { "select", INPUT_CONTROLLER_BUTTON_SELECT },
-    { "start", INPUT_CONTROLLER_BUTTON_START },
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    { NULL, -1 },
-    { NULL, -1 },
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-    { "quit", INPUT_CONTROLLER_BUTTON_QUIT }
+    { "start", INPUT_CONTROLLER_BUTTON_START }
 };
 
 static const Map_Entry_t _sticks[Input_Controller_Sticks_t_CountOf] = {

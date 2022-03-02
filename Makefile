@@ -95,8 +95,7 @@ CWARNINGS=-std=c99 \
 
 CFLAGS=-D_DEFAULT_SOURCE \
 	-DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor \
-	-DGIF_FLIP_VERT \
-	-DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
+	-DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
 	-DDR_FLAC_NO_STDIO \
 	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION \
 	-DLIBXMP_BUILDING_STATIC \
@@ -171,7 +170,6 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/utils/*.c)
 # Source files list (external)
 SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
-	$(wildcard $(externaldir)/gif-h/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
 	$(wildcard $(externaldir)/lua/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
@@ -191,7 +189,6 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/utils/*.h)
 # Include files list (external)
 INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
-	$(wildcard $(externaldir)/gif-h/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \

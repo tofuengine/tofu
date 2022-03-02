@@ -33,9 +33,6 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-  #include <gif-h/gif.h>
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -72,15 +69,6 @@ typedef struct Display_s {
         GL_Point_t offset;
     } vram;
 
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    struct {
-        void *pixels;
-        GifWriter gif_writer;
-        size_t index;
-        double time;
-    } capture;
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
     double time;
 } Display_t;
 
@@ -107,10 +95,5 @@ extern float Display_get_scale(const Display_t *display);
 extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Color_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-extern void Display_grab_snapshot(const Display_t *display, const char *base_path);
-extern void Display_toggle_recording(Display_t *display, const char *base_path);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #endif  /* __SYSTEMS_DISPLAY_H__ */

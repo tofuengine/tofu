@@ -40,12 +40,6 @@
   #define PIXEL_FORMAT    GL_RGBA
 #endif
 
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-  #define CAPTURE_FRAMES_PER_SECOND     50
-  #define CAPTURE_FRAME_TIME            (1.0f / CAPTURE_FRAMES_PER_SECOND)
-  #define CAPTURE_FRAME_TIME_100TH      (100 / CAPTURE_FRAMES_PER_SECOND)
-#endif
-
 typedef enum Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_TEXTURE_SIZE,
@@ -446,23 +440,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         return NULL;
     }
 
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    display->capture.pixels = malloc(display->vram.rectangle.width * display->vram.rectangle.height * 4);
-    if (!display->capture.pixels) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate capture buffer");
-        shader_destroy(display->shader);
-        glDeleteBuffers(1, &display->vram.texture);
-        free(display->vram.pixels);
-        GL_processor_destroy(display->canvas.processor);
-        GL_surface_destroy(display->canvas.surface);
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
-    }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p allocated", display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
@@ -478,16 +455,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
 void Display_destroy(Display_t *display)
 {
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    if (GifIsWriting(&display->capture.gif_writer)) {
-        GifEnd(&display->capture.gif_writer);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
-    }
-
-    free(display->capture.pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
     shader_destroy(display->shader);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p destroyed", display->shader);
 
@@ -529,18 +496,6 @@ bool Display_update(Display_t *display, float delta_time)
 
     GLfloat time = (GLfloat)display->time;
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Since GIFs' delay is expressed in 100th of seconds, we automatically "auto-sample" at a proper
-    // framerate in order to preserve the period (e.g. 25 FPS is fine).
-    if (GifIsWriting(&display->capture.gif_writer)) {
-        display->capture.time += delta_time;
-        while (display->capture.time >= CAPTURE_FRAME_TIME) {
-            display->capture.time -= CAPTURE_FRAME_TIME;
-            GifWriteFrame(&display->capture.gif_writer, display->capture.pixels, display->vram.rectangle.width, display->vram.rectangle.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
-        }
-    }
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -594,18 +549,6 @@ void Display_present(const Display_t *display)
     glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
     glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Read the framebuffer data, which include the final stretching and post-processing effects. The call is
-    // synchronous in that it waits the previous drawing function to be completed on the texture. But this is fine
-    // for us as we need to capture the full frame-buffer. Just disable this feature if not required, as it slows
-    // down the rendering *a lot*.
-    //
-    // https://vec.io/posts/faster-alternatives-to-glreadpixels-and-glteximage2d-in-opengl-es
-    // https://www.khronos.org/opengl/wiki/Pixel_Transfer
-    // https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object
-    glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -671,36 +614,3 @@ GL_Point_t Display_get_offset(const Display_t *display)
 {
     return display->vram.offset;
 }
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-void Display_grab_snapshot(const Display_t *display, const char *base_path)
-{
-    time_t t = time(0);
-    struct tm *lt = localtime(&t);
-
-    char path[PLATFORM_PATH_MAX] = { 0 };
-    sprintf(path, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-
-    stbi_write_png(path, display->vram.rectangle.width, display->vram.rectangle.height, 4, display->capture.pixels, display->vram.rectangle.width * 4);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path);
-}
-
-void Display_toggle_recording(Display_t *display, const char *base_path)
-{
-    if (!GifIsWriting(&display->capture.gif_writer)) {
-        time_t t = time(0);
-        struct tm *lt = localtime(&t);
-
-        char path[PLATFORM_PATH_MAX] = { 0 };
-        sprintf(path, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-
-        GifBegin(&display->capture.gif_writer, path, display->vram.rectangle.width, display->vram.rectangle.height, 0);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started to file `%s`", path);
-
-        display->capture.time = 0.0;
-    } else {
-        GifEnd(&display->capture.gif_writer);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
-    }
-}
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
