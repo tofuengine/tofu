@@ -204,22 +204,17 @@ Engine_t *Engine_create(int argc, const char *argv[])
     engine->input = Input_create(&(const Input_Configuration_t){
             .mappings = S_SCHARS(mappings),
             .keyboard = {
-                .enabled = engine->configuration->keyboard.enabled,
                 .exit_key = engine->configuration->keyboard.exit_key,
             },
             .cursor = {
-                .enabled = engine->configuration->cursor.enabled,
                 .hide = engine->configuration->cursor.hide,
                 .speed = engine->configuration->cursor.speed,
                 .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
             },
             .gamepad = {
-                .enabled = engine->configuration->gamepad.enabled,
                 .sensitivity = engine->configuration->gamepad.sensitivity,
                 .deadzone = engine->configuration->gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
                 .range = 1.0f - engine->configuration->gamepad.inner_deadzone - engine->configuration->gamepad.outer_deadzone,
-                .emulate_dpad = engine->configuration->gamepad.emulate_dpad,
-                .emulate_cursor = engine->configuration->gamepad.emulate_cursor
             }
         }, Display_get_window(engine->display));
     if (!engine->input) {

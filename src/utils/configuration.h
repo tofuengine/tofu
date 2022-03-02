@@ -56,21 +56,16 @@ typedef struct Configuration_s {
         float master_volume;
     } audio;
     struct {
-        bool enabled;
         bool exit_key; // TODO: enum type with disabled/notify/autoclose?
     } keyboard;
     struct {
-        bool enabled;
         bool hide;
         float speed;
     } cursor;
     struct {
-        bool enabled;
         float sensitivity;
         float inner_deadzone; // TODO: separate into distinct stick and trigger deadzone.
         float outer_deadzone;
-        bool emulate_dpad;
-        bool emulate_cursor;
     } gamepad;
     struct {
         size_t frames_per_seconds;
