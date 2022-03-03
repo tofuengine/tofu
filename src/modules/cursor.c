@@ -50,7 +50,6 @@ int cursor_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "new", cursor_new_v_1o },
             { "__gc", cursor_gc_1o_0 },
-            { "is_available", cursor_is_available_1o_1b },
             { "is_down", cursor_is_down_1s_1b },
             { "is_up", cursor_is_up_1s_1b },
             { "is_pressed", cursor_is_pressed_1s_1b },
@@ -63,6 +62,12 @@ int cursor_loader(lua_State *L)
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, NULL);
 }
+
+static const Map_Entry_t _buttons[Input_Cursor_Buttons_t_CountOf] = {
+    { "left", INPUT_CURSOR_BUTTON_LEFT },
+    { "right", INPUT_CURSOR_BUTTON_RIGHT },
+    { "middle", INPUT_CURSOR_BUTTON_MIDDLE }
+};
 
 static int cursor_new_v_1o(lua_State *L)
 {

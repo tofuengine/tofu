@@ -25,6 +25,7 @@
 #include "controller.h"
 
 #include <config.h>
+#include <libs/log.h>
 #include <systems/input.h>
 
 #include "udt.h"
@@ -42,6 +43,7 @@ static int controller_is_pressed_2os_1b(lua_State *L);
 static int controller_is_released_2os_1b(lua_State *L);
 static int controller_stick_2os_4nnnn(lua_State *L);
 static int controller_triggers_1o_2nn(lua_State *L);
+static int controller_flags_v_v(lua_State *L);
 
 int controller_loader(lua_State *L)
 {
@@ -58,9 +60,13 @@ int controller_loader(lua_State *L)
             { "is_released", controller_is_released_2os_1b },
             { "stick", controller_stick_2os_4nnnn },
             { "triggers", controller_triggers_1o_2nn },
+            { "flags", controller_flags_v_v },
             { NULL, NULL }
         },
         (const luaX_Const[]){
+            { "FLAG_EMULATED", LUA_CT_INTEGER, { .i = INPUT_FLAG_EMULATED } },
+            { "FLAG_DPAD", LUA_CT_INTEGER, { .i = INPUT_FLAG_DPAD } },
+            { "FLAG_CURSOR", LUA_CT_INTEGER, { .i = INPUT_FLAG_CURSOR } },
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, NULL);
 }
@@ -92,7 +98,7 @@ static int controller_new_v_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_OPTIONAL_STRING(L, 1, "default")
+    const char *id = LUAX_OPTIONAL_STRING(L, 1, "default");
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -115,7 +121,7 @@ static int controller_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    Input_Controller_t *self = (Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    Controller_Object_t *self = (Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
 
     Input_controller_detach(self->controller);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller %p detached", self->controller);
@@ -131,11 +137,11 @@ static int controller_is_down_2os_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Input_Controller_t *self = (const Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value)->down);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).down);
 
     return 1;
 }
@@ -146,11 +152,11 @@ static int controller_is_up_2os_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Input_Controller_t *self = (const Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value)->down);
+    lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).down);
 
     return 1;
 }
@@ -161,11 +167,11 @@ static int controller_is_pressed_2os_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Input_Controller_t *self = (const Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value)->pressed);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).pressed);
 
     return 1;
 }
@@ -176,46 +182,82 @@ static int controller_is_released_2os_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Input_Controller_t *self = (const Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value)->released);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).released);
 
     return 1;
 }
 
-static int input_stick_2os_4nnnn(lua_State *L)
+static int controller_stick_2os_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Input_Controller_t *self = (const Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _sticks, Input_Sticks_t_CountOf);
-    const Input_Controller_Stick_t *stick = Input_controller_get_stick(self->controller, (Input_Sticks_t)entry->value);
-    lua_pushnumber(L, (lua_Number)stick->x);
-    lua_pushnumber(L, (lua_Number)stick->y);
-    lua_pushnumber(L, (lua_Number)stick->angle);
-    lua_pushnumber(L, (lua_Number)stick->magnitude);
+    const Map_Entry_t *entry = map_find_key(L, id, _sticks, Input_Controller_Sticks_t_CountOf);
+    const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, (Input_Controller_Sticks_t)entry->value);
+    lua_pushnumber(L, (lua_Number)stick.x);
+    lua_pushnumber(L, (lua_Number)stick.y);
+    lua_pushnumber(L, (lua_Number)stick.angle);
+    lua_pushnumber(L, (lua_Number)stick.magnitude);
 
     return 4;
 }
 
-static int input_triggers_1o_2nn(lua_State *L)
+static int controller_triggers_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Input_Controller_t *self = (const Input_Controller_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Input_Controller_Triggers_t *triggers = Input_controller_get_triggers(self->controller);
-    lua_pushnumber(L, (lua_Number)triggers->left);
-    lua_pushnumber(L, (lua_Number)triggers->right);
+    const Input_Controller_Triggers_t triggers = Input_controller_get_triggers(self->controller);
+    lua_pushnumber(L, (lua_Number)triggers.left);
+    lua_pushnumber(L, (lua_Number)triggers.right);
 
     return 2;
+}
+
+static int controller_flags_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+
+    const Input_Controller_t *controller = self->controller;
+    lua_pushinteger(L, controller->flags);
+
+    return 1;
+}
+
+static int controller_flags_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Controller_Object_t *self = (Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    int flags = LUAX_INTEGER(L, 2);
+
+    Input_Controller_t *controller = self->controller;
+    controller->flags = flags;
+
+    return 0;
+}
+
+static int controller_flags_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, controller_flags_1o_1n)
+        LUAX_OVERLOAD_ARITY(2, controller_flags_2on_0)
+    LUAX_OVERLOAD_END
 }
