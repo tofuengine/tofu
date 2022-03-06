@@ -57,7 +57,7 @@ static void _keyboard_handler(Input_t *input)
     for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
         button->was = button->is; // Store current state and clear it.
-        button->is |= glfwGetKey(window, keys[i]) == GLFW_PRESS;
+        button->is = glfwGetKey(window, keys[i]) == GLFW_PRESS;
     }
 }
 
@@ -98,7 +98,7 @@ static void _mouse_handler(Input_t *input)
         }
         Input_Button_t *button = &buttons[i];
         button->was = button->is;
-        button->is |= glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
+        button->is = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
     }
 
     double x, y;
@@ -172,7 +172,7 @@ static void _gamepad_handler(Input_t *input)
         for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
             Input_Button_t *button = &buttons[i];
             button->was = button->is; // Store current state and clear it.
-            button->is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+            button->is = gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
         }
 
         if (controller->flags & INPUT_FLAG_DPAD) {
