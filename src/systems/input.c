@@ -155,24 +155,22 @@ static void _gamepad_handler(Input_t *input)
     const Input_Configuration_t *configuration = &input->configuration;
     Input_Controller_t *controllers = input->state.controllers;
 
-    for (size_t i = 0; i <= GLFW_JOYSTICK_LAST; ++i) {
-        Input_Controller_t *controller = &controllers[i];
-        Input_Button_t *buttons = controller->buttons;
-        Input_Controller_Stick_t *sticks = controller->sticks;
-        Input_Controller_Triggers_t *triggers = &controller->triggers;
-
-        GLFWgamepadstate gamepad;
-        int result = glfwGetGamepadState(i, &gamepad);
-        if (result == GLFW_FALSE) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get gamepad #%d state", i);
+    for (int jid = 0; jid <= GLFW_JOYSTICK_LAST; ++jid) {
+        if (!glfwJoystickPresent(jid) == GLFW_FALSE || !glfwJoystickIsGamepad(jid)) { // Skip not present or not gamepad joysticks.
             continue;
         }
 
-        for (size_t j = Input_Buttons_t_First; j <= Input_Buttons_t_Last; ++j) {
-            if (gamepad_buttons[j] == -1) {
-                continue;
-            }
-            Input_Button_t *button = &buttons[j];
+        GLFWgamepadstate gamepad;
+        int result = glfwGetGamepadState(jid, &gamepad);
+        if (result == GLFW_FALSE) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get gamepad #%d state", jid);
+            continue;
+        }
+
+        Input_Controller_t *controller = &controllers[jid];
+        Input_Button_t *buttons = controller->buttons;
+        for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+            Input_Button_t *button = &buttons[i];
             button->was = button->is; // Store current state and clear it.
             button->is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
         }
@@ -191,9 +189,11 @@ static void _gamepad_handler(Input_t *input)
         const float deadzone = configuration->gamepad.deadzone;
         const float range = configuration->gamepad.range;
 
+        Input_Controller_Stick_t *sticks = controller->sticks;
         sticks[INPUT_CONTROLLER_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
         sticks[INPUT_CONTROLLER_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
 
+        Input_Controller_Triggers_t *triggers = &controller->triggers;
         triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
         triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
     }
