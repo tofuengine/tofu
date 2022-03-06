@@ -63,7 +63,7 @@ int cursor_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        }, nup, META_TABLE);
 }
 
 static int cursor_new_1n_1o(lua_State *L)

@@ -68,7 +68,7 @@ int controller_loader(lua_State *L)
             { "FLAG_DPAD", LUA_CT_INTEGER, { .i = INPUT_FLAG_DPAD } },
             { "FLAG_CURSOR", LUA_CT_INTEGER, { .i = INPUT_FLAG_CURSOR } },
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        }, nup, META_TABLE);
 }
 
 static const Map_Entry_t _buttons[Input_Controller_Buttons_t_CountOf] = {
@@ -256,7 +256,7 @@ static int controller_flags_2on_0(lua_State *L)
     int flags = LUAX_INTEGER(L, 2);
 
     Input_Controller_t *controller = self->controller;
-    controller->flags = flags;
+    controller->flags = flags; // FIXME: call method.
 
     return 0;
 }
