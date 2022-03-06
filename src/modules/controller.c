@@ -34,7 +34,7 @@
 #define LOG_CONTEXT "controller"
 #define META_TABLE  "Tofu_Input_Controller_mt"
 
-static int controller_new_v_1o(lua_State *L);
+static int controller_new_1n_1o(lua_State *L);
 static int controller_gc_1o_0(lua_State *L);
 static int controller_is_available_1o_1b(lua_State *L);
 static int controller_is_down_2os_1b(lua_State *L);
@@ -51,7 +51,7 @@ int controller_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", controller_new_v_1o },
+            { "new", controller_new_1n_1o },
             { "__gc", controller_gc_1o_0 },
             { "is_available", controller_is_available_1o_1b },
             { "is_down", controller_is_down_2os_1b },
@@ -93,25 +93,25 @@ static const Map_Entry_t _sticks[Input_Controller_Sticks_t_CountOf] = {
     { "right", INPUT_CONTROLLER_STICK_RIGHT }
 };
 
-static int controller_new_v_1o(lua_State *L)
+static int controller_new_1n_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_OPTIONAL_STRING(L, 1, "default");
+    size_t id = LUAX_OPTIONAL_UNSIGNED(L, 1, 0);
 
-    const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_Controller_t *controller = Input_find_controller(input, id);
+    Input_Controller_t *controller = Input_get_controller(input, id);
     if (!controller) {
-        return luaL_error(L, "can't find controller `%s`", id);
+        return luaL_error(L, "can't find controller `%u`", id);
     }
 
     Controller_Object_t *self = (Controller_Object_t *)luaX_newobject(L, sizeof(Controller_Object_t), &(Controller_Object_t){
             .controller = controller,
         }, OBJECT_TYPE_CONTROLLER, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller %p allocated w/ controller %p for id `%s`", self, controller, id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller %p allocated w/ controller %p for id `%u`", self, controller, id);
 
     return 1;
 }
@@ -123,12 +123,21 @@ static int controller_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Controller_Object_t *self = (Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
 
-    Input_controller_detach(self->controller);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller %p detached", self->controller);
-
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller %p finalized", self);
 
     return 0;
+}
+
+static int controller_is_available_1o_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+
+    lua_pushboolean(L, Input_controller_is_available(self->controller));
+
+    return 1;
 }
 
 static int controller_is_down_2os_1b(lua_State *L)
@@ -141,7 +150,7 @@ static int controller_is_down_2os_1b(lua_State *L)
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).down);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).down);
 
     return 1;
 }
@@ -156,7 +165,7 @@ static int controller_is_up_2os_1b(lua_State *L)
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).down);
+    lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).down);
 
     return 1;
 }
@@ -171,7 +180,7 @@ static int controller_is_pressed_2os_1b(lua_State *L)
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).pressed);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).pressed);
 
     return 1;
 }
@@ -186,7 +195,7 @@ static int controller_is_released_2os_1b(lua_State *L)
     const char *id = LUAX_STRING(L, 2);
 
     const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Buttons_t)entry->value).released);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).released);
 
     return 1;
 }
@@ -214,10 +223,8 @@ static int controller_triggers_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    const char *id = LUAX_STRING(L, 2);
 
     const Input_Controller_Triggers_t triggers = Input_controller_get_triggers(self->controller);
     lua_pushnumber(L, (lua_Number)triggers.left);

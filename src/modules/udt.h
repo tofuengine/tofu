@@ -35,6 +35,7 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 #include <systems/display.h>
+#include <systems/input.h>
 
 typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,

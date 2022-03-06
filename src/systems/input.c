@@ -53,7 +53,7 @@ static void _keyboard_handler(Input_t *input)
     };
 
     GLFWwindow *window = input->window;
-    Input_Button_t *buttons = &input->state.buttons;
+    Input_Button_t *buttons = input->state.buttons;
     for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
         button->was = button->is; // Store current state and clear it.
@@ -153,7 +153,7 @@ static void _gamepad_handler(Input_t *input)
     };
 
     const Input_Configuration_t *configuration = &input->configuration;
-    Input_Controller_t *controllers = &input->state.controllers;
+    Input_Controller_t *controllers = input->state.controllers;
 
     for (size_t i = 0; i <= GLFW_JOYSTICK_LAST; ++i) {
         Input_Controller_t *controller = &controllers[i];
@@ -168,16 +168,16 @@ static void _gamepad_handler(Input_t *input)
             continue;
         }
 
-        for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
-            if (gamepad_buttons[i] == -1) {
+        for (size_t j = Input_Buttons_t_First; j <= Input_Buttons_t_Last; ++j) {
+            if (gamepad_buttons[j] == -1) {
                 continue;
             }
-            Input_Button_t *button = &buttons[i];
+            Input_Button_t *button = &buttons[j];
             button->was = button->is; // Store current state and clear it.
             button->is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
         }
 
-        if (controller->dpad_emulation) {
+        if (controller->flags & INPUT_FLAG_DPAD) {
             const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X]; // Left stick controls the DPAD.
             const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
             if (fabsf(x) > configuration->gamepad.sensitivity) {
@@ -201,7 +201,7 @@ static void _gamepad_handler(Input_t *input)
 
 static size_t _controllers_detect(Input_t *input)
 {
-    Input_Controller_t *controllers = &input->state.controllers;
+    Input_Controller_t *controllers = input->state.controllers;
 
     size_t count = 0U;
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) { // Detect the available gamepads.
@@ -242,12 +242,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
     *input = (Input_t){
             .configuration = *configuration,
-            .window = window,
-            .state = {
-                .buttons = { { 0 } },
-                .controllers = { { 0 } },
-                .cursor = { 0 }
-            }
+            .window = window
         };
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling sticky input mode");
@@ -292,12 +287,12 @@ static inline void _buttons_copy(Input_Button_t *target, size_t target_first, co
 
 static void _cursor_update(Input_t *input, float delta_time)
 {
-    Input_Controller_t *controllers = &input->state.controllers;
+    Input_Controller_t *controllers = input->state.controllers;
 
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
         Input_Controller_t *controller = &controllers[i];
 
-        if (controller->available && controller->cursor_emulation) { // First available controller cursor-mapped will control the cursor.
+        if (controller->available && (controller->flags & INPUT_FLAG_CURSOR)) { // First available controller cursor-mapped will control the cursor.
             Input_Cursor_t *cursor = &input->state.cursor;
 
             const Input_Controller_Stick_t *stick = &controller->sticks[INPUT_CONTROLLER_STICK_RIGHT]; // Right stick for cursor movement.
@@ -305,7 +300,7 @@ static void _cursor_update(Input_t *input, float delta_time)
             _move_and_bound_cursor(cursor, cursor->x + stick->x * delta, cursor->y + stick->y * delta);
 
             _buttons_copy(cursor->buttons, Input_Cursor_Buttons_t_First, // Copy gamepad input as cursor buttons.
-                &controller->buttons, INPUT_CONTROLLER_BUTTON_Y,
+                controller->buttons, INPUT_CONTROLLER_BUTTON_Y,
                 Input_Cursor_Buttons_t_CountOf);
 
             break;
@@ -338,22 +333,22 @@ static inline void _buttons_sync(Input_Button_t *buttons, size_t first, size_t c
 
 static void _buttons_process(Input_t *input)
 {
-    _buttons_sync(&input->state.buttons, Input_Buttons_t_First, Input_Buttons_t_CountOf);
+    _buttons_sync(input->state.buttons, Input_Buttons_t_First, Input_Buttons_t_CountOf);
 
-    Input_Controller_t *controllers = &input->state.controllers;
+    Input_Controller_t *controllers = input->state.controllers;
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
         Input_Controller_t *controller = &controllers[i];
 
-        if (!controller->available && !controller->emulated) {
+        if (!controller->available && !(controller->flags & INPUT_FLAG_EMULATED)) {
             continue;
         }
 
-        if (controller->emulated) {
-            _buttons_copy(&controller->buttons, Input_Controller_Buttons_t_First,
-                &state->buttons, Input_Buttons_t_First,
+        if (controller->flags & INPUT_FLAG_EMULATED) {
+            _buttons_copy(controller->buttons, Input_Controller_Buttons_t_First,
+                input->state.buttons, Input_Buttons_t_First,
                 Input_Controller_Buttons_t_CountOf);
         } else {
-            _buttons_sync(&controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
+            _buttons_sync(controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
         }
     }
 }
@@ -383,52 +378,77 @@ void Input_process(Input_t *input)
     }
 }
 
-const Input_State_t *Input_get_state(const Input_t *input)
+Input_Controller_t *Input_get_controller(Input_t *input, size_t id)
 {
-    return &input->state;
+    if (id >= INPUT_CONTROLLERS_COUNT) {
+        return NULL;
+    }
+    return &input->state.controllers[id];
 }
 
-void Input_set_cursor_position(Input_t *input, int x, int y)
+Input_Cursor_t *Input_get_cursor(Input_t *input, size_t id)
 {
-    input->cursor.x = (float)x + 0.5f; // Center on mid-pixel, as movements are float-based (to support dpad/stick)
-    input->cursor.y = (float)y + 0.5f;
+    return &input->state.cursor;
 }
 
-void Input_set_cursor_area(Input_t *input, int x, int y, size_t width, size_t height)
+bool Input_cursor_is_available(const Input_Cursor_t *cursor)
 {
-    input->cursor.area.x0 = (float)x + 0.5f;
-    input->cursor.area.y0 = (float)y + 0.5f;
-    input->cursor.area.x1 = (float)x + (float)width - 0.5f; // Cursor area is right-bottom inclusive.
-    input->cursor.area.y1 = (float)y + (float)height - 0.5f;
+    return true; // TODO: should really check if available or emulated?
 }
 
-void Input_set_mode(Input_t *input, int mode)
+Input_Button_t Input_cursor_get_button(const Input_Cursor_t *cursor, Input_Cursor_Buttons_t button)
 {
-    input->state.mode = mode;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mode set to 0x%04x", mode);
+    return cursor->buttons[button];
 }
 
-const Input_Button_t *Input_get_button(const Input_t *input, Input_Buttons_t button)
+Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor)
 {
-    return &input->buttons[button];
+    return (Input_Position_t){
+            .x = (int)cursor->x, // FIXME: round values?
+            .y = (int)cursor->y
+        };
 }
 
-const Input_Cursor_t *Input_get_cursor(const Input_t *input)
+void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position)
 {
-    return &input->cursor;
+    cursor->x = (float)position.x + 0.5f; // Center on mid-pixel, as movements are float-based (to support dpad/stick)
+    cursor->y = (float)position.y + 0.5f;
 }
 
-const Input_Triggers_t *Input_get_triggers(const Input_t *input)
+Input_Area_t Input_cursor_get_area(const Input_Cursor_t *cursor)
 {
-    return &input->triggers;
+    return (Input_Area_t){ // FIXME: round values?
+            .x = (int)cursor->area.x0,
+            .y = (int)cursor->area.y0,
+            .width = (size_t)(cursor->area.x1 - cursor->area.x0 + 1.0f),
+            .height = (size_t)(cursor->area.y1 - cursor->area.y0 + 1.0f)
+        };
 }
 
-const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick)
+void Input_cursor_set_area(Input_Cursor_t *cursor, Input_Area_t area)
 {
-    return &input->sticks[stick];
+    cursor->area.x0 = (float)area.x + 0.5f;
+    cursor->area.y0 = (float)area.y + 0.5f;
+    cursor->area.x1 = (float)area.x + (float)area.width - 0.5f; // Cursor area is right-bottom inclusive.
+    cursor->area.y1 = (float)area.y + (float)area.height - 0.5f;
 }
 
-int Input_get_mode(const Input_t *input)
+bool Input_controller_is_available(const Input_Controller_t *controller)
 {
-    return input->state.mode;
+    return controller->available || (controller->flags & INPUT_FLAG_EMULATED);
+}
+
+Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button)
+{
+    return controller->buttons[button];
+}
+
+Input_Controller_Triggers_t Input_controller_get_triggers(const Input_Controller_t *controller)
+{
+    return controller->triggers;
+}
+
+Input_Controller_Stick_t Input_controller_get_stick(const Input_Controller_t *controller, Input_Controller_Sticks_t stick)
+{
+    return controller->sticks[stick];
 }
