@@ -242,7 +242,17 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
     *input = (Input_t){
             .configuration = *configuration,
-            .window = window
+            .window = window,
+            .state = {
+                .cursor =  {
+                    .area = {
+                        .x0 = (float)configuration->cursor.area.x,
+                        .y0 = (float)configuration->cursor.area.y,
+                        .x1 = (float)(configuration->cursor.area.x + configuration->cursor.area.width - 1),
+                        .y1 = (float)(configuration->cursor.area.y + configuration->cursor.area.height - 1)
+                    }
+                }
+            }
         };
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling sticky input mode");

@@ -209,7 +209,13 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .cursor = {
                 .hide = engine->configuration->cursor.hide,
                 .speed = engine->configuration->cursor.speed,
-                .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
+                .scale = 1.0f / Display_get_scale(engine->display), // FIXME: pass the sizes?
+                .area = {
+                    .x = 0,
+                    .y = 0,
+                    .width = engine->display->canvas.size.width, // FIXME: avoid direct access.
+                    .height = engine->display->canvas.size.height
+                }
             },
             .gamepad = {
                 .sensitivity = engine->configuration->gamepad.sensitivity,

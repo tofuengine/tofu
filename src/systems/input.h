@@ -128,6 +128,10 @@ typedef struct Input_Configuration_s {
         bool hide;
         float speed;
         float scale;
+        struct {
+            int x, y;
+            size_t width, height;
+        } area;
     } cursor;
     struct {
         float sensitivity;
