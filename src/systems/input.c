@@ -448,6 +448,16 @@ bool Input_controller_is_available(const Input_Controller_t *controller)
     return controller->available || (controller->flags & INPUT_FLAG_EMULATED);
 }
 
+int Input_controller_get_flags(const Input_Controller_t *controller)
+{
+    return controller->flags;
+}
+
+void Input_controller_set_flags(Input_Controller_t *controller, int flags)
+{
+    controller->flags = flags;
+}
+
 Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button)
 {
     return controller->buttons[button];

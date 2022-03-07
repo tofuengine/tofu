@@ -202,6 +202,8 @@ extern Input_Area_t Input_cursor_get_area(const Input_Cursor_t *cursor);
 extern void Input_cursor_set_area(Input_Cursor_t *cursor, Input_Area_t area);
 
 extern bool Input_controller_is_available(const Input_Controller_t *controller);
+extern int Input_controller_get_flags(const Input_Controller_t *controller);
+extern void Input_controller_set_flags(Input_Controller_t *controller, int flags);
 extern Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button);
 extern Input_Controller_Triggers_t Input_controller_get_triggers(const Input_Controller_t *controller);
 extern Input_Controller_Stick_t Input_controller_get_stick(const Input_Controller_t *controller, Input_Controller_Sticks_t stick);

@@ -241,7 +241,7 @@ static int controller_flags_1o_1n(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
 
     const Input_Controller_t *controller = self->controller;
-    lua_pushinteger(L, controller->flags);
+    lua_pushinteger(L, Input_controller_get_flags(controller));
 
     return 1;
 }
@@ -256,7 +256,7 @@ static int controller_flags_2on_0(lua_State *L)
     int flags = LUAX_INTEGER(L, 2);
 
     Input_Controller_t *controller = self->controller;
-    controller->flags = flags; // FIXME: call method.
+    Input_controller_set_flags(controller, flags);
 
     return 0;
 }
