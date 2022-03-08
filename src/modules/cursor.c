@@ -26,15 +26,18 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <systems/input.h>
+#include <systems/storage.h>
 
 #include "udt.h"
 #include "utils/map.h"
 
 #define LOG_CONTEXT "cursor"
+#define MODULE_NAME "tofu.input.cursor"
 #define META_TABLE  "Tofu_Input_Cursor_mt"
 
-static int cursor_new_1n_1o(lua_State *L);
+static int cursor_from_id_1n_1o(lua_State *L);
 static int cursor_gc_1o_0(lua_State *L);
 static int cursor_is_available_1o_1b(lua_State *L);
 static int cursor_is_down_2os_1b(lua_State *L);
@@ -45,11 +48,21 @@ static int cursor_position_v_v(lua_State *L);
 
 int cursor_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+        (luaX_Script){
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
+            .name = file
+        },
         (const struct luaL_Reg[]){
-            { "new", cursor_new_1n_1o },
+            { "from_id", cursor_from_id_1n_1o },
             { "__gc", cursor_gc_1o_0 },
             { "is_available", cursor_is_available_1o_1b },
             { "is_down", cursor_is_down_2os_1b },
@@ -64,7 +77,7 @@ int cursor_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int cursor_new_1n_1o(lua_State *L)
+static int cursor_from_id_1n_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)

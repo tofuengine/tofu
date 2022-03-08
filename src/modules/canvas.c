@@ -37,7 +37,7 @@
 #define LOG_CONTEXT "canvas"
 #define MODULE_NAME "tofu.graphics.canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
-// FIXME: collapse meta and script name?
+// FIXME: collapse meta and script name? or desume the meta-table name from the module and try and load always?
 
 static int canvas_new_1o_1o(lua_State *L);
 static int canvas_gc_1o_0(lua_State *L);

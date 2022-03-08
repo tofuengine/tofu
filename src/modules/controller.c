@@ -26,15 +26,18 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <systems/input.h>
+#include <systems/storage.h>
 
 #include "udt.h"
 #include "utils/map.h"
 
 #define LOG_CONTEXT "controller"
+#define MODULE_NAME "tofu.input.controller"
 #define META_TABLE  "Tofu_Input_Controller_mt"
 
-static int controller_new_1n_1o(lua_State *L);
+static int controller_from_id_1n_1o(lua_State *L);
 static int controller_gc_1o_0(lua_State *L);
 static int controller_is_available_1o_1b(lua_State *L);
 static int controller_is_down_2os_1b(lua_State *L);
@@ -47,11 +50,21 @@ static int controller_flags_v_v(lua_State *L);
 
 int controller_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+        (luaX_Script){
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
+            .name = file
+        },
         (const struct luaL_Reg[]){
-            { "new", controller_new_1n_1o },
+            { "from_id", controller_from_id_1n_1o },
             { "__gc", controller_gc_1o_0 },
             { "is_available", controller_is_available_1o_1b },
             { "is_down", controller_is_down_2os_1b },
@@ -93,7 +106,7 @@ static const Map_Entry_t _sticks[Input_Controller_Sticks_t_CountOf] = {
     { "right", INPUT_CONTROLLER_STICK_RIGHT }
 };
 
-static int controller_new_1n_1o(lua_State *L)
+static int controller_from_id_1n_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
