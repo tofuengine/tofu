@@ -321,16 +321,16 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     shader_send(display->shader, UNIFORM_TEXTURE, SHADER_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
     shader_send(display->shader, UNIFORM_SCREEN_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
-            (GLfloat)display->vram.rectangle.width,
-            (GLfloat)display->vram.rectangle.height
+            (GLfloat)display->vram.size.width,
+            (GLfloat)display->vram.size.height
         });
     shader_send(display->shader, UNIFORM_TEXTURE_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->configuration.window.width,
             (GLfloat)display->configuration.window.height
         });
     shader_send(display->shader, UNIFORM_SCREEN_SCALE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
-            (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
-            (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height
+            (GLfloat)display->vram.size.width / (GLfloat)display->configuration.window.width,
+            (GLfloat)display->vram.size.height / (GLfloat)display->configuration.window.height
         });
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p initialized", display->shader);
@@ -352,13 +352,17 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(&display->configuration, &display->vram.rectangle, &display->canvas.size);
+    GL_Rectangle_t vram_rectangle;
+    display->window = _window_initialize(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
+
+    display->vram.position = (GL_Point_t){ .x = vram_rectangle.x, .y = vram_rectangle.y };
+    display->vram.size = (GL_Size_t){ .width = vram_rectangle.width, .height = vram_rectangle.height };
 
     display->canvas.surface = GL_surface_create(display->canvas.size.width, display->canvas.size.height);
     if (!display->canvas.surface) {
@@ -521,14 +525,15 @@ void Display_present(const Display_t *display)
 #endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
+    const GL_Point_t *vram_position = &display->vram.position;
+    const GL_Size_t *vram_size = &display->vram.size;
     const GL_Point_t *vram_offset = &display->vram.offset;
 
     // Add x/y offset to implement screen-shaking or similar effects.
-    const int x0 = vram_rectangle->x + vram_offset->x;
-    const int y0 = vram_rectangle->y + vram_offset->y;
-    const int x1 = x0 + (int)vram_rectangle->width;
-    const int y1 = y0 + (int)vram_rectangle->height;
+    const int x0 = vram_position->x + vram_offset->x;
+    const int y0 = vram_position->y + vram_offset->y;
+    const int x1 = x0 + (int)vram_size->width;
+    const int y1 = y0 + (int)vram_size->height;
 
     // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
     const float vertices[] = { // Inspired to https://github.com/emoon/minifb
@@ -590,14 +595,14 @@ GLFWwindow *Display_get_window(const Display_t *display)
     return display->window;
 }
 
-float Display_get_scale(const Display_t *display)
+GL_Size_t Display_get_virtual_size(const Display_t *display)
 {
-    return (float)display->vram.rectangle.width / (float)display->canvas.size.width;
+    return display->canvas.size;
 }
 
-GL_Size_t Display_get_size(const Display_t *display)
+GL_Size_t Display_get_physical_size(const Display_t *display)
 {
-    return (GL_Size_t){ .width = display->canvas.size.width, .height = display->canvas.size.height };
+    return display->vram.size;
 }
 
 GL_Surface_t *Display_get_surface(const Display_t *display)

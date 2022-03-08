@@ -65,7 +65,8 @@ typedef struct Display_s {
     struct {
         GLuint texture;
         GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-        GL_Rectangle_t rectangle; // Destination rectangle, scaled to the final screen size.
+        GL_Point_t position; // Destination position, scaled to the final screen size.
+        GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;
     } vram;
 
@@ -90,8 +91,8 @@ extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, con
 extern void Display_set_program(Display_t *display, const GL_Program_t *program);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
-extern GL_Size_t Display_get_size(const Display_t *display);
-extern float Display_get_scale(const Display_t *display);
+extern GL_Size_t Display_get_virtual_size(const Display_t *display);
+extern GL_Size_t Display_get_physical_size(const Display_t *display);
 extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Color_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
