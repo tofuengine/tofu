@@ -42,7 +42,6 @@ static int cursor_is_up_2os_1b(lua_State *L);
 static int cursor_is_pressed_2os_1b(lua_State *L);
 static int cursor_is_released_2os_1b(lua_State *L);
 static int cursor_position_v_v(lua_State *L);
-static int cursor_area_v_v(lua_State *L);
 
 int cursor_loader(lua_State *L)
 {
@@ -58,7 +57,6 @@ int cursor_loader(lua_State *L)
             { "is_pressed", cursor_is_pressed_2os_1b },
             { "is_released", cursor_is_released_2os_1b },
             { "position", cursor_position_v_v },
-            { "area", cursor_area_v_v },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -215,54 +213,5 @@ static int cursor_position_v_v(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, cursor_position_1o_2nn)
         LUAX_OVERLOAD_ARITY(3, cursor_position_3onn_0)
-    LUAX_OVERLOAD_END
-}
-
-static int cursor_area_1o_4nnnn(lua_State *L) 
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-
-    const Input_Area_t area = Input_cursor_get_area(self->cursor);
-    lua_pushinteger(L, (lua_Integer)area.x);
-    lua_pushinteger(L, (lua_Integer)area.y);
-    lua_pushinteger(L, (lua_Integer)area.width);
-    lua_pushinteger(L, (lua_Integer)area.height);
-
-    return 4;
-}
-
-static int cursor_area_5onnnn_0(lua_State *L) 
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Cursor_Object_t *self = (Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    int x = LUAX_INTEGER(L, 2);
-    int y = LUAX_INTEGER(L, 3);
-    size_t width = LUAX_UNSIGNED(L, 4);
-    size_t height = LUAX_UNSIGNED(L, 5);
-
-    Input_cursor_set_area(self->cursor, (Input_Area_t){
-            .x = x,
-            .y = y,
-            .width = width,
-            .height = height
-        });
-
-    return 0;
-}
-
-static int cursor_area_v_v(lua_State *L)// TODO: rename to `region`?
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, cursor_area_1o_4nnnn)
-        LUAX_OVERLOAD_ARITY(5, cursor_area_5onnnn_0)
     LUAX_OVERLOAD_END
 }
