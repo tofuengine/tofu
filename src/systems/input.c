@@ -419,6 +419,11 @@ Input_Cursor_t *Input_get_cursor(Input_t *input, size_t id)
     return &input->state.cursor;
 }
 
+size_t Input_get_controllers_count(const Input_t *input)
+{
+    return input->state.controllers_count;
+}
+
 bool Input_cursor_is_available(const Input_Cursor_t *cursor)
 {
     return true; // TODO: should really check if available or emulated?

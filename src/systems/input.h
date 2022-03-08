@@ -203,6 +203,8 @@ extern void Input_process(Input_t *input);
 extern Input_Controller_t *Input_get_controller(Input_t *input, size_t id);
 extern Input_Cursor_t *Input_get_cursor(Input_t *input, size_t id);
 
+extern size_t Input_get_controllers_count(const Input_t *input);
+
 extern bool Input_cursor_is_available(const Input_Cursor_t *cursor);
 extern Input_Button_t Input_cursor_get_button(const Input_Cursor_t *cursor, Input_Cursor_Buttons_t button);
 extern Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor);

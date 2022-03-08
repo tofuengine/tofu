@@ -29,6 +29,7 @@
 #include <stddef.h>
 
 #include "display.h"
+#include "input.h"
 
 typedef struct Environment_Stats_s {
     size_t fps;
@@ -47,6 +48,10 @@ typedef struct Environment_State_s {
         bool was;
     } active;
 #endif
+    struct {
+        int previous;
+        int current;
+    } controllers;
     Environment_Stats_t stats;
     double time;
 } Environment_State_t;
@@ -54,10 +59,11 @@ typedef struct Environment_State_s {
 typedef struct Environment_s {
     const char **args;
     const Display_t *display;
+    const Input_t *input;
     Environment_State_t state;
 } Environment_t;
 
-extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
+extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display, const Input_t *input);
 extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);

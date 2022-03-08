@@ -265,7 +265,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    engine->environment = Environment_create(argc, argv, engine->display);
+    engine->environment = Environment_create(argc, argv, engine->display, engine->input);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
         Physics_destroy(engine->physics);
@@ -320,14 +320,28 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 {
     arrsetlen(events, 0);
 
-#ifdef __DISPLAY_FOCUS_SUPPORT__
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
+
+
+#ifdef __DISPLAY_FOCUS_SUPPORT__
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-    // TODO: add gamepad connect/disconnect events?
+    if (environment_state->controllers.previous != environment_state->controllers.current) {
+        if (environment_state->controllers.current > environment_state->controllers.previous) {
+            arrpush(events, "on_gamepad_connected");
+            if (environment_state->controllers.current == 1) {
+                arrpush(events, "on_gamepad_available");
+            }
+        } else {
+            arrpush(events, "on_gamepad_disconnected");
+            if (environment_state->controllers.current == 0) {
+                arrpush(events, "on_gamepad_unavailable");
+            }
+        }
+    }
 
     arrpush(events, NULL);
 
