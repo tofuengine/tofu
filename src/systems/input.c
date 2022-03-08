@@ -216,10 +216,8 @@ static void _initialize_cursor(Input_Cursor_t *cursor, const Input_Configuration
     cursor->scale.y = (float)vh / (float)ph; // (but we want to generalize, so we stick to this choice)
 }
 
-static size_t _controllers_detect(Input_t *input)
+static size_t _controllers_detect(Input_Controller_t *controllers)
 {
-    Input_Controller_t *controllers = input->state.controllers;
-
     size_t count = 0U;
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) { // Detect the available gamepads.
         Input_Controller_t *controller = &controllers[i];
@@ -237,6 +235,24 @@ static size_t _controllers_detect(Input_t *input)
                 Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d detached", i);
             }
         }
+    }
+
+    return count;
+}
+
+static size_t _initialize_controllers(Input_Controller_t *controllers, const Input_Configuration_t *configuration)
+{
+    size_t count = _controllers_detect(controllers);
+    if (count == 0) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
+    } else {
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", count);
+    }
+
+    const int flags = (configuration->cursor.emulated ? INPUT_FLAG_CURSOR : 0) // FIXME: refactor and move.
+        | (configuration->gamepad.emulated ? (INPUT_FLAG_EMULATED | INPUT_FLAG_DPAD) : 0);
+    for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
+        controllers[i].flags = flags;
     }
 
     return count;
@@ -264,17 +280,12 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
     _initialize_cursor(&input->state.cursor, configuration);
 
+    input->state.controllers_count = _initialize_controllers(input->state.controllers, configuration);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling sticky input mode");
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-    size_t count = _controllers_detect(input);
-    if (count == 0) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
-    } else {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", count);
-    }
 
     return input;
 }
@@ -287,7 +298,7 @@ void Input_destroy(Input_t *input)
 
 static void _controllers_update(Input_t *input, float delta_time)
 {
-    (void)_controllers_detect(input);
+    input->state.controllers_count = _controllers_detect(input->state.controllers);
 }
 
 static void _buttons_update(Input_t *input, float delta_time)

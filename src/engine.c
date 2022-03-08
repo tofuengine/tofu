@@ -219,10 +219,12 @@ Engine_t *Engine_create(int argc, const char *argv[])
                 .exit_key = engine->configuration->keyboard.exit_key,
             },
             .cursor = {
+                .emulated = engine->configuration->cursor.emulated,
                 .hide = engine->configuration->cursor.hide,
                 .speed = engine->configuration->cursor.speed
             },
             .gamepad = {
+                .emulated = engine->configuration->gamepad.emulated,
                 .sensitivity = engine->configuration->gamepad.sensitivity,
                 .deadzone = engine->configuration->gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
                 .range = 1.0f - engine->configuration->gamepad.inner_deadzone - engine->configuration->gamepad.outer_deadzone,

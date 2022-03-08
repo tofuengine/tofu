@@ -133,10 +133,12 @@ typedef struct Input_Configuration_s {
         bool exit_key;
     } keyboard;
     struct {
+        bool emulated;
         bool hide;
         float speed;
     } cursor;
     struct {
+        bool emulated;
         float sensitivity;
         float deadzone; // TODO: what is anti-deadzone?
         float range;
@@ -177,6 +179,7 @@ typedef struct Input_s {
 
     struct {
         Input_Controller_t controllers[INPUT_CONTROLLERS_COUNT];
+        size_t controllers_count;
         Input_Cursor_t cursor;
         Input_Button_t buttons[Input_Buttons_t_CountOf];
     } state;

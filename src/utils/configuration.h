@@ -59,10 +59,12 @@ typedef struct Configuration_s {
         bool exit_key; // TODO: enum type with disabled/notify/autoclose?
     } keyboard;
     struct {
+        bool emulated;
         bool hide;
         float speed;
     } cursor;
     struct {
+        bool emulated;
         float sensitivity;
         float inner_deadzone; // TODO: separate into distinct stick and trigger deadzone.
         float outer_deadzone;
