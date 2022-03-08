@@ -122,16 +122,19 @@ typedef enum Input_Handlers_e {
 typedef struct Input_Configuration_s {
     const char *mappings;
     struct {
+        struct {
+            size_t width, height;
+        } physical;
+        struct {
+            size_t width, height;
+        } virtual;
+    } screen;
+    struct {
         bool exit_key;
     } keyboard;
     struct {
         bool hide;
         float speed;
-        float scale;
-        struct {
-            int x, y;
-            size_t width, height;
-        } area;
     } cursor;
     struct {
         float sensitivity;
@@ -158,6 +161,9 @@ typedef struct Input_Controller_s {
 typedef struct Input_Cursor_s {
     Input_Button_t buttons[Input_Cursor_Buttons_t_CountOf];
     float x, y; // FIXME: use `Input_Position_t` datatype?
+    struct {
+        float x, y;
+    } scale;
     struct {
         float x0, y0;
         float x1, y1;
@@ -198,8 +204,6 @@ extern bool Input_cursor_is_available(const Input_Cursor_t *cursor);
 extern Input_Button_t Input_cursor_get_button(const Input_Cursor_t *cursor, Input_Cursor_Buttons_t button);
 extern Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor);
 extern void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position);
-extern Input_Area_t Input_cursor_get_area(const Input_Cursor_t *cursor);
-extern void Input_cursor_set_area(Input_Cursor_t *cursor, Input_Area_t area);
 
 extern bool Input_controller_is_available(const Input_Controller_t *controller);
 extern int Input_controller_get_flags(const Input_Controller_t *controller);

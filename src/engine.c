@@ -201,21 +201,26 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
+    const GL_Size_t phyisical_size = Display_get_physical_size(engine->display);
+    const GL_Size_t virtual_size = Display_get_virtual_size(engine->display);
     engine->input = Input_create(&(const Input_Configuration_t){
             .mappings = S_SCHARS(mappings),
+            .screen = {
+                .physical = {
+                    .width = phyisical_size.width,
+                    .height = phyisical_size.height
+                },
+                .virtual = {
+                    .width = virtual_size.width,
+                    .height = virtual_size.height
+                }
+            },
             .keyboard = {
                 .exit_key = engine->configuration->keyboard.exit_key,
             },
             .cursor = {
                 .hide = engine->configuration->cursor.hide,
-                .speed = engine->configuration->cursor.speed,
-                .scale = 1.0f / Display_get_scale(engine->display), // FIXME: pass the sizes?
-                .area = {
-                    .x = 0,
-                    .y = 0,
-                    .width = engine->display->canvas.size.width, // FIXME: avoid direct access.
-                    .height = engine->display->canvas.size.height
-                }
+                .speed = engine->configuration->cursor.speed
             },
             .gamepad = {
                 .sensitivity = engine->configuration->gamepad.sensitivity,

@@ -104,8 +104,9 @@ static void _mouse_handler(Input_t *input)
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
-    const float scale = input->configuration.cursor.scale;
-    _move_and_bound_cursor(cursor, (float)x * scale + 0.5f, (float)y * scale + 0.5f);
+    const float scale_x = input->state.cursor.scale.x;
+    const float scale_y = input->state.cursor.scale.y;
+    _move_and_bound_cursor(cursor, (float)x * scale_x + 0.5f, (float)y * scale_y + 0.5f);
 }
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
@@ -199,6 +200,22 @@ static void _gamepad_handler(Input_t *input)
     }
 }
 
+static void _initialize_cursor(Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
+{
+    const size_t pw = configuration->screen.physical.width;
+    const size_t ph = configuration->screen.physical.height;
+    const size_t vw = configuration->screen.virtual.width;
+    const size_t vh = configuration->screen.virtual.height;
+
+    cursor->area.x0 = 0.0f;
+    cursor->area.y0 = 0.0f;
+    cursor->area.x1 = (float)(vw - 1);
+    cursor->area.y1 = (float)(vh - 1);
+
+    cursor->scale.x = (float)vw / (float)pw; // Since aspect-ratio is enforced on source, it'is pedantic to have X/Y separate ratios.
+    cursor->scale.y = (float)vh / (float)ph; // (but we want to generalize, so we stick to this choice)
+}
+
 static size_t _controllers_detect(Input_t *input)
 {
     Input_Controller_t *controllers = input->state.controllers;
@@ -242,25 +259,15 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
     *input = (Input_t){
             .configuration = *configuration,
-            .window = window,
-            .state = {
-                .cursor =  {
-                    .area = {
-                        .x0 = (float)configuration->cursor.area.x,
-                        .y0 = (float)configuration->cursor.area.y,
-                        .x1 = (float)(configuration->cursor.area.x + configuration->cursor.area.width - 1),
-                        .y1 = (float)(configuration->cursor.area.y + configuration->cursor.area.height - 1)
-                    }
-                }
-            }
+            .window = window
         };
+
+    _initialize_cursor(&input->state.cursor, configuration);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling sticky input mode");
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->cursor.hide ? "hiding" : "showing");
-    glfwSetInputMode(window, GLFW_CURSOR, configuration->cursor.hide ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     size_t count = _controllers_detect(input);
     if (count == 0) {
@@ -423,24 +430,6 @@ void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position
 {
     cursor->x = (float)position.x + 0.5f; // Center on mid-pixel, as movements are float-based (to support dpad/stick)
     cursor->y = (float)position.y + 0.5f;
-}
-
-Input_Area_t Input_cursor_get_area(const Input_Cursor_t *cursor)
-{
-    return (Input_Area_t){ // FIXME: round values?
-            .x = (int)cursor->area.x0,
-            .y = (int)cursor->area.y0,
-            .width = (size_t)(cursor->area.x1 - cursor->area.x0 + 1.0f),
-            .height = (size_t)(cursor->area.y1 - cursor->area.y0 + 1.0f)
-        };
-}
-
-void Input_cursor_set_area(Input_Cursor_t *cursor, Input_Area_t area)
-{
-    cursor->area.x0 = (float)area.x + 0.5f;
-    cursor->area.y0 = (float)area.y + 0.5f;
-    cursor->area.x1 = (float)area.x + (float)area.width - 0.5f; // Cursor area is right-bottom inclusive.
-    cursor->area.y1 = (float)area.y + (float)area.height - 0.5f;
 }
 
 bool Input_controller_is_available(const Input_Controller_t *controller)
