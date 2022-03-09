@@ -40,12 +40,6 @@
   #define PIXEL_FORMAT    GL_RGBA
 #endif
 
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-  #define CAPTURE_FRAMES_PER_SECOND     50
-  #define CAPTURE_FRAME_TIME            (1.0f / CAPTURE_FRAMES_PER_SECOND)
-  #define CAPTURE_FRAME_TIME_100TH      (100 / CAPTURE_FRAMES_PER_SECOND)
-#endif
-
 typedef enum Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_TEXTURE_SIZE,
@@ -327,16 +321,16 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     shader_send(display->shader, UNIFORM_TEXTURE, SHADER_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
     shader_send(display->shader, UNIFORM_SCREEN_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
-            (GLfloat)display->vram.rectangle.width,
-            (GLfloat)display->vram.rectangle.height
+            (GLfloat)display->vram.size.width,
+            (GLfloat)display->vram.size.height
         });
     shader_send(display->shader, UNIFORM_TEXTURE_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->configuration.window.width,
             (GLfloat)display->configuration.window.height
         });
     shader_send(display->shader, UNIFORM_SCREEN_SCALE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
-            (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
-            (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height
+            (GLfloat)display->vram.size.width / (GLfloat)display->configuration.window.width,
+            (GLfloat)display->vram.size.height / (GLfloat)display->configuration.window.height
         });
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p initialized", display->shader);
@@ -358,13 +352,17 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(&display->configuration, &display->vram.rectangle, &display->canvas.size);
+    GL_Rectangle_t vram_rectangle;
+    display->window = _window_initialize(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
+
+    display->vram.position = (GL_Point_t){ .x = vram_rectangle.x, .y = vram_rectangle.y };
+    display->vram.size = (GL_Size_t){ .width = vram_rectangle.width, .height = vram_rectangle.height };
 
     display->canvas.surface = GL_surface_create(display->canvas.size.width, display->canvas.size.height);
     if (!display->canvas.surface) {
@@ -446,23 +444,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         return NULL;
     }
 
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    display->capture.pixels = malloc(display->vram.rectangle.width * display->vram.rectangle.height * 4);
-    if (!display->capture.pixels) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate capture buffer");
-        shader_destroy(display->shader);
-        glDeleteBuffers(1, &display->vram.texture);
-        free(display->vram.pixels);
-        GL_processor_destroy(display->canvas.processor);
-        GL_surface_destroy(display->canvas.surface);
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
-    }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p allocated", display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
@@ -478,16 +459,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
 void Display_destroy(Display_t *display)
 {
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    if (GifIsWriting(&display->capture.gif_writer)) {
-        GifEnd(&display->capture.gif_writer);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
-    }
-
-    free(display->capture.pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
     shader_destroy(display->shader);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p destroyed", display->shader);
 
@@ -530,18 +501,6 @@ bool Display_update(Display_t *display, float delta_time)
     GLfloat time = (GLfloat)display->time;
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Since GIFs' delay is expressed in 100th of seconds, we automatically "auto-sample" at a proper
-    // framerate in order to preserve the period (e.g. 25 FPS is fine).
-    if (GifIsWriting(&display->capture.gif_writer)) {
-        display->capture.time += delta_time;
-        while (display->capture.time >= CAPTURE_FRAME_TIME) {
-            display->capture.time -= CAPTURE_FRAME_TIME;
-            GifWriteFrame(&display->capture.gif_writer, display->capture.pixels, display->vram.rectangle.width, display->vram.rectangle.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
-        }
-    }
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
@@ -566,14 +525,15 @@ void Display_present(const Display_t *display)
 #endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
+    const GL_Point_t *vram_position = &display->vram.position;
+    const GL_Size_t *vram_size = &display->vram.size;
     const GL_Point_t *vram_offset = &display->vram.offset;
 
     // Add x/y offset to implement screen-shaking or similar effects.
-    const int x0 = vram_rectangle->x + vram_offset->x;
-    const int y0 = vram_rectangle->y + vram_offset->y;
-    const int x1 = x0 + (int)vram_rectangle->width;
-    const int y1 = y0 + (int)vram_rectangle->height;
+    const int x0 = vram_position->x + vram_offset->x;
+    const int y0 = vram_position->y + vram_offset->y;
+    const int x1 = x0 + (int)vram_size->width;
+    const int y1 = y0 + (int)vram_size->height;
 
     // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
     const float vertices[] = { // Inspired to https://github.com/emoon/minifb
@@ -594,18 +554,6 @@ void Display_present(const Display_t *display)
     glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
     glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Read the framebuffer data, which include the final stretching and post-processing effects. The call is
-    // synchronous in that it waits the previous drawing function to be completed on the texture. But this is fine
-    // for us as we need to capture the full frame-buffer. Just disable this feature if not required, as it slows
-    // down the rendering *a lot*.
-    //
-    // https://vec.io/posts/faster-alternatives-to-glreadpixels-and-glteximage2d-in-opengl-es
-    // https://www.khronos.org/opengl/wiki/Pixel_Transfer
-    // https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object
-    glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -647,14 +595,14 @@ GLFWwindow *Display_get_window(const Display_t *display)
     return display->window;
 }
 
-float Display_get_scale(const Display_t *display)
+GL_Size_t Display_get_virtual_size(const Display_t *display)
 {
-    return (float)display->vram.rectangle.width / (float)display->canvas.size.width;
+    return display->canvas.size;
 }
 
-GL_Size_t Display_get_size(const Display_t *display)
+GL_Size_t Display_get_physical_size(const Display_t *display)
 {
-    return (GL_Size_t){ .width = display->canvas.size.width, .height = display->canvas.size.height };
+    return display->vram.size;
 }
 
 GL_Surface_t *Display_get_surface(const Display_t *display)
@@ -671,36 +619,3 @@ GL_Point_t Display_get_offset(const Display_t *display)
 {
     return display->vram.offset;
 }
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-void Display_grab_snapshot(const Display_t *display, const char *base_path)
-{
-    time_t t = time(0);
-    struct tm *lt = localtime(&t);
-
-    char path[PLATFORM_PATH_MAX] = { 0 };
-    sprintf(path, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-
-    stbi_write_png(path, display->vram.rectangle.width, display->vram.rectangle.height, 4, display->capture.pixels, display->vram.rectangle.width * 4);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path);
-}
-
-void Display_toggle_recording(Display_t *display, const char *base_path)
-{
-    if (!GifIsWriting(&display->capture.gif_writer)) {
-        time_t t = time(0);
-        struct tm *lt = localtime(&t);
-
-        char path[PLATFORM_PATH_MAX] = { 0 };
-        sprintf(path, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-
-        GifBegin(&display->capture.gif_writer, path, display->vram.rectangle.width, display->vram.rectangle.height, 0);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started to file `%s`", path);
-
-        display->capture.time = 0.0;
-    } else {
-        GifEnd(&display->capture.gif_writer);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
-    }
-}
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */

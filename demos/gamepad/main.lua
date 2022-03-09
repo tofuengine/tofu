@@ -24,13 +24,14 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Controller = require("tofu.input.controller")
+local Cursor = require("tofu.input.cursor")
 
 local Main = Class.define()
 
@@ -55,15 +56,14 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
-
-  local canvas = Canvas.default()
-  Input.cursor_area(0, 0, canvas:image():size()) -- FIXME: painful!
 end
 
 function Main:process()
+  local controller = Controller.default()
+
   for _, id in ipairs(IDS) do
-    self.down[id] = Input.is_down(id)
-    if Input.is_pressed(id) then
+    self.down[id] = controller:is_down(id)
+    if controller:is_pressed(id) then
       self.scale[id] = 3.0
     end
   end
@@ -122,16 +122,18 @@ function Main:render(_)
     x = x + cw
   end
 
+  local controller = Controller.default()
   local cy = height * 0.5
-  local lx, ly, la, lm = Input.stick("left")
-  local rx, ry, ra, rm = Input.stick("right")
-  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
-  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
-  local tl, tr = Input.triggers()
+  local lx, ly, la, lm = controller:stick("left")
+  local rx, ry, ra, rm = controller:stick("right")
+  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, controller:is_down("lt"))
+  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, controller:is_down("rt"))
+  local tl, tr = controller:triggers()
   draw_trigger(canvas, 24, cy + 12, 8, tl)
   draw_trigger(canvas, 232, cy + 12, 8, tr)
 
-  local mx, my = Input.cursor()
+  local cursor = Cursor.default()
+  local mx, my = cursor:position()
   canvas:line(mx - 3, my, mx - 1, my, 2)
   canvas:line(mx + 1, my, mx + 3, my, 2)
   canvas:line(mx, my - 3, mx, my - 1, 2)

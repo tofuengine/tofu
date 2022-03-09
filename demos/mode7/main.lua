@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -67,35 +67,36 @@ end
 function Main:process()
   local recompute = false
 
-  if Input.is_pressed("select") then
+  local controller = Controller.default()
+  if controller:is_pressed("select") then
     self.speed = 1.0
-  elseif Input.is_pressed("start") then
+  elseif controller:is_pressed("start") then
     self.running = not self.running
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     self.elevation = self.elevation + 4.0
     recompute = true
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     self.elevation = self.elevation - 4.0
     recompute = true
-  elseif Input.is_pressed("a") then -- STRAFE
+  elseif controller:is_pressed("a") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x + math.cos(a) * 8
     self.y = self.y + math.sin(a) * 8
-  elseif Input.is_pressed("b") then -- STRAFE
+  elseif controller:is_pressed("b") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x - math.cos(a) * 8
     self.y = self.y - math.sin(a) * 8
-  elseif Input.is_pressed("rt") then
+  elseif controller:is_pressed("rt") then
     self.wrap = (self.wrap % #WRAP_MODES) + 1
     self.xform:wrap(WRAP_MODES[self.wrap])
-  elseif Input.is_pressed("up") then
+  elseif controller:is_pressed("up") then
     self.speed = self.speed + 16.0
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.speed = self.speed - 16.0
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.angle = self.angle - math.pi * 0.05
     recompute = true
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.angle = self.angle + math.pi * 0.05
     recompute = true
   end

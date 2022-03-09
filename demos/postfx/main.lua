@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -52,19 +52,20 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
       table.insert(self.sprites, Sprite.new(Canvas.default(), self.bank, #self.sprites))
     end
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.speed = self.speed * 0.5
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.speed = self.speed * 2.0
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.speed = 1.0
-  elseif Input.is_pressed("select") then
+  elseif controller:is_pressed("select") then
     self.sprites = {}
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     self.running = not self.running
   end
 end

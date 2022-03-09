@@ -115,14 +115,11 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "audio-master-volume") == 0) {
         configuration->audio.master_volume = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "keyboard-enabled") == 0) {
-        configuration->keyboard.enabled = strcmp(value, "true") == 0;
-    } else
     if (strcmp(fqn, "keyboard-exit-key") == 0) {
         configuration->keyboard.exit_key = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "cursor-enabled") == 0) {
-        configuration->cursor.enabled = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "cursor-emulated") == 0) {
+        configuration->cursor.emulated = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "cursor-hide") == 0) {
         configuration->cursor.hide = strcmp(value, "true") == 0;
@@ -130,8 +127,8 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "cursor-speed") == 0) {
         configuration->cursor.speed = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad-enabled") == 0) {
-        configuration->gamepad.enabled = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "gamepad-emulated") == 0) {
+        configuration->gamepad.emulated = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "gamepad-sensitivity") == 0) {
         configuration->gamepad.sensitivity = (float)strtod(value, NULL);
@@ -141,12 +138,6 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     } else
     if (strcmp(fqn, "gamepad-outer-deadzone") == 0) {
         configuration->gamepad.outer_deadzone = (float)strtod(value, NULL);
-    } else
-    if (strcmp(fqn, "gamepad-emulate-dpad") == 0) {
-        configuration->gamepad.emulate_dpad = strcmp(value, "true") == 0;
-    } else
-    if (strcmp(fqn, "gamepad-emulate-cursor") == 0) {
-        configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "engine-frames-per-seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
@@ -286,21 +277,18 @@ Configuration_t *Configuration_create(const char *data)
                 .master_volume = 1.0f
             },
             .keyboard = {
-                .enabled = true,
                 .exit_key = true
             },
             .cursor = {
-                .enabled = true,
+                .emulated = true,
                 .hide = true,
                 .speed = 128.0f
             },
             .gamepad = {
-                .enabled = true,
+                .emulated = true,
                 .sensitivity = 0.5f,
                 .inner_deadzone = 0.25f,
-                .outer_deadzone = 0.0f,
-                .emulate_dpad = true,
-                .emulate_cursor = true
+                .outer_deadzone = 0.0f
             },
             .engine = {
                 .frames_per_seconds = 60,

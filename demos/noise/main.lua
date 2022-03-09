@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Noise = require("tofu.generators.noise")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -61,16 +61,17 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("right") then
+  local controller = Controller.default()
+  if controller:is_pressed("right") then
     self.current = (self.current % #NOISES) + 1
     self.noise:type(NOISES[self.current])
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.current = ((self.current + (#NOISES - 2)) % #NOISES) + 1
     self.noise:type(NOISES[self.current])
   end
-  if Input.is_pressed("up") then
+  if controller:is_pressed("up") then
     self.frequency = self.frequency + 1
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.frequency = self.frequency - 1
   end
 end

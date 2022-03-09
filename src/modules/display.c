@@ -66,7 +66,7 @@ static int display_size_0_2nn(lua_State *L)
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Size_t size = Display_get_size(display);
+    GL_Size_t size = Display_get_virtual_size(display);
     lua_pushinteger(L, (lua_Integer)size.width);
     lua_pushinteger(L, (lua_Integer)size.height);
 

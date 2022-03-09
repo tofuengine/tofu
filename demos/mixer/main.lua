@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -70,7 +70,8 @@ end
 local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
 function Main:process()
-  if Input.is_pressed("a") then
+  local controller = Controller.default()
+  if controller:is_pressed("a") then
     local source = self.sources[self.current]
     if self.property == 1 then
       source.instance:play()
@@ -82,7 +83,7 @@ function Main:process()
       local ll, lr, rl, rr = source.instance:mix()
       source.instance:mix(lr, ll, rr, rl)
     end
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     local source = self.sources[self.current]
     if self.property == 4 then
       local gain = source.instance:gain()
@@ -94,7 +95,7 @@ function Main:process()
       source.balance = math.max(-1.0, source.balance - 0.05)
       source.instance:balance(source.balance)
     end
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     local source = self.sources[self.current]
     if self.property == 4 then
       local gain = source.instance:gain()
@@ -106,13 +107,13 @@ function Main:process()
       source.balance = math.min(1.0, source.balance + 0.05)
       source.instance:balance(source.balance)
     end
-  elseif Input.is_pressed("up") then
+  elseif controller:is_pressed("up") then
     self.current = math.max(self.current - 1, 1)
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.current = math.min(self.current + 1, #self.sources)
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.property = math.max(self.property - 1, 1)
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.property = math.min(self.property + 1, #PROPERTIES)
   end
 end

@@ -80,7 +80,6 @@
 #define __STORAGE_CHECK_ABSOLUTE_PATHS__
 #define __STORAGE_CACHE_ENTRIES_LIMIT__ 32U
 // The capture support is darn slow!!!
-#undef  __GRAPHICS_CAPTURE_SUPPORT__
 #define __FS_ENFORCE_ARCHIVE_EXTENSION__
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
 #define __SL_BALANCE_LAW__  BALANCE_LAW_SINCOS
@@ -102,7 +101,6 @@
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef NDEBUG
   #undef __LUAX_RTTI__
-  #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
   #undef __SYSTEM_HEAP_STATISTICS__
   #undef __ENGINE_PERFORMANCE_STATISTICS__

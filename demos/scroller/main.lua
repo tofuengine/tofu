@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.controller:controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -102,7 +102,8 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("select") then
+  local controller = Controller.default()
+  if controller:is_pressed("select") then
     self.running = not self.running
   end
 end

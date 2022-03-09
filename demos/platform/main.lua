@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -121,23 +121,24 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if self.jumps < 2 and Input.is_pressed("up") then
+  local controller = Controller.default()
+  if self.jumps < 2 and controller:is_pressed("up") then
     self.velocity.y = 128
     self.jumps = self.jumps + 1
     self.idle_time = nil
-  elseif Input.is_down("right") then
+  elseif controller:is_down("right") then
     self.facing = "right"
     self.velocity.x = 64
     self.idle_time = nil
-  elseif Input.is_down("left") then
+  elseif controller:is_down("left") then
     self.facing = "left"
     self.velocity.x = -64
     self.idle_time = nil
-  elseif Input.is_released("right") or Input.is_released("left") then
+  elseif controller:is_released("right") or controller:is_released("left") then
     self.velocity.x = 0
     self.idle_time = 0
   end
-  if Input.is_pressed("start") then
+  if controller:is_pressed("start") then
     self.map = generate_map(50)
     self.shake_time = 5
   end

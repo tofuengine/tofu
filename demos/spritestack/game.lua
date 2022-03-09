@@ -25,7 +25,7 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Tweener = require("tofu.generators.tweener")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
@@ -77,7 +77,8 @@ function Game:process()
   self.force = 0
   self.torque = 0
 
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     local cx, cy = Canvas.default():image():center()
     for _ = 1, CHUNK_SIZE do
       local sprite = Sprite.new(self.bank, 15, 11, 1, self.palette)
@@ -86,22 +87,22 @@ function Game:process()
       table.insert(self.sprites, sprite)
     end
   end
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     self.force = self.force + THROTTLE
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     self.force = self.force - BRAKE
   end
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.torque = self.torque - TORQUE * Math.sign(self.force)
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     self.torque = self.torque + TORQUE * Math.sign(self.force)
   end
-  if Input.is_pressed("select") then
+  if controller:is_pressed("select") then
     self.sprites = {}
   end
-  if Input.is_pressed("y") then
+  if controller:is_pressed("y") then
     self.running = not self.running
   end
 end

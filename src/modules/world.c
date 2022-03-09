@@ -36,6 +36,8 @@
 static int world_gravity_v_v(lua_State *L);
 static int world_damping_v_v(lua_State *L);
 
+// TODO: make the world a non-singleton?
+
 int world_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);

@@ -25,7 +25,7 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
@@ -46,9 +46,10 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("left") then
+  local controller = Controller.default()
+  if controller:is_pressed("left") then
     self.factor = self.factor - 0.01
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.factor = self.factor + 0.01
   end
 end

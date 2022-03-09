@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Display = require("tofu.graphics.display")
 local Canvas = require("tofu.graphics.canvas")
 local Font = require("tofu.graphics.font")
@@ -60,18 +60,20 @@ function Main:__ctor()
 end
 
 function Main:process()
+  local controller <const> = Controller.default()
+
   self.dx = 0
   self.dy = 0
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.dx = self.dx - 1
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     self.dx = self.dx + 1
   end
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     self.dy = self.dy - 1
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     self.dy = self.dy + 1
   end
 end

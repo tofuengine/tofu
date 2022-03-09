@@ -35,6 +35,7 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 #include <systems/display.h>
+#include <systems/input.h>
 
 typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
@@ -50,20 +51,25 @@ typedef enum Object_Types_e {
     // Graphics
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
-    OBJECT_TYPE_BODY,
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_IMAGE,
-    OBJECT_TYPE_GRID,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
     OBJECT_TYPE_XFORM,
-    // Sound
-    OBJECT_TYPE_SOURCE,
+    // Input
+    OBJECT_TYPE_CONTROLLER,
+    OBJECT_TYPE_CURSOR,
     // Math
     OBJECT_TYPE_NOISE,
     OBJECT_TYPE_TWEENER,
-    OBJECT_TYPE_WAVE
+    OBJECT_TYPE_WAVE,
+    // Physics
+    OBJECT_TYPE_BODY,
+    // Sound
+    OBJECT_TYPE_SOURCE,
+    // Util
+    OBJECT_TYPE_GRID
 } Object_Types_t;
 
 typedef struct Image_Object_s {
@@ -117,45 +123,13 @@ typedef struct Canvas_Object_s {
     } image;
 } Canvas_Object_t;
 
-#ifdef __GRID_INTEGER_CELL__
-typedef int Cell_t;
-#else
-typedef float Cell_t;
-#endif
+typedef struct Controller_Object_s {
+    Input_Controller_t *controller;
+} Controller_Object_t;
 
-typedef struct Grid_Object_s {
-    size_t width, height;
-    Cell_t *data;
-    size_t data_size;
-} Grid_Object_t;
-
-typedef struct Source_Object_s {
-    FS_Handle_t *handle;
-    SL_Source_t *source;
-} Source_Object_t;
-
-typedef enum Body_Kinds_e {
-    BODY_KIND_SHAPELESS,
-    BODY_KIND_BOX,
-    BODY_KIND_CIRCLE,
-    Body_Kinds_t_CountOf
-} Body_Kinds_t;
-
-typedef struct Body_Object_s {
-    cpBody *body;
-    cpShape *shape;
-    Body_Kinds_t kind;
-    union {
-        struct {
-            cpFloat width, height, radius;
-        } box;
-        struct {
-            cpFloat radius;
-            cpVect offset;
-        } circle;
-    } size;
-//    cpFloat *momentum;
-} Body_Object_t;
+typedef struct Cursor_Object_s {
+    Input_Cursor_t *cursor;
+} Cursor_Object_t;
 
 typedef enum Easing_Types_e {
     EASING_TYPE_LINEAR,
@@ -228,5 +202,45 @@ typedef struct Wave_Object_s {
     float period;
     float amplitude;
 } Wave_Object_t;
+
+typedef enum Body_Kinds_e {
+    BODY_KIND_SHAPELESS,
+    BODY_KIND_BOX,
+    BODY_KIND_CIRCLE,
+    Body_Kinds_t_CountOf
+} Body_Kinds_t;
+
+typedef struct Body_Object_s {
+    cpBody *body;
+    cpShape *shape;
+    Body_Kinds_t kind;
+    union {
+        struct {
+            cpFloat width, height, radius;
+        } box;
+        struct {
+            cpFloat radius;
+            cpVect offset;
+        } circle;
+    } size;
+//    cpFloat *momentum;
+} Body_Object_t;
+
+typedef struct Source_Object_s {
+    FS_Handle_t *handle;
+    SL_Source_t *source;
+} Source_Object_t;
+
+#ifdef __GRID_INTEGER_CELL__
+typedef int Cell_t;
+#else
+typedef float Cell_t;
+#endif
+
+typedef struct Grid_Object_s {
+    size_t width, height;
+    Cell_t *data;
+    size_t data_size;
+} Grid_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

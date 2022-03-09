@@ -57,12 +57,13 @@
 #include "batch.h"
 #include "body.h"
 #include "canvas.h"
+#include "controller.h"
+#include "cursor.h"
 #include "display.h"
 #include "file.h"
 #include "font.h"
 #include "grid.h"
 #include "image.h"
-#include "input.h"
 #include "log.h"
 #include "math.h"
 #include "noise.h"
@@ -107,7 +108,8 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },
-            { "tofu.events.input", input_loader },
+            { "tofu.input.controller", controller_loader },
+            { "tofu.input.cursor", cursor_loader },
             { "tofu.generators.noise", noise_loader },
             { "tofu.generators.tweener", tweener_loader },
             { "tofu.generators.wave", wave_loader },

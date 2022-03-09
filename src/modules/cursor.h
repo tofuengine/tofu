@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_INPUT_H__
-#define __MODULES_INPUT_H__
+#ifndef __MODULES_CURSOR_H__
+#define __MODULES_CURSOR_H__
 
 #include <lua/lua.h>
 
-extern int input_loader(lua_State *L);
+extern int cursor_loader(lua_State *L);
 
-#endif  /* __MODULES_INPUT_H__ */
+#endif  /* __MODULES_CURSOR_H__ */

@@ -38,7 +38,7 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display)
+Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display, const Input_t *input)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
@@ -49,14 +49,18 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
 
     const char **args = NULL;
     for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
-        arrpush(args, argv[i]);
+        arrpush(args, argv[i]); // Note, we don't need to clone/copy/allocate the strings (arguments are persisted)
     }
 
     *environment = (Environment_t){
         .args = args,
         .display = display,
+        .input = input,
         .state = (Environment_State_t){
+#ifdef __DISPLAY_FOCUS_SUPPORT__
             .active = { .is = false, .was = false },
+#endif
+            .controllers = { .previous = -1, .current = 0 },
             .stats = { 0 },
             .time = 0.0
         },
@@ -122,6 +126,8 @@ void Environment_process(Environment_t *environment, float frame_time)
     state->active.was = state->active.is;
     state->active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
+    state->controllers.previous = state->controllers.current;
+    state->controllers.current = Input_get_controllers_count(environment->input);
 
     Environment_Stats_t *stats = &state->stats;
     stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!

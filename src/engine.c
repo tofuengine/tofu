@@ -201,25 +201,33 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
+    const GL_Size_t phyisical_size = Display_get_physical_size(engine->display);
+    const GL_Size_t virtual_size = Display_get_virtual_size(engine->display);
     engine->input = Input_create(&(const Input_Configuration_t){
             .mappings = S_SCHARS(mappings),
+            .screen = {
+                .physical = {
+                    .width = phyisical_size.width,
+                    .height = phyisical_size.height
+                },
+                .virtual = {
+                    .width = virtual_size.width,
+                    .height = virtual_size.height
+                }
+            },
             .keyboard = {
-                .enabled = engine->configuration->keyboard.enabled,
                 .exit_key = engine->configuration->keyboard.exit_key,
             },
             .cursor = {
-                .enabled = engine->configuration->cursor.enabled,
+                .emulated = engine->configuration->cursor.emulated,
                 .hide = engine->configuration->cursor.hide,
-                .speed = engine->configuration->cursor.speed,
-                .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
+                .speed = engine->configuration->cursor.speed
             },
             .gamepad = {
-                .enabled = engine->configuration->gamepad.enabled,
+                .emulated = engine->configuration->gamepad.emulated,
                 .sensitivity = engine->configuration->gamepad.sensitivity,
                 .deadzone = engine->configuration->gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
                 .range = 1.0f - engine->configuration->gamepad.inner_deadzone - engine->configuration->gamepad.outer_deadzone,
-                .emulate_dpad = engine->configuration->gamepad.emulate_dpad,
-                .emulate_cursor = engine->configuration->gamepad.emulate_cursor
             }
         }, Display_get_window(engine->display));
     if (!engine->input) {
@@ -257,7 +265,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    engine->environment = Environment_create(argc, argv, engine->display);
+    engine->environment = Environment_create(argc, argv, engine->display, engine->input);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
         Physics_destroy(engine->physics);
@@ -312,24 +320,26 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 {
     arrsetlen(events, 0);
 
-#ifdef __DISPLAY_FOCUS_SUPPORT__
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
+
+
+#ifdef __DISPLAY_FOCUS_SUPPORT__
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-    const Input_State_t *input_state = Input_get_state(engine->input);
-    if (input_state->gamepad.delta > 0) {
-        arrpush(events, "on_gamepad_connected");
-        if (input_state->gamepad.count == 1) {
-            arrpush(events, "on_gamepad_available");
-        }
-    } else
-    if (input_state->gamepad.delta < 0) {
-        arrpush(events, "on_gamepad_disconnected");
-        if (input_state->gamepad.count == 0) {
-            arrpush(events, "on_gamepad_unavailable");
+    if (environment_state->controllers.previous != environment_state->controllers.current) {
+        if (environment_state->controllers.current > environment_state->controllers.previous) {
+            arrpush(events, "on_gamepad_connected");
+            if (environment_state->controllers.current == 1) {
+                arrpush(events, "on_gamepad_available");
+            }
+        } else {
+            arrpush(events, "on_gamepad_disconnected");
+            if (environment_state->controllers.current == 0) {
+                arrpush(events, "on_gamepad_unavailable");
+            }
         }
     }
 
@@ -428,18 +438,6 @@ void Engine_run(Engine_t *engine)
         const double render_marker = glfwGetTime();
         deltas[2] = (float)(render_marker - update_marker);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-        const Input_Button_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
-        if (record_button->pressed) {
-            Display_toggle_recording(engine->display, Storage_get_local_path(engine->storage));
-        }
-
-        const Input_Button_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
-        if (capture_button->pressed) {
-            Display_grab_snapshot(engine->display, Storage_get_local_path(engine->storage));
-        }
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);

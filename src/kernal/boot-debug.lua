@@ -25,7 +25,6 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Log = require("tofu.core.log")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
@@ -114,9 +113,6 @@ function Tofu:__ctor()
           me.font = nil
         end,
       process = function(_, _)
-          if Input.is_pressed("start") then
-            System.quit()
-          end
         end,
       update = function(_, _)
         end,

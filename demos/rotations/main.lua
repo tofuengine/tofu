@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -54,34 +54,36 @@ function Main:__ctor()
 end
 
 function Main:process()
+  local controller = Controller.default()
+
   self.scale_speed = 0
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     self.scale_speed = self.scale_speed + 2
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     self.scale_speed = self.scale_speed - 2
   end
 
   self.rotation_speed = 0
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.rotation_speed = self.rotation_speed - 32
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     self.rotation_speed = self.rotation_speed + 32
   end
 
   self.anchor_speed = 0
-  if Input.is_down("a") then
+  if controller:is_down("a") then
     self.anchor_speed = self.anchor_speed - 1
   end
-  if Input.is_down("b") then
+  if controller:is_down("b") then
     self.anchor_speed = self.anchor_speed + 1
   end
 
-  if Input.is_pressed("x") then
+  if controller:is_pressed("x") then
     self.flip_x = not self.flip_x
   end
-  if Input.is_pressed("y") then
+  if controller:is_pressed("y") then
     self.flip_y = not self.flip_y
   end
 end
