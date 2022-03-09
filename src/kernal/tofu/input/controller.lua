@@ -24,8 +24,13 @@ SOFTWARE.
 
 local Controller = {}
 
+local _default = nil
+
 function Controller.default()
-  return Controller.from_id(0)
+  if not _default then
+    _default = Controller.from_id(0)
+  end
+  return _default
 end
 
 return Controller

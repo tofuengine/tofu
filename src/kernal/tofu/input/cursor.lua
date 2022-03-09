@@ -24,8 +24,13 @@ SOFTWARE.
 
 local Cursor = {}
 
+local _default = nil
+
 function Cursor.default()
-  return Cursor.from_id(0)
+  if not _default then
+    _default = Cursor.from_id(0)
+  end
+  return _default
 end
 
 return Cursor
