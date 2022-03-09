@@ -24,7 +24,8 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
+local Cursor = require("tofu.input.cursor")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -57,21 +58,22 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_down("up") then
+  local controller = Controller.default()
+  if controller:is_down("up") then
     self.velocity.y = -SPEED
-  elseif Input.is_down("down") then
+  elseif controller:is_down("down") then
     self.velocity.y = SPEED
   else
     self.velocity.y = 0
   end
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.velocity.x = -SPEED
-  elseif Input.is_down("right") then
+  elseif controller:is_down("right") then
     self.velocity.x = SPEED
   else
     self.velocity.x = 0
   end
-  if Input.is_down("a") then
+  if controller:is_down("a") then
     self.apply = true
   else
     self.apply = false
@@ -82,7 +84,8 @@ function Main:update(delta_time)
   self.position.x = self.position.x + self.velocity.x * delta_time
   self.position.y = self.position.y + self.velocity.y * delta_time
 
-  self.cursor.x, self.cursor.y = Input.cursor()
+  local cursor = Cursor.default()
+  self.cursor.x, self.cursor.y = cursor:position()
 end
 
 function Main:render(_)

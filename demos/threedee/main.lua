@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -62,26 +62,28 @@ function Main:__ctor()
 end
 
 function Main:process()
+  local controller <const> = Controller.default()
+
   local camera <const> = self.camera
 
-  if Input.is_pressed("y") then
+  if controller:is_pressed("y") then
     local field_of_view = math.min(camera.field_of_view + math.pi / 32, math.pi)
     camera:set_field_of_view(field_of_view)
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     local field_of_view = math.max(camera.field_of_view - math.pi / 32, 0)
     camera:set_field_of_view(field_of_view)
   end
-  if Input.is_pressed("b") then
+  if controller:is_pressed("b") then
     local far = math.min(camera.far + 50.0, 5000.0)
     camera:set_clipping_planes(camera.near, far)
-  elseif Input.is_pressed("a") then
+  elseif controller:is_pressed("a") then
     local far = math.max(camera.far - 50.0, 0)
     camera:set_clipping_planes(camera.near, far)
   end
-  if Input.is_pressed("start") then
+  if controller:is_pressed("start") then
     self.player.pause = not self.player.pause
   end
-  if Input.is_pressed("select") then
+  if controller:is_pressed("select") then
     self.running = not self.running
   end
 

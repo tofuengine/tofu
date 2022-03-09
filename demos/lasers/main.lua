@@ -36,7 +36,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Cursor = require("tofu.input.cursor")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -57,8 +57,6 @@ function Main:__ctor()
 
   local width, height = canvas:image():size()
 
-  Input.cursor_area(0, 0, width, height) -- FIXME: painful!
-
   self.font = Font.default(0, FOREGROUND)
   self.colors = {
       PALETTE:match( 15,  15,  15),
@@ -76,15 +74,16 @@ function Main:__ctor()
 end
 
 function Main:process()
-  local cx, cy = Input.cursor()
+  local cursor = Cursor.default()
+  local cx, cy = cursor:position()
   self.c.x = cx
   self.c.y = cy
 
-  if Input.is_down("a") then
+  if cursor:is_down("left") then
     self.a.x = cx
     self.a.y = cy
     self.changed = true
-  elseif Input.is_down("b") then
+  elseif cursor:is_down("right") then
     self.b.x = cx
     self.b.y = cy
     self.changed = true

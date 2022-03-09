@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -63,15 +63,16 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("select") then
+  local controller = Controller.default()
+  if controller:is_pressed("select") then
     self.mode = (self.mode + 1) % 2
-  elseif Input.is_pressed("up") then
+  elseif controller:is_pressed("up") then
     self.comparator = math.min(self.comparator + 1, #COMPARATORS)
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.comparator = math.max(self.comparator - 1, 1)
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.threshold = self.mode == 1 and self.threshold or math.min(self.threshold + 1, self.limit)
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.threshold = self.mode == 1 and self.threshold or math.max(self.threshold - 1, 0)
   end
 end

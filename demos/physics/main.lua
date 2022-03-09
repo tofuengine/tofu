@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.controller:controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -83,14 +83,15 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(self.font, self.bank))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
     end
-  elseif Input.is_pressed("select") then
+  elseif controller:is_pressed("select") then
     self.bunnies = {}
   end
 end

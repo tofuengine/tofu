@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Noise = require("tofu.generators.noise")
 local Wave = require("tofu.generators.wave")
 local Bank = require("tofu.graphics.bank")
@@ -106,22 +106,23 @@ function Main:_change_palette(palette)
 end
 
 function Main:process()
-  if Input.is_pressed("down") then
+  local controller = Controller.default()
+  if controller:is_pressed("down") then
     self.scale_y = 1.0
     self.y = self.y + 1
-  elseif Input.is_pressed("up") then
+  elseif controller:is_pressed("up") then
     self.scale_y = -1.0
     self.y = self.y - 1
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.scale_x = 1.0
     self.x = self.x + 1
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.scale_x = -1.0
     self.x = self.x - 1
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     print("Y")
     self.mode = (self.mode + 1) % 10
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     print("X")
     self.clipping = not self.clipping
     local canvas = Canvas.default()
@@ -137,8 +138,8 @@ function Main:update(_)
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
-    local palette, count = Palette.default(PALETTES[index])
-    self:_change_palette(palette, count)
+    local palette = Palette.default(PALETTES[index])
+    self:_change_palette(palette)
   end
 end
 

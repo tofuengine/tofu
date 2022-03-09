@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -48,6 +48,8 @@ function Main:__ctor()
   local image = canvas:image()
   local width, height = image:size()
 
+  self.controller = Controller.new()
+
   self.font = Font.default(0, 15)
   self.x_size = width / STEPS
   self.y_size = height / STEPS
@@ -68,13 +70,15 @@ function Main:reset()
 end
 
 function Main:process()
-  if Input.is_pressed("select") then
+  local controller = self.controller
+
+  if controller:is_pressed("select") then
     self.windy = not self.windy
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.damping = self.damping - 0.1
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.damping = self.damping + 0.1
-  elseif Input.is_pressed("start") then
+  elseif controller:is_pressed("start") then
     self:reset()
   end
 end

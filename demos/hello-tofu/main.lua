@@ -25,7 +25,7 @@ SOFTWARE.
 -- Include the modules we'll be using.
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -67,12 +67,13 @@ end
 function Main:process()
   local recompute = false
 
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     self.running = not self.running
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     self.factor = self.factor + 0.1
     recompute = true
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     self.factor = self.factor - 0.1
     recompute = true
   end

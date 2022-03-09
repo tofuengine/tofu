@@ -324,6 +324,7 @@ static void _cursor_update(Input_t *input, float delta_time)
             const Input_Controller_Stick_t *stick = &controller->sticks[INPUT_CONTROLLER_STICK_RIGHT]; // Right stick for cursor movement.
             const float delta = input->configuration.cursor.speed * delta_time;
             _move_and_bound_cursor(cursor, cursor->x + stick->x * delta, cursor->y + stick->y * delta);
+            // TODO: check if this really works... :)
 
             break;
         }

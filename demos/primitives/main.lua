@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -50,11 +50,12 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     System.quit()
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.mode = (self.mode % 10) + 1
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.mode = ((self.mode + 8) % 10) + 1
   end
 end
