@@ -83,9 +83,9 @@ static inline void _move_and_bound_cursor(Input_Cursor_t *cursor, float x, float
 static void _mouse_handler(Input_t *input)
 {
     static const int mouse_buttons[Input_Cursor_Buttons_t_CountOf] = {
-        GLFW_MOUSE_BUTTON_MIDDLE,
-        GLFW_MOUSE_BUTTON_RIGHT,
         GLFW_MOUSE_BUTTON_LEFT,
+        GLFW_MOUSE_BUTTON_RIGHT,
+        GLFW_MOUSE_BUTTON_MIDDLE
     };
 
     GLFWwindow *window = input->window;
@@ -93,9 +93,6 @@ static void _mouse_handler(Input_t *input)
     Input_Cursor_t *cursor = &input->state.cursor;
     Input_Button_t *buttons = cursor->buttons;
     for (size_t i = Input_Cursor_Buttons_t_First; i <= Input_Cursor_Buttons_t_Last; ++i) {
-        if (mouse_buttons[i] == -1) {
-            continue;
-        }
         Input_Button_t *button = &buttons[i];
         button->was = button->is;
         button->is = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
@@ -251,6 +248,7 @@ static size_t _initialize_controllers(Input_Controller_t *controllers, const Inp
 
     const int flags = (configuration->cursor.emulated ? INPUT_FLAG_CURSOR : 0) // FIXME: refactor and move.
         | (configuration->gamepad.emulated ? (INPUT_FLAG_EMULATED | INPUT_FLAG_DPAD) : 0);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "settings gamepad flags to 0x%02x", flags);
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
         controllers[i].flags = flags;
     }
@@ -296,14 +294,14 @@ void Input_destroy(Input_t *input)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
-static void _controllers_update(Input_t *input, float delta_time)
-{
-    input->state.controllers_count = _controllers_detect(input->state.controllers);
-}
-
 static void _buttons_update(Input_t *input, float delta_time)
 {
     // NOP.
+}
+
+static void _controllers_update(Input_t *input, float delta_time)
+{
+    input->state.controllers_count = _controllers_detect(input->state.controllers);
 }
 
 static inline void _buttons_copy(Input_Button_t *target, size_t target_first, const Input_Button_t *source, size_t source_first, size_t count)
@@ -327,10 +325,6 @@ static void _cursor_update(Input_t *input, float delta_time)
             const float delta = input->configuration.cursor.speed * delta_time;
             _move_and_bound_cursor(cursor, cursor->x + stick->x * delta, cursor->y + stick->y * delta);
 
-            _buttons_copy(cursor->buttons, Input_Cursor_Buttons_t_First, // Copy gamepad input as cursor buttons.
-                controller->buttons, INPUT_CONTROLLER_BUTTON_Y,
-                Input_Cursor_Buttons_t_CountOf);
-
             break;
         }
     }
@@ -338,8 +332,8 @@ static void _cursor_update(Input_t *input, float delta_time)
 
 bool Input_update(Input_t *input, float delta_time)
 {
-    _controllers_update(input, delta_time);
     _buttons_update(input, delta_time);
+    _controllers_update(input, delta_time);
     _cursor_update(input, delta_time);
 
     return true;
@@ -378,6 +372,26 @@ static void _buttons_process(Input_t *input)
         } else {
             _buttons_sync(controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
         }
+    }
+
+    for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
+        Input_Controller_t *controller = &controllers[i];
+
+        if (!controller->available && !(controller->flags & INPUT_FLAG_EMULATED)) {
+            continue;
+        }
+
+        if (controller->flags & INPUT_FLAG_CURSOR) {
+            Input_Cursor_t *cursor = &input->state.cursor;
+
+            _buttons_copy(cursor->buttons, Input_Cursor_Buttons_t_First, // Copy gamepad input as cursor buttons.
+                controller->buttons, INPUT_CONTROLLER_BUTTON_Y,
+                Input_Cursor_Buttons_t_CountOf);
+        } else {
+            _buttons_sync(input->state.cursor.buttons, Input_Cursor_Buttons_t_First, Input_Cursor_Buttons_t_CountOf);
+        }
+
+        break;
     }
 }
 
