@@ -233,9 +233,9 @@ static inline int _raw_call(lua_State *L, int nargs, int nresults)
     int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
-        lua_pop(L, 1);
+        return luaL_error(L, "error #%d in call: %s", result, lua_tostring(L, -1));
     }
-    return result;
+    return LUA_OK;
 #else
     lua_call(L, nargs, nresults);
     return LUA_OK;
