@@ -272,7 +272,7 @@ static int grid_poke_3onn_0(lua_State *L)
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 3);
 #ifdef DEBUG
     if (offset >= self->data_size) {
-        return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
+        return luaL_error(L, "offset %d is out of range [0, %d)", offset, self->data_size);
     }
 #endif
 
@@ -295,10 +295,10 @@ static int grid_poke_4onnn_0(lua_State *L)
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 4);
 #ifdef DEBUG
     if (column >= self->width) {
-        return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
+        return luaL_error(L, "column %d is out of range [0, %d)", column, self->width);
     } else
     if (row >= self->height) {
-        return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
+        return luaL_error(L, "row %d is out of range [0, %d)", row, self->height);
     }
 #endif
 
