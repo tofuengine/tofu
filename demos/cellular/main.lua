@@ -25,46 +25,29 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
+local Cursor = require("tofu.input.cursor")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Grid = require("tofu.util.grid")
 
-local STEPS = 64
-local PALETTE = {
-    { 0x00, 0x00, 0x00 }, { 0x24, 0x00, 0x00 }, { 0x48, 0x00, 0x00 }, { 0x6D, 0x00, 0x00 },
-    { 0x91, 0x00, 0x00 }, { 0xB6, 0x00, 0x00 }, { 0xDA, 0x00, 0x00 }, { 0xFF, 0x00, 0x00 },
-    { 0xFF, 0x3F, 0x00 }, { 0xFF, 0x7F, 0x00 }, { 0xFF, 0xBF, 0x00 }, { 0xFF, 0xFF, 0x00 },
-    { 0xFF, 0xFF, 0x3F }, { 0xFF, 0xFF, 0x7F }, { 0xFF, 0xFF, 0xBF }, { 0xFF, 0xFF, 0xFF }
-  }
-
 local Main = Class.define()
 
+local PALETTE <const> = Palette.default("famicube")
+local SAND <const> = PALETTE:match(255, 255, 0)
+local CURSOR <const> = PALETTE:match(255, 255, 255)
+
 function Main:__ctor()
-  Display.palette(Palette.new(PALETTE))
+  Display.palette(PALETTE)
 
   local canvas = Canvas.default()
   local image = canvas:image()
   local width, height = image:size()
 
   self.font = Font.default(0, 15)
-  self.x_size = width / STEPS
-  self.y_size = height / STEPS
-  self.windy = false
-  self.damping = 1.0
-  self.grid = Grid.new(STEPS, STEPS, { 0 })
-
-  self:reset()
-end
-
-function Main:reset()
-  self.grid:process(function(column, row, _)
-    if row == STEPS - 1 then
-      return column, row, #PALETTE - 1
-    end
-    return column, row, 0
-  end)
+  self.grid = Grid.new(width, height, { 0 })
+  self.dirg = Grid.new(width, height, { 0 })
 end
 
 function Main:process()
@@ -79,54 +62,58 @@ function Main:process()
   elseif controller:is_pressed("start") then
     self:reset()
   end
+
+  local cursor <const> = Cursor.default()
+  if cursor:is_down("left") then
+    local x, y = cursor:position()
+    self.grid:poke(x, y, 1)
+  end
 end
 
 function Main:update(_)
-  local windy = self.windy
-  self.grid:process(function(column, row, value)
-      if row == 0 then -- Skip the 1st row entirely.
-        return column, row, value
-      end
+  self.dirg:copy(self.grid)
 
-      if value > 0 then
-        local delta = math.random(0, 1) * self.damping
-        value = value - delta
-        if value < 0 then
-          value = 0
+  local width, height = self.dirg:size()
+
+  for y = 0, height - 2 do
+    for x = 1, width - 2 do
+      if self.dirg:peek(x, y) == 1 then
+        if self.dirg:peek(x, y + 1) == 0 then
+          self.grid:poke(x, y, 0)
+          self.grid:poke(x, y + 1, 1)
+        elseif self.dirg:peek(x - 1, y + 1) == 0 then
+          self.grid:poke(x, y, 0)
+          self.grid:poke(x - 1, y + 1, 1)
+        elseif self.dirg:peek(x + 1, y + 1) == 0 then
+          self.grid:poke(x, y, 0)
+          self.grid:poke(x + 1, y + 1, 1)
         end
       end
+    end
+  end
+end
 
-      if windy then
-        column = column + math.random(0, 3) - 1
-        if column < 0 then
-          column = 0
-        elseif column > STEPS - 1 then
-          column = STEPS - 1
-        end
-      end
-
-      return column, row - 1, value -- Move up one row!
-    end)
+local function draw_cursor(canvas, x, y, size, color)
+  canvas:line(x, y - size, x, y + size, color)
+  canvas:line(x - size, y, x + size, y, color)
 end
 
 function Main:render(_)
   local canvas = Canvas.default()
   local image = canvas:image()
-  local width, _ = image:size()
   image:clear(0)
 
-  local w = self.x_size
-  local h = self.y_size
   self.grid:scan(function(column, row, value)
-      local x = column * w
-      local y = row * h
-      if value > 0 then
-        canvas:rectangle("fill", x, y, w, h, value)
+      if value == 1 then
+        canvas:point(column, row, SAND)
       end
     end)
 
-    canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
-    canvas:write(width, 0, self.font, string.format("D: %.2f", self.damping), "right")
+  local cursor <const> = Cursor.default()
+  local cx, cy = cursor:position()
+  draw_cursor(canvas, cx, cy, 2, CURSOR)
+
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

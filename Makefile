@@ -430,6 +430,11 @@ scroller: engine
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/scroller
 	@$(builddir)/$(TARGET) --path=./demos/scroller
 
+cellular: engine
+	@echo "Launching *cellular* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/cellular
+	@$(builddir)/$(TARGET) --path=./demos/cellular
+
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
