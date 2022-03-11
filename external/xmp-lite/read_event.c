@@ -1113,7 +1113,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	/* Check note */
 
-	if (key && !new_invalid_ins) {
+	if (key) {
 		SET(NEW_NOTE);
 		SET_NOTE(NOTE_SET);
 
@@ -1146,7 +1146,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (!ev.ins) {
 				use_ins_vol = 0;
 			}
-		} else {
+		} else if (!new_invalid_ins) {
 			/* Sample sustain release should always carry for tone
 			 * portamento, and is not reset unless a note is
 			 * present (Atomic Playboy, portamento_sustain.it). */
@@ -1187,6 +1187,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			int smp, to;
 			int dct;
 			int rvv;
+
+			/* Clear note delay before duplicating channels:
+			 * it_note_delay_nna.it */
+			xc->delay = 0;
 
 			note = key + sub->xpo + transp;
 			smp = sub->sid;
@@ -1369,7 +1373,9 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 
 	xxi = libxmp_get_instrument(ctx, ins);
-	xc->ins_fade = xxi->rls;
+	if (xxi != NULL) {
+		xc->ins_fade = xxi->rls;
+	}
 	xc->ins = ins;
 
 	SET(NEW_NOTE);
