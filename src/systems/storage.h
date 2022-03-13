@@ -85,11 +85,11 @@ typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
     struct {
-        char base[PLATFORM_PATH_MAX];
-        char user[PLATFORM_PATH_MAX];
+        char base[PLATFORM_PATH_MAX]; // The folder whence the engine is running.
+        char user[PLATFORM_PATH_MAX]; // User-dependent folder, where the engine can save.
         // TODO: add the possibility to save to a shared folder, e.g. for saving hiscores.
         // char shared[PLATFORM_PATH_MAX];
-        char local[PLATFORM_PATH_MAX];
+        char local[PLATFORM_PATH_MAX]; // Identity-derived folder.
     } path;
 
     Storage_Cache_Entry_t *cache;

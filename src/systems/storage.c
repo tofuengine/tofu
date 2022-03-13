@@ -185,6 +185,9 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependend folder.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user path is `%s`", storage->path.user);
 
+    // This would be correct to do, since the local path is initialized, but it's also very pedant.
+    // Storage_set_identity(storage, DEFAULT_IDENTITY);
+
     storage->context = FS_create();
     if (!storage->context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
@@ -196,8 +199,11 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     FS_attach_folder_or_archive(storage->context, path);
 
     // FIXME: move to a separate function.
+    char executable[PATH_MAX];
+    path_expand(configuration->executable, executable);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "executable is `%s`", executable);
     char executable_path[PATH_MAX];
-    path_split(configuration->executable, executable_path, NULL);
+    path_split(executable, executable_path, NULL);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "executable path is `%s`", executable_path);
 
     char kernal_path[PLATFORM_PATH_MAX] = { 0 };
