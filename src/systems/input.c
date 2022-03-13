@@ -154,7 +154,7 @@ static void _gamepad_handler(Input_t *input)
     Input_Controller_t *controllers = input->state.controllers;
 
     for (int jid = 0; jid <= GLFW_JOYSTICK_LAST; ++jid) {
-        if (!glfwJoystickPresent(jid) == GLFW_FALSE || !glfwJoystickIsGamepad(jid)) { // Skip not present or not gamepad joysticks.
+        if (glfwJoystickPresent(jid) == GLFW_FALSE || glfwJoystickIsGamepad(jid) == GLFW_FALSE) { // Skip not present or not gamepad joysticks.
             continue;
         }
 
