@@ -212,6 +212,7 @@ void path_split(const char *path, char *folder, char *file)
         if (folder) {
             size_t length = separator - path + 1;
             strncpy(folder, path, length);
+            folder[length] = '\0';
         }
         if (file) {
             strcpy(file, separator + 1);
