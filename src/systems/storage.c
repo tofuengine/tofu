@@ -199,10 +199,10 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     FS_attach_folder_or_archive(storage->context, path);
 
     // FIXME: move to a separate function.
-    char executable[PATH_MAX];
+    char executable[PATH_MAX] = { 0 };
     path_expand(configuration->executable, executable);
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "executable is `%s`", executable);
-    char executable_path[PATH_MAX];
+    char executable_path[PATH_MAX] = { 0 };
     path_split(executable, executable_path, NULL);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "executable path is `%s`", executable_path);
 
@@ -386,21 +386,6 @@ bool Storage_set_identity(Storage_t *storage, const char *identity)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user-dependent path `%s` attached", storage->path.local);
     return true;
-}
-
-const char *Storage_get_base_path(const Storage_t *storage)
-{
-    return storage->path.base;
-}
-
-const char *Storage_get_user_path(const Storage_t *storage)
-{
-    return storage->path.user;
-}
-
-const char *Storage_get_local_path(const Storage_t *storage)
-{
-    return storage->path.local;
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
