@@ -37,7 +37,7 @@
 #define MODULE_NAME "tofu.input.cursor"
 #define META_TABLE  "Tofu_Input_Cursor_mt"
 
-static int cursor_from_id_1n_1o(lua_State *L);
+static int cursor_new_0_1o(lua_State *L);
 static int cursor_gc_1o_0(lua_State *L);
 static int cursor_is_available_1o_1b(lua_State *L);
 static int cursor_is_down_2os_1b(lua_State *L);
@@ -62,7 +62,7 @@ int cursor_loader(lua_State *L)
             .name = file
         },
         (const struct luaL_Reg[]){
-            { "from_id", cursor_from_id_1n_1o },
+            { "new", cursor_new_0_1o },
             { "__gc", cursor_gc_1o_0 },
             { "is_available", cursor_is_available_1o_1b },
             { "is_down", cursor_is_down_2os_1b },
@@ -77,25 +77,23 @@ int cursor_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int cursor_from_id_1n_1o(lua_State *L)
+static int cursor_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t id = LUAX_OPTIONAL_UNSIGNED(L, 1, 0);
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_Cursor_t *cursor = Input_get_cursor(input, id);
+    Input_Cursor_t *cursor = Input_get_cursor(input);
     if (!cursor) {
-        return luaL_error(L, "can't find cursor `%u`", id);
+        return luaL_error(L, "can't find cursor");
     }
 
     Cursor_Object_t *self = (Cursor_Object_t *)luaX_newobject(L, sizeof(Cursor_Object_t), &(Cursor_Object_t){
             .cursor = cursor,
         }, OBJECT_TYPE_CURSOR, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cursor %p allocated w/ cursor %p for id `%u`", self, cursor, id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cursor %p allocated w/ cursor %p", self, cursor);
 
     return 1;
 }
@@ -139,7 +137,7 @@ static int cursor_is_down_2os_1b(lua_State *L)
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Cursor_Buttons_t_CountOf);
     lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).down);
 
     return 1;
@@ -154,7 +152,7 @@ static int cursor_is_up_2os_1b(lua_State *L)
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Cursor_Buttons_t_CountOf);
     lua_pushboolean(L, !Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).down);
 
     return 1;
@@ -169,7 +167,7 @@ static int cursor_is_pressed_2os_1b(lua_State *L)
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Cursor_Buttons_t_CountOf);
     lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).pressed);
 
     return 1;
@@ -184,7 +182,7 @@ static int cursor_is_released_2os_1b(lua_State *L)
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Cursor_Buttons_t_CountOf);
     lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).released);
 
     return 1;

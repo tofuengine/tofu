@@ -162,7 +162,7 @@ static int controller_is_down_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
     lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).down);
 
     return 1;
@@ -177,7 +177,7 @@ static int controller_is_up_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
     lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).down);
 
     return 1;
@@ -192,7 +192,7 @@ static int controller_is_pressed_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
     lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).pressed);
 
     return 1;
@@ -207,7 +207,7 @@ static int controller_is_released_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
     lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).released);
 
     return 1;

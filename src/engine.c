@@ -216,9 +216,11 @@ Engine_t *Engine_create(int argc, const char *argv[])
                 }
             },
             .keyboard = {
-                .exit_key = engine->configuration->keyboard.exit_key,
+                .enabled = engine->configuration->keyboard.enabled,
+                .exit_key = engine->configuration->keyboard.exit_key
             },
             .cursor = {
+                .enabled = engine->configuration->cursor.enabled,
                 .emulated = engine->configuration->cursor.emulated,
                 .hide = engine->configuration->cursor.hide,
                 .speed = engine->configuration->cursor.speed

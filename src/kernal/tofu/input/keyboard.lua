@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Shape = {}
+local Keyboard = {}
 
-function Shape.square(target, mode, x, y, size, index)
-  Shape.rectangle(target, mode, x, y, size, size, index)
+local _default = nil
+
+function Keyboard.default()
+  if not _default then
+    _default = Keyboard.new()
+  end
+  return _default
 end
 
-return Shape
+return Keyboard

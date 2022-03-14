@@ -28,7 +28,7 @@ local _default = nil
 
 function Cursor.default()
   if not _default then
-    _default = Cursor.from_id(0)
+    _default = Cursor.new()
   end
   return _default
 end

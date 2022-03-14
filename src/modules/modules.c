@@ -64,6 +64,7 @@
 #include "font.h"
 #include "grid.h"
 #include "image.h"
+#include "keyboard.h"
 #include "log.h"
 #include "math.h"
 #include "noise.h"
@@ -110,6 +111,7 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.core.system", system_loader },
             { "tofu.input.controller", controller_loader },
             { "tofu.input.cursor", cursor_loader },
+            { "tofu.input.keyboard", keyboard_loader },
             { "tofu.generators.noise", noise_loader },
             { "tofu.generators.tweener", tweener_loader },
             { "tofu.generators.wave", wave_loader },

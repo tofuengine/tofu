@@ -35,26 +35,27 @@ typedef void (*Input_Handler_t)(Input_t *input);
 
 static void _keyboard_handler(Input_t *input)
 {
-    static const int keys[Input_Buttons_t_CountOf] = {
+    static const int keys[Input_Keyboard_Buttons_t_CountOf] = {
         GLFW_KEY_UP,
         GLFW_KEY_DOWN,
         GLFW_KEY_LEFT,
         GLFW_KEY_RIGHT,
-        GLFW_KEY_Q,
-        GLFW_KEY_R,
-        GLFW_KEY_W,
-        GLFW_KEY_E,
+        GLFW_KEY_A,
         GLFW_KEY_Z,
         GLFW_KEY_S,
         GLFW_KEY_X,
-        GLFW_KEY_D,
         GLFW_KEY_ENTER,
         GLFW_KEY_SPACE
     };
 
+    Input_Keyboard_t *keyboard = &input->state.keyboard;
+    if (!keyboard->enabled) {
+        return;
+    }
+
     GLFWwindow *window = input->window;
-    Input_Button_t *buttons = input->state.buttons;
-    for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+    Input_Button_t *buttons = keyboard->buttons;
+    for (size_t i = Input_Keyboard_Buttons_t_First; i <= Input_Keyboard_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
         button->was = button->is; // Store current state and clear it.
         button->is = glfwGetKey(window, keys[i]) == GLFW_PRESS;
@@ -88,9 +89,12 @@ static void _mouse_handler(Input_t *input)
         GLFW_MOUSE_BUTTON_MIDDLE
     };
 
-    GLFWwindow *window = input->window;
-
     Input_Cursor_t *cursor = &input->state.cursor;
+    if (!cursor->enabled) {
+        return;
+    }
+
+    GLFWwindow *window = input->window;
     Input_Button_t *buttons = cursor->buttons;
     for (size_t i = Input_Cursor_Buttons_t_First; i <= Input_Cursor_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
@@ -133,7 +137,7 @@ static inline float _gamepad_trigger(float magnitude, float deadzone, float rang
 
 static void _gamepad_handler(Input_t *input)
 {
-    static const int gamepad_buttons[Input_Buttons_t_CountOf] = {
+    static const int gamepad_buttons[Input_Controller_Buttons_t_CountOf] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
         GLFW_GAMEPAD_BUTTON_DPAD_DOWN,
         GLFW_GAMEPAD_BUTTON_DPAD_LEFT,
@@ -167,7 +171,7 @@ static void _gamepad_handler(Input_t *input)
 
         Input_Controller_t *controller = &controllers[jid];
         Input_Button_t *buttons = controller->buttons;
-        for (size_t i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+        for (size_t i = Input_Controller_Buttons_t_First; i <= Input_Controller_Buttons_t_Last; ++i) {
             Input_Button_t *button = &buttons[i];
             button->was = button->is; // Store current state and clear it.
             button->is = gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
@@ -197,6 +201,11 @@ static void _gamepad_handler(Input_t *input)
     }
 }
 
+static void _initialize_keyboard(Input_Keyboard_t *keyboard, const Input_Configuration_t *configuration)
+{
+    keyboard->enabled = configuration->keyboard.enabled;
+}
+
 static void _initialize_cursor(Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
 {
     const size_t pw = configuration->screen.physical.width;
@@ -211,6 +220,8 @@ static void _initialize_cursor(Input_Cursor_t *cursor, const Input_Configuration
 
     cursor->scale.x = (float)vw / (float)pw; // Since aspect-ratio is enforced on source, it'is pedantic to have X/Y separate ratios.
     cursor->scale.y = (float)vh / (float)ph; // (but we want to generalize, so we stick to this choice)
+
+    cursor->enabled = configuration->keyboard.enabled;
 }
 
 static size_t _controllers_detect(Input_Controller_t *controllers)
@@ -276,6 +287,8 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
             .window = window
         };
 
+    _initialize_keyboard(&input->state.keyboard, configuration);
+
     _initialize_cursor(&input->state.cursor, configuration);
 
     input->state.controllers_count = _initialize_controllers(input->state.controllers, configuration);
@@ -294,21 +307,9 @@ void Input_destroy(Input_t *input)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
-static void _buttons_update(Input_t *input, float delta_time)
+static void _keyboard_update(Input_t *input, float delta_time)
 {
     // NOP.
-}
-
-static void _controllers_update(Input_t *input, float delta_time)
-{
-    input->state.controllers_count = _controllers_detect(input->state.controllers);
-}
-
-static inline void _buttons_copy(Input_Button_t *target, size_t target_first, const Input_Button_t *source, size_t source_first, size_t count)
-{
-    for (size_t i = 0; i < count; ++i) {
-        target[target_first + i] = source[source_first + i];
-    }
 }
 
 static void _cursor_update(Input_t *input, float delta_time)
@@ -331,11 +332,16 @@ static void _cursor_update(Input_t *input, float delta_time)
     }
 }
 
+static void _controllers_update(Input_t *input, float delta_time)
+{
+    input->state.controllers_count = _controllers_detect(input->state.controllers);
+}
+
 bool Input_update(Input_t *input, float delta_time)
 {
-    _buttons_update(input, delta_time);
-    _controllers_update(input, delta_time);
+    _keyboard_update(input, delta_time);
     _cursor_update(input, delta_time);
+    _controllers_update(input, delta_time);
 
     return true;
 }
@@ -354,25 +360,54 @@ static inline void _buttons_sync(Input_Button_t *buttons, size_t first, size_t c
     }
 }
 
+typedef struct Int_To_Int_s {
+    int from, to;
+} Int_To_Int_t;
+
+static Int_To_Int_t _keyboard_to_controller[] = {
+     { INPUT_KEYBOARD_BUTTON_UP, INPUT_CONTROLLER_BUTTON_UP },
+     { INPUT_KEYBOARD_BUTTON_DOWN, INPUT_CONTROLLER_BUTTON_DOWN },
+     { INPUT_KEYBOARD_BUTTON_LEFT, INPUT_CONTROLLER_BUTTON_LEFT },
+     { INPUT_KEYBOARD_BUTTON_RIGHT, INPUT_CONTROLLER_BUTTON_RIGHT },
+     { INPUT_KEYBOARD_BUTTON_A, INPUT_CONTROLLER_BUTTON_Y },
+     { INPUT_KEYBOARD_BUTTON_Z, INPUT_CONTROLLER_BUTTON_X },
+     { INPUT_KEYBOARD_BUTTON_S, INPUT_CONTROLLER_BUTTON_B },
+     { INPUT_KEYBOARD_BUTTON_X, INPUT_CONTROLLER_BUTTON_A },
+     { INPUT_KEYBOARD_BUTTON_ENTER, INPUT_CONTROLLER_BUTTON_SELECT },
+     { INPUT_KEYBOARD_BUTTON_SPACE, INPUT_CONTROLLER_BUTTON_START },
+     { -1, -1 }
+};
+
+static Int_To_Int_t _controller_to_cursor[] = {
+    { INPUT_CONTROLLER_BUTTON_Y, INPUT_CURSOR_BUTTON_LEFT },
+    { INPUT_CONTROLLER_BUTTON_X, INPUT_CURSOR_BUTTON_RIGHT },
+    { INPUT_CONTROLLER_BUTTON_B, INPUT_CURSOR_BUTTON_MIDDLE },
+    { -1, -1 }
+};
+
+static inline void _buttons_copy(Input_Button_t *target, const Input_Button_t *source, const Int_To_Int_t *mapping)
+{
+    for (size_t i = 0; mapping[i].from != -1; ++i) {
+        Input_Button_t *t = &target[mapping[i].to];
+        const Input_Button_t *s = &source[mapping[i].from];
+
+        t->down |= s->down;
+        t->pressed |= s->pressed;
+        t->released |= s->released;
+    }
+}
+
 static void _buttons_process(Input_t *input)
 {
-    _buttons_sync(input->state.buttons, Input_Buttons_t_First, Input_Buttons_t_CountOf);
-
+    Input_Keyboard_t *keyboard = &input->state.keyboard;
+    Input_Cursor_t *cursor = &input->state.cursor;
     Input_Controller_t *controllers = input->state.controllers;
+
+    _buttons_sync(keyboard->buttons, Input_Keyboard_Buttons_t_First, Input_Keyboard_Buttons_t_CountOf);
+    _buttons_sync(cursor->buttons, Input_Cursor_Buttons_t_First, Input_Cursor_Buttons_t_CountOf);
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
         Input_Controller_t *controller = &controllers[i];
-
-        if (!controller->available && !(controller->flags & INPUT_FLAG_EMULATED)) {
-            continue;
-        }
-
-        if (controller->flags & INPUT_FLAG_EMULATED) {
-            _buttons_copy(controller->buttons, Input_Controller_Buttons_t_First,
-                input->state.buttons, Input_Buttons_t_First,
-                Input_Controller_Buttons_t_CountOf);
-        } else {
-            _buttons_sync(controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
-        }
+        _buttons_sync(controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
     }
 
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
@@ -382,17 +417,13 @@ static void _buttons_process(Input_t *input)
             continue;
         }
 
-        if (controller->flags & INPUT_FLAG_CURSOR) {
-            Input_Cursor_t *cursor = &input->state.cursor;
-
-            _buttons_copy(cursor->buttons, Input_Cursor_Buttons_t_First, // Copy gamepad input as cursor buttons.
-                controller->buttons, INPUT_CONTROLLER_BUTTON_Y,
-                Input_Cursor_Buttons_t_CountOf);
-        } else {
-            _buttons_sync(input->state.cursor.buttons, Input_Cursor_Buttons_t_First, Input_Cursor_Buttons_t_CountOf);
+        if (controller->flags & INPUT_FLAG_EMULATED) {
+            _buttons_copy(controller->buttons, keyboard->buttons, _keyboard_to_controller);
         }
 
-        break;
+        if (controller->flags & INPUT_FLAG_CURSOR) {
+            _buttons_copy(cursor->buttons, controller->buttons, _controller_to_cursor);
+        }
     }
 }
 
@@ -421,6 +452,16 @@ void Input_process(Input_t *input)
     }
 }
 
+Input_Keyboard_t *Input_get_keyboard(Input_t *input)
+{
+    return &input->state.keyboard;
+}
+
+Input_Cursor_t *Input_get_cursor(Input_t *input)
+{
+    return &input->state.cursor;
+}
+
 Input_Controller_t *Input_get_controller(Input_t *input, size_t id)
 {
     if (id >= INPUT_CONTROLLERS_COUNT) {
@@ -429,14 +470,19 @@ Input_Controller_t *Input_get_controller(Input_t *input, size_t id)
     return &input->state.controllers[id];
 }
 
-Input_Cursor_t *Input_get_cursor(Input_t *input, size_t id)
-{
-    return &input->state.cursor;
-}
-
 size_t Input_get_controllers_count(const Input_t *input)
 {
     return input->state.controllers_count;
+}
+
+bool Input_keyboard_is_available(const Input_Keyboard_t *keyboard)
+{
+    return true; // TODO: should really check if available or emulated?
+}
+
+Input_Button_t Input_keyboard_get_button(const Input_Keyboard_t *keyboard, Input_Keyboard_Buttons_t button)
+{
+    return keyboard->buttons[button];
 }
 
 bool Input_cursor_is_available(const Input_Cursor_t *cursor)

@@ -60,6 +60,7 @@ typedef enum Object_Types_e {
     // Input
     OBJECT_TYPE_CONTROLLER,
     OBJECT_TYPE_CURSOR,
+    OBJECT_TYPE_KEYBOARD,
     // Math
     OBJECT_TYPE_NOISE,
     OBJECT_TYPE_TWEENER,
@@ -130,6 +131,10 @@ typedef struct Controller_Object_s {
 typedef struct Cursor_Object_s {
     Input_Cursor_t *cursor;
 } Cursor_Object_t;
+
+typedef struct Keyboard_Object_s {
+    Input_Keyboard_t *keyboard;
+} Keyboard_Object_t;
 
 typedef enum Easing_Types_e {
     EASING_TYPE_LINEAR,
