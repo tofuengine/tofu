@@ -217,7 +217,11 @@ Engine_t *Engine_create(int argc, const char *argv[])
             },
             .keyboard = {
                 .enabled = engine->configuration->keyboard.enabled,
+#ifdef DEBUG
+                .exit_key = true
+#else
                 .exit_key = engine->configuration->keyboard.exit_key
+#endif
             },
             .cursor = {
                 .enabled = engine->configuration->cursor.enabled,
