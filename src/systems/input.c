@@ -177,17 +177,6 @@ static void _gamepad_handler(Input_t *input)
             button->is = gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
         }
 
-        if (controller->flags & INPUT_FLAG_DPAD) {
-            const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X]; // Left stick controls the DPAD.
-            const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-            if (fabsf(x) > configuration->gamepad.sensitivity) {
-                buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].is = true;
-            }
-            if (fabsf(y) > configuration->gamepad.sensitivity) {
-                buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].is = true;
-            }
-        }
-
         const float deadzone = configuration->gamepad.deadzone;
         const float range = configuration->gamepad.range;
 
@@ -258,7 +247,7 @@ static size_t _initialize_controllers(Input_Controller_t *controllers, const Inp
     }
 
     const int flags = (configuration->cursor.emulated ? INPUT_FLAG_CURSOR : 0) // FIXME: refactor and move.
-        | (configuration->gamepad.emulated ? (INPUT_FLAG_EMULATED | INPUT_FLAG_DPAD) : 0);
+        | (configuration->gamepad.emulated ? INPUT_FLAG_EMULATED : 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "settings gamepad flags to 0x%02x", flags);
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
         controllers[i].flags = flags;

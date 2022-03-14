@@ -137,7 +137,6 @@ typedef struct Input_Configuration_s {
     } cursor;
     struct {
         bool emulated;
-        float sensitivity;
         float deadzone; // TODO: what is anti-deadzone?
         float range;
     } gamepad;
@@ -145,9 +144,8 @@ typedef struct Input_Configuration_s {
 
 #define INPUT_FLAG_NONE         0
 #define INPUT_FLAG_EMULATED     1
-#define INPUT_FLAG_DPAD         2
-#define INPUT_FLAG_CURSOR       4
-#define INPUT_FLAG_ALL          (INPUT_FLAG_EMULATED | INPUT_FLAG_DPAD | INPUT_FLAG_CURSOR)
+#define INPUT_FLAG_CURSOR       2
+#define INPUT_FLAG_ALL          (INPUT_FLAG_EMULATED | INPUT_FLAG_CURSOR)
 
 typedef struct Input_Keyboard_s {
     bool enabled;

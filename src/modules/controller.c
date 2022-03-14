@@ -78,7 +78,6 @@ int controller_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { "FLAG_EMULATED", LUA_CT_INTEGER, { .i = INPUT_FLAG_EMULATED } },
-            { "FLAG_DPAD", LUA_CT_INTEGER, { .i = INPUT_FLAG_DPAD } },
             { "FLAG_CURSOR", LUA_CT_INTEGER, { .i = INPUT_FLAG_CURSOR } },
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, META_TABLE);

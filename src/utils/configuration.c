@@ -136,9 +136,6 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "gamepad-emulated") == 0) {
         configuration->gamepad.emulated = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "gamepad-sensitivity") == 0) {
-        configuration->gamepad.sensitivity = (float)strtod(value, NULL);
-    } else
     if (strcmp(fqn, "gamepad-inner-deadzone") == 0) {
         configuration->gamepad.inner_deadzone = (float)strtod(value, NULL);
     } else
@@ -294,7 +291,6 @@ Configuration_t *Configuration_create(const char *data)
             },
             .gamepad = {
                 .emulated = true,
-                .sensitivity = 0.5f,
                 .inner_deadzone = 0.25f,
                 .outer_deadzone = 0.0f
             },
