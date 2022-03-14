@@ -377,12 +377,10 @@ static Int_To_Int_t _controller_to_cursor[] = {
 static inline void _buttons_copy(Input_Button_t *target, const Input_Button_t *source, const Int_To_Int_t *mapping)
 {
     for (size_t i = 0; mapping[i].from != -1; ++i) {
-        Input_Button_t *t = &target[mapping[i].to];
-        const Input_Button_t *s = &source[mapping[i].from];
-
-        t->down |= s->down;
-        t->pressed |= s->pressed;
-        t->released |= s->released;
+        if (target[mapping[i].to].is) { // Don't update if already pressed.
+            continue;
+        }
+        target[mapping[i].to] = source[mapping[i].from];
     }
 }
 
