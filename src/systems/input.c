@@ -119,15 +119,23 @@ static void _mouse_handler(Input_t *input)
     };
 
     Input_Cursor_t *cursor = &input->state.cursor;
+    Input_Button_t *buttons = cursor->buttons;
+
+    // As for the controllers, we need to reset the cursor state or (in case is emulated) any button press
+    // will persist indefinitely.
+    for (size_t i = Input_Cursor_Buttons_t_First; i <= Input_Cursor_Buttons_t_Last; ++i) {
+        Input_Button_t *button = &buttons[i];
+        button->was = button->is;
+        button->is = false;
+    }
+
     if (!cursor->enabled) {
         return;
     }
 
     GLFWwindow *window = input->window;
-    Input_Button_t *buttons = cursor->buttons;
     for (size_t i = Input_Cursor_Buttons_t_First; i <= Input_Cursor_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
-        button->was = button->is;
         button->is = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
     }
 
