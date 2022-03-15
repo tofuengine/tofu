@@ -46,7 +46,6 @@ static int controller_is_pressed_2os_1b(lua_State *L);
 static int controller_is_released_2os_1b(lua_State *L);
 static int controller_stick_2os_4nnnn(lua_State *L);
 static int controller_triggers_1o_2nn(lua_State *L);
-static int controller_flags_v_v(lua_State *L);
 
 int controller_loader(lua_State *L)
 {
@@ -73,12 +72,9 @@ int controller_loader(lua_State *L)
             { "is_released", controller_is_released_2os_1b },
             { "stick", controller_stick_2os_4nnnn },
             { "triggers", controller_triggers_1o_2nn },
-            { "flags", controller_flags_v_v },
             { NULL, NULL }
         },
         (const luaX_Const[]){
-            { "FLAG_EMULATED", LUA_CT_INTEGER, { .i = INPUT_FLAG_EMULATED } },
-            { "FLAG_CURSOR", LUA_CT_INTEGER, { .i = INPUT_FLAG_CURSOR } },
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, META_TABLE);
 }
@@ -243,40 +239,4 @@ static int controller_triggers_1o_2nn(lua_State *L)
     lua_pushnumber(L, (lua_Number)triggers.right);
 
     return 2;
-}
-
-static int controller_flags_1o_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-
-    const Input_Controller_t *controller = self->controller;
-    lua_pushinteger(L, Input_controller_get_flags(controller));
-
-    return 1;
-}
-
-static int controller_flags_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Controller_Object_t *self = (Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int flags = LUAX_INTEGER(L, 2);
-
-    Input_Controller_t *controller = self->controller;
-    Input_controller_set_flags(controller, flags);
-
-    return 0;
-}
-
-static int controller_flags_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, controller_flags_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, controller_flags_2on_0)
-    LUAX_OVERLOAD_END
 }

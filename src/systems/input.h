@@ -35,14 +35,46 @@
 
 typedef enum Input_Keyboard_Buttons_e {
     Input_Keyboard_Buttons_t_First = 0,
-    INPUT_KEYBOARD_BUTTON_UP = Input_Keyboard_Buttons_t_First,
+    INPUT_KEYBOARD_BUTTON_1 = Input_Keyboard_Buttons_t_First,
+    INPUT_KEYBOARD_BUTTON_2,
+    INPUT_KEYBOARD_BUTTON_3,
+    INPUT_KEYBOARD_BUTTON_4,
+    INPUT_KEYBOARD_BUTTON_5,
+    INPUT_KEYBOARD_BUTTON_6,
+    INPUT_KEYBOARD_BUTTON_7,
+    INPUT_KEYBOARD_BUTTON_8,
+    INPUT_KEYBOARD_BUTTON_9,
+    INPUT_KEYBOARD_BUTTON_0,
+    INPUT_KEYBOARD_BUTTON_Q,
+    INPUT_KEYBOARD_BUTTON_W,
+    INPUT_KEYBOARD_BUTTON_E,
+    INPUT_KEYBOARD_BUTTON_R,
+    INPUT_KEYBOARD_BUTTON_T,
+    INPUT_KEYBOARD_BUTTON_Y,
+    INPUT_KEYBOARD_BUTTON_U,
+    INPUT_KEYBOARD_BUTTON_I,
+    INPUT_KEYBOARD_BUTTON_O,
+    INPUT_KEYBOARD_BUTTON_P,
+    INPUT_KEYBOARD_BUTTON_A,
+    INPUT_KEYBOARD_BUTTON_S,
+    INPUT_KEYBOARD_BUTTON_D,
+    INPUT_KEYBOARD_BUTTON_F,
+    INPUT_KEYBOARD_BUTTON_G,
+    INPUT_KEYBOARD_BUTTON_H,
+    INPUT_KEYBOARD_BUTTON_J,
+    INPUT_KEYBOARD_BUTTON_K,
+    INPUT_KEYBOARD_BUTTON_L,
+    INPUT_KEYBOARD_BUTTON_Z,
+    INPUT_KEYBOARD_BUTTON_X,
+    INPUT_KEYBOARD_BUTTON_C,
+    INPUT_KEYBOARD_BUTTON_V,
+    INPUT_KEYBOARD_BUTTON_B,
+    INPUT_KEYBOARD_BUTTON_N,
+    INPUT_KEYBOARD_BUTTON_M,
+    INPUT_KEYBOARD_BUTTON_UP,
     INPUT_KEYBOARD_BUTTON_DOWN,
     INPUT_KEYBOARD_BUTTON_LEFT,
     INPUT_KEYBOARD_BUTTON_RIGHT,
-    INPUT_KEYBOARD_BUTTON_A,
-    INPUT_KEYBOARD_BUTTON_Z,
-    INPUT_KEYBOARD_BUTTON_S,
-    INPUT_KEYBOARD_BUTTON_X,
     INPUT_KEYBOARD_BUTTON_ENTER,
     INPUT_KEYBOARD_BUTTON_SPACE,
     Input_Keyboard_Buttons_t_Last = INPUT_KEYBOARD_BUTTON_SPACE,
@@ -142,11 +174,6 @@ typedef struct Input_Configuration_s {
     } gamepad;
 } Input_Configuration_t;
 
-#define INPUT_FLAG_NONE         0
-#define INPUT_FLAG_EMULATED     1
-#define INPUT_FLAG_CURSOR       2
-#define INPUT_FLAG_ALL          (INPUT_FLAG_EMULATED | INPUT_FLAG_CURSOR)
-
 typedef struct Input_Keyboard_s {
     bool enabled;
     Input_Button_t buttons[Input_Keyboard_Buttons_t_CountOf];
@@ -168,7 +195,6 @@ typedef struct Input_Cursor_s {
 typedef struct Input_Controller_s {
     size_t id;
     bool available;
-    int flags;
     Input_Button_t buttons[Input_Controller_Buttons_t_CountOf];
     Input_Controller_Stick_t sticks[Input_Controller_Sticks_t_CountOf];
     Input_Controller_Triggers_t triggers;
@@ -216,8 +242,6 @@ extern Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor);
 extern void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position);
 
 extern bool Input_controller_is_available(const Input_Controller_t *controller);
-extern int Input_controller_get_flags(const Input_Controller_t *controller);
-extern void Input_controller_set_flags(Input_Controller_t *controller, int flags);
 extern Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button);
 extern Input_Controller_Triggers_t Input_controller_get_triggers(const Input_Controller_t *controller);
 extern Input_Controller_Stick_t Input_controller_get_stick(const Input_Controller_t *controller, Input_Controller_Sticks_t stick);
