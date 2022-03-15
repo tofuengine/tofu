@@ -559,8 +559,7 @@ void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position
 
 bool Input_controller_is_available(const Input_Controller_t *controller)
 {
-    // FIXME: for controllers #0 and #1 it should return `true` if keyboard is enabled.
-    return controller->available;
+    return controller->available || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
 }
 
 Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button)
