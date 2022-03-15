@@ -158,24 +158,20 @@ typedef struct Input_Configuration_s {
         } virtual;
     } screen;
     struct {
-        bool enabled;
         bool exit_key;
     } keyboard;
     struct {
         bool enabled;
-        bool emulated;
         bool hide;
         float speed;
     } cursor;
     struct {
-        bool emulated;
         float deadzone; // TODO: what is anti-deadzone?
         float range;
     } gamepad;
 } Input_Configuration_t;
 
 typedef struct Input_Keyboard_s {
-    bool enabled;
     Input_Button_t buttons[Input_Keyboard_Buttons_t_CountOf];
 } Input_Keyboard_t;
 

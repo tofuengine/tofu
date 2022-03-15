@@ -81,12 +81,9 @@ static void _keyboard_handler(Input_t *input)
     };
 
     Input_Keyboard_t *keyboard = &input->state.keyboard;
-    if (!keyboard->enabled) {
-        return;
-    }
+    Input_Button_t *buttons = keyboard->buttons;
 
     GLFWwindow *window = input->window;
-    Input_Button_t *buttons = keyboard->buttons;
     for (size_t i = Input_Keyboard_Buttons_t_First; i <= Input_Keyboard_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
         button->was = button->is; // Store current state and clear it.
@@ -234,12 +231,12 @@ static void _gamepad_handler(Input_t *input)
     }
 }
 
-static void _initialize_keyboard(Input_Keyboard_t *keyboard, const Input_Configuration_t *configuration)
+static inline void _initialize_keyboard(Input_Keyboard_t *keyboard, const Input_Configuration_t *configuration)
 {
-    keyboard->enabled = configuration->keyboard.enabled;
+    // NOP.
 }
 
-static void _initialize_cursor(Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
+static inline void _initialize_cursor(Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
 {
     const size_t pw = configuration->screen.physical.width;
     const size_t ph = configuration->screen.physical.height;
@@ -281,7 +278,7 @@ static size_t _controllers_detect(Input_Controller_t *controllers)
     return count;
 }
 
-static size_t _initialize_controllers(Input_Controller_t *controllers, const Input_Configuration_t *configuration)
+static inline size_t _initialize_controllers(Input_Controller_t *controllers, const Input_Configuration_t *configuration)
 {
     size_t count = _controllers_detect(controllers);
     if (count == 0) {
@@ -333,12 +330,12 @@ void Input_destroy(Input_t *input)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
-static void _keyboard_update(Input_t *input, float delta_time)
+static inline void _keyboard_update(Input_t *input, float delta_time)
 {
     // NOP.
 }
 
-static void _cursor_update(Input_t *input, float delta_time)
+static inline void _cursor_update(Input_t *input, float delta_time)
 {
 #ifdef __INPUT_CURSOR_EMULATION__
     Input_Cursor_t *cursor = &input->state.cursor;
@@ -361,7 +358,7 @@ static void _cursor_update(Input_t *input, float delta_time)
 #endif  /* __INPUT_CURSOR_EMULATION__*/
 }
 
-static void _controllers_update(Input_t *input, float delta_time)
+static inline void _controllers_update(Input_t *input, float delta_time)
 {
     input->state.controllers_count = _controllers_detect(input->state.controllers);
 }
@@ -448,7 +445,7 @@ static inline void _buttons_copy(Input_Button_t *target, const Input_Button_t *s
 }
 #endif
 
-static void _buttons_process(Input_t *input)
+static inline void _buttons_process(Input_t *input)
 {
     Input_Keyboard_t *keyboard = &input->state.keyboard;
     Input_Cursor_t *cursor = &input->state.cursor;
@@ -462,10 +459,8 @@ static void _buttons_process(Input_t *input)
     }
 
 #ifdef __INPUT_CONTROLLER_EMULATION__
-    if (keyboard->enabled) {
-        _buttons_copy(controllers[0].buttons, keyboard->buttons, _keyboard_to_controller_0);
-        _buttons_copy(controllers[1].buttons, keyboard->buttons, _keyboard_to_controller_1);
-    }
+    _buttons_copy(controllers[0].buttons, keyboard->buttons, _keyboard_to_controller_0);
+    _buttons_copy(controllers[1].buttons, keyboard->buttons, _keyboard_to_controller_1);
 #endif
 
 #ifdef __INPUT_CURSOR_EMULATION__
@@ -526,7 +521,7 @@ size_t Input_get_controllers_count(const Input_t *input)
 
 bool Input_keyboard_is_available(const Input_Keyboard_t *keyboard)
 {
-    return keyboard->enabled;
+    return true;
 }
 
 Input_Button_t Input_keyboard_get_button(const Input_Keyboard_t *keyboard, Input_Keyboard_Buttons_t button)
