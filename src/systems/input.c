@@ -595,7 +595,7 @@ Input_Button_t Input_cursor_get_button(const Input_Cursor_t *cursor, Input_Curso
 Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor)
 {
     return (Input_Position_t){
-            .x = (int)cursor->x, // FIXME: round values?
+            .x = (int)cursor->x, // No need for rounding.
             .y = (int)cursor->y
         };
 }
@@ -608,7 +608,11 @@ void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position
 
 bool Input_controller_is_available(const Input_Controller_t *controller)
 {
+#ifdef __INPUT_CONTROLLER_EMULATION__
     return controller->jid != -1 || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
+#else
+    return controller->jid != -1;
+#endif
 }
 
 Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button)

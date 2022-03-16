@@ -43,7 +43,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
-* [x] Game-controller support (w/ D-PAD and mouse emulation) w/ keyboard/mouse fallback if not available.
+* [x] Up to 4 game-controller support. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
