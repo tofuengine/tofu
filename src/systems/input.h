@@ -208,6 +208,8 @@ typedef struct Input_s {
         size_t controllers_count;
         bool used_gamepads[GLFW_JOYSTICK_LAST + 1];
     } state;
+
+    double age;
 } Input_t;
 
 typedef struct Input_Position_s {

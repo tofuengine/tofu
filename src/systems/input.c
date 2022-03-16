@@ -402,7 +402,14 @@ static inline void _cursor_update(Input_t *input, float delta_time)
 
 static inline void _controllers_update(Input_t *input, float delta_time)
 {
-    input->state.controllers_count = _controllers_detect(input->state.controllers, input->state.used_gamepads);
+    input->age += delta_time;
+
+    // We don't need to update the controller detection in real-time, as the controllers' update function already
+    // handles the "not initialized or disconnected" case.
+    while (input->age >= __INPUT_CONTROLLER_DETECTION_PERIOD__) {
+        input->age -= __INPUT_CONTROLLER_DETECTION_PERIOD__;
+        input->state.controllers_count = _controllers_detect(input->state.controllers, input->state.used_gamepads);
+    }
 }
 
 bool Input_update(Input_t *input, float delta_time)
