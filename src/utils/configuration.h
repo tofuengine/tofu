@@ -66,7 +66,7 @@ typedef struct Configuration_s {
     struct {
         float inner_deadzone; // TODO: separate into distinct stick and trigger deadzone.
         float outer_deadzone;
-    } gamepad;
+    } controller;
     struct {
         size_t frames_per_seconds;
         size_t skippable_frames;

@@ -168,7 +168,7 @@ typedef struct Input_Configuration_s {
     struct {
         float deadzone; // TODO: what is anti-deadzone?
         float range;
-    } gamepad;
+    } controller;
 } Input_Configuration_t;
 
 typedef struct Input_Keyboard_s {

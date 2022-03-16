@@ -149,7 +149,7 @@ static void _mouse_handler(Input_t *input)
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
 // http://blog.hypersect.com/interpreting-analog-sticks/
-static inline Input_Controller_Stick_t _gamepad_stick(float x, float y, float deadzone, float range)
+static inline Input_Controller_Stick_t _controller_stick(float x, float y, float deadzone, float range)
 {
     const float magnitude = sqrtf(x * x + y * y);
     if (magnitude < deadzone) {
@@ -162,7 +162,7 @@ static inline Input_Controller_Stick_t _gamepad_stick(float x, float y, float de
     }
 }
 
-static inline float _gamepad_trigger(float magnitude, float deadzone, float range)
+static inline float _controller_trigger(float magnitude, float deadzone, float range)
 {
     // TODO: optimize by calculating angle/magnitude only if the trigger status is requested.
     if (magnitude < deadzone) {
@@ -172,9 +172,9 @@ static inline float _gamepad_trigger(float magnitude, float deadzone, float rang
     }
 }
 
-static void _gamepad_handler(Input_t *input)
+static void _controller_handler(Input_t *input)
 {
-    static const int gamepad_buttons[Input_Controller_Buttons_t_CountOf] = {
+    static const int controller_buttons[Input_Controller_Buttons_t_CountOf] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
         GLFW_GAMEPAD_BUTTON_DPAD_DOWN,
         GLFW_GAMEPAD_BUTTON_DPAD_LEFT,
@@ -192,8 +192,8 @@ static void _gamepad_handler(Input_t *input)
     };
 
     const Input_Configuration_t *configuration = &input->configuration;
-    const float deadzone = configuration->gamepad.deadzone;
-    const float range = configuration->gamepad.range;
+    const float deadzone = configuration->controller.deadzone;
+    const float range = configuration->controller.range;
 
     Input_Controller_t *controllers = input->state.controllers;
 
@@ -220,22 +220,22 @@ static void _gamepad_handler(Input_t *input)
         GLFWgamepadstate gamepad;
         int result = glfwGetGamepadState(jid, &gamepad);
         if (result == GLFW_FALSE) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get gamepad #%d state", jid);
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get controller #%d state", jid);
             continue;
         }
 
         for (size_t i = Input_Controller_Buttons_t_First; i <= Input_Controller_Buttons_t_Last; ++i) {
             Input_Button_t *button = &buttons[i];
-            button->is = gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+            button->is = gamepad.buttons[controller_buttons[i]] == GLFW_PRESS;
         }
 
         Input_Controller_Stick_t *sticks = controller->sticks;
-        sticks[INPUT_CONTROLLER_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
-        sticks[INPUT_CONTROLLER_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
+        sticks[INPUT_CONTROLLER_STICK_LEFT] = _controller_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
+        sticks[INPUT_CONTROLLER_STICK_RIGHT] = _controller_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
 
         Input_Controller_Triggers_t *triggers = &controller->triggers;
-        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
-        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
+        triggers->left = _controller_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
+        triggers->right = _controller_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
     }
 }
 
@@ -265,7 +265,7 @@ static inline void _initialize_cursor(Input_Cursor_t *cursor, const Input_Config
 static size_t _controllers_detect(Input_Controller_t *controllers)
 {
     size_t count = 0U;
-    for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) { // Detect the available gamepads.
+    for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) { // Detect the available controllers.
         Input_Controller_t *controller = &controllers[i];
 
         controller->id = i;
@@ -275,10 +275,10 @@ static size_t _controllers_detect(Input_Controller_t *controllers)
         if (controller->available != available) {
             controller->available = available;
             if (available) {
-                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
                 ++count;
             } else {
-                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d detached", i);
+                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller #%d detached", i);
             }
         }
     }
@@ -290,9 +290,9 @@ static inline size_t _initialize_controllers(Input_Controller_t *controllers, co
 {
     size_t count = _controllers_detect(controllers);
     if (count == 0) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no controllers detected");
     } else {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", count);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d controller(s) detected", count);
     }
 
     return count;
@@ -302,10 +302,10 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 {
     int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update controller mappings");
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input gamepad mappings updated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input controller mappings updated");
 
     Input_t *input = malloc(sizeof(Input_t));
     if (!input) {
@@ -484,7 +484,7 @@ void Input_process(Input_t *input)
     static const Input_Handler_t handlers[Input_Handlers_t_CountOf] = {
         _keyboard_handler,
         _mouse_handler,
-        _gamepad_handler
+        _controller_handler
     };
 
     glfwPollEvents();

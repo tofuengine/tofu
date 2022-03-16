@@ -227,9 +227,9 @@ Engine_t *Engine_create(int argc, const char *argv[])
                 .hide = engine->configuration->cursor.hide,
                 .speed = engine->configuration->cursor.speed
             },
-            .gamepad = {
-                .deadzone = engine->configuration->gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
-                .range = 1.0f - engine->configuration->gamepad.inner_deadzone - engine->configuration->gamepad.outer_deadzone,
+            .controller = {
+                .deadzone = engine->configuration->controller.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
+                .range = 1.0f - engine->configuration->controller.inner_deadzone - engine->configuration->controller.outer_deadzone,
             }
         }, Display_get_window(engine->display));
     if (!engine->input) {
@@ -333,14 +333,14 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 
     if (environment_state->controllers.previous != environment_state->controllers.current) {
         if (environment_state->controllers.current > environment_state->controllers.previous) {
-            arrpush(events, "on_gamepad_connected");
+            arrpush(events, "on_controller_connected");
             if (environment_state->controllers.current == 1) {
-                arrpush(events, "on_gamepad_available");
+                arrpush(events, "on_controller_available");
             }
         } else {
-            arrpush(events, "on_gamepad_disconnected");
+            arrpush(events, "on_controller_disconnected");
             if (environment_state->controllers.current == 0) {
-                arrpush(events, "on_gamepad_unavailable");
+                arrpush(events, "on_controller_unavailable");
             }
         }
     }

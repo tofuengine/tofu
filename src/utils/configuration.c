@@ -127,11 +127,11 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "cursor-speed") == 0) {
         configuration->cursor.speed = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad-inner-deadzone") == 0) {
-        configuration->gamepad.inner_deadzone = (float)strtod(value, NULL);
+    if (strcmp(fqn, "controller-inner-deadzone") == 0) {
+        configuration->controller.inner_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad-outer-deadzone") == 0) {
-        configuration->gamepad.outer_deadzone = (float)strtod(value, NULL);
+    if (strcmp(fqn, "controller-outer-deadzone") == 0) {
+        configuration->controller.outer_deadzone = (float)strtod(value, NULL);
     } else
     if (strcmp(fqn, "engine-frames-per-seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
@@ -278,7 +278,7 @@ Configuration_t *Configuration_create(const char *data)
                 .hide = true,
                 .speed = 128.0f
             },
-            .gamepad = {
+            .controller = {
                 .inner_deadzone = 0.25f,
                 .outer_deadzone = 0.0f
             },
