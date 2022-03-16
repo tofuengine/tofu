@@ -197,8 +197,8 @@ static void _controller_handler(Input_t *input)
 
     Input_Controller_t *controllers = input->state.controllers;
 
-    for (int jid = 0; jid <= GLFW_JOYSTICK_LAST; ++jid) {
-        Input_Controller_t *controller = &controllers[jid];
+    for (size_t id = 0; id < INPUT_CONTROLLERS_COUNT; ++id) {
+        Input_Controller_t *controller = &controllers[id];
         Input_Button_t *buttons = controller->buttons;
 
         // We need to clear the controller state (and pass back the `is` value to `was`) so that it's moved back
@@ -213,7 +213,8 @@ static void _controller_handler(Input_t *input)
         controller->sticks[INPUT_CONTROLLER_STICK_RIGHT] = (Input_Controller_Stick_t){ 0 };
         controller->triggers = (Input_Controller_Triggers_t){ 0 };
 
-        if (glfwJoystickPresent(jid) == GLFW_FALSE || glfwJoystickIsGamepad(jid) == GLFW_FALSE) { // Skip not present or not gamepad joysticks.
+        const int jid = controller->jid;
+        if (jid == -1 || glfwJoystickPresent(jid) == GLFW_FALSE || glfwJoystickIsGamepad(jid) == GLFW_FALSE) { // Skip not present or not gamepad joysticks.
             continue;
         }
 
@@ -262,33 +263,66 @@ static inline void _initialize_cursor(Input_Cursor_t *cursor, const Input_Config
     cursor->enabled = configuration->cursor.enabled;
 }
 
-static size_t _controllers_detect(Input_Controller_t *controllers)
+static size_t _controllers_detect(Input_Controller_t *controllers, bool used_gamepads[GLFW_JOYSTICK_LAST + 1])
 {
-    size_t count = 0U;
-    for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) { // Detect the available controllers.
-        Input_Controller_t *controller = &controllers[i];
+    size_t count = 0;
 
-        controller->id = i;
+    for (size_t id = 0; id < INPUT_CONTROLLERS_COUNT; ++id) { // First loop, check for controller disconnection.
+        Input_Controller_t *controller = &controllers[id];
 
-        bool available = glfwJoystickIsGamepad(i) == GLFW_TRUE;
+        if (controller->jid == -1) {
+            continue;
+        }
 
-        if (controller->available != available) {
-            controller->available = available;
-            if (available) {
-                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
-                ++count;
-            } else {
-                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller #%d detached", i);
+        bool available = glfwJoystickPresent(controller->jid) == GLFW_TRUE && glfwJoystickIsGamepad(controller->jid) == GLFW_TRUE;
+        if (!available) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller #%d w/ jid #%d detached", id, controller->jid);
+            used_gamepads[controller->jid] = false;
+            controller->jid = -1;
+            continue;
+        }
+
+        ++count;
+    }
+
+    for (size_t id = 0; id < INPUT_CONTROLLERS_COUNT; ++id) { // Bind a new gamepad to unavailable controllers, if any.
+        Input_Controller_t *controller = &controllers[id];
+
+        if (controller->jid != -1) {
+            continue;
+        }
+
+        for (int jid = 0; jid <= GLFW_JOYSTICK_LAST; ++jid) {
+            if (used_gamepads[jid]) {
+                continue;
             }
+
+            bool available = glfwJoystickPresent(jid) == GLFW_TRUE && glfwJoystickIsGamepad(jid) == GLFW_TRUE;
+            if (!available) {
+                continue;
+            }
+
+            ++count;
+            controller->jid = jid;
+            used_gamepads[controller->jid] = true;
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller #%d found (jid #%d, GUID `%s`, name `%s`)", id, jid, glfwGetJoystickGUID(jid), glfwGetGamepadName(jid));
         }
     }
 
     return count;
 }
 
-static inline size_t _initialize_controllers(Input_Controller_t *controllers, const Input_Configuration_t *configuration)
+static inline size_t _initialize_controllers(Input_Controller_t *controllers, bool used_gamepads[GLFW_JOYSTICK_LAST + 1])
 {
-    size_t count = _controllers_detect(controllers);
+    for (size_t id = 0; id < INPUT_CONTROLLERS_COUNT; ++id) {
+        Input_Controller_t *controller = &controllers[id];
+
+        controller->id = id;
+        controller->jid = -1;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller(s) initialized");
+
+    size_t count = _controllers_detect(controllers, used_gamepads);
     if (count == 0) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no controllers detected");
     } else {
@@ -322,7 +356,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
     _initialize_cursor(&input->state.cursor, configuration);
 
-    input->state.controllers_count = _initialize_controllers(input->state.controllers, configuration);
+    input->state.controllers_count = _initialize_controllers(input->state.controllers, input->state.used_gamepads);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling sticky input mode");
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
@@ -355,7 +389,7 @@ static inline void _cursor_update(Input_t *input, float delta_time)
     for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
         Input_Controller_t *controller = &controllers[i];
 
-        if (controller->available) { // First available controller cursor-mapped will control the cursor.
+        if (controller->jid != -1) { // First available controller cursor-mapped will control the cursor.
             const Input_Controller_Stick_t *stick = &controller->sticks[INPUT_CONTROLLER_STICK_RIGHT]; // Right stick for cursor movement.
             const float delta = input->configuration.cursor.speed * delta_time;
             _move_and_bound_cursor(cursor, cursor->x + stick->x * delta, cursor->y + stick->y * delta);
@@ -368,7 +402,7 @@ static inline void _cursor_update(Input_t *input, float delta_time)
 
 static inline void _controllers_update(Input_t *input, float delta_time)
 {
-    input->state.controllers_count = _controllers_detect(input->state.controllers);
+    input->state.controllers_count = _controllers_detect(input->state.controllers, input->state.used_gamepads);
 }
 
 bool Input_update(Input_t *input, float delta_time)
@@ -567,7 +601,7 @@ void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position
 
 bool Input_controller_is_available(const Input_Controller_t *controller)
 {
-    return controller->available || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
+    return controller->jid != -1 || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
 }
 
 Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button)

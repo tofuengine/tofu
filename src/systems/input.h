@@ -136,7 +136,7 @@ typedef struct Input_Controller_Triggers_s {
     float left, right;
 } Input_Controller_Triggers_t;
 
-#define INPUT_CONTROLLERS_COUNT (GLFW_JOYSTICK_LAST + 1)
+#define INPUT_CONTROLLERS_COUNT 4
 
 typedef enum Input_Handlers_e {
     Input_Handlers_t_First = 0,
@@ -190,7 +190,7 @@ typedef struct Input_Cursor_s {
 
 typedef struct Input_Controller_s {
     size_t id;
-    bool available;
+    int jid; // When greater than `-1`, the controller is AVAILABLE.
     Input_Button_t buttons[Input_Controller_Buttons_t_CountOf];
     Input_Controller_Stick_t sticks[Input_Controller_Sticks_t_CountOf];
     Input_Controller_Triggers_t triggers;
@@ -206,6 +206,7 @@ typedef struct Input_s {
         Input_Cursor_t cursor;
         Input_Controller_t controllers[INPUT_CONTROLLERS_COUNT];
         size_t controllers_count;
+        bool used_gamepads[GLFW_JOYSTICK_LAST + 1];
     } state;
 } Input_t;
 
