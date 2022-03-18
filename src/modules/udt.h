@@ -43,7 +43,6 @@ typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
-    USERDATA_PHYSICS,
     USERDATA_INTERPRETER
 } UserData_t;
 

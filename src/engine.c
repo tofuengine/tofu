@@ -255,22 +255,9 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    engine->physics = Physics_create(&(const Physics_Configuration_t){ 0 });
-    if (!engine->physics) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize physics");
-        Audio_destroy(engine->audio);
-        Input_destroy(engine->input);
-        Display_destroy(engine->display);
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
-    }
-
     engine->environment = Environment_create(argc, argv, engine->display, engine->input);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
-        Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
@@ -284,7 +271,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter");
         Environment_destroy(engine->environment);
-        Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
@@ -303,7 +289,6 @@ void Engine_destroy(Engine_t *engine)
 {
     Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
     Environment_destroy(engine->environment);
-    Physics_destroy(engine->physics);
     Audio_destroy(engine->audio);
     Input_destroy(engine->input);
     Display_destroy(engine->display);
@@ -358,7 +343,6 @@ void Engine_run(Engine_t *engine)
             engine->input,
             engine->audio,
             engine->environment,
-            engine->physics,
             engine->interpreter,
             NULL
         });
@@ -414,7 +398,6 @@ void Engine_run(Engine_t *engine)
             running = running && Display_update(engine->display, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
             running = running && Audio_update(engine->audio, delta_time);
-            running = running && Physics_update(engine->physics, delta_time);
             running = running && Storage_update(engine->storage, delta_time); // Note: we could update audio/storage one every two steps (or more).
             lag -= delta_time;
         }
@@ -423,7 +406,6 @@ void Engine_run(Engine_t *engine)
 //        running = running && Display_update_variable(engine->display, elapsed);
 //        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
-//        running = running && Physics_update_variable(engine->storage, elapsed);
 //        running = running && Storage_update_variable(engine->storage, elapsed);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
