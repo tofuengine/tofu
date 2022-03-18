@@ -26,17 +26,19 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <systems/physics.h>
+
+#include <chipmunk/chipmunk.h>
 
 #include "udt.h"
 
-#define LOG_CONTEXT "space"
+#define LOG_CONTEXT "world"
 #define META_TABLE  "Tofu_World_Body_mt"
 
+static int world_new_0_1o(lua_State *L);
+static int world_gc_1o_0(lua_State *L);
 static int world_gravity_v_v(lua_State *L);
 static int world_damping_v_v(lua_State *L);
-
-// TODO: make the world a non-singleton?
+static int world_update_2on_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
@@ -44,8 +46,11 @@ int world_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            { "new", world_new_0_1o },
+            { "__gc", world_gc_1o_0 },
             { "gravity", world_gravity_v_v },
             { "damping", world_damping_v_v },
+            { "update", world_update_2on_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -53,14 +58,49 @@ int world_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int world_gravity_0_2n(lua_State *L)
+static int world_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Physics_t *physics = (const Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
+    cpSpace *space = cpSpaceNew();
+    if (!space) {
+        return luaL_error(L, "can't create space");
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "space %p created", space);
 
-    const cpSpace *space = physics->space;
+    World_Object_t *self = (World_Object_t *)luaX_newobject(L, sizeof(World_Object_t), &(World_Object_t){
+            .space = space
+        }, OBJECT_TYPE_WORLD, META_TABLE);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p created", self);
+
+    return 1;
+}
+
+static int world_gc_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+
+    cpSpaceFree(self->space);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p finalized", self);
+
+    return 0;
+}
+
+static int world_gravity_1o_2n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+
+    const cpSpace *space = self->space;
     const cpVect position = cpSpaceGetGravity(space);
 
     lua_pushnumber(L, (lua_Number)position.x);
@@ -69,18 +109,18 @@ static int world_gravity_0_2n(lua_State *L)
     return 2;
 }
 
-static int world_gravity_2nn_0(lua_State *L)
+static int world_gravity_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    cpFloat x = (cpFloat)LUAX_NUMBER(L, 1);
-    cpFloat y = (cpFloat)LUAX_NUMBER(L, 2);
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+    cpFloat x = (cpFloat)LUAX_NUMBER(L, 2);
+    cpFloat y = (cpFloat)LUAX_NUMBER(L, 3);
 
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
-
-    cpSpace *space = physics->space;
+    cpSpace *space = self->space;
     cpSpaceSetGravity(space, (cpVect){ .x = x, .y = y });
 
     return 0;
@@ -89,19 +129,19 @@ static int world_gravity_2nn_0(lua_State *L)
 static int world_gravity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, world_gravity_0_2n)
-        LUAX_OVERLOAD_ARITY(2, world_gravity_2nn_0)
+        LUAX_OVERLOAD_ARITY(1, world_gravity_1o_2n)
+        LUAX_OVERLOAD_ARITY(3, world_gravity_3onn_0)
     LUAX_OVERLOAD_END
 }
 
-static int world_damping_0_1n(lua_State *L)
+static int world_damping_1o_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
-    const Physics_t *physics = (const Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
-
-    const cpSpace *space = physics->space;
+    const cpSpace *space = self->space;
     const cpFloat damping = cpSpaceGetDamping(space);
 
     lua_pushnumber(L, (lua_Number)damping);
@@ -109,16 +149,16 @@ static int world_damping_0_1n(lua_State *L)
     return 1;
 }
 
-static int world_damping_1n_0(lua_State *L)
+static int world_damping_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    cpFloat damping = (cpFloat)LUAX_NUMBER(L, 1);
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+    cpFloat damping = (cpFloat)LUAX_NUMBER(L, 2);
 
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
-
-    cpSpace *space = physics->space;
+    cpSpace *space = self->space;
     cpSpaceSetDamping(space, damping);
 
     return 0;
@@ -127,7 +167,22 @@ static int world_damping_1n_0(lua_State *L)
 static int world_damping_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, world_damping_0_1n)
-        LUAX_OVERLOAD_ARITY(1, world_damping_1n_0)
+        LUAX_OVERLOAD_ARITY(1, world_damping_1o_1n)
+        LUAX_OVERLOAD_ARITY(2, world_damping_2on_0)
     LUAX_OVERLOAD_END
+}
+
+static int world_update_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+    cpFloat delta_time = (cpFloat)LUAX_NUMBER(L, 2);
+
+    cpSpace *space = self->space;
+    cpSpaceStep(space, delta_time);
+
+    return 0;
 }

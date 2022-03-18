@@ -33,7 +33,7 @@ local CELL_ID = 0
 local MIN_X, MIN_Y = 0, 0
 local MAX_X, MAX_Y = Canvas.default():image():size()
 
-function Bunny:__ctor(font, bank)
+function Bunny:__ctor(font, bank, world)
   local cw, ch = bank:size(CELL_ID)
 
   local min_x = MIN_X + cw
@@ -47,11 +47,11 @@ function Bunny:__ctor(font, bank)
   local x = math.random() * (max_x - min_x) + cw
   local y = math.random() * (max_y - min_y) + ch
 
-  local body = Body.new()
+  local body = Body.new(world)
   body:shape("box", cw, ch)
   body:elasticity(0.75)
   body:type("dynamic")
-  body:mass(math.random(10, 50))
+  body:mass(math.random(1, 100))
   body:momentum(10)
   body:position(x, y)
   self.body = body

@@ -26,7 +26,8 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <systems/physics.h>
+
+#include <chipmunk/chipmunk.h>
 
 #include "udt.h"
 #include "utils/map.h"
@@ -34,7 +35,7 @@
 #define LOG_CONTEXT "body"
 #define META_TABLE  "Tofu_Physics_Body_mt"
 
-static int body_new_0_1o(lua_State *L);
+static int body_new_1o_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
 static int body_shape_v_v(lua_State *L);
 static int body_center_of_gravity_v_v(lua_State *L);
@@ -53,7 +54,7 @@ int body_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", body_new_0_1o },
+            { "new", body_new_1o_1o },
             { "__gc", body_gc_1o_0 },
             { "shape", body_shape_v_v },
             { "center_of_gravity", body_center_of_gravity_v_v },
@@ -83,12 +84,12 @@ static const Map_Entry_t _types[3] = {
     { "static", CP_BODY_TYPE_STATIC }
 };
 
-static int body_new_0_1o(lua_State *L)
+static int body_new_1o_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
+    World_Object_t *world = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
@@ -96,7 +97,7 @@ static int body_new_0_1o(lua_State *L)
     }
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
 
-    cpSpaceAddBody(physics->space, body);
+    cpSpaceAddBody(world->space, body);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
@@ -105,7 +106,7 @@ static int body_new_0_1o(lua_State *L)
             .size = { { 0 } }
         }, OBJECT_TYPE_BODY, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created", self);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created and added to world %p", self, world);
 
     return 1;
 }
@@ -117,15 +118,15 @@ static int body_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
+    cpSpace *space = cpBodyGetSpace(self->body);
 
     if (self->shape) {
-        cpSpaceRemoveShape(physics->space, self->shape);
+        cpSpaceRemoveShape(space, self->shape);
         cpShapeFree(self->shape);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
     }
 
-    cpSpaceRemoveBody(physics->space, self->body);
+    cpSpaceRemoveBody(space, self->body);
     cpBodyFree(self->body);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p destroyed", self->body);
 
@@ -134,9 +135,12 @@ static int body_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static void _recreate(lua_State *L, cpSpace *space, Body_Object_t *self)
+static inline void _recreate(lua_State *L, Body_Object_t *self)
 {
+    cpBody *body = self->body;
     cpShape *shape = self->shape;
+    cpSpace *space = cpBodyGetSpace(body);
+
     //const cpFloat density = shape ? cpShapeGetDensity(shape) : 1.0; // ???
     const cpFloat elasticity = shape ? cpShapeGetElasticity(shape) : 1.0;
 
@@ -147,7 +151,6 @@ static void _recreate(lua_State *L, cpSpace *space, Body_Object_t *self)
         self->shape = shape = NULL;
     }
 
-    cpBody *body = self->body;
     if (self->kind == BODY_KIND_BOX) {
         shape = cpBoxShapeNew(body, self->size.box.width, self->size.box.height, self->size.box.radius);
     } else
@@ -202,8 +205,6 @@ static int body_shape_5osnNN_0(lua_State *L)
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
     const char *kind = LUAX_STRING(L, 2);
 
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
-
     const Map_Entry_t *entry = map_find_key(L, kind, _kinds, Body_Kinds_t_CountOf);
     if ((Body_Kinds_t)entry->value == BODY_KIND_BOX) {
         self->kind = BODY_KIND_BOX;
@@ -220,8 +221,7 @@ static int body_shape_5osnNN_0(lua_State *L)
         return luaL_error(L, "unrecognized kind `%s`", kind);
     }
 
-    cpSpace *space = physics->space;
-    _recreate(L, space, self);
+    _recreate(L, self);
 
     return 0;
 }

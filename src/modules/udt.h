@@ -66,6 +66,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_WAVE,
     // Physics
     OBJECT_TYPE_BODY,
+    OBJECT_TYPE_WORLD,
     // Sound
     OBJECT_TYPE_SOURCE,
     // Util
@@ -229,6 +230,10 @@ typedef struct Body_Object_s {
     } size;
 //    cpFloat *momentum;
 } Body_Object_t;
+
+typedef struct World_Object_s {
+    cpSpace *space;
+} World_Object_t;
 
 typedef struct Source_Object_s {
     FS_Handle_t *handle;

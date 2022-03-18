@@ -24,13 +24,13 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Controller = require("tofu.controller:controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Controller = require("tofu.input.controller")
 local Body = require("tofu.physics.body")
 local World = require("tofu.physics.world")
 
@@ -45,8 +45,6 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  World.gravity(0.0, 200.0)
-
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
 
@@ -56,21 +54,24 @@ function Main:__ctor()
   self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
 
-  local left = Body.new()
+  self.world = World.new()
+  self.world:gravity(0.0, 200.0)
+
+  local left = Body.new(self.world)
   left:shape("box", 1, height)
   left:type("kinematic")
   left:position(0, height * 0.5)
   left:elasticity(1.0)
   self.left = left
 
-  local bottom = Body.new()
+  local bottom = Body.new(self.world)
   bottom:shape("box", width, 1)
   bottom:type("kinematic")
   bottom:position(width * 0.5, height)
   bottom:elasticity(1.0)
   self.bottom = bottom
 
-  local right = Body.new()
+  local right = Body.new(self.world)
   right:shape("box", 1, height)
   right:type("kinematic")
   right:position(width, height * 0.5)
@@ -78,7 +79,7 @@ function Main:__ctor()
   self.right = right
 
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.font, self.bank))
+    table.insert(self.bunnies, Bunny.new(self.font, self.bank, self.world))
   end
 end
 
@@ -86,7 +87,7 @@ function Main:process()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.font, self.bank))
+      table.insert(self.bunnies, Bunny.new(self.font, self.bank, self.world))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
@@ -97,6 +98,7 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self.world:update(delta_time)
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time)
   end
