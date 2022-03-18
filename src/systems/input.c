@@ -24,6 +24,7 @@
 
 #include "input.h"
 
+#include <libs/fmath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -93,21 +94,8 @@ static void _keyboard_handler(Input_t *input)
 
 static inline void _move_and_bound_cursor(Input_Cursor_t *cursor, float x, float y)
 {
-    cursor->x = x;
-    cursor->y = y;
-
-    if (cursor->x < cursor->area.x0) {
-        cursor->x = cursor->area.x0;
-    } else
-    if (cursor->x > cursor->area.x1) {
-        cursor->x = cursor->area.x1;
-    }
-    if (cursor->y < cursor->area.y0) {
-        cursor->y = cursor->area.y0;
-    } else
-    if (cursor->y > cursor->area.y1) {
-        cursor->y = cursor->area.y1;
-    }
+    cursor->position.x = FCLAMP(x, cursor->area.x0, cursor->area.x1);
+    cursor->position.y = FCLAMP(y, cursor->area.y0, cursor->area.y1);
 }
 
 static void _mouse_handler(Input_t *input)
@@ -317,7 +305,7 @@ static inline size_t _initialize_controllers(Input_Controller_t *controllers, bo
     for (size_t id = 0; id < INPUT_CONTROLLERS_COUNT; ++id) {
         Input_Controller_t *controller = &controllers[id];
 
-        controller->id = id;
+        controller->id = id; // Set internal controller identifier and clear the gamepad/joystick id.
         controller->jid = -1;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "controller(s) initialized");
@@ -392,7 +380,7 @@ static inline void _cursor_update(Input_t *input, float delta_time)
         if (controller->jid != -1) { // First available controller cursor-mapped will control the cursor.
             const Input_Controller_Stick_t *stick = &controller->sticks[INPUT_CONTROLLER_STICK_RIGHT]; // Right stick for cursor movement.
             const float delta = input->configuration.cursor.speed * delta_time;
-            _move_and_bound_cursor(cursor, cursor->x + stick->x * delta, cursor->y + stick->y * delta);
+            _move_and_bound_cursor(cursor, cursor->position.x + stick->x * delta, cursor->position.y + stick->y * delta);
 
             break;
         }
@@ -595,15 +583,15 @@ Input_Button_t Input_cursor_get_button(const Input_Cursor_t *cursor, Input_Curso
 Input_Position_t Input_cursor_get_position(const Input_Cursor_t *cursor)
 {
     return (Input_Position_t){
-            .x = (int)cursor->x, // No need for rounding.
-            .y = (int)cursor->y
+            .x = (int)cursor->position.x, // No need for rounding.
+            .y = (int)cursor->position.y
         };
 }
 
 void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position)
 {
-    cursor->x = (float)position.x + 0.5f; // Center on mid-pixel, as movements are float-based (to support dpad/stick)
-    cursor->y = (float)position.y + 0.5f;
+    cursor->position.x = (float)position.x + 0.5f; // Center on mid-pixel, as movements are float-based (to support dpad/stick)
+    cursor->position.y = (float)position.y + 0.5f;
 }
 
 bool Input_controller_is_available(const Input_Controller_t *controller)

@@ -178,7 +178,9 @@ typedef struct Input_Keyboard_s {
 typedef struct Input_Cursor_s {
     bool enabled;
     Input_Button_t buttons[Input_Cursor_Buttons_t_CountOf];
-    float x, y; // FIXME: use `Input_Position_t` datatype?
+    struct {
+        float x, y;
+    } position; // We can't use `Input_Position_t` as we are using float-based movements.
     struct {
         float x, y;
     } scale;

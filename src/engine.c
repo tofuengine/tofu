@@ -324,7 +324,6 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
 
-
 #ifdef __DISPLAY_FOCUS_SUPPORT__
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
