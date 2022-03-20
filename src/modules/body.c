@@ -47,6 +47,7 @@ static int body_velocity_v_v(lua_State *L);
 static int body_angle_v_v(lua_State *L);
 static int body_elasticity_v_v(lua_State *L);
 static int body_density_v_v(lua_State *L);
+static int body_sleep_v_v(lua_State *L);
 
 int body_loader(lua_State *L)
 {
@@ -66,6 +67,7 @@ int body_loader(lua_State *L)
             { "angle", body_angle_v_v },
             { "elasticity", body_elasticity_v_v },
             { "density", body_density_v_v },
+            { "sleep", body_sleep_v_v },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -596,5 +598,48 @@ static int body_density_v_v(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_density_1o_1n)
         LUAX_OVERLOAD_ARITY(2, body_density_2on_0)
+    LUAX_OVERLOAD_END
+}
+
+static int body_sleep_1o_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+
+    const cpBody *body = self->body;
+    const bool is_sleeping = cpBodyIsSleeping(body) == cpTrue;
+
+    lua_pushboolean(L, is_sleeping);
+
+    return 1;
+}
+
+static int body_sleep_2ob_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
+    LUAX_SIGNATURE_END
+    Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    bool is_sleeping = LUAX_BOOLEAN(L, 2);
+
+    cpBody *body = self->body;
+    if (is_sleeping) {
+        cpBodySleep(body);
+    } else {
+        cpBodyActivate(body);
+//        cpBodyActivateStatic(body, NULL);
+    }
+
+    return 0;
+}
+
+static int body_sleep_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, body_sleep_1o_1b)
+        LUAX_OVERLOAD_ARITY(2, body_sleep_2ob_0)
     LUAX_OVERLOAD_END
 }
