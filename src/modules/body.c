@@ -432,7 +432,7 @@ static int body_position_3onn_0(lua_State *L)
 
     cpBody *body = self->body;
     cpBodySetPosition(body, (cpVect){ .x = x, .y = y });
-    cpShape *shape = self->shape;
+    cpShape *shape = self->shape; // Or `cpSpaceReindexShapesForBody`.
     cpSpaceReindexShape(cpShapeGetSpace(shape), shape); // Reindex when moving (mostly for static bodies)
 
     return 0;
@@ -513,6 +513,8 @@ static int body_angle_2on_0(lua_State *L)
 
     cpBody *body = self->body;
     cpBodySetAngle(body, angle);
+    cpShape *shape = self->shape; // Or `cpSpaceReindexShapesForBody`.
+    cpSpaceReindexShape(cpShapeGetSpace(shape), shape); // Reindex when moving (mostly for static bodies)
 
     return 0;
 }
