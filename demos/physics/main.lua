@@ -57,25 +57,25 @@ function Main:__ctor()
   self.world = World.new()
   self.world:gravity(0.0, 200.0)
 
-  local left = Body.new(self.world)
-  left:shape("box", 1, height)
-  left:type("kinematic")
+  local left = Body.new("box", 1, height, 0)
+  left:type("static") -- Can either be kinematic or static (the latter is better)
   left:position(0, height * 0.5)
   left:elasticity(1.0)
+  self.world:add(left)
   self.left = left
 
-  local bottom = Body.new(self.world)
-  bottom:shape("box", width, 1)
-  bottom:type("kinematic")
+  local bottom = Body.new("box", width, 1, 0)
+  bottom:type("static")
   bottom:position(width * 0.5, height)
   bottom:elasticity(1.0)
+  self.world:add(bottom)
   self.bottom = bottom
 
-  local right = Body.new(self.world)
-  right:shape("box", 1, height)
-  right:type("kinematic")
+  local right = Body.new("box", 1, height, 0)
+  right:type("static")
   right:position(width, height * 0.5)
-  right:density(1.0)
+  right:elasticity(1.0)
+  self.world:add(right)
   self.right = right
 
   for _ = 1, INITIAL_BUNNIES do
@@ -93,6 +93,9 @@ function Main:process()
       System.quit()
     end
   elseif controller:is_pressed("select") then
+    for _, bunny in ipairs(self.bunnies) do
+      self.world:remove(bunny.body)
+    end
     self.bunnies = {}
   end
 end

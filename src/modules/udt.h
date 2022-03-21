@@ -209,7 +209,6 @@ typedef struct Wave_Object_s {
 } Wave_Object_t;
 
 typedef enum Body_Kinds_e {
-    BODY_KIND_SHAPELESS,
     BODY_KIND_BOX,
     BODY_KIND_CIRCLE,
     Body_Kinds_t_CountOf

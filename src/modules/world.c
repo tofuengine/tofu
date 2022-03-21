@@ -42,6 +42,7 @@ static int world_damping_v_v(lua_State *L);
 static int world_update_2on_0(lua_State *L);
 static int world_add_2oo_0(lua_State *L);
 static int world_remove_2oo_0(lua_State *L);
+static int world_clear_1o_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
@@ -56,6 +57,7 @@ int world_loader(lua_State *L)
             { "update", world_update_2on_0 },
             { "add", world_add_2oo_0 },
             { "remove", world_remove_2oo_0 },
+            { "clear", world_clear_1o_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -216,6 +218,8 @@ static int world_add_2oo_0(lua_State *L)
     }
 
     cpSpaceAddBody(space, body->body);
+    cpSpaceAddShape(space, body->shape);
+
     Body_Object_Reference_t reference = (Body_Object_Reference_t){
             .body = body,
             .reference = luaX_ref(L, 2)
@@ -241,16 +245,40 @@ static int world_remove_2oo_0(lua_State *L)
         return 0;
     }
 
-    for (int i = 0; i < arrlen(self->references); ++i) { // FIXME: use an hashmap.
+    for (int i = arrlen(self->references) - 1; i > 0; --i) { // FIXME: use an hashmap.
         Body_Object_Reference_t *reference = &self->references[i];
         if (reference->body == body) {
+            cpSpaceRemoveShape(space, body->shape);
             cpSpaceRemoveBody(space, body->body);
+
             luaX_unref(L, reference->reference);
             arrdel(self->references, i);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p found at slot #%d, remove fro world %p", body, i, self);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p found at slot #%d, remove from world %p", body, i, self);
             break;
         }
     }
+
+    return 0;
+}
+
+static int world_clear_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+
+    cpSpace *space = self->space;
+    for (int i = 0; i < arrlen(self->references); ++i) { // FIXME: use an hashmap.
+        Body_Object_Reference_t *reference = &self->references[i];
+
+        const Body_Object_t *body = reference->body;
+        cpSpaceRemoveShape(space, body->shape);
+        cpSpaceRemoveBody(space, body->body);
+
+        luaX_unref(L, reference->reference);
+    }
+    arrfree(self->references);
 
     return 0;
 }
