@@ -35,7 +35,7 @@
 #define LOG_CONTEXT "body"
 #define META_TABLE  "Tofu_Physics_Body_mt"
 
-static int body_new_1o_1o(lua_State *L);
+static int body_new_0_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
 static int body_shape_v_v(lua_State *L);
 static int body_center_of_gravity_v_v(lua_State *L);
@@ -55,7 +55,7 @@ int body_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", body_new_1o_1o },
+            { "new", body_new_0_1o },
             { "__gc", body_gc_1o_0 },
             { "shape", body_shape_v_v },
             { "center_of_gravity", body_center_of_gravity_v_v },
@@ -86,20 +86,16 @@ static const Map_Entry_t _types[3] = {
     { "static", CP_BODY_TYPE_STATIC }
 };
 
-static int body_new_1o_1o(lua_State *L)
+static int body_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    World_Object_t *world = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
         return luaL_error(L, "can't create body");
     }
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
-
-    cpSpaceAddBody(world->space, body);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
@@ -108,7 +104,7 @@ static int body_new_1o_1o(lua_State *L)
             .size = { { 0 } }
         }, OBJECT_TYPE_BODY, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created and added to world %p", self, world);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created", self);
 
     return 1;
 }
@@ -128,7 +124,6 @@ static int body_gc_1o_0(lua_State *L)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
     }
 
-    cpSpaceRemoveBody(space, self->body);
     cpBodyFree(self->body);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p destroyed", self->body);
 

@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include <chipmunk/chipmunk.h>
 
@@ -39,6 +40,8 @@ static int world_gc_1o_0(lua_State *L);
 static int world_gravity_v_v(lua_State *L);
 static int world_damping_v_v(lua_State *L);
 static int world_update_2on_0(lua_State *L);
+static int world_add_2oo_0(lua_State *L);
+static int world_remove_2oo_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
@@ -51,6 +54,8 @@ int world_loader(lua_State *L)
             { "gravity", world_gravity_v_v },
             { "damping", world_damping_v_v },
             { "update", world_update_2on_0 },
+            { "add", world_add_2oo_0 },
+            { "remove", world_remove_2oo_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -84,6 +89,14 @@ static int world_gc_1o_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+
+//    cpSpace *space = self->space;
+    for (int i = 0; i < arrlen(self->references); ++i) { // FIXME: use an hashmap.
+        Body_Object_Reference_t *reference = &self->references[i];
+//        cpSpaceRemoveBody(space, body->body);
+        luaX_unref(L, reference->reference);
+    }
+    arrfree(self->references);
 
     cpSpaceFree(self->space);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
@@ -183,6 +196,61 @@ static int world_update_2on_0(lua_State *L)
 
     cpSpace *space = self->space;
     cpSpaceStep(space, delta_time);
+
+    return 0;
+}
+
+static int world_add_2oo_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+    const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
+
+    cpSpace *space = self->space;
+    if (cpSpaceContainsBody(space, body->body) == cpTrue) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p already bound to world %p", body, self);
+        return 0;
+    }
+
+    cpSpaceAddBody(space, body->body);
+    Body_Object_Reference_t reference = (Body_Object_Reference_t){
+            .body = body,
+            .reference = luaX_ref(L, 2)
+        };
+    arrput(self->references, reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p bound to world %p", body, self);
+
+    return 0;
+}
+
+static int world_remove_2oo_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+    const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
+
+    cpSpace *space = self->space;
+    if (cpSpaceContainsBody(space, body->body) == cpFalse) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p already not bound to world %p", body, self);
+        return 0;
+    }
+
+    for (int i = 0; i < arrlen(self->references); ++i) { // FIXME: use an hashmap.
+        Body_Object_Reference_t *reference = &self->references[i];
+        if (reference->body == body) {
+            cpSpaceRemoveBody(space, body->body);
+            luaX_unref(L, reference->reference);
+            arrdel(self->references, i);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p found at slot #%d, remove fro world %p", body, i, self);
+            break;
+        }
+    }
 
     return 0;
 }
