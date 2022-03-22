@@ -217,16 +217,18 @@ static int world_add_2oo_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
     const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
 
-    cpSpace *space = self->space;
-    if (cpSpaceContainsBody(space, body->body) == cpTrue) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p already bound to world %p", body, self);
-        return 0;
+    int index = hmgeti(self->entries, body);
+    if (index != -1) {
+        luaL_error(L, "body %p already in world %p", body, self);
     }
 
+    cpSpace *space = self->space;
     cpSpaceAddBody(space, body->body);
     cpSpaceAddShape(space, body->shape);
 
-    hmput(self->entries, body, luaX_ref(L, 2));
+    luaX_Reference reference = luaX_ref(L, 2);
+
+    hmput(self->entries, body, reference);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p bound to world %p", body, self);
 
     return 0;
@@ -241,18 +243,13 @@ static int world_remove_2oo_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
     const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
 
-    cpSpace *space = self->space;
-    if (cpSpaceContainsBody(space, body->body) == cpFalse) { // FIXME: remove this (and the above) and use the hashmap?
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p not bound to world %p", body, self);
-        return 0;
-    }
-
     int index = hmgeti(self->entries, body);
     if (index == -1) {
-        luaL_error(L, "body %p not found in reference cache", body);
+        luaL_error(L, "body %p not in world %p", body, self);
     }
     World_Object_Entry_t *entry = &self->entries[index];
 
+    cpSpace *space = self->space;
     cpSpaceRemoveShape(space, body->shape);
     cpSpaceRemoveBody(space, body->body);
 
