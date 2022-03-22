@@ -230,14 +230,14 @@ typedef struct Body_Object_s {
 //    cpFloat *momentum;
 } Body_Object_t;
 
-typedef struct Body_Object_Reference_s {
-    const Body_Object_t *body;
-    luaX_Reference reference;
-} Body_Object_Reference_t;
+typedef struct World_Object_Entry_s {
+    const Body_Object_t *key;
+    luaX_Reference value;
+} World_Object_Entry_t;
 
 typedef struct World_Object_s {
     cpSpace *space;
-    Body_Object_Reference_t *references;
+    World_Object_Entry_t *entries;
 } World_Object_t;
 
 typedef struct Source_Object_s {
