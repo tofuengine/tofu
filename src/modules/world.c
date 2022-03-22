@@ -87,13 +87,8 @@ static int world_new_0_1o(lua_State *L)
 
 static inline void _release(lua_State *L, World_Object_t *world)
 {
-    cpSpace *space = world->space;
     for (size_t i = 0; i < hmlenu(world->entries); ++i) {
         World_Object_Entry_t *entry = &world->entries[i];
-
-        const Body_Object_t *body = entry->key;
-        cpSpaceRemoveShape(space, body->shape);
-        cpSpaceRemoveBody(space, body->body);
 
         luaX_Reference reference = entry->value;
         luaX_unref(L, reference);
@@ -109,7 +104,7 @@ static int world_gc_1o_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     _release(L, self);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world entries freed");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p entries cleared", self);
 
     cpSpaceFree(self->space);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
@@ -247,8 +242,8 @@ static int world_remove_2oo_0(lua_State *L)
     const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
 
     cpSpace *space = self->space;
-    if (cpSpaceContainsBody(space, body->body) == cpFalse) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p already not bound to world %p", body, self);
+    if (cpSpaceContainsBody(space, body->body) == cpFalse) { // FIXME: remove this (and the above) and use the hashmap?
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p not bound to world %p", body, self);
         return 0;
     }
 
@@ -277,8 +272,11 @@ static int world_clear_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
+    cpSpaceDestroy(self->space);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
+
     _release(L, self);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world entries cleared");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p entries cleared", self);
 
     return 0;
 }
