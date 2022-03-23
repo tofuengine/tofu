@@ -35,7 +35,7 @@
 #define LOG_CONTEXT "world"
 #define META_TABLE  "Tofu_World_Body_mt"
 
-static int world_new_0_1o(lua_State *L);
+static int world_new_v_1o(lua_State *L);
 static int world_gc_1o_0(lua_State *L);
 static int world_gravity_v_v(lua_State *L);
 static int world_damping_v_v(lua_State *L);
@@ -50,7 +50,7 @@ int world_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", world_new_0_1o },
+            { "new", world_new_v_1o },
             { "__gc", world_gc_1o_0 },
             { "gravity", world_gravity_v_v },
             { "damping", world_damping_v_v },
@@ -65,16 +65,23 @@ int world_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int world_new_0_1o(lua_State *L)
+static int world_new_2NN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
+    cpFloat x = (cpFloat)LUAX_OPTIONAL_NUMBER(L, 1, 0.0);
+    cpFloat y = (cpFloat)LUAX_OPTIONAL_NUMBER(L, 2, 0.0);
 
     cpSpace *space = cpSpaceNew();
     if (!space) {
         return luaL_error(L, "can't create space");
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "space %p created", space);
+
+    cpSpaceSetGravity(space, (cpVect){ .x = x, .y = y });
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "gravity set to <%.3f, %.3f> for space %p", x, y, space);
 
     World_Object_t *self = (World_Object_t *)luaX_newobject(L, sizeof(World_Object_t), &(World_Object_t){
             .space = space
@@ -83,6 +90,14 @@ static int world_new_0_1o(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p created", self);
 
     return 1;
+}
+
+static int world_new_v_1o(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, world_new_2NN_1o)
+        LUAX_OVERLOAD_ARITY(2, world_new_2NN_1o)
+    LUAX_OVERLOAD_END
 }
 
 static inline void _release(lua_State *L, World_Object_t *world)
