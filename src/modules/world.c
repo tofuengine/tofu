@@ -27,13 +27,16 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <libs/path.h>
+#include <systems/storage.h>
 
 #include <chipmunk/chipmunk.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "world"
-#define META_TABLE  "Tofu_World_Body_mt"
+#define MODULE_NAME "tofu.physics.world"
+#define META_TABLE  "Tofu_Physics_World_mt"
 
 static int world_new_v_1o(lua_State *L);
 static int world_gc_1o_0(lua_State *L);
@@ -46,9 +49,19 @@ static int world_clear_1o_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
+    char file[PATH_MAX] = { 0 };
+    path_lua_to_fs(file, MODULE_NAME);
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+        (luaX_Script){
+            .data = S_SCHARS(script),
+            .size = S_SLENTGH(script),
+            .name = file
+        },
         (const struct luaL_Reg[]){
             { "new", world_new_v_1o },
             { "__gc", world_gc_1o_0 },
