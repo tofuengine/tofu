@@ -27,7 +27,6 @@
 #include <config.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 #include <libs/path.h>
 #include <systems/storage.h>
 

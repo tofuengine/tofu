@@ -25,7 +25,6 @@
 #include "system.h"
 
 #include <config.h>
-#include <libs/luax.h>
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
 #include <systems/environment.h>

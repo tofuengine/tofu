@@ -25,7 +25,6 @@
 #include "file.h"
 
 #include <config.h>
-#include <libs/luax.h>
 #include <systems/storage.h>
 
 #include "udt.h"

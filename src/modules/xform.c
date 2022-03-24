@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 

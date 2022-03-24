@@ -27,7 +27,6 @@
 #include <config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 
 #include "utils/map.h"
 #include "udt.h"
