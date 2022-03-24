@@ -25,7 +25,6 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local Canvas = require("tofu.graphics.canvas")
-local Body = require("tofu.physics.body")
 
 local Bunny = Class.define()
 
@@ -47,13 +46,12 @@ function Bunny:__ctor(font, bank, world)
   local x = math.random() * (max_x - min_x) + cw
   local y = math.random() * (max_y - min_y) + ch
 
-  local body = Body.new("box", cw, ch, 0)
+  local body = world:spawn("box", cw, ch, 0)
   body:elasticity(0.75)
   body:type("dynamic")
   body:mass(math.random(1, 100))
   body:momentum(10)
   body:position(x, y)
-  world:add(body)
   self.body = body
 end
 

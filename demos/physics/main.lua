@@ -31,7 +31,6 @@ local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 local Controller = require("tofu.input.controller")
-local Body = require("tofu.physics.body")
 local World = require("tofu.physics.world")
 
 local Bunny = require("lib/bunny")
@@ -54,28 +53,24 @@ function Main:__ctor()
   self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
 
-  self.world = World.new()
-  self.world:gravity(0.0, 200.0)
+  self.world = World.new(0.0, 200.0)
 
-  local left = Body.new("box", 1, height, 0)
+  local left = self.world:spawn("box", 1, height, 0)
   left:type("static") -- Can either be kinematic or static (the latter is better)
   left:position(0, height * 0.5)
   left:elasticity(1.0)
-  self.world:add(left)
   self.left = left
 
-  local bottom = Body.new("box", width, 1, 0)
+  local bottom = self.world:spawn("box", width, 1, 0)
   bottom:type("static")
   bottom:position(width * 0.5, height)
   bottom:elasticity(1.0)
-  self.world:add(bottom)
   self.bottom = bottom
 
-  local right = Body.new("box", 1, height, 0)
+  local right = self.world:spawn("box", 1, height, 0)
   right:type("static")
   right:position(width, height * 0.5)
   right:elasticity(1.0)
-  self.world:add(right)
   self.right = right
 
   for _ = 1, INITIAL_BUNNIES do
