@@ -24,14 +24,13 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Controller = require("tofu.controller:controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
-local Body = require("tofu.physics.body")
+local Controller = require("tofu.input.controller")
 local World = require("tofu.physics.world")
 
 local Bunny = require("lib/bunny")
@@ -45,8 +44,6 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  World.gravity(0.0, 200.0)
-
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
 
@@ -56,29 +53,28 @@ function Main:__ctor()
   self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
 
-  local left = Body.new()
-  left:shape("box", 1, height)
-  left:type("kinematic")
+  self.world = World.new(0.0, 200.0)
+
+  local left = self.world:spawn("box", 1, height, 0)
+  left:type("static") -- Can either be kinematic or static (the latter is better)
   left:position(0, height * 0.5)
   left:elasticity(1.0)
   self.left = left
 
-  local bottom = Body.new()
-  bottom:shape("box", width, 1)
-  bottom:type("kinematic")
+  local bottom = self.world:spawn("box", width, 1, 0)
+  bottom:type("static")
   bottom:position(width * 0.5, height)
   bottom:elasticity(1.0)
   self.bottom = bottom
 
-  local right = Body.new()
-  right:shape("box", 1, height)
-  right:type("kinematic")
+  local right = self.world:spawn("box", 1, height, 0)
+  right:type("static")
   right:position(width, height * 0.5)
-  right:density(1.0)
+  right:elasticity(1.0)
   self.right = right
 
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.font, self.bank))
+    table.insert(self.bunnies, Bunny.new(self.font, self.bank, self.world))
   end
 end
 
@@ -86,17 +82,21 @@ function Main:process()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.font, self.bank))
+      table.insert(self.bunnies, Bunny.new(self.font, self.bank, self.world))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
     end
   elseif controller:is_pressed("select") then
+    for _, bunny in ipairs(self.bunnies) do
+      self.world:remove(bunny.body)
+    end
     self.bunnies = {}
   end
 end
 
 function Main:update(delta_time)
+  self.world:update(delta_time)
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time)
   end

@@ -29,7 +29,6 @@
 #include "systems/display.h"
 #include "systems/environment.h"
 #include "systems/input.h"
-#include "systems/physics.h"
 #include "systems/storage.h"
 #include "systems/interpreter.h"
 #include "utils/configuration.h"
@@ -40,7 +39,6 @@ typedef struct Engine_s {
     Display_t *display;
     Input_t *input;
     Audio_t *audio;
-    Physics_t *physics;
     Environment_t *environment;
     Interpreter_t *interpreter;
 } Engine_t;

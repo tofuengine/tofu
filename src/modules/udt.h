@@ -43,7 +43,6 @@ typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
-    USERDATA_PHYSICS,
     USERDATA_INTERPRETER
 } UserData_t;
 
@@ -67,6 +66,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_WAVE,
     // Physics
     OBJECT_TYPE_BODY,
+    OBJECT_TYPE_WORLD,
     // Sound
     OBJECT_TYPE_SOURCE,
     // Util
@@ -209,7 +209,6 @@ typedef struct Wave_Object_s {
 } Wave_Object_t;
 
 typedef enum Body_Kinds_e {
-    BODY_KIND_SHAPELESS,
     BODY_KIND_BOX,
     BODY_KIND_CIRCLE,
     Body_Kinds_t_CountOf
@@ -230,6 +229,16 @@ typedef struct Body_Object_s {
     } size;
 //    cpFloat *momentum;
 } Body_Object_t;
+
+typedef struct World_Object_Entry_s {
+    const Body_Object_t *key;
+    luaX_Reference value;
+} World_Object_Entry_t;
+
+typedef struct World_Object_s {
+    cpSpace *space;
+    World_Object_Entry_t *entries;
+} World_Object_t;
 
 typedef struct Source_Object_s {
     FS_Handle_t *handle;

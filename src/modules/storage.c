@@ -25,7 +25,6 @@
 #include "storage.h"
 
 #include <config.h>
-#include <libs/luax.h>
 #include <systems/interpreter.h>
 #include <systems/storage.h>
 
