@@ -1,6 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-
 //========================================================================
 // GLFW 3.3 GLX - www.glfw.org
 //------------------------------------------------------------------------
@@ -263,6 +260,8 @@ GLFWbool _glfwInitGLX(void)
         _GLFW_GLX_LIBRARY,
 #elif defined(__CYGWIN__)
         "libGL-1.so",
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
+        "libGL.so",
 #else
         "libGL.so.1",
         "libGL.so",
@@ -310,10 +309,6 @@ GLFWbool _glfwInitGLX(void)
         _glfw_dlsym(_glfw.glx.handle, "glXCreateWindow");
     _glfw.glx.DestroyWindow =
         _glfw_dlsym(_glfw.glx.handle, "glXDestroyWindow");
-    _glfw.glx.GetProcAddress =
-        _glfw_dlsym(_glfw.glx.handle, "glXGetProcAddress");
-    _glfw.glx.GetProcAddressARB =
-        _glfw_dlsym(_glfw.glx.handle, "glXGetProcAddressARB");
     _glfw.glx.GetVisualFromFBConfig =
         _glfw_dlsym(_glfw.glx.handle, "glXGetVisualFromFBConfig");
 
@@ -329,14 +324,18 @@ GLFWbool _glfwInitGLX(void)
         !_glfw.glx.CreateNewContext ||
         !_glfw.glx.CreateWindow ||
         !_glfw.glx.DestroyWindow ||
-        !_glfw.glx.GetProcAddress ||
-        !_glfw.glx.GetProcAddressARB ||
         !_glfw.glx.GetVisualFromFBConfig)
     {
         _glfwInputError(GLFW_PLATFORM_ERROR,
                         "GLX: Failed to load required entry points");
         return GLFW_FALSE;
     }
+
+    // NOTE: Unlike GLX 1.3 entry points these are not required to be present
+    _glfw.glx.GetProcAddress = (PFNGLXGETPROCADDRESSPROC)
+        _glfw_dlsym(_glfw.glx.handle, "glXGetProcAddress");
+    _glfw.glx.GetProcAddressARB = (PFNGLXGETPROCADDRESSPROC)
+        _glfw_dlsym(_glfw.glx.handle, "glXGetProcAddressARB");
 
     if (!glXQueryExtension(_glfw.x11.display,
                            &_glfw.glx.errorBase,
@@ -700,4 +699,3 @@ GLFWAPI GLXWindow glfwGetGLXWindow(GLFWwindow* handle)
     return window->context.glx.window;
 }
 
-#pragma GCC diagnostic pop

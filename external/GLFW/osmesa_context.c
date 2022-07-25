@@ -1,7 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-
 //========================================================================
 // GLFW 3.3 OSMesa - www.glfw.org
 //------------------------------------------------------------------------
@@ -128,6 +124,8 @@ GLFWbool _glfwInitOSMesa(void)
         "libOSMesa.8.dylib",
 #elif defined(__CYGWIN__)
         "libOSMesa-8.so",
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
+        "libOSMesa.so",
 #else
         "libOSMesa.so.8",
         "libOSMesa.so.6",
@@ -385,6 +383,4 @@ GLFWAPI OSMesaContext glfwGetOSMesaContext(GLFWwindow* handle)
 
     return window->context.osmesa.handle;
 }
-
-#pragma GCC diagnostic pop
 

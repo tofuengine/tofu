@@ -1,6 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-
 //========================================================================
 // GLFW 3.3 WGL - www.glfw.org
 //------------------------------------------------------------------------
@@ -799,4 +796,3 @@ GLFWAPI HGLRC glfwGetWGLContext(GLFWwindow* handle)
     return window->context.wgl.handle;
 }
 
-#pragma GCC diagnostic pop

@@ -1,5 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
 //========================================================================
 // GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
@@ -523,6 +521,8 @@ GLFWAPI void glfwSetGammaRamp(GLFWmonitor* handle, const GLFWgammaramp* ramp)
     assert(ramp->green != NULL);
     assert(ramp->blue != NULL);
 
+    _GLFW_REQUIRE_INIT();
+
     if (ramp->size <= 0)
     {
         _glfwInputError(GLFW_INVALID_VALUE,
@@ -530,8 +530,6 @@ GLFWAPI void glfwSetGammaRamp(GLFWmonitor* handle, const GLFWgammaramp* ramp)
                         ramp->size);
         return;
     }
-
-    _GLFW_REQUIRE_INIT();
 
     if (!monitor->originalRamp.size)
     {
@@ -542,4 +540,3 @@ GLFWAPI void glfwSetGammaRamp(GLFWmonitor* handle, const GLFWgammaramp* ramp)
     _glfwPlatformSetGammaRamp(monitor, ramp);
 }
 
-#pragma GCC diagnostic pop

@@ -1,7 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-
 //========================================================================
 // GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
@@ -63,6 +59,8 @@ GLFWbool _glfwInitVulkan(int mode)
     _glfw.vk.handle = _glfw_dlopen("libvulkan.1.dylib");
     if (!_glfw.vk.handle)
         _glfw.vk.handle = _glfwLoadLocalVulkanLoaderNS();
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
+    _glfw.vk.handle = _glfw_dlopen("libvulkan.so");
 #else
     _glfw.vk.handle = _glfw_dlopen("libvulkan.so.1");
 #endif
@@ -334,4 +332,3 @@ GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance,
     return _glfwPlatformCreateWindowSurface(instance, window, allocator, surface);
 }
 
-#pragma GCC diagnostic pop

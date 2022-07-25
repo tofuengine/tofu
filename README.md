@@ -63,7 +63,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
-* [GLFW](https://www.glfw.org/) v3.3.6
+* [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.4
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.8
