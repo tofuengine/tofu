@@ -59,14 +59,14 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.37, v0.6.32, v0.13.5
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.38, v0.6.33, v0.13.6
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.4
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.8
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.9
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
