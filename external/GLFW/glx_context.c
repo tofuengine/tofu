@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.3 GLX - www.glfw.org
 //------------------------------------------------------------------------
@@ -699,3 +702,4 @@ GLFWAPI GLXWindow glfwGetGLXWindow(GLFWwindow* handle)
     return window->context.glx.window;
 }
 
+#pragma GCC diagnostic pop

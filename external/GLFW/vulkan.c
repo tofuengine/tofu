@@ -1,3 +1,7 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+
 //========================================================================
 // GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
@@ -332,3 +336,4 @@ GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance,
     return _glfwPlatformCreateWindowSurface(instance, window, allocator, surface);
 }
 
+#pragma GCC diagnostic pop

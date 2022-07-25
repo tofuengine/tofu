@@ -1,3 +1,8 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 //========================================================================
 // GLFW 3.3 X11 - www.glfw.org
 //------------------------------------------------------------------------
@@ -1272,3 +1277,4 @@ const char* _glfwPlatformGetVersionString(void)
         ;
 }
 
+#pragma GCC diagnostic pop

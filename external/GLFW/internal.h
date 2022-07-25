@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
@@ -46,7 +49,7 @@
 #endif
 
 #define GLFW_INCLUDE_NONE
-#include "../include/GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 
 #define _GLFW_INSERT_FIRST      0
 #define _GLFW_INSERT_LAST       1
@@ -784,3 +787,4 @@ int _glfw_max(int a, int b);
 float _glfw_fminf(float a, float b);
 float _glfw_fmaxf(float a, float b);
 
+#pragma GCC diagnostic pop
