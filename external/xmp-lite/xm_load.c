@@ -625,13 +625,14 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		total_sample_size = 0;
 		for (j = 0; j < xxi->nsm; j++) {
 			struct xmp_subinstrument *sub = &xxi->sub[j];
+			struct xmp_sample *xxs = &mod->xxs[sub->sid];
 			int flags;
 
 			flags = SAMPLE_FLAG_DIFF;
 
 			if (version > 0x0103) {
-			        D_(D_INFO "  read sample: index:%d sample id:%d", j, sub->sid);
-				if (libxmp_load_sample(m, f, flags, &mod->xxs[sub->sid], NULL) < 0) {
+				D_(D_INFO "  read sample: index:%d sample id:%d", j, sub->sid);
+				if (libxmp_load_sample(m, f, flags, xxs, NULL) < 0) {
 					return -1;
 				}
 				if (flags & SAMPLE_FLAG_ADPCM) {

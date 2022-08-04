@@ -111,6 +111,9 @@ static int get_envelope(struct xmp_envelope *env, int x, int def)
 	x2 = data[idx + 2];
 	y2 = data[idx + 3];
 
+	/* Interpolation requires x1 <= x <= x2 */
+	if (x < x1 || x2 < x1) return y1;
+
 	return x2 == x1 ? y2 : ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
 }
 
@@ -1467,13 +1470,14 @@ static void next_order(struct context_data *ctx)
 	struct flow_control *f = &p->flow;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	int reset_gvol = 0;
 	int mark;
 
 	do {
-    		p->ord++;
+   		p->ord++;
 
 		/* Restart module */
-		mark = HAS_QUIRK(QUIRK_MARKER) && mod->xxo[p->ord] == 0xff;
+		mark = HAS_QUIRK(QUIRK_MARKER) && p->ord < mod->len && mod->xxo[p->ord] == 0xff;
 		if (p->ord >= mod->len || mark) {
 			if (mod->rst > mod->len ||
 			    mod->xxo[mod->rst] >= mod->pat ||
@@ -1487,9 +1491,14 @@ static void next_order(struct context_data *ctx)
 				}
 			}
 
-			p->gvol = m->xxo_info[p->ord].gvl;
+			/* This might be a marker, so delay updating global
+			 * volume until an actual pattern is found */
+			reset_gvol = 1;
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
+
+	if (reset_gvol)
+		p->gvol = m->xxo_info[p->ord].gvl;
 
 	p->current_time = m->xxo_info[p->ord].time;
 

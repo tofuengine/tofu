@@ -36,5 +36,5 @@ const struct format_loader *const format_loaders[] = {
 	&libxmp_loader_it,
 #endif
 	&libxmp_loader_s3m,
-	NULL
+	NULL /* list terminator */
 };
