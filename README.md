@@ -40,6 +40,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Module playback support (MOD, S3M, XM, and IT).
 * [x] Out-of-the-box timers support.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
+* [x] 2D physics-engine.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
@@ -62,7 +63,6 @@ Guess what? Yup, that's yet another game engine/framework.
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.38, v0.6.33, v0.13.6
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
-* [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.4
@@ -127,7 +127,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ## Desiderata
 
-* [ ] Physics-engine.
 * [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
