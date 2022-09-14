@@ -22,25 +22,21 @@
  * SOFTWARE.
  */
 
-#if defined(DEBUG) && !defined(SANITIZE)
-  #define STB_LEAKCHECK_IMPLEMENTATION
-  #include <stb/stb_leakcheck.h>
+#include <libs/mumalloc.h>
 
-  #define STBDS_REALLOC(c,p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
-  #define STBDS_FREE(c,p)      stb_leakcheck_free((p))
-#endif
+#define STBDS_REALLOC(c,p,s) mu_realloc((p), (s))
+#define STBDS_FREE(c,p)      mu_free((p))
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
+
+#define STBI_MALLOC(s)    mu_malloc((s))
+#define STBI_REALLOC(p,s) mu_realloc((p), (s))
+#define STBI_FREE(p)      mu_free((p))
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+
+#define STBIW_MALLOC(s)    mu_malloc((s))
+#define STBIW_REALLOC(p,s) mu_realloc((p), (s))
+#define STBIW_FREE(p)      mu_free((p))
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
-
-void *stb_memdup(const void *ptr, size_t size)
-{
-    void *copy = malloc(size);
-    if (copy) {
-        memcpy(copy, ptr, size);
-    }
-    return copy;
-}
