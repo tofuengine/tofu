@@ -25,15 +25,9 @@
 #include "mumalloc.h"
 
 #include <config.h>
-#include <platform.h>
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-
-#if PLATFORM_ID == PLATFORM_WINDOWS
-  #define realpath(N,R) _fullpath((R),(N),PLATFORM_PATH_MAX)
-#endif
 
 void *mu_malloc(size_t size)
 {
@@ -65,18 +59,6 @@ char *mu_strndup(const char *s, size_t n)
         return copy;
     }
     return mu_memdup(s, length + 1);
-}
-
-char *mu_realpath(const char *fname, char *resolved_name)
-{
-    char *buffer = mu_malloc(PLATFORM_PATH_MAX + 1);
-    if (!buffer) {
-        return NULL;
-    }
-    char *rname  = realpath(fname, buffer);
-    char *result = mu_strndup(rname, PLATFORM_PATH_MAX); // ok if `rname==NULL`
-    mu_free(buffer);
-    return result;
 }
 
 void *mu_memdup(const void *ptr, size_t size)

@@ -34,7 +34,6 @@ extern void *mu_realloc(void *p, size_t newsize);
 
 extern char *mu_strdup(const char *s);
 extern char *mu_strndup(const char *s, size_t n);
-extern char *mu_realpath(const char *fname, char *resolved_name);
 
 extern void *mu_memdup(const void *ptr, size_t size);
 
