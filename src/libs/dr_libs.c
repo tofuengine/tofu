@@ -22,5 +22,12 @@
  * SOFTWARE.
  */
 
+#include <libs/mumalloc.h>
+
+#define DRFLAC_MALLOC(sz)                   mu_malloc((sz))
+#define DRFLAC_REALLOC(p, sz)               mu_realloc((p), (sz))
+#define DRFLAC_FREE(p)                      mu_free((p))
+#define DRFLAC_COPY_MEMORY(dst, src, sz)    mu_memcpy((dst), (src), (sz))
+#define DRFLAC_ZERO_MEMORY(p, sz)           mu_memset((p), 0, (sz))
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
