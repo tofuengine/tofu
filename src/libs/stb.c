@@ -25,14 +25,28 @@
 #if defined(DEBUG) && !defined(SANITIZE)
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
+#endif
 
+#ifdef STB_LEAKCHECK_IMPLEMENTATION
   #define STBDS_REALLOC(c,p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
   #define STBDS_FREE(c,p)      stb_leakcheck_free((p))
 #endif
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
+
+#ifdef STB_LEAKCHECK_IMPLEMENTATION
+  #define STBI_MALLOC(s)    stb_leakcheck_realloc(NULL, (s), __FILE__, __LINE__)
+  #define STBI_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+  #define STBI_FREE(p)      stb_leakcheck_free((p))
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+
+#ifdef STB_LEAKCHECK_IMPLEMENTATION
+  #define STBIW_MALLOC(s)    stb_leakcheck_realloc(NULL, (s), __FILE__, __LINE__)
+  #define STBIW_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+  #define STBIW_FREE(p)      stb_leakcheck_free((p))
+#endif
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
