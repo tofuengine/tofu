@@ -30,7 +30,7 @@
 #include <config.h>
 #include <libs/dr_libs.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 #include <miniaudio/miniaudio.h>
 
 #include <stdint.h>
@@ -141,7 +141,7 @@ static inline bool _produce(Music_t *music)
 
 SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    SL_Source_t *music = malloc(sizeof(Music_t));
+    SL_Source_t *music = mu_malloc(sizeof(Music_t));
     if (!music) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate music structure");
         return NULL;
@@ -150,7 +150,7 @@ SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbac
     bool cted = _music_ctor(music, context, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music structure");
-        free(music);
+        mu_free(music);
         return NULL;
     }
 
@@ -181,6 +181,21 @@ static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
+static void *_malloc(size_t sz, void *pUserData)
+{
+    return mu_malloc(sz);
+}
+
+static void *_realloc(void *ptr, size_t sz, void *pUserData)
+{
+    return mu_realloc(ptr, sz);
+}
+
+static void  _free(void *ptr, void *pUserData)
+{
+    mu_free(ptr);
+}
+
 static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Music_t *music = (Music_t *)source;
@@ -196,7 +211,12 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
             .frames_completed = 0
         };
 
-    music->decoder = drflac_open(_music_read, _music_seek, music, NULL);
+    music->decoder = drflac_open(_music_read, _music_seek, music, &(drflac_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc = _malloc,
+            .onRealloc = _realloc,
+            .onFree = _free
+        });
     if (!music->decoder) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create music decoder");
         return false;

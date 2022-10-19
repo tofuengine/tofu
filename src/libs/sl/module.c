@@ -29,7 +29,7 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 #include <xmp-lite/xmp.h>
 
 #include <stdint.h>
@@ -137,7 +137,7 @@ static inline bool _produce(Module_t *module)
 
 SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    SL_Source_t *module = malloc(sizeof(Module_t));
+    SL_Source_t *module = mu_malloc(sizeof(Module_t));
     if (!module) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate module structure");
         return NULL;
@@ -146,7 +146,7 @@ SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callba
     bool cted = _module_ctor(module, context, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module structure");
-        free(module);
+        mu_free(module);
         return NULL;
     }
 

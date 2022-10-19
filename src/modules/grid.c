@@ -26,8 +26,8 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/path.h>
-#include <libs/stb.h>
 #include <systems/interpreter.h>
 
 #include "udt.h"
@@ -92,7 +92,7 @@ static int grid_new_3nnT_1o(lua_State *L)
     size_t length = LUAX_OPTIONAL_TABLE(L, 3, 0);
 
     size_t data_size = width * height;
-    Cell_t *data = malloc(sizeof(Cell_t) * data_size);
+    Cell_t *data = mu_malloc(sizeof(Cell_t) * data_size);
     if (!data) {
         return luaL_error(L, "can't allocate %dx%d grid", width, height);
     }
@@ -131,7 +131,7 @@ static int grid_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 
-    free(self->data);
+    mu_free(self->data);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", self->data);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", self);

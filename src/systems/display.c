@@ -28,8 +28,9 @@
 #include <platform.h>
 #include <libs/log.h>
 #include <libs/imath.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
+#include <string.h>
 #include <time.h>
 
 #define LOG_CONTEXT "display"
@@ -303,7 +304,7 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading shader %p", display->shader);
 
     const size_t length = strlen(FRAGMENT_SHADER) + strlen(effect);
-    char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
+    char *code = mu_malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
     strcpy(code, FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
     strcat(code, effect);
 
@@ -335,14 +336,14 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p initialized", display->shader);
 
-    free(code);
+    mu_free(code);
 
     return true;
 }
 
 Display_t *Display_create(const Display_Configuration_t *configuration)
 {
-    Display_t *display = malloc(sizeof(Display_t));
+    Display_t *display = mu_malloc(sizeof(Display_t));
     if (!display) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate display");
         return NULL;
@@ -356,7 +357,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     display->window = _window_initialize(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
-        free(display);
+        mu_free(display);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
@@ -369,7 +370,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics surface");
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        free(display);
+        mu_free(display);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p created", display->canvas.surface);
@@ -384,20 +385,20 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        free(display);
+        mu_free(display);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p created", display->canvas.processor);
 
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
-    display->vram.pixels = malloc(size);
+    display->vram.pixels = mu_malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
         GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        free(display);
+        mu_free(display);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
@@ -405,12 +406,12 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glGenTextures(1, &display->vram.texture); //allocate the memory for texture
     if (display->vram.texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
-        free(display->vram.pixels);
+        mu_free(display->vram.pixels);
         GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        free(display);
+        mu_free(display);
         return NULL;
     }
     glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
@@ -435,12 +436,12 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     if (!shader) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
         glDeleteBuffers(1, &display->vram.texture);
-        free(display->vram.pixels);
+        mu_free(display->vram.pixels);
         GL_processor_destroy(display->canvas.processor);
         GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        free(display);
+        mu_free(display);
         return NULL;
     }
 
@@ -465,7 +466,7 @@ void Display_destroy(Display_t *display)
     glDeleteBuffers(1, &display->vram.texture);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
 
-    free(display->vram.pixels);
+    mu_free(display->vram.pixels);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
 
     GL_processor_destroy(display->canvas.processor);
@@ -480,7 +481,7 @@ void Display_destroy(Display_t *display)
     glfwTerminate();
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display terminated");
 
-    free(display);
+    mu_free(display);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
 }
 

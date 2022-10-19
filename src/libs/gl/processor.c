@@ -26,13 +26,13 @@
 
 #include <libs/imath.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #define LOG_CONTEXT "gl-processor"
 
 GL_Processor_t *GL_processor_create(void)
 {
-    GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
+    GL_Processor_t *processor = mu_malloc(sizeof(GL_Processor_t));
     if (!processor) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
         return NULL;
@@ -79,7 +79,7 @@ void GL_processor_destroy(GL_Processor_t *processor)
 #endif  /* VERBOSE_DEBUG */
     }
 
-    free(processor);
+    mu_free(processor);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p freed", processor);
 #endif  /* VERBOSE_DEBUG */
@@ -156,8 +156,8 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
 {
     GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS); // Make a local copy, the processor could change it.
-    memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
+    mu_memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS); // Make a local copy, the processor could change it.
+    mu_memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
     size_t wait = 0;
 #ifdef __DEBUG_GRAPHICS__

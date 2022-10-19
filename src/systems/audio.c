@@ -26,16 +26,15 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #ifdef DEBUG
   #define MA_DEBUG_OUTPUT
-
-  #ifndef SANITIZE
-    #define MA_MALLOC(sz)     stb_leakcheck_malloc((sz), __FILE__, __LINE__)
-    #define MA_REALLOC(p, sz) stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
-    #define MA_FREE(p)        stb_leakcheck_free((p))
-  #endif
+#endif
+#ifdef __AUDIO_MALLOC_REDEFINE__
+  #define MA_MALLOC(sz)     mu_malloc((sz))
+  #define MA_REALLOC(p, sz) mu_realloc((p), (sz))
+  #define MA_FREE(p)        mu_free((p))
 #endif
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
@@ -107,24 +106,26 @@ static void _notification_callback(const ma_device_notification *notification)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p notified for event `%s`", notification->pDevice, types[notification->type]);
 }
 
+#ifndef __AUDIO_MALLOC_REDEFINE__
 static void *_malloc(size_t sz, void *pUserData)
 {
-    return malloc(sz);
+    return mu_malloc(sz);
 }
 
 static void *_realloc(void *ptr, size_t sz, void *pUserData)
 {
-    return realloc(ptr, sz);
+    return mu_realloc(ptr, sz);
 }
 
 static void  _free(void *ptr, void *pUserData)
 {
-    free(ptr);
+    mu_free(ptr);
 }
+#endif  /* __AUDIO_MALLOC_REDEFINE__ */
 
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 {
-    Audio_t *audio = malloc(sizeof(Audio_t));
+    Audio_t *audio = mu_malloc(sizeof(Audio_t));
     if (!audio) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate audio");
         return NULL;
@@ -137,7 +138,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     audio->context = SL_context_create();
     if (!audio->context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the sound context");
-        free(audio);
+        mu_free(audio);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context created at %p", audio->context);
@@ -146,28 +147,34 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the synchronization object");
         SL_context_destroy(audio->context);
-        free(audio);
+        mu_free(audio);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
 
+#ifndef __AUDIO_MALLOC_REDEFINE__
     ma_log_init(&(ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
             .onRealloc = _realloc,
             .onFree = _free
         }, &audio->driver.log);
+#else   /* __AUDIO_MALLOC_REDEFINE__ */
+    ma_log_init(NULL, &audio->driver.log);
+#endif  /* __AUDIO_MALLOC_REDEFINE__ */
     ma_log_callback log_callback = ma_log_callback_init(_log_callback, (void *)audio);
     ma_log_register_callback(&audio->driver.log, log_callback);
 
     ma_context_config context_config = ma_context_config_init();
     context_config.pLog = &audio->driver.log;
+#ifndef __AUDIO_MALLOC_REDEFINE__
     context_config.allocationCallbacks = (ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
             .onRealloc = _realloc,
             .onFree = _free
         };
+#endif  /* __AUDIO_MALLOC_REDEFINE__ */
 
     result = ma_context_init(NULL, 0, &context_config, &audio->driver.context);
     if (result != MA_SUCCESS) {
@@ -175,7 +182,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
-        free(audio);
+        mu_free(audio);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio driver context created");
@@ -189,7 +196,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
-        free(audio);
+        mu_free(audio);
         return NULL;
     }
 
@@ -220,7 +227,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
-        free(audio);
+        mu_free(audio);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
@@ -237,7 +244,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         ma_log_uninit(&audio->driver.log);
         ma_mutex_uninit(&audio->driver.lock);
         SL_context_destroy(audio->context);
-        free(audio);
+        mu_free(audio);
         return NULL;
     }
 #endif
@@ -264,7 +271,7 @@ void Audio_destroy(Audio_t *audio)
     SL_context_destroy(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");
 
-    free(audio);
+    mu_free(audio);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio freed");
 }
 

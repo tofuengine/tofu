@@ -28,6 +28,7 @@
 #include <libs/ascii85.h>
 #include <libs/base64.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 
@@ -71,7 +72,7 @@ static void *_cache_open(void *user_data, const char *name)
 
     const Storage_Cache_Entry_Value_t *value = &cache[index].value;
 
-    Storage_Cache_Stream_t *stream = malloc(sizeof(Storage_Cache_Stream_t));
+    Storage_Cache_Stream_t *stream = mu_malloc(sizeof(Storage_Cache_Stream_t));
     if (!stream) {
         return NULL;
     }
@@ -89,7 +90,7 @@ static void _cache_close(void *stream)
 {
     Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
 
-    free(cache_stream);
+    mu_free(cache_stream);
 }
 
 static size_t _cache_size(void *stream)
@@ -158,7 +159,7 @@ static bool _cache_eof(void *stream)
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
-    Storage_t *storage = malloc(sizeof(Storage_t));
+    Storage_t *storage = mu_malloc(sizeof(Storage_t));
     if (!storage) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate storage");
         return NULL;
@@ -191,7 +192,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     storage->context = FS_create();
     if (!storage->context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
-        free(storage);
+        mu_free(storage);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
@@ -213,7 +214,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     bool attached = FS_attach_folder_or_archive(storage->context, kernal_path);
     if (!attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach `%s`", kernal_path);
-        free(storage);
+        mu_free(storage);
         return NULL;
     }
 
@@ -238,12 +239,12 @@ static void _release(Storage_Resource_t *resource)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p wasn't allocated, won't release", resource);
     } else
     if (resource->type == STORAGE_RESOURCE_STRING) {
-        free(resource->var.string.chars);
+        mu_free(resource->var.string.chars);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d characters string)",
             resource->name, resource->var.string.chars, resource->var.string.length);
     } else
     if (resource->type == STORAGE_RESOURCE_BLOB) {
-        free(resource->var.blob.ptr);
+        mu_free(resource->var.blob.ptr);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d bytes blob)",
             resource->name, resource->var.blob.ptr, resource->var.blob.size);
     } else
@@ -252,8 +253,8 @@ static void _release(Storage_Resource_t *resource)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%dx%d image)",
             resource->name, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
-    free(resource->name);
-    free(resource);
+    mu_free(resource->name);
+    mu_free(resource);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p freed", resource);
 }
 
@@ -271,12 +272,12 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system context destroyed");
 
     for (size_t i = 0; i < shlenu(storage->cache); ++i) {
-        free(storage->cache[i].value.data);
+        mu_free(storage->cache[i].value.data);
     }
     shfree(storage->cache);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache freed");
 
-    free(storage);
+    mu_free(storage);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
@@ -311,7 +312,7 @@ bool Storage_inject_base64(Storage_t *storage, const char *name, const char *enc
     size_t size = base64_decoded_size(encoded_data);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Base64 data `%.32s` is %d byte(s) long", encoded_data, size);
 
-    void *data = malloc(sizeof(char) * size);
+    void *data = mu_malloc(sizeof(char) * size);
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", size, encoded_data);
         return false;
@@ -330,7 +331,7 @@ bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *en
     int32_t max_size = ascii85_get_max_decoded_length(strlen(encoded_data));
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Ascii85 data `%.32s` is %d byte(s) long", encoded_data, max_size);
 
-    void *data = malloc(sizeof(char) * max_size);
+    void *data = mu_malloc(sizeof(char) * max_size);
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", max_size, encoded_data);
         return false;
@@ -339,7 +340,7 @@ bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *en
     int32_t size = ascii85_decode(encoded_data, length, data, max_size);
     if (size < 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` can't be decoded as Ascii85");
-        free(data);
+        mu_free(data);
         return false;
     }
 
@@ -351,7 +352,7 @@ bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *en
 
 bool Storage_inject_raw(Storage_t *storage, const char *name, const void *raw_data, size_t size)
 {
-    void *data = stb_memdup(raw_data, size);
+    void *data = mu_memdup(raw_data, size);
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for data %p", size, data);
         return false;
@@ -393,7 +394,7 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     size_t bytes_requested = FS_size(handle);
 
     size_t bytes_to_allocate = bytes_requested + (null_terminate ? 1 : 0);
-    void *data = malloc(sizeof(uint8_t) * bytes_to_allocate); // Add null terminator for the string.
+    void *data = mu_malloc(sizeof(uint8_t) * bytes_to_allocate); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
         FS_close(handle);
@@ -403,7 +404,7 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     size_t bytes_read = FS_read(handle, data, bytes_requested);
     if (bytes_read < bytes_requested) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
-        free(data);
+        mu_free(data);
         return NULL;
     }
 
@@ -573,7 +574,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         return resource;
     }
 
-    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
+    Storage_Resource_t *resource = mu_malloc(sizeof(Storage_Resource_t));
     if (!resource) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate resource");
         return NULL;
@@ -583,10 +584,10 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
     } else {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load resource `%s`", name);
-        free(resource);
+        mu_free(resource);
         return NULL;
     }
-    resource->name = stb_memdup(name, strlen(name) + 1);
+    resource->name = mu_strdup(name);
 
     arrpush(storage->resources, resource);
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__

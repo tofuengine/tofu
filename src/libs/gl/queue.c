@@ -28,13 +28,14 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-queue"
 
 GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
 {
-    GL_Queue_t *queue = malloc(sizeof(GL_Queue_t));
+    GL_Queue_t *queue = mu_malloc(sizeof(GL_Queue_t));
     if (!queue) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate queue");
         return NULL;
@@ -45,7 +46,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
         bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate queue sprites");
-            free(queue);
+            mu_free(queue);
             return NULL;
         }
     }
@@ -64,7 +65,7 @@ void GL_queue_destroy(GL_Queue_t *queue)
     arrfree(queue->sprites);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue sprites freed");
 
-    free(queue);
+    mu_free(queue);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p freed", queue);
 }
 

@@ -32,6 +32,9 @@ extern void *mu_calloc(size_t count, size_t size);
 extern void *mu_realloc(void *p, size_t newsize);
 //extern void *mi_expand(void *p, size_t newsize);
 
+extern void *mu_memcpy(void *dest, const void *src, size_t n);
+extern void *mu_memset(void *s, int c, size_t n);
+
 extern char *mu_strdup(const char *s);
 extern char *mu_strndup(const char *s, size_t n);
 

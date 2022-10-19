@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 
 #include <malloc.h>
@@ -40,7 +41,7 @@
 
 Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display, const Input_t *input)
 {
-    Environment_t *environment = malloc(sizeof(Environment_t));
+    Environment_t *environment = mu_malloc(sizeof(Environment_t));
     if (!environment) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate environment");
         return NULL;
@@ -74,7 +75,7 @@ void Environment_destroy(Environment_t *environment)
     arrfree(environment->args);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "arguments freed");
 
-    free(environment);
+    mu_free(environment);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
 }
 

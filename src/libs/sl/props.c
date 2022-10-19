@@ -28,7 +28,7 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #include <math.h>
 
@@ -48,22 +48,22 @@
 
 static void *_malloc(size_t sz, void *pUserData)
 {
-    return malloc(sz);
+    return mu_malloc(sz);
 }
 
 static void *_realloc(void *ptr, size_t sz, void *pUserData)
 {
-    return realloc(ptr, sz);
+    return mu_realloc(ptr, sz);
 }
 
 static void  _free(void *ptr, void *pUserData)
 {
-    free(ptr);
+    mu_free(ptr);
 }
 
 SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
-    SL_Props_t *props = malloc(sizeof(SL_Props_t));
+    SL_Props_t *props = mu_malloc(sizeof(SL_Props_t));
     if (!props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate properties");
         return NULL;
@@ -89,7 +89,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
         }, &props->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create data converter");
-        free(props);
+        mu_free(props);
         return NULL;
     }
 
@@ -106,7 +106,7 @@ void SL_props_destroy(SL_Props_t *props)
         });
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data converted deinitialized");
 
-    free(props);
+    mu_free(props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "properties freed");
 }
 

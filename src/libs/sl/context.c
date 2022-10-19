@@ -28,6 +28,7 @@
 #include "mix.h"
 
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 
 #include <math.h>
@@ -36,7 +37,7 @@
 
 SL_Context_t *SL_context_create(void)
 {
-    SL_Context_t *context = malloc(sizeof(SL_Context_t));
+    SL_Context_t *context = mu_malloc(sizeof(SL_Context_t));
     if (!context) {
         return NULL;
     }
@@ -61,7 +62,7 @@ void SL_context_destroy(SL_Context_t *context)
     arrfree(context->sources);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context sources freed");
 
-    free(context);
+    mu_free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 

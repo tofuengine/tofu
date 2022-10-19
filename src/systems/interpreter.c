@@ -35,10 +35,11 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <config.h>
 #include <libs/log.h>
 #include <libs/path.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 #include <modules/modules.h>
 
 #include <stdint.h>
+#include <string.h>
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
 #endif
@@ -84,10 +85,10 @@ static const char *_methods[] = { // We don't use a compound-literal on purpose 
 static void *_allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 {
     if (nsize == 0) {
-        free(ptr);
+        mu_free(ptr);
         return NULL;
     }
-    return realloc(ptr, nsize);
+    return mu_realloc(ptr, nsize);
 }
 
 static int _panic(lua_State *L)
@@ -261,7 +262,7 @@ static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int n
 
 Interpreter_t *Interpreter_create(const Storage_t *storage)
 {
-    Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
+    Interpreter_t *interpreter = mu_malloc(sizeof(Interpreter_t));
     if (!interpreter) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate interpreter");
         return NULL;
@@ -274,7 +275,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter VM");
-        free(interpreter);
+        mu_free(interpreter);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p created", interpreter->state);
@@ -319,7 +320,7 @@ void Interpreter_destroy(Interpreter_t *interpreter)
     lua_close(interpreter->state);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p destroyed", interpreter->state);
 
-    free(interpreter);
+    mu_free(interpreter);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
 }
 

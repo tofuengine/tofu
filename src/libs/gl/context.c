@@ -27,6 +27,7 @@
 #include <config.h>
 #include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-context"
@@ -52,7 +53,7 @@ static void _reset(GL_Context_t *context)
 
 GL_Context_t *GL_context_create(const GL_Surface_t *surface)
 {
-    GL_Context_t *context = malloc(sizeof(GL_Context_t));
+    GL_Context_t *context = mu_malloc(sizeof(GL_Context_t));
     if (!context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate context");
         return NULL;
@@ -72,7 +73,7 @@ void GL_context_destroy(GL_Context_t *context)
     arrfree(context->state.stack);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack at %p freed", context->state.stack);
 
-    free(context);
+    mu_free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p freed", context);
 }
 

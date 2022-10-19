@@ -24,6 +24,7 @@
 #include "program.h"
 
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-program"
@@ -47,7 +48,7 @@ static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int posit
 
 GL_Program_t *GL_program_create(void)
 {
-    GL_Program_t *program = malloc(sizeof(GL_Program_t));
+    GL_Program_t *program = mu_malloc(sizeof(GL_Program_t));
     if (!program) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate program");
         return NULL;
@@ -95,7 +96,7 @@ void GL_program_destroy(GL_Program_t *program)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
-    free(program);
+    mu_free(program);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p freed", program);
 #endif  /* VERBOSE_DEBUG */

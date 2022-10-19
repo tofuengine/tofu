@@ -26,7 +26,7 @@
 
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #include <math.h>
 
@@ -329,7 +329,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input controller mappings updated");
 
-    Input_t *input = malloc(sizeof(Input_t));
+    Input_t *input = mu_malloc(sizeof(Input_t));
     if (!input) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate input");
         return NULL;
@@ -356,7 +356,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
 void Input_destroy(Input_t *input)
 {
-    free(input);
+    mu_free(input);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 

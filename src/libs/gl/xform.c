@@ -27,6 +27,7 @@
 #include <config.h>
 #include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-xform"
@@ -40,7 +41,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 
 GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
-    GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
+    GL_XForm_t *xform = mu_malloc(sizeof(GL_XForm_t));
     if (!xform) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate xform");
         return NULL;
@@ -71,7 +72,7 @@ void GL_xform_destroy(GL_XForm_t *xform)
 #endif  /* VERBOSE_DEBUG */
     }
 
-    free(xform);
+    mu_free(xform);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p freed", xform);
 #endif  /* VERBOSE_DEBUG */

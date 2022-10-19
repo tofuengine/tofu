@@ -26,7 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #define LOG_CONTEXT "gl-surface"
 
@@ -50,17 +50,17 @@ GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels,
 
 GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
-    GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
+    GL_Pixel_t *data = mu_malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate (%dx%d) pixel-data", width, height);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
 
-    GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
+    GL_Surface_t *surface = mu_malloc(sizeof(GL_Surface_t));
     if (!surface) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate surface");
-        free(data);
+        mu_free(data);
         return NULL;
     }
 
@@ -77,10 +77,10 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
-    free(surface->data);
+    mu_free(surface->data);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface data at %p freed", surface->data);
 
-    free(surface);
+    mu_free(surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
 }
 
@@ -92,7 +92,7 @@ void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)
         *(dst++) = index;
     }
 #else
-    memset(surface->data, index, surface->data_size);
+    mu_memset(surface->data, index, surface->data_size);
 #endif
 }
 

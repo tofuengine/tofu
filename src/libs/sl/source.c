@@ -26,12 +26,12 @@
 
 #include "internals.h"
 
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 void SL_source_destroy(SL_Source_t *source)
 {
     source->vtable.dtor(source);
-    free(source);
+    mu_free(source);
 }
 
 bool SL_source_reset(SL_Source_t *source)

@@ -30,7 +30,7 @@
 #include <config.h>
 #include <libs/imath.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #include <math.h>
 
@@ -38,7 +38,7 @@
 
 static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t count)
 {
-    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * count);
+    GL_Rectangle_t *cells = mu_malloc(sizeof(GL_Rectangle_t) * count);
     if (!cells) {
         return NULL;
     }
@@ -60,7 +60,7 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
     size_t columns = atlas_size.width / cell_size.width;
     size_t rows = atlas_size.height / cell_size.height;
     size_t amount = columns * rows;
-    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * amount);
+    GL_Rectangle_t *cells = mu_malloc(sizeof(GL_Rectangle_t) * amount);
     if (!cells) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d cells", amount);
         return NULL;
@@ -84,7 +84,7 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
 
 static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t count)
 {
-    GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
+    GL_Sheet_t *sheet = mu_malloc(sizeof(GL_Sheet_t));
     if (!sheet) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sheet");
         return NULL;
@@ -100,10 +100,10 @@ static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t co
 
 static void _detach(GL_Sheet_t *sheet)
 {
-    free(sheet->cells);
+    mu_free(sheet->cells);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
 
-    free(sheet);
+    mu_free(sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
 }
 
@@ -116,7 +116,7 @@ GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size
     }
     GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
     if (!sheet) {
-        free(cells);
+        mu_free(cells);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
@@ -131,7 +131,7 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t 
     }
     GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
     if (!sheet) {
-        free(cells);
+        mu_free(cells);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);

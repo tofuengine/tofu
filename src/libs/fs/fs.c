@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 
@@ -42,7 +43,7 @@ struct FS_Context_s {
 
 FS_Context_t *FS_create(void)
 {
-    FS_Context_t *context = malloc(sizeof(FS_Context_t));
+    FS_Context_t *context = mu_malloc(sizeof(FS_Context_t));
     if (!context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate context");
         return NULL;
@@ -59,13 +60,13 @@ void FS_destroy(FS_Context_t *context)
     for (size_t count = arrlenu(context->mounts); count; --count) {
         FS_Mount_t *mount = *(current++);
         mount->vtable.dtor(mount);
-        free(mount);
+        mu_free(mount);
     }
 
     arrfree(context->mounts);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context mount(s) freed");
 
-    free(context);
+    mu_free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
@@ -165,7 +166,7 @@ FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 void FS_close(FS_Handle_t *handle)
 {
     handle->vtable.dtor(handle);
-    free(handle);
+    mu_free(handle);
 }
 
 size_t FS_size(FS_Handle_t *handle)

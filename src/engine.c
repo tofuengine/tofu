@@ -27,6 +27,7 @@
 #include <config.h>
 #include <platform.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
 #include <version.h>
@@ -116,7 +117,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
 {
     options_t options = options_parse_command_line(argc, argv); // We do this early, since options could have effect on everything.
 
-    Engine_t *engine = malloc(sizeof(Engine_t));
+    Engine_t *engine = mu_malloc(sizeof(Engine_t));
     if (!engine) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate engine");
         return NULL;
@@ -134,14 +135,14 @@ Engine_t *Engine_create(int argc, const char *argv[])
         });
     if (!engine->storage) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
     engine->configuration = _configure(engine->storage, argc, argv);
     if (!engine->configuration) {
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -149,7 +150,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!set) {
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -157,7 +158,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!icon) {
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
@@ -166,7 +167,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!effect) {
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
@@ -175,7 +176,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!mappings) {
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
@@ -197,7 +198,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -237,7 +238,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Display_destroy(engine->display);
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -251,7 +252,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Display_destroy(engine->display);
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -263,7 +264,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Display_destroy(engine->display);
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -276,7 +277,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Display_destroy(engine->display);
         Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
-        free(engine);
+        mu_free(engine);
         return NULL;
     }
 
@@ -295,7 +296,7 @@ void Engine_destroy(Engine_t *engine)
     Configuration_destroy(engine->configuration);
     Storage_destroy(engine->storage);
 
-    free(engine);
+    mu_free(engine);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "engine freed");
 
 #ifdef STB_LEAKCHECK_INCLUDED

@@ -26,6 +26,7 @@
 
 #include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/mumalloc.h>
 #include <version.h>
 
 #include <ctype.h>
@@ -241,7 +242,7 @@ static void _normalize_identity(Configuration_t *configuration)
 
 Configuration_t *Configuration_create(const char *data)
 {
-    Configuration_t *configuration = malloc(sizeof(Configuration_t));
+    Configuration_t *configuration = mu_malloc(sizeof(Configuration_t));
     if (!configuration) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate configuration");
         return NULL;
@@ -317,7 +318,7 @@ Configuration_t *Configuration_create(const char *data)
 
 void Configuration_destroy(Configuration_t *configuration)
 {
-    free(configuration);
+    mu_free(configuration);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "configuration freed");
 }
 

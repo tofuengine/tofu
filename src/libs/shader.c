@@ -25,13 +25,13 @@
 #include "shader.h"
 
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 
 #define LOG_CONTEXT "shader"
 
 Shader_t *shader_create(void)
 {
-    Shader_t *shader = malloc(sizeof(Shader_t));
+    Shader_t *shader = mu_malloc(sizeof(Shader_t));
     if (!shader) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate shader");
         return NULL;
@@ -45,7 +45,7 @@ Shader_t *shader_create(void)
     shader->id = glCreateProgram();
     if (shader->id == 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create shader program");
-        free(shader);
+        mu_free(shader);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d created", shader->id);
@@ -69,10 +69,10 @@ void shader_destroy(Shader_t *shader)
     glDeleteProgram(shader->id);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d deleted", shader->id);
 
-    free(shader->locations); // Safe when passing NULL.
+    mu_free(shader->locations); // Safe when passing NULL.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d freed", shader->id);
 
-    free(shader);
+    mu_free(shader);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p freed", shader);
 }
 
@@ -136,7 +136,7 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
 void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
 {
     if (shader->locations) {
-        free(shader->locations);
+        mu_free(shader->locations);
         shader->locations = NULL;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d freed", shader->id);
     }
@@ -144,7 +144,7 @@ void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no uniforms to prepare for program #%d", shader->id);
         return;
     }
-    shader->locations = malloc(sizeof(GLuint) * count);
+    shader->locations = mu_malloc(sizeof(GLuint) * count);
     for (size_t i = 0; i < count; ++i) {
         GLint location = glGetUniformLocation(shader->id, ids[i]);
         Log_assert(location != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "uniform `%s` not found for program #%d", ids[i], shader->id);

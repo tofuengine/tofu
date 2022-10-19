@@ -30,7 +30,7 @@
 #include <config.h>
 #include <libs/dr_libs.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/mumalloc.h>
 #include <miniaudio/miniaudio.h>
 
 #include <stdint.h>
@@ -108,7 +108,7 @@ static inline bool _produce(Sample_t *sample)
 
 SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    SL_Source_t *sample = malloc(sizeof(Sample_t));
+    SL_Source_t *sample = mu_malloc(sizeof(Sample_t));
     if (!sample) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
         return NULL;
@@ -116,7 +116,7 @@ SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callba
 
     bool cted = _sample_ctor(sample, context, callbacks);
     if (!cted) {
-        free(sample);
+        mu_free(sample);
         return NULL;
     }
 
@@ -149,17 +149,17 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
 
 static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.
 {
-    return malloc(sz);
+    return mu_malloc(sz);
 }
 
 static void *_realloc(void *ptr, size_t sz, void *pUserData)
 {
-    return realloc(ptr, sz);
+    return mu_realloc(ptr, sz);
 }
 
 static void  _free(void *ptr, void *pUserData)
 {
-    free(ptr);
+    mu_free(ptr);
 }
 
 static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
