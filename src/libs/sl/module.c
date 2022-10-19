@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "music.h"
+#include "module.h"
 
 #include "internals.h"
 #include "mix.h"
