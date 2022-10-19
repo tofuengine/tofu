@@ -22,5 +22,14 @@
  * SOFTWARE.
  */
 
+#if defined(DEBUG) && !defined(SANITIZE)
+  #include <stb/stb_leakcheck.h>
+#endif
+
+#if defined(DEBUG) && !defined(SANITIZE)
+  #define DRFLAC_MALLOC(sz)                   stb_leakcheck_realloc(NULL, (sz), __FILE__, __LINE__)
+  #define DRFLAC_REALLOC(p, sz)               stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
+  #define DRFLAC_FREE(p)                      stb_leakcheck_free((p))
+#endif
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
