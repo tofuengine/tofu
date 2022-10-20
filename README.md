@@ -60,13 +60,13 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.38, v0.6.33, v0.13.6
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.39, v0.6.34, v0.13.7
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.4
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.9
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.10
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
@@ -84,14 +84,13 @@ Guess what? Yup, that's yet another game engine/framework.
 
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, altought I've using Ubuntu for the development. One can issue the following commands to install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested (I've been using Ubuntu for the development), but with minor adaptations any distribution should be fine. On Debian/Ubuntu the following commands install all the required dependencies:
 
 ```bash
-sudo apt install git
 sudo apt install build-essential
 sudo apt install mingw-w64
 sudo apt install libx11-dev mesa-common-dev libgles2-mesa-dev
-sudo apt install lua5.3 liblua5.3-dev luarocks
+sudo apt install lua5.4 liblua5.4-dev luarocks
 sudo luarocks install argparse
 sudo luarocks install luafilesystem
 sudo luarocks install luacheck
@@ -127,6 +126,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ## Desiderata
 
+* [ ] Custom highly-efficient memory allocator ([mimalloc](https://github.com/microsoft/mimalloc/)).
 * [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
@@ -136,7 +136,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Multiple players support.
-* [ ] Use a custom memory-management allocator.
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] game time management, in system class (speed, up down pause)
