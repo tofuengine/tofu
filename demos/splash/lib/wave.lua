@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,13 +26,13 @@ local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local Oscillator = require("tofu.generators.oscillator")
 local Tweener = require("tofu.generators.tweener")
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Timer = require("tofu.timers.timer")
 
 local Wave = Class.define()
 
-function Wave:__ctor(_, transparent, _)
-  self.stripe = Canvas.new("assets/images/stripes.png", transparent)
+function Wave:__ctor(_, _, transparent, _)
+  self.stripe = Image.new("assets/images/stripes.png", transparent)
   self.tweener = Tweener.new("linear", 5)
   self.oscillator = Oscillator.new("sine", 0.75)
   self.period_current = 0
@@ -49,11 +49,11 @@ function Wave:update(delta_time)
 end
 
 function Wave:render(canvas)
-  local canvas_width, _ = canvas:size()
+  local canvas_width, _ = canvas:image():size()
   local stripe_width, stripe_height = self.stripe:size()
   local span = stripe_height * 0.25
   for i = 0, canvas_width, stripe_width do
-    local dy = self.oscillator:value(i * 0.0005) * span
+    local dy = self.oscillator(i * 0.0005) * span
     canvas:blit(i, dy, self.stripe)
   end
 end

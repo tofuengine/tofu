@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,21 +24,20 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 
 local Logo = Class.define()
 
-function Logo:__ctor(canvas, transparent, _)
+function Logo:__ctor(width, height, transparent, _)
   self.images = {
-      Canvas.new("assets/images/tofu.png", transparent),
-      Canvas.new("assets/images/engine.png", transparent)
+      Image.new("assets/images/tofu.png", transparent),
+      Image.new("assets/images/engine.png", transparent)
     }
-  self.outline = Canvas.new("assets/images/outline.png", transparent)
+  self.outline = Image.new("assets/images/outline.png", transparent)
 
-  local cw, ch = canvas:size()
   local w, h = self.outline:size()
-  self.x = (cw - w) * 0.5
-  self.y = (ch - h) * 0.5
+  self.x = (width - w) * 0.5
+  self.y = (height - h) * 0.5
 end
 
 function Logo:update(_)
@@ -48,7 +47,7 @@ function Logo:render(canvas)
   -- TODO: generate the outline w/ 4 offsetted blits.
   local t = System.time()
 
-  canvas:blit(self.x, self.y, self.outline)
+  canvas:blit(self.x, self.y, self.outline) -- Don't use `Canvas.copy()` as we want transparency!
   canvas:blit(self.x, self.y, self.images[(math.tointeger(t * 1.0) % 2) + 1])
 end
 

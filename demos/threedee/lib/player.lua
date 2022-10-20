@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 
 local config = require("config")
 
@@ -46,19 +46,21 @@ function Player:__ctor()
 end
 
 function Player:process()
+  local controller <const> = Controller.default()
+
   local dx = 0
   local dy = 0
   local dz = 1
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     dy = dy + 1
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     dy = dy - 1
   end
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     dx = dx - 1
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     dx = dx + 1
   end
   self:direction(dx, dy, dz)

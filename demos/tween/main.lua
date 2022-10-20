@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local EASINGS = {
@@ -59,11 +60,12 @@ function Main:__ctor()
   end
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
   local x0, y0 = width * 0.25, height * 0
   self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
 
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 8, 8)
+  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(0, 15)
   self.wave = Wave.new("triangle", PERIOD)
 end
@@ -82,7 +84,8 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
   local ratio = self:_evaluate(System.time()) -- The waves have values in the range [-1, +1].
 
@@ -93,11 +96,11 @@ function Main:render(_)
   for index, tweener in ipairs(self.tweeners) do
     local x = area.x + area.width * tweener(ratio)
     canvas:shift(5, 1 + (index % 15))
-    self.bank:blit(canvas, x, y, index % 7)
+    canvas:sprite(x, y, self.bank, index % 7)
     y = y + ch
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

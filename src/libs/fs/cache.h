@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,22 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_COMMON_H__
-#define __RESOURCES_COMMON_H__
+#ifndef __FS_CACHE_H__
+#define __FS_CACHE_H__
 
-#include <stddef.h>
+#include "fs.h"
 
-typedef struct Blob_s {
-    const void *ptr;
-    size_t size;
-} Blob_t;
+extern FS_Mount_t *FS_cache_mount(FS_Cache_Callbacks_t callbacks, void *user_data);
 
-typedef struct Image_s {
-    size_t width, height;
-    const void *pixels;
-} Image_t;
-
-#define BLOB_IS_VALID(b)        ((b).ptr)
-#define IMAGE_IS_VALID(i)       ((i).pixels)
-
-#endif  /* __RESOURCES_COMMON_H__ */
+#endif /* __FS_CACHE_H__ */

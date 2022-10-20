@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -45,7 +45,8 @@ function Main:__ctor()
   Display.palette(Palette.new(PALETTE))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.font = Font.default(0, 15)
   self.x_size = width / STEPS
@@ -67,13 +68,15 @@ function Main:reset()
 end
 
 function Main:process()
-  if Input.is_pressed("select") then
+  local controller <const> = Controller.default()
+
+  if controller:is_pressed("select") then
     self.windy = not self.windy
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.damping = self.damping - 0.1
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.damping = self.damping + 0.1
-  elseif Input.is_pressed("start") then
+  elseif controller:is_pressed("start") then
     self:reset()
   end
 end
@@ -108,8 +111,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
-  local width, _ = canvas:size()
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(0)
 
   local w = self.x_size
   local h = self.y_size
@@ -121,8 +125,8 @@ function Main:render(_)
       end
     end)
 
-    self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-    self.font:write(canvas, width, 0, string.format("D: %.2f", self.damping), "right")
+    canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+    canvas:write(width, 0, self.font, string.format("D: %.2f", self.damping), "right")
 end
 
 return Main

@@ -21,9 +21,9 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Support for both proportional and non-proportional bitmap based fonts (alphabet subset can be specified, if required).
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Tiles drawing with offset/scaling/flipping.
-* [x] Palette based graphics with up to 256 colors.
-* [x] Banked palette support w/ color bias during VRAM transfer.
+* [x] Palette based graphics w/ 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
+* [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] Multiple canvas, with drawing state stack support.
@@ -40,10 +40,11 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Module playback support (MOD, S3M, XM, and IT).
 * [x] Out-of-the-box timers support.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
+* [x] 2D physics-engine.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
-* [x] Game-controller support (w/ D-PAD and mouse emulation) w/ keyboard/mouse fallback if not available.
+* [x] Up to 4 game-controller support. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
@@ -59,14 +60,13 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.31, v0.6.31, v0.13.3
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.38, v0.6.33, v0.13.6
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://glad.dav1d.de/)
-* [gif-h](https://github.com/charlietangora/gif-h)
-* [GLFW](https://www.glfw.org/) v3.3.6
+* [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
-* [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11
+* [Lua](https://lua.org/) v5.4.4
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.9
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
@@ -84,7 +84,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested. One can issue the following commands to install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, altought I've using Ubuntu for the development. One can issue the following commands to install all the required dependencies:
 
 ```bash
 sudo apt install git
@@ -111,7 +111,7 @@ Proceed in creating a local clone of the repository with the command
 git clone https://github.com/tofuengine/tofu.git
 ```
 
-into a suitable work folder. Change directory into `tofu` folder you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
+into a suitable work folder. Change directory into the `tofu` folder you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
@@ -127,7 +127,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ## Desiderata
 
-* [ ] Physics-engine.
 * [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)

@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,12 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 
@@ -38,11 +39,12 @@ function Main:__ctor()
   Display.palette(Palette.default("pico-8-ext"))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
   canvas:transparent({ ["0"] = false, ["22"] = true })
 
   self.font = Font.default(0, 11)
-  self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
+  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
   self.big_font = Font.default("32x64", 1, 31)
   self.running = true
   self.time = 0
@@ -53,22 +55,23 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("y") then
+  local controller = Controller.default()
+  if controller:is_pressed("y") then
     self.running = not self.running
   end
 
   self.dx = 0
   self.dy = 0
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     self.dy = self.dy - 1
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     self.dy = self.dy + 1
   end
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.dx = self.dx - 1
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     self.dx = self.dx + 1
   end
 end
@@ -84,7 +87,8 @@ function Main:update(delta_time)
   self.y = self.y + self.dy * 64 * delta_time
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   local t = self.time
   local y = math.sin(t * 2.5) * height * 0.125 + height * 0.25
@@ -122,17 +126,18 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local _, height = canvas:size()
+  local image = canvas:image()
+  local _, height = image:size()
 
-  canvas:clear()
+  image:clear(0)
 
   local t = self.time
   local y = math.sin(t * 0.5) * height * 0.125 + height * 0.25
-  self.big_font:write(canvas, 0, y, "TOFU ENGINE")
+  canvas:write(0, y, self.big_font, "TOFU ENGINE")
 
-  self.bank:blit(canvas, self.x, self.y, 12, 4, 4, 0)
+  canvas:sprite(self.x, self.y, self.bank, 12, 4, 4, 0)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

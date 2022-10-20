@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,8 @@
 #include <libs/path.h>
 #include <libs/stb.h>
 
-#include <dirent.h>
-
 #include "internals.h"
+#include "cache.h"
 #include "pak.h"
 #include "std.h"
 
@@ -41,77 +40,7 @@ struct FS_Context_s {
 
 #define LOG_CONTEXT "fs"
 
-static inline FS_Mount_t *_mount(const char *path)
-{
-    if (FS_std_is_valid(path)) {
-        return FS_std_mount(path);
-    } else
-    if (FS_pak_is_valid(path)) {
-        return FS_pak_mount(path);
-    } else {
-        return NULL;
-    }
-}
-
-static inline void _unmount(FS_Mount_t *mount)
-{
-    mount->vtable.dtor(mount);
-    free(mount);
-}
-
-static bool _attach(FS_Context_t *context, const char *path)
-{
-    FS_Mount_t *mount = _mount(path); // Path need to be already resolved.
-    if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach mount-point `%s`", path);
-        return false;
-    }
-
-    arrpush(context->mounts, mount);
-
-    return true;
-}
-
-#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
-static inline bool _ends_with(const char *string, const char *suffix)
-{
-    size_t string_length = strlen(string);
-    size_t suffix_length = strlen(suffix);
-    if (string_length < suffix_length) {
-        return false;
-    }
-    return strcasecmp(string + string_length - suffix_length, suffix) == 0;
-}
-#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
-
-static int _dirent_compare_by_name(const void *lhs, const void *rhs)
-{
-    const struct dirent *l = (const struct dirent *)lhs;
-    const struct dirent *r = (const struct dirent *)rhs;
-    return strcasecmp(l->d_name, r->d_name);
-}
-
-static struct dirent *_read_directory(const char *path, int (*compare)(const void *, const void *))
-{
-    DIR *dp = opendir(path);
-    if (!dp) { // Path is a folder, scan and mount all valid archives.
-        return NULL;
-    }
-
-    struct dirent *directory = NULL;
-
-    for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-        arrpush(directory, *entry);
-    }
-
-    qsort(directory, arrlenu(directory), sizeof(struct dirent), compare);
-
-    closedir(dp);
-
-    return directory;
-}
-
-FS_Context_t *FS_create(const char *path)
+FS_Context_t *FS_create(void)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
     if (!context) {
@@ -121,50 +50,6 @@ FS_Context_t *FS_create(const char *path)
 
     *context = (FS_Context_t){ 0 };
 
-    if (path_is_folder(path)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is a folder", path);
-
-        struct dirent *directory = _read_directory(path, _dirent_compare_by_name); // Build the non-recursive sorted directory listing.
-        if (!directory) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't access directory `%s`", path);
-            free(context);
-            return NULL;
-        }
-
-        for (size_t i = 0; i < arrlenu(directory); ++i) {
-            const struct dirent *entry = &directory[i]; 
-
-            char subpath[PLATFORM_PATH_MAX] = { 0 };
-            path_join(subpath, path, entry->d_name);
-
-            if (!path_is_file(subpath)) { // Discard non-regular files (e.g. folders).
-                continue;
-            }
-
-#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
-            if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
-                continue;
-            }
-#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
-            if (!FS_pak_is_valid(subpath)) {
-                continue;
-            }
-
-            _attach(context, subpath);
-        }
-
-        arrfree(directory);
-    } else
-    if (FS_pak_is_valid(path)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is an archive", path);
-    } else {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
-        free(context);
-        return NULL;
-    }
-
-    _attach(context, path); // Mount the resolved folder, as well (overriding archives).
-
     return context;
 }
 
@@ -173,7 +58,8 @@ void FS_destroy(FS_Context_t *context)
     FS_Mount_t **current = context->mounts;
     for (size_t count = arrlenu(context->mounts); count; --count) {
         FS_Mount_t *mount = *(current++);
-        _unmount(mount);
+        mount->vtable.dtor(mount);
+        free(mount);
     }
 
     arrfree(context->mounts);
@@ -183,9 +69,74 @@ void FS_destroy(FS_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
-bool FS_attach(FS_Context_t *context, const char *path)
+bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
 {
-    return _attach(context, path);
+    if (FS_std_is_valid(path)) {
+        return FS_attach_folder(context, path);
+    } else 
+    if (FS_pak_is_valid(path)) {
+        return FS_attach_archive(context, path);
+    } else {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
+        return false;
+    }
+}
+
+bool FS_attach_folder(FS_Context_t *context, const char *path)
+{
+    if (!FS_std_is_valid(path)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is not a folder", path);
+        return false;
+    }
+
+    FS_Mount_t *mount = FS_std_mount(path); // Path need to be already resolved.
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
+        return false;
+    }
+
+    arrpush(context->mounts, mount);
+
+    return true;
+}
+
+bool FS_attach_archive(FS_Context_t *context, const char *path)
+{
+    if (!FS_pak_is_valid(path)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is not an archive", path);
+        return false;
+    }
+
+    FS_Mount_t *mount = FS_pak_mount(path); // Path need to be already resolved.
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
+        return false;
+    }
+
+    arrpush(context->mounts, mount);
+
+    return true;
+}
+
+bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void *user_data)
+{
+    FS_Mount_t *mount = FS_cache_mount(callbacks, user_data);
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach cache w/ user-data `%p`", user_data);
+        return false;
+    }
+
+    arrpush(context->mounts, mount);
+
+    return true;
+}
+
+void FS_scan(const FS_Context_t *context, FS_Scan_Callback_t callback, void *user_data)
+{
+    for (int index = 0; index < arrlen(context->mounts); ++index) {
+        FS_Mount_t *current = context->mounts[index];
+        current->vtable.scan(current, callback, user_data);
+    }
 }
 
 FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)

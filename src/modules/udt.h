@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 #include <systems/display.h>
+#include <systems/input.h>
 
 typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
@@ -42,7 +43,6 @@ typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
-    USERDATA_PHYSICS,
     USERDATA_INTERPRETER
 } UserData_t;
 
@@ -50,32 +50,37 @@ typedef enum Object_Types_e {
     // Graphics
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
-    OBJECT_TYPE_BODY,
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_FONT,
-    OBJECT_TYPE_GRID,
+    OBJECT_TYPE_IMAGE,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
     OBJECT_TYPE_XFORM,
-    // Sound
-    OBJECT_TYPE_SOURCE,
+    // Input
+    OBJECT_TYPE_CONTROLLER,
+    OBJECT_TYPE_CURSOR,
+    OBJECT_TYPE_KEYBOARD,
     // Math
     OBJECT_TYPE_NOISE,
     OBJECT_TYPE_TWEENER,
-    OBJECT_TYPE_WAVE
+    OBJECT_TYPE_WAVE,
+    // Physics
+    OBJECT_TYPE_BODY,
+    OBJECT_TYPE_WORLD,
+    // Sound
+    OBJECT_TYPE_SOURCE,
+    // Util
+    OBJECT_TYPE_GRID
 } Object_Types_t;
 
-typedef struct Canvas_Object_s {
+typedef struct Image_Object_s {
     GL_Surface_t *surface;
     bool allocated;
-    struct {
-        GL_Pixel_t background, foreground;
-    } color;
-} Canvas_Object_t;
+} Image_Object_t;
 
 typedef struct Bank_Object_s {
     struct {
-        const Canvas_Object_t *instance;
+        const Image_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
@@ -83,7 +88,7 @@ typedef struct Bank_Object_s {
 
 typedef struct Font_Object_s {
     struct {
-        const Canvas_Object_t *instance;
+        const Image_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
@@ -95,7 +100,7 @@ typedef struct Batch_Object_s {
         const Bank_Object_t *instance;
         luaX_Reference reference;
     } bank;
-    GL_Batch_t *batch;
+    GL_Queue_t *queue;
 } Batch_Object_t;
 
 typedef struct XForm_Object_s {
@@ -103,52 +108,33 @@ typedef struct XForm_Object_s {
 } XForm_Object_t;
 
 typedef struct Palette_Object_s {
-    GL_Palette_t *palette;
+    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
+    size_t size;
 } Palette_Object_t;
 
 typedef struct Program_Object_s {
     GL_Program_t *program;
 } Program_Object_t;
 
-#ifdef __GRID_INTEGER_CELL__
-typedef int Cell_t;
-#else
-typedef float Cell_t;
-#endif
+typedef struct Canvas_Object_s {
+    GL_Context_t *context;
+    struct {
+        const Image_Object_t *instance;
+        luaX_Reference reference;
+    } image;
+} Canvas_Object_t;
 
-typedef struct Grid_Object_s {
-    size_t width, height;
-    Cell_t *data;
-    size_t data_size;
-} Grid_Object_t;
+typedef struct Controller_Object_s {
+    Input_Controller_t *controller;
+} Controller_Object_t;
 
-typedef struct Source_Object_s {
-    FS_Handle_t *handle;
-    SL_Source_t *source;
-} Source_Object_t;
+typedef struct Cursor_Object_s {
+    Input_Cursor_t *cursor;
+} Cursor_Object_t;
 
-typedef enum Body_Kinds_e {
-    BODY_KIND_SHAPELESS,
-    BODY_KIND_BOX,
-    BODY_KIND_CIRCLE,
-    Body_Kinds_t_CountOf
-} Body_Kinds_t;
-
-typedef struct Body_Object_s {
-    cpBody *body;
-    cpShape *shape;
-    Body_Kinds_t kind;
-    union {
-        struct {
-            cpFloat width, height, radius;
-        } box;
-        struct {
-            cpFloat radius;
-            cpVect offset;
-        } circle;
-    } size;
-//    cpFloat *momentum;
-} Body_Object_t;
+typedef struct Keyboard_Object_s {
+    Input_Keyboard_t *keyboard;
+} Keyboard_Object_t;
 
 typedef enum Easing_Types_e {
     EASING_TYPE_LINEAR,
@@ -221,5 +207,54 @@ typedef struct Wave_Object_s {
     float period;
     float amplitude;
 } Wave_Object_t;
+
+typedef enum Body_Kinds_e {
+    BODY_KIND_BOX,
+    BODY_KIND_CIRCLE,
+    Body_Kinds_t_CountOf
+} Body_Kinds_t;
+
+typedef struct Body_Object_s {
+    cpBody *body;
+    cpShape *shape;
+    Body_Kinds_t kind;
+    union {
+        struct {
+            cpFloat width, height, radius;
+        } box;
+        struct {
+            cpFloat radius;
+            cpVect offset;
+        } circle;
+    } size;
+//    cpFloat *momentum;
+} Body_Object_t;
+
+typedef struct World_Object_Entry_s {
+    const Body_Object_t *key;
+    luaX_Reference value;
+} World_Object_Entry_t;
+
+typedef struct World_Object_s {
+    cpSpace *space;
+    World_Object_Entry_t *entries;
+} World_Object_t;
+
+typedef struct Source_Object_s {
+    FS_Handle_t *handle;
+    SL_Source_t *source;
+} Source_Object_t;
+
+#ifdef __GRID_INTEGER_CELL__
+typedef int Cell_t;
+#else
+typedef float Cell_t;
+#endif
+
+typedef struct Grid_Object_s {
+    size_t width, height;
+    Cell_t *data;
+    size_t data_size;
+} Grid_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

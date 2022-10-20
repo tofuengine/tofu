@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -77,11 +77,11 @@
 #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #define __AUDIO_START_AND_STOP__
 #define __AUDIO_START_AND_STOP_GRACE_PERIOD__ 30.0
-#undef  __AUDIO_MULTITHREAD_SUPPORT__
+#define __INPUT_CURSOR_EMULATION__
+#define __INPUT_CONTROLLER_EMULATION__
+#define __INPUT_CONTROLLER_DETECTION_PERIOD__ 10.0
 #define __STORAGE_CHECK_ABSOLUTE_PATHS__
 #define __STORAGE_CACHE_ENTRIES_LIMIT__ 32U
-// The capture support is darn slow!!!
-#undef  __GRAPHICS_CAPTURE_SUPPORT__
 #define __FS_ENFORCE_ARCHIVE_EXTENSION__
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
 #define __SL_BALANCE_LAW__  BALANCE_LAW_SINCOS
@@ -92,7 +92,7 @@
 #undef  __GL_XFORM_TRANSPARENCY__
 #define __GL_OPTIMIZED_ROTATIONS__
 #define __DISPLAY_FOCUS_SUPPORT__
-#undef  __DISPLAY_DEFAULT_QUANTIZED_PALETTE__
+#undef  __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
 #define __PALETTE_COLOR_MEMOIZATION__
 #define __ENGINE_PERFORMANCE_STATISTICS__
 #define __ENGINE_PERFORMANCES_PERIOD__ 10.0f
@@ -103,7 +103,6 @@
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef NDEBUG
   #undef __LUAX_RTTI__
-  #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
   #undef __SYSTEM_HEAP_STATISTICS__
   #undef __ENGINE_PERFORMANCE_STATISTICS__

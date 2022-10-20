@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,4 +32,3 @@ typedef struct options_s {
 extern options_t options_parse_command_line(int argc, const char *argv[]);
 
 #endif /* __UTILS_OPTIONS_H__ */
-

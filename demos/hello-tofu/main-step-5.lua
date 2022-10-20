@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -62,7 +62,7 @@ function Main:render(_)
   local t = System.time()
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
-  canvas:clear()
+  canvas:clear(0)
 
   -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,6 @@
 #include <config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 #include <systems/display.h>
 
 #include "udt.h"
@@ -39,6 +38,7 @@
 static int program_new_0_1o(lua_State *L);
 static int program_gc_1o_0(lua_State *L);
 static int program_clear_1o_0(lua_State *L);
+static int program_erase_3oNN_0(lua_State *L);
 static int program_nop_2oN_0(lua_State *L);
 static int program_wait_4onnN_0(lua_State *L);
 static int program_skip_4onnN_0(lua_State *L);
@@ -54,11 +54,13 @@ static int program_palette_5onntN_0(lua_State *L);
 int program_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", program_new_0_1o },
             { "__gc", program_gc_1o_0 },
             { "clear", program_clear_1o_0 },
+            { "erase", program_erase_3oNN_0 },
             { "nop", program_nop_2oN_0 },
             { "wait", program_wait_4onnN_0 },
             { "skip", program_skip_4onnN_0 },
@@ -126,6 +128,22 @@ static int program_clear_1o_0(lua_State *L)
     return 0;
 }
 
+static int program_erase_3oNN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+    size_t position = (size_t)LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
+    size_t count = (size_t)LUAX_OPTIONAL_UNSIGNED(L, 3, 1);
+
+    GL_program_erase(self->program, position, count);
+
+    return 0;
+}
+
 static int program_nop_2oN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -149,8 +167,8 @@ static int program_wait_4onnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    size_t x = (size_t)LUAX_INTEGER(L, 2);
-    size_t y = (size_t)LUAX_INTEGER(L, 3);
+    size_t x = LUAX_UNSIGNED(L, 2);
+    size_t y = LUAX_UNSIGNED(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_wait(self->program, position, x, y);
@@ -167,8 +185,8 @@ static int program_skip_4onnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    size_t delta_x = (size_t)LUAX_INTEGER(L, 2);
-    size_t delta_y = (size_t)LUAX_INTEGER(L, 3);
+    int delta_x = LUAX_INTEGER(L, 2);
+    int delta_y = LUAX_INTEGER(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_skip(self->program, position, delta_x, delta_y);
@@ -219,7 +237,7 @@ static int program_color_6onnnnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
@@ -245,8 +263,8 @@ static int program_shift_3otN_0(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        const GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, -2);
-        const GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, -1);
+        const GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
+        const GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, -1);
 
         GL_program_shift(self->program, position, from, to);
 
@@ -265,8 +283,8 @@ static int program_shift_4onnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     GL_program_shift(self->program, position, from, to);
@@ -293,7 +311,7 @@ static int program_gradient_4ontN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
     // idx #3: LUA_TTABLE
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
@@ -315,7 +333,7 @@ static int program_gradient_4ontN_0(lua_State *L)
         lua_rawgeti(L, 5, 3); // O N T N T I I -> O N T N T I I I
         lua_rawgeti(L, 5, 4); // O N T N T I I -> O N T N T I I I I
 
-        const size_t wait_y = (size_t)LUAX_INTEGER(L, -4);
+        const size_t wait_y = LUAX_UNSIGNED(L, -4);
         const uint8_t wait_r = (uint8_t)LUAX_INTEGER(L, -3);
         const uint8_t wait_g = (uint8_t)LUAX_INTEGER(L, -2);
         const uint8_t wait_b = (uint8_t)LUAX_INTEGER(L, -1);
@@ -357,15 +375,15 @@ static int program_palette_5onntN_0(lua_State *L)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     // idx #2: LUA_TTABLE
-    size_t x = (size_t)LUAX_INTEGER(L, 3);
-    size_t y = (size_t)LUAX_INTEGER(L, 4);
+    size_t x = LUAX_UNSIGNED(L, 3);
+    size_t y = LUAX_UNSIGNED(L, 4);
     int position = LUAX_OPTIONAL_INTEGER(L, 5, -1);
 
     GL_program_wait(self->program, INC_IF_VALID(position), x, y);
 
     lua_pushnil(L); // O T N N -> O T N N N
     for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
-        const GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, -2);
+        const GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
 
 #ifdef __DEFENSIVE_CHECKS__
         size_t count = lua_rawlen(L, 6);

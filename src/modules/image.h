@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,26 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_PHYSICS_H__
-#define __SYSTEMS_PHYSICS_H__
+#ifndef __MODULES_IMAGE_H__
+#define __MODULES_IMAGE_H__
 
-#include <chipmunk/chipmunk.h>
+#include <lua/lua.h>
 
-#include <stdbool.h>
+extern int image_loader(lua_State *L);
 
-typedef struct Physics_Configuration_s {
-    const char *path;
-} Physics_Configuration_t;
-
-typedef struct Physics_s {
-    Physics_Configuration_t configuration;
-
-    cpSpace *space;
-} Physics_t;
-
-extern Physics_t *Physics_create(const Physics_Configuration_t *configuration);
-extern void Physics_destroy(Physics_t *physics);
-
-extern bool Physics_update(Physics_t *physics, float delta_time);
-
-#endif  /* __SYSTEMS_PHYSICS_H__ */
+#endif  /* __MODULES_IMAGE_H__ */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,12 @@
 
 #ifdef DEBUG
   #define MA_DEBUG_OUTPUT
+
+  #ifndef SANITIZE
+    #define MA_MALLOC(sz)     stb_leakcheck_malloc((sz), __FILE__, __LINE__)
+    #define MA_REALLOC(p, sz) stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
+    #define MA_FREE(p)        stb_leakcheck_free((p))
+  #endif
 #endif
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
@@ -76,7 +82,7 @@ static ma_bool32 _enum_callback(ma_context *context, ma_device_type device_type,
     return MA_TRUE;
 }
 
-// Note that output buffer is already pre-zeroed upon call.
+// Note that output buffer is already pre-silenced upon call.
 static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
     Audio_t *audio = (Audio_t *)device->pUserData;
@@ -88,9 +94,17 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     ma_mutex_unlock(&audio->driver.lock);
 }
 
-static void _stop_callback(ma_device* device)
+static void _notification_callback(const ma_device_notification *notification)
 {
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p has been stopped", device);
+    static const char *types[] = {
+        "started",
+        "stopped",
+        "rerouted",
+        "interruption-began",
+        "interruption-ended"
+    };
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p notified for event `%s`", notification->pDevice, types[notification->type]);
 }
 
 static void *_malloc(size_t sz, void *pUserData)
@@ -195,7 +209,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     device_config.playback.channels         = SL_CHANNELS_PER_FRAME;
     device_config.sampleRate                = SL_FRAMES_PER_SECOND;
     device_config.dataCallback              = _data_callback;
-    device_config.stopCallback              = _stop_callback;
+    device_config.notificationCallback      = _notification_callback;
     device_config.pUserData                 = (void *)audio;
     device_config.noPreSilencedOutputBuffer = MA_FALSE;
 
@@ -246,9 +260,6 @@ void Audio_destroy(Audio_t *audio)
     ma_log_uninit(&audio->driver.log);
     ma_mutex_uninit(&audio->driver.lock);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
-
-    arrfree(audio->queue);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio queue freed");
 
     SL_context_destroy(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");
@@ -330,72 +341,37 @@ float Audio_get_gain(const Audio_t *audio, size_t group_id)
 
 void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 {
-    // There's no need to mutually-exclude access to the array content. `Audio_[un]track()` is called on a separate
-    // step *before* `Audio_update()` (unless the engine become multi-threaded).
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     if (reset) {
-        Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_RESET };
-        arrpush(audio->queue, entry);
+        bool success = SL_source_reset(source);
+        Log_assert(success, LOG_LEVELS_WARNING, LOG_CONTEXT, "can't reset source %p", source);
     }
-    Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_TRACK };
-    arrpush(audio->queue, entry);
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
-    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    if (!SL_context_is_tracked(audio->context, source)) {
+        SL_context_track(audio->context, source);
+    }
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 {
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_lock(&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
-    Audio_Queue_Entry_t entry = (Audio_Queue_Entry_t){ .source = source, .action = AUDIO_QUEUE_ACTION_UNTRACK };
-    arrpush(audio->queue, entry);
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
-    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    if (SL_context_is_tracked(audio->context, source)) {
+        SL_context_untrack(audio->context, source);
+    }
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
 {
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
-    ma_mutex_lock(&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
+    ma_mutex_lock((ma_mutex *)&audio->driver.lock);
     bool is_tracked = SL_context_is_tracked(audio->context, source);
-#ifdef __AUDIO_MULTITHREAD_SUPPORT__
     ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
-#endif  /* __AUDIO_MULTITHREAD_SUPPORT__ */
     return is_tracked;
 }
 
 bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->driver.lock);
-
-    Audio_Queue_Entry_t *current = audio->queue;
-    for (size_t count = arrlenu(audio->queue); count; --count) {
-        Audio_Queue_Entry_t entry = *(current++);
-        if (entry.action == AUDIO_QUEUE_ACTION_RESET) {
-            bool success = SL_source_reset(entry.source);
-            Log_assert(success, LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p", entry.source);
-        } else
-        if (entry.action == AUDIO_QUEUE_ACTION_TRACK) {
-            if (SL_context_is_tracked(audio->context, entry.source)) {
-                continue;
-            }
-            SL_context_track(audio->context, entry.source);
-        } else
-        if (entry.action == AUDIO_QUEUE_ACTION_UNTRACK) {
-            if (!SL_context_is_tracked(audio->context, entry.source)) {
-                continue;
-            }
-            SL_context_untrack(audio->context, entry.source);
-        }
-    }
-    arrsetlen(audio->queue, 0); // Don't free, just force length to `0` to save time.
-
     bool updated = SL_context_update(audio->context, delta_time);
 #ifdef __AUDIO_START_AND_STOP__
     size_t count = SL_context_count_tracked(audio->context);

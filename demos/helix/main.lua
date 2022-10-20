@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
@@ -46,9 +46,10 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("left") then
+  local controller = Controller.default()
+  if controller:is_pressed("left") then
     self.factor = self.factor - 0.01
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.factor = self.factor + 0.01
   end
 end
@@ -58,8 +59,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
-  canvas:clear()
+  local image = canvas:image()
+  local width, height = image:size()
+  image:clear(0)
 
   local x = width * 0.5
 
@@ -89,7 +91,7 @@ function Main:render(_)
     canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:match(v2, v2, v2))
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

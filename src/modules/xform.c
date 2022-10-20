@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 
@@ -54,12 +53,12 @@ static int xform_table_v_0(lua_State *L);
 // TODO: add helper functions to generate common transformations?
 static int xform_project_4onnn_0(lua_State *L);
 static int xform_warp_3onn_0(lua_State *L);
-static int xform_blit_v_0(lua_State *L);
 
 int xform_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", xform_new_1S_1o },
             { "__gc", xform_gc_1o_0 },
@@ -69,7 +68,6 @@ int xform_loader(lua_State *L)
             { "table", xform_table_v_0 },
             { "project", xform_project_4onnn_0 },
             { "warp", xform_warp_3onn_0 },
-            { "blit", xform_blit_v_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -342,7 +340,7 @@ static int xform_project_4onnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    size_t height = (size_t)LUAX_INTEGER(L, 2);
+    size_t height = LUAX_UNSIGNED(L, 2);
     float angle = LUAX_NUMBER(L, 3);
     float elevation = LUAX_NUMBER(L, 4);
 
@@ -388,7 +386,7 @@ static int xform_warp_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    size_t height = (size_t)LUAX_INTEGER(L, 2);
+    size_t height = LUAX_UNSIGNED(L, 2);
     float factor = LUAX_NUMBER(L, 3);
 
     GL_XForm_Table_Entry_t *table = NULL;
@@ -418,86 +416,4 @@ static int xform_warp_3onn_0(lua_State *L)
     arrfree(table);
 
     return 0;
-}
-
-static int xform_blit_3ooo_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const XForm_Object_t *self = (const XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    const Canvas_Object_t *target_canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS); // FIXME: better and more consistent naming.
-    const Canvas_Object_t *source_canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_CANVAS);
-
-    const GL_Surface_t *surface = target_canvas->surface;
-    const GL_Surface_t *source = source_canvas->surface;
-    GL_xform_blit(self->xform, surface, (GL_Point_t){ .x = 0, .y = 0 },
-        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
-
-    return 0;
-}
-
-static int xform_blit_5oonno_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const XForm_Object_t *self = (const XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    const Canvas_Object_t *target_canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
-    const Canvas_Object_t *source_canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 5, OBJECT_TYPE_CANVAS);
-
-    const GL_Surface_t *surface = target_canvas->surface;
-    const GL_Surface_t *source = source_canvas->surface;
-    GL_xform_blit(self->xform, surface, (GL_Point_t){ .x = x, .y = y },
-        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
-
-    return 0;
-}
-
-static int xform_blit_9oonnonnnn_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const XForm_Object_t *self = (const XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    const Canvas_Object_t *target_canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
-    const Canvas_Object_t *source_canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 5, OBJECT_TYPE_CANVAS);
-    int ox = LUAX_INTEGER(L, 6);
-    int oy = LUAX_INTEGER(L, 7);
-    size_t width = (size_t)LUAX_INTEGER(L, 8);
-    size_t height = (size_t)LUAX_INTEGER(L, 9);
-
-    const GL_Surface_t *surface = target_canvas->surface;
-    const GL_Surface_t *source = source_canvas->surface;
-    GL_xform_blit(self->xform, surface, (GL_Point_t){ .x = x, .y = y },
-        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
-
-    return 0;
-}
-
-static int xform_blit_v_0(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, xform_blit_3ooo_0)
-        LUAX_OVERLOAD_ARITY(5, xform_blit_5oonno_0)
-        LUAX_OVERLOAD_ARITY(9, xform_blit_9oonnonnnn_0)
-    LUAX_OVERLOAD_END
 }

@@ -60,6 +60,18 @@ static void check_envelope(struct xmp_envelope *env)
 	}
 }
 
+static void clamp_volume_envelope(struct module_data *m, struct xmp_envelope *env)
+{
+	/* Clamp broken values in the volume envelope to the expected range. */
+	if (env->flg & XMP_ENVELOPE_ON) {
+		int i;
+		for (i = 0; i < env->npt; i++) {
+			int16_t *data = &env->data[i * 2 + 1];
+			CLAMP(*data, 0, m->volbase);
+		}
+	}
+}
+
 void libxmp_load_prologue(struct context_data *ctx)
 {
 	struct module_data *m = &ctx->m;
@@ -77,6 +89,7 @@ void libxmp_load_prologue(struct context_data *ctx)
 	m->period_type = PERIOD_AMIGA;
 	m->comment = NULL;
 	m->scan_cnt = NULL;
+	m->midi = NULL;
 
 	/* Set defaults */
 	m->mod.pat = 0;
@@ -88,10 +101,6 @@ void libxmp_load_prologue(struct context_data *ctx)
 	m->mod.bpm = 125;
 	m->mod.len = 0;
 	m->mod.rst = 0;
-
-#ifndef LIBXMP_CORE_DISABLE_IT
-	m->xsmp = NULL;
-#endif
 
 	m->time_factor = DEFAULT_TIME_FACTOR;
 
@@ -110,7 +119,7 @@ void libxmp_load_epilogue(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	int i, j;
 
-    	mod->gvl = m->gvol;
+	mod->gvl = m->gvol;
 
 	/* Sanity check for module parameters */
 	CLAMP(mod->len, 0, XMP_MAX_MOD_LENGTH);
@@ -155,7 +164,27 @@ void libxmp_load_epilogue(struct context_data *ctx)
 		check_envelope(&mod->xxi[i].aei);
 		check_envelope(&mod->xxi[i].fei);
 		check_envelope(&mod->xxi[i].pei);
+		clamp_volume_envelope(m, &mod->xxi[i].aei);
 	}
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+	/* TODO: there's no unintrusive and clean way to get this struct into
+	 * libxmp_load_sample currently, so bound these fields here for now. */
+	for (i = 0; i < mod->smp; i++) {
+		struct xmp_sample *xxs = &mod->xxs[i];
+		struct extra_sample_data *xtra = &m->xtra[i];
+		if (xtra->sus < 0) {
+			xtra->sus = 0;
+		}
+		if (xtra->sue > xxs->len) {
+			xtra->sue = xxs->len;
+		}
+		if (xtra->sus >= xxs->len || xtra->sus >= xtra->sue) {
+			xtra->sus = xtra->sue = 0;
+			xxs->flg &= ~(XMP_SAMPLE_SLOOP | XMP_SAMPLE_SLOOP_BIDIR);
+		}
+	}
+#endif
 
 	p->filter = 0;
 	p->mode = XMP_MODE_AUTO;

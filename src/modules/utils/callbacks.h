@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,7 @@
 #include <libs/gl/gl.h>
 
 typedef struct Callback_Palette_Closure_s {
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    GL_Palette_t *palette;
-#else
-    const GL_Palette_t *palette;
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+    const GL_Color_t *palette;
     GL_Pixel_t transparent;
     uint8_t threshold;
 } Callback_Palette_Closure_t;

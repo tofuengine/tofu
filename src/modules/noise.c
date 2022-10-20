@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 
 #include "udt.h"
 #include "utils/map.h"
@@ -44,7 +43,8 @@ static int noise_generate_3onNN_1n(lua_State *L);
 int noise_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", noise_new_1sNN_1o },
             { "__gc", noise_gc_1o_0 },

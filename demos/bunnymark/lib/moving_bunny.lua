@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Canvas = require("tofu.graphics.canvas")
 
 local Bunny = Class.define()
 
@@ -32,24 +31,20 @@ local MAX_SPEED = 500
 local GRAVITY = 981
 local X_DAMPENING = 0.95
 local Y_DAMPENING = 0.85
-local MIN_X, MIN_Y = 0, 0
-local MAX_X, MAX_Y = Canvas.default():size()
 
-function Bunny:__ctor(bank, batch)
+function Bunny:__ctor(bank, width, height)
   local cw, ch = bank:size(CELL_ID)
 
-  self.min_x = MIN_X
-  self.min_y = MIN_Y
-  self.max_x = MAX_X - cw
-  self.max_y = MAX_Y - ch
+  self.min_x = 0
+  self.min_y = 0
+  self.max_x = width - cw
+  self.max_y = height - ch
 
-  self.batch = batch
+  self.bank = bank
   self.x = (self.max_x - self.min_x) / 2 -- Spawn in the top-center part of the screen.
   self.y = (self.max_y - self.min_y) / 8
   self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED * 0.5)
   self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED * 0.5)
-
-  self.batch:add(CELL_ID, self.x, self.y)
 end
 
 function Bunny:update(delta_time)
@@ -78,8 +73,10 @@ function Bunny:update(delta_time)
     self.vy = 0.0 -- Bump on the ceiling!
     self.y = self.min_y
   end
+end
 
-  self.batch:add(CELL_ID, self.x, self.y)
+function Bunny:render(canvas)
+  canvas:sprite(self.x, self.y, self.bank, CELL_ID)
 end
 
 return Bunny

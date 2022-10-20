@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,15 +25,14 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local Canvas = require("tofu.graphics.canvas")
-local Body = require("tofu.physics.body")
 
 local Bunny = Class.define()
 
 local CELL_ID = 0
 local MIN_X, MIN_Y = 0, 0
-local MAX_X, MAX_Y = Canvas.default():size()
+local MAX_X, MAX_Y = Canvas.default():image():size()
 
-function Bunny:__ctor(font, bank)
+function Bunny:__ctor(font, bank, world)
   local cw, ch = bank:size(CELL_ID)
 
   local min_x = MIN_X + cw
@@ -47,11 +46,10 @@ function Bunny:__ctor(font, bank)
   local x = math.random() * (max_x - min_x) + cw
   local y = math.random() * (max_y - min_y) + ch
 
-  local body = Body.new()
-  body:shape("box", cw, ch)
+  local body = world:spawn("box", cw, ch, 0)
   body:elasticity(0.75)
   body:type("dynamic")
-  body:mass(25)
+  body:mass(math.random(1, 100))
   body:momentum(10)
   body:position(x, y)
   self.body = body
@@ -64,8 +62,8 @@ function Bunny:render(canvas)
   local x, y = self.body:position()
   local _, ch = self.bank:size(CELL_ID)
   local angle = self.body:angle()
-  self.bank:blit(canvas, x, y, CELL_ID, Math.angle_to_rotation(angle))
-  self.font:write(canvas, x, y - ch * 0.5, string.format("%d, %d", x, y), "center", "middle")
+  canvas:sprite(x, y, self.bank, CELL_ID, Math.angle_to_rotation(angle))
+  canvas:write(x, y - ch * 0.5, self.font, string.format("%d, %d, %d", x, y, self.body:mass()), "center", "middle")
 end
 
 return Bunny

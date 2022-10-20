@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,12 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
-local Batch = require("tofu.graphics.batch")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 local Vector = require("tofu.util.vector")
@@ -62,7 +62,7 @@ local function extra_half_brite(palette, target, ratio)
   local r, g, b = table.unpack(target)
   local tweaked = Palette.new(palette)
   tweaked:lerp(r, g, b, ratio)
-  palette:merge(tweaked, false) -- Just append.
+  palette:merge(32, tweaked, 0, 32, false) -- Just append.
 --  local size = palette:size()
 --  for index = 0, size - 1 do
 --    local ar, ag, ab = palette:get(index)
@@ -78,13 +78,11 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
-  canvas:background(12)
 
-  self.atlas = Canvas.new(1, 1)
+  self.atlas = Image.new(1, 1)
   self.pixies = Bank.new(self.atlas, 1, 1)
-  self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
-  self.tileset = Bank.new(Canvas.new("assets/tileset.png", 22), 16, 16)
-  self.batch = Batch.new(self.bank, 5000)
+  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
+  self.tileset = Bank.new(Image.new("assets/tileset.png", 22), 16, 16)
   self.font = Font.default(22, 2)
 
   self.animations = {
@@ -123,23 +121,24 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if self.jumps < 2 and Input.is_pressed("up") then
+  local controller = Controller.default()
+  if self.jumps < 2 and controller:is_pressed("up") then
     self.velocity.y = 128
     self.jumps = self.jumps + 1
     self.idle_time = nil
-  elseif Input.is_down("right") then
+  elseif controller:is_down("right") then
     self.facing = "right"
     self.velocity.x = 64
     self.idle_time = nil
-  elseif Input.is_down("left") then
+  elseif controller:is_down("left") then
     self.facing = "left"
     self.velocity.x = -64
     self.idle_time = nil
-  elseif Input.is_released("right") or Input.is_released("left") then
+  elseif controller:is_released("right") or controller:is_released("left") then
     self.velocity.x = 0
     self.idle_time = 0
   end
-  if Input.is_pressed("start") then
+  if controller:is_pressed("start") then
     self.map = generate_map(50)
     self.shake_time = 5
   end
@@ -190,7 +189,7 @@ function Main:update(delta_time)
   end
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 --[[
   self.flake_time = self.flake_time + delta_time
   while self.flake_time >= 0.025 do
@@ -256,8 +255,8 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
-  canvas:clear()
+  local width, height = canvas:image():size()
+  canvas:image():clear(12)
 
   local x, y = (width - 16) * 0.5, height * 0.5
 
@@ -272,7 +271,7 @@ function Main:render(_)
   for i = 1, 5 do
     for j = 1, 15 + 1 do
       local cell_id = self.map[i][ox + j]
-      self.tileset:blit(canvas, (j - 1) * 16 - dx, y + 16 + (i - 2) * 16, cell_id)
+      canvas:sprite((j - 1) * 16 - dx, y + 16 + (i - 2) * 16, self.tileset, cell_id)
     end
   end
 
@@ -300,7 +299,7 @@ function Main:render(_)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
 
 --  local a, b, c, d = System.stats()
 --  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)

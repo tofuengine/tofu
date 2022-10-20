@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,12 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
+local Cursor = require("tofu.input.cursor")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -45,9 +47,9 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:transparent(0, false)
 
-  self.background = Canvas.new("assets/background.png")
-  self.stamp = Canvas.new("assets/sphere.png", 0, greyscale)
-  self.bank = Bank.new(Canvas.new("assets/sheet.png",
+  self.background = Image.new("assets/background.png")
+  self.stamp = Image.new("assets/sphere.png", 0, greyscale)
+  self.bank = Bank.new(Image.new("assets/sheet.png",
     palette:match(0, 0, 0), palette:match(255, 255, 255)), 32, 32)
   self.font = Font.default(palette:match(255, 255, 255), palette:match(0, 0, 0))
   self.velocity = { x = 0, y = 0 }
@@ -56,21 +58,22 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_down("up") then
+  local controller = Controller.default()
+  if controller:is_down("up") then
     self.velocity.y = -SPEED
-  elseif Input.is_down("down") then
+  elseif controller:is_down("down") then
     self.velocity.y = SPEED
   else
     self.velocity.y = 0
   end
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.velocity.x = -SPEED
-  elseif Input.is_down("right") then
+  elseif controller:is_down("right") then
     self.velocity.x = SPEED
   else
     self.velocity.x = 0
   end
-  if Input.is_down("a") then
+  if controller:is_down("a") then
     self.apply = true
   else
     self.apply = false
@@ -81,12 +84,14 @@ function Main:update(delta_time)
   self.position.x = self.position.x + self.velocity.x * delta_time
   self.position.y = self.position.y + self.velocity.y * delta_time
 
-  self.cursor.x, self.cursor.y = Input.cursor()
+  local cursor = Cursor.default()
+  self.cursor.x, self.cursor.y = cursor:position()
 end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
 --  local time = System.time()
 
@@ -99,8 +104,8 @@ function Main:render(_)
 
   canvas:push()
     canvas:transparent(255, true)
-    self.bank:blit(canvas, self.position.x, self.position.y, 0)
-    self.font:write(canvas, 0, 0,string.format("FPS: %.1f", System.fps()))
+    canvas:sprite(self.position.x, self.position.y, self.bank, 0)
+    canvas:write(0, 0, self.font, string.format("FPS: %.1f", System.fps()))
   canvas:pop()
 
   canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)

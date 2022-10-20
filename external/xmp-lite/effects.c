@@ -331,7 +331,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			h = MSN(fxp);
 			l = LSN(fxp);
 			xc->vol.slide2 = h ? h : -l;
-		}		
+		}
 		break;
 	case FX_JUMP:		/* Order jump */
 		p->flow.pbreak = 1;
@@ -481,7 +481,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		if (fxp) {
 			SET(FINE_BEND);
 			xc->freq.fslide = fxp;
-		} 
+		}
 		break;
 	case FX_PATT_DELAY:
 	    fx_patt_delay:
@@ -535,7 +535,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 	/* From the OpenMPT VolColMemory.it test case:
 	 * "Volume column commands a, b, c and d (volume slide) share one
 	 *  effect memory, but it should not be shared with Dxy in the effect
-	 *  column. 
+	 *  column.
 	 */
 	case FX_VSLIDE_UP_2:	/* Fine volume slide up */
 		EFFECT_MEMORY(fxp, xc->vol.memory2);
@@ -698,6 +698,9 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 	case FX_SURROUND:
 		xc->pan.surround = fxp;
 		break;
+	case FX_REVERSE:	/* Play forward/backward */
+		libxmp_virt_reverse(ctx, chn, fxp);
+		break;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_TRK_VOL:	/* Track volume setting */
@@ -791,12 +794,25 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		}
 		break;
 	case FX_FLT_CUTOFF:
-		if (fxp < 0xfe || xc->filter.resonance > 0) {
-			xc->filter.cutoff = fxp;
-		}
+		xc->filter.cutoff = fxp;
 		break;
 	case FX_FLT_RESN:
 		xc->filter.resonance = fxp;
+		break;
+	case FX_MACRO_SET:
+		xc->macro.active = LSN(fxp);
+		break;
+	case FX_MACRO:
+		SET(MIDI_MACRO);
+		xc->macro.val = fxp;
+		xc->macro.slide = 0;
+		break;
+	case FX_MACROSMOOTH:
+		if (ctx->p.speed && xc->macro.val < 0x80) {
+			SET(MIDI_MACRO);
+			xc->macro.target = fxp;
+			xc->macro.slide = ((float)fxp - xc->macro.val) / ctx->p.speed;
+		}
 		break;
 	case FX_PANBRELLO:	/* Panbrello */
 		SET(PANBRELLO);

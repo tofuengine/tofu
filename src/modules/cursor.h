@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_DECODER_H__
-#define __RESOURCES_DECODER_H__
+#ifndef __MODULES_CURSOR_H__
+#define __MODULES_CURSOR_H__
 
-#include <stdbool.h>
+#include <lua/lua.h>
 
-#include "common.h"
+extern int cursor_loader(lua_State *L);
 
-extern bool decoder_is_valid(const char *encoded_data);
-
-extern Blob_t decoder_as_blob(const char *encoded_data);
-extern Image_t decoder_as_image(const char *encoded_data);
-
-#endif  /* __RESOURCES_DECODER_H__ */
+#endif  /* __MODULES_CURSOR_H__ */

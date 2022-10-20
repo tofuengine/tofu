@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Noise = require("tofu.generators.noise")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
@@ -47,7 +47,7 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
   self.current = 1
 
@@ -61,16 +61,17 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("right") then
+  local controller = Controller.default()
+  if controller:is_pressed("right") then
     self.current = (self.current % #NOISES) + 1
     self.noise:type(NOISES[self.current])
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.current = ((self.current + (#NOISES - 2)) % #NOISES) + 1
     self.noise:type(NOISES[self.current])
   end
-  if Input.is_pressed("up") then
+  if controller:is_pressed("up") then
     self.frequency = self.frequency + 1
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.frequency = self.frequency - 1
   end
 end
@@ -78,7 +79,8 @@ end
 -- https://www.redblobgames.com/maps/terrain-from-noise/
 function Main:update(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   local time <const> = System.time() * 0.1
   local nz = time
@@ -119,7 +121,8 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
   local scale = (COLORS - 1) / (self.max - self.min)
   canvas:scan(function(x, y, _)
@@ -127,7 +130,7 @@ function Main:render(_)
       return math.tointeger((v - self.min) * scale)
     end)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
+  canvas:write(0, 0, self.font, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
 end
 
 return Main

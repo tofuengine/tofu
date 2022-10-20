@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_INPUT_H__
-#define __MODULES_INPUT_H__
+#ifndef __MODULES_STORAGE_H__
+#define __MODULES_STORAGE_H__
 
 #include <lua/lua.h>
 
-extern int input_loader(lua_State *L);
+extern int storage_loader(lua_State *L);
 
-#endif  /* __MODULES_INPUT_H__ */
+#endif  /* __MODULES_STORAGE_H__ */

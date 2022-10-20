@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,7 +56,6 @@ typedef struct Configuration_s {
         float master_volume;
     } audio;
     struct {
-        bool enabled;
         bool exit_key; // TODO: enum type with disabled/notify/autoclose?
     } keyboard;
     struct {
@@ -65,13 +64,9 @@ typedef struct Configuration_s {
         float speed;
     } cursor;
     struct {
-        bool enabled;
-        float sensitivity;
         float inner_deadzone; // TODO: separate into distinct stick and trigger deadzone.
         float outer_deadzone;
-        bool emulate_dpad;
-        bool emulate_cursor;
-    } gamepad;
+    } controller;
     struct {
         size_t frames_per_seconds;
         size_t skippable_frames;

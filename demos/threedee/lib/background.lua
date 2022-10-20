@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,9 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Canvas = require("tofu.graphics.canvas")
+local Bank = require("tofu.graphics.bank")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Program = require("tofu.graphics.program")
 
 local config = require("config")
@@ -40,13 +41,13 @@ local SKY <const> = {
 local Background = Class.define()
 
 function Background:__ctor(camera, index)
-  self.skyline = Canvas.new("assets/skyline.png", index)
+  self.skyline = Bank.new(Image.new("assets/skyline.png", index))
   self.camera = camera
   self.index = index
   self.program = Program.new()
 end
 
--- Rebuild sky and ground (copperlist) program.
+-- Rebuild sky and ground (processor) program.
 local function _compile_program(program, camera, index)
   local x <const> = camera.x
   local far <const> = camera.far + camera.z
@@ -94,14 +95,18 @@ function Background:render(canvas)
   local y = math.tointeger(sy + 0.5)
 
   -- Render the skyline.
-  local width, _ = canvas:size()
-  local w, h = self.skyline:size()
+  local image = canvas:image()
+  local width, _ = image:size()
+  local w, h = self.skyline:size(Bank.NIL)
   h = h - (15 - camera.y // 16)
   local wy = y - h
   local offset_x <const> = camera.x // 4
+  canvas:push()
+  canvas:clipping(0, wy, width, h) -- Clip to limit the skyline "under" the road.
   for wx = 0, width, w do
-    canvas:tile(wx, wy, self.skyline, 0, 0, w, h, offset_x, 0)
+    canvas:tile(wx, wy, self.skyline, 0, offset_x, 0)
   end
+  canvas:pop()
 
   -- Render the "road"
   local _, _, _, sx0, sy0 = camera:project(-100, 0.0, far)
@@ -114,7 +119,7 @@ function Background:render(canvas)
       math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5), self.index + 1)
   canvas:triangle("fill", math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5),
       math.tointeger(sx2 + 0.5), math.tointeger(sy2 + 0.5),
-      math.tointeger(sx3 + 0.5), math.tointeger(sy3 + 0.5)  , self.index + 1)
+      math.tointeger(sx3 + 0.5), math.tointeger(sy3 + 0.5), self.index + 1)
 --    print(">>", sx0, sy0)
 --    print("  ", sx1, sy1)
 --    print("  ", sx2, sy2)

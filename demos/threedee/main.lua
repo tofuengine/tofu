@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -44,11 +44,12 @@ local CAMERA_NEAR <const> = config.camera.near or 1
 local CAMERA_FAR <const> = config.camera.far or 1000
 
 function Main:__ctor()
-  local palette <const> = Palette.new(config.display.palette)
+  local palette <const> = Palette.default(config.display.palette)
   Display.palette(palette)
 
   local canvas <const> = Canvas.default()
-  local width <const>, height <const> = canvas:size()
+  local image <const> = canvas:image()
+  local width <const>, height <const> = image:size()
   canvas:transparent({ [0] = false, [63] = true })
 
   self.player = Player.new()
@@ -61,26 +62,28 @@ function Main:__ctor()
 end
 
 function Main:process()
+  local controller <const> = Controller.default()
+
   local camera <const> = self.camera
 
-  if Input.is_pressed("y") then
+  if controller:is_pressed("y") then
     local field_of_view = math.min(camera.field_of_view + math.pi / 32, math.pi)
     camera:set_field_of_view(field_of_view)
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     local field_of_view = math.max(camera.field_of_view - math.pi / 32, 0)
     camera:set_field_of_view(field_of_view)
   end
-  if Input.is_pressed("b") then
+  if controller:is_pressed("b") then
     local far = math.min(camera.far + 50.0, 5000.0)
     camera:set_clipping_planes(camera.near, far)
-  elseif Input.is_pressed("a") then
+  elseif controller:is_pressed("a") then
     local far = math.max(camera.far - 50.0, 0)
     camera:set_clipping_planes(camera.near, far)
   end
-  if Input.is_pressed("start") then
+  if controller:is_pressed("start") then
     self.player.pause = not self.player.pause
   end
-  if Input.is_pressed("select") then
+  if controller:is_pressed("select") then
     self.running = not self.running
   end
 
@@ -98,7 +101,7 @@ function Main:update(delta_time)
   player:update(delta_time)
   camera:move(player:position())
 
-  -- Rebuild sky and ground (copperlist) program.
+  -- Rebuild sky and ground (processor) program.
   self.background:update(delta_time)
 
   self.scene:update(delta_time)
@@ -107,14 +110,15 @@ end
 function Main:render(_)
   local camera <const> = self.camera
 
-  local canvas = Canvas.default()
-  canvas:clear(59)
+  local canvas <const> = Canvas.default()
+  local image <const> = canvas:image()
+  image:clear(59)
 
   self.background:render(canvas)
   self.scene:render(canvas)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, 0, 10, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 10, self.font, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
 end
 
 return Main

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 #include "system.h"
 
 #include <config.h>
-#include <libs/luax.h>
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
 #include <systems/environment.h>
@@ -57,7 +56,8 @@ static int system_quit_0_0(lua_State *L);
 int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "args", system_args_0_1t },
             { "version", system_version_0_3nnn },

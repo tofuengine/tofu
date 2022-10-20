@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,8 @@ function Sprite:__ctor(canvas, bank, index)
 
   self.id = math.random(0, 11)
 
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.CENTER_X = width / 2
   self.CENTER_Y = (height - 64) / 2
@@ -59,7 +60,7 @@ function Sprite:render(canvas)
   local y = self.CENTER_Y + math.sin(self.angle * self.frequency_y) * self.Y_AMPLITUDE
 
   local s = ((math.sin(self.angle * self.frequency_s) + 1.0) * 0.5) * 1.5 + 0.5
-  self.bank:blit(canvas, x, y, self.id, s, s)
+  canvas:sprite(x, y, self.bank, self.id, s, s)
 end
 
 return Sprite

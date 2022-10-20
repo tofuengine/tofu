@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -154,11 +154,34 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
 
     const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
+    if (!icon) {
+        Configuration_destroy(engine->configuration);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
+
     const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
-    Log_assert(!effect, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
+    if (!effect) {
+        Configuration_destroy(engine->configuration);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
+
+    const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
+    if (!mappings) {
+        Configuration_destroy(engine->configuration);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
+
     engine->display = Display_create(&(const Display_Configuration_t){
-            .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 0 },
+            .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
             .window = {
                 .title = engine->configuration->display.title,
                 .width = engine->configuration->display.width,
@@ -168,7 +191,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
             .quit_on_close = engine->configuration->system.quit_on_close,
-            .effect = effect ? S_SCHARS(effect) : NULL
+            .effect = S_SCHARS(effect)
         });
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
@@ -178,27 +201,35 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
-    Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
+    const GL_Size_t phyisical_size = Display_get_physical_size(engine->display);
+    const GL_Size_t virtual_size = Display_get_virtual_size(engine->display);
     engine->input = Input_create(&(const Input_Configuration_t){
-            .mappings = mappings ? S_SCHARS(mappings) : NULL,
+            .mappings = S_SCHARS(mappings),
+            .screen = {
+                .physical = {
+                    .width = phyisical_size.width,
+                    .height = phyisical_size.height
+                },
+                .virtual = {
+                    .width = virtual_size.width,
+                    .height = virtual_size.height
+                }
+            },
             .keyboard = {
-                .enabled = engine->configuration->keyboard.enabled,
-                .exit_key = engine->configuration->keyboard.exit_key,
+#ifdef DEBUG
+                .exit_key = true
+#else
+                .exit_key = engine->configuration->keyboard.exit_key
+#endif
             },
             .cursor = {
                 .enabled = engine->configuration->cursor.enabled,
                 .hide = engine->configuration->cursor.hide,
-                .speed = engine->configuration->cursor.speed,
-                .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
+                .speed = engine->configuration->cursor.speed
             },
-            .gamepad = {
-                .enabled = engine->configuration->gamepad.enabled,
-                .sensitivity = engine->configuration->gamepad.sensitivity,
-                .deadzone = engine->configuration->gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
-                .range = 1.0f - engine->configuration->gamepad.inner_deadzone - engine->configuration->gamepad.outer_deadzone,
-                .emulate_dpad = engine->configuration->gamepad.emulate_dpad,
-                .emulate_cursor = engine->configuration->gamepad.emulate_cursor
+            .controller = {
+                .deadzone = engine->configuration->controller.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
+                .range = 1.0f - engine->configuration->controller.inner_deadzone - engine->configuration->controller.outer_deadzone,
             }
         }, Display_get_window(engine->display));
     if (!engine->input) {
@@ -224,22 +255,9 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    engine->physics = Physics_create(&(const Physics_Configuration_t){ 0 });
-    if (!engine->physics) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize physics");
-        Audio_destroy(engine->audio);
-        Input_destroy(engine->input);
-        Display_destroy(engine->display);
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
-    }
-
-    engine->environment = Environment_create(argc, argv, engine->display);
+    engine->environment = Environment_create(argc, argv, engine->display, engine->input);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
-        Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
@@ -253,7 +271,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter");
         Environment_destroy(engine->environment);
-        Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
@@ -272,7 +289,6 @@ void Engine_destroy(Engine_t *engine)
 {
     Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
     Environment_destroy(engine->environment);
-    Physics_destroy(engine->physics);
     Audio_destroy(engine->audio);
     Input_destroy(engine->input);
     Display_destroy(engine->display);
@@ -282,7 +298,7 @@ void Engine_destroy(Engine_t *engine)
     free(engine);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "engine freed");
 
-#ifdef DEBUG
+#ifdef STB_LEAKCHECK_INCLUDED
     stb_leakcheck_dumpmem();
 #endif
 }
@@ -291,24 +307,25 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 {
     arrsetlen(events, 0);
 
-#ifdef __DISPLAY_FOCUS_SUPPORT__
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
+
+#ifdef __DISPLAY_FOCUS_SUPPORT__
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-    const Input_State_t *input_state = Input_get_state(engine->input);
-    if (input_state->gamepad.delta > 0) {
-        arrpush(events, "on_gamepad_connected");
-        if (input_state->gamepad.count == 1) {
-            arrpush(events, "on_gamepad_available");
-        }
-    } else
-    if (input_state->gamepad.delta < 0) {
-        arrpush(events, "on_gamepad_disconnected");
-        if (input_state->gamepad.count == 0) {
-            arrpush(events, "on_gamepad_unavailable");
+    if (environment_state->controllers.previous != environment_state->controllers.current) {
+        if (environment_state->controllers.current > environment_state->controllers.previous) {
+            arrpush(events, "on_controller_connected");
+            if (environment_state->controllers.current == 1) {
+                arrpush(events, "on_controller_available");
+            }
+        } else {
+            arrpush(events, "on_controller_disconnected");
+            if (environment_state->controllers.current == 0) {
+                arrpush(events, "on_controller_unavailable");
+            }
         }
     }
 
@@ -326,7 +343,6 @@ void Engine_run(Engine_t *engine)
             engine->input,
             engine->audio,
             engine->environment,
-            engine->physics,
             engine->interpreter,
             NULL
         });
@@ -379,19 +395,18 @@ void Engine_run(Engine_t *engine)
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
+            running = running && Display_update(engine->display, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
             running = running && Audio_update(engine->audio, delta_time);
-            running = running && Physics_update(engine->physics, delta_time);
             running = running && Storage_update(engine->storage, delta_time); // Note: we could update audio/storage one every two steps (or more).
             lag -= delta_time;
         }
 
 //        running = running && Input_update_variable(engine->storage, elapsed);
+//        running = running && Display_update_variable(engine->display, elapsed);
 //        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
-//        running = running && Physics_update_variable(engine->storage, elapsed);
 //        running = running && Storage_update_variable(engine->storage, elapsed);
-        Display_update(engine->display, elapsed);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
         const double update_marker = glfwGetTime();
@@ -406,18 +421,6 @@ void Engine_run(Engine_t *engine)
         const double render_marker = glfwGetTime();
         deltas[2] = (float)(render_marker - update_marker);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-        const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
-        if (record_button->pressed) {
-            Display_toggle_recording(engine->display, Storage_get_local_path(engine->storage));
-        }
-
-        const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
-        if (capture_button->pressed) {
-            Display_grab_snapshot(engine->display, Storage_get_local_path(engine->storage));
-        }
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);

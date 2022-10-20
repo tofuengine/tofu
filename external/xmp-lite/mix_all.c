@@ -100,8 +100,13 @@
     *(buffer++) += smp_in * (old_vl >> 8); old_vl += delta_l; \
 } while (0)
 
+/* IT's WAV output driver uses a clamp that seems to roughly match this:
+ * compare the WAV output of OpenMPT env-flt-max.it and filter-reset.it */
+#define MIX_FILTER_CLAMP(a) CLAMP((a), -65536, 65535)
+
 #define MIX_MONO_FILTER() do { \
     sl = (a0 * smp_in + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
+    MIX_FILTER_CLAMP(sl); \
     fl2 = fl1; fl1 = sl; \
     *(buffer++) += sl * vl; \
 } while (0)
@@ -124,8 +129,10 @@
 
 #define MIX_STEREO_FILTER() do { \
     sr = (a0 * smp_in + b0 * fr1 + b1 * fr2) >> FILTER_SHIFT; \
+    MIX_FILTER_CLAMP(sr); \
     fr2 = fr1; fr1 = sr; \
     sl = (a0 * smp_in + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
+    MIX_FILTER_CLAMP(sl); \
     fl2 = fl1; fl1 = sl; \
     *(buffer++) += sr * vr; \
     *(buffer++) += sl * vl; \
@@ -137,6 +144,16 @@
     MIX_STEREO_FILTER(); \
     old_vr += delta_r; \
     old_vl += delta_l; \
+} while (0)
+
+/* For "nearest" to be nearest neighbor (instead of floor), the position needs
+ * to be rounded. This only needs to be done once at the start of mixing, and
+ * is required for reverse samples to round the same as forward samples.
+ */
+#define NEAREST_ROUND() do { \
+    frac += (1 << (SMIX_SHIFT - 1)); \
+    pos += frac >> SMIX_SHIFT; \
+    frac &= SMIX_MASK; \
 } while (0)
 
 #define VAR_NORM(x) \
@@ -197,6 +214,7 @@
 MIXER(mono_8bit_nearest)
 {
     VAR_NORM(int8_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR(); MIX_MONO(); UPDATE_POS(); }
 }
@@ -207,6 +225,7 @@ MIXER(mono_8bit_nearest)
 MIXER(mono_16bit_nearest)
 {
     VAR_NORM(int16_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR_16BIT(); MIX_MONO(); UPDATE_POS(); }
 }
@@ -216,6 +235,7 @@ MIXER(mono_16bit_nearest)
 MIXER(stereo_8bit_nearest)
 {
     VAR_NORM(int8_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR(); MIX_STEREO(); UPDATE_POS(); }
 }
@@ -225,6 +245,7 @@ MIXER(stereo_8bit_nearest)
 MIXER(stereo_16bit_nearest)
 {
     VAR_NORM(int16_t);
+    NEAREST_ROUND();
 
     LOOP { NEAREST_NEIGHBOR_16BIT(); MIX_STEREO(); UPDATE_POS(); }
 }

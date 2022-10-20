@@ -29,6 +29,14 @@
 #define inline __inline
 #endif
 
+#if (defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))) ||\
+    (defined(_MSC_VER) && (_MSC_VER >= 1400)) || \
+    (defined(__WATCOMC__) && (__WATCOMC__ >= 1250) && !defined(__cplusplus))
+#define LIBXMP_RESTRICT __restrict
+#else
+#define LIBXMP_RESTRICT
+#endif
+
 #if defined(_MSC_VER) ||  defined(__WATCOMC__) || defined(__EMX__)
 #define XMP_MAXPATH _MAX_PATH
 #elif defined(PATH_MAX)
@@ -148,21 +156,26 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #else
 
 #ifdef DEBUG
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define LIBXMP_FUNC __func__
+#else
+#define LIBXMP_FUNC __FUNCTION__
+#endif
   #if defined(_WIN32) || defined(_WIN64)
 	#define D_CRIT "  Error: "
 	#define D_WARN "Warning: "
 	#define D_INFO "   Info: "
 	#define D_(...) do { \
-		printf("[%s:%d] ", \
-			__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\n"); \
+		printf("%s [%s:%d] ", \
+			LIBXMP_FUNC, __FILE__, __LINE__); printf (__VA_ARGS__); printf ("\n"); \
 		} while (0)
   #else
 	#define D_INFO "\x1b[33m"
 	#define D_CRIT "\x1b[31m"
 	#define D_WARN "\x1b[36m"
 	#define D_(...) do { \
-		printf("\x1b[37m[%s:%d]\x1b[0m " D_INFO, \
-			__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
+		printf("\x1b[37m[%s:%d@%s]\x1b[0m " D_INFO, \
+			__FILE__, __LINE__, LIBXMP_FUNC); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
 		} while (0)
   #endif
 #else
@@ -296,6 +309,17 @@ struct smix_data {
 /* This will be added to the sample structure in the next API revision */
 struct extra_sample_data {
 	double c5spd;
+	int sus;
+	int sue;
+};
+
+struct midi_macro {
+	char data[32];
+};
+
+struct midi_macro_data {
+	struct midi_macro param[16];
+	struct midi_macro fixed[128];
 };
 
 struct module_data {
@@ -335,9 +359,7 @@ struct module_data {
 	void *extra;			/* format-specific extra fields */
 	uint8_t **scan_cnt;		/* scan counters */
 	struct extra_sample_data *xtra;
-#ifndef LIBXMP_CORE_DISABLE_IT
-	struct xmp_sample *xsmp;	/* sustain loop samples */
-#endif
+	struct midi_macro_data *midi;
 };
 
 
@@ -435,12 +457,13 @@ struct mixer_data {
 	int mix;		/* percentage of channel separation */
 	int interp;		/* interpolation type */
 	int dsp;		/* dsp effect flags */
-	char* buffer;		/* output buffer */
-	int32_t* buf32;	/* temporary buffer for 32 bit samples */
+	char *buffer;		/* output buffer */
+	int32_t *buf32;	/* temporary buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
+	int bidir_adjust;	/* adjustment for IT bidirectional loops */
 	double pbase;		/* period base */
 };
 

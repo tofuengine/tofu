@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "context.h"
 #include "surface.h"
 
 typedef struct GL_Sheet_s {
@@ -43,11 +44,11 @@ extern void GL_sheet_destroy(GL_Sheet_t *sheet);
 
 extern GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y);
 
-extern void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id);
-extern void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, float scale_x, float scale_y);
-extern void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
+extern void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id);
+extern void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, float scale_x, float scale_y);
+extern void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
 
-extern void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, GL_Point_t offset);
-extern void GL_sheet_tile_s(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, GL_Point_t offset, int scale_x, int scale_y);
+extern void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset);
+extern void GL_sheet_tile_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset, int scale_x, int scale_y);
 
 #endif  /* __GL_SHEET_H__ */

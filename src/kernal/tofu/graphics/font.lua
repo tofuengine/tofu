@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 
 local Font = {}
 
@@ -42,46 +42,12 @@ function Font.default(...)
   local args = { ... }
   if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]
-    return Font.new(Canvas.new(font.file, args[1], args[2]), font.width, font.height)
+    return Font.new(Image.new(font.file, args[1], args[2]), font.width, font.height)
   elseif #args == 3 then -- id, background_color, foreground_color
     local font = FONTS[args[1]]
-    return Font.new(Canvas.new(font.file, args[2], args[3]), font.width, font.height)
+    return Font.new(Image.new(font.file, args[2], args[3]), font.width, font.height)
   else
     error("invalid arguments for default font")
-  end
-end
-
--- Only `canvas`, `x`, `y`, and `text` are required. All the other arguments are optional.
---
--- From the [reference manual](https://www.lua.org/pil/5.1.html)
--- << [...] A function call that is not the last element in the list always produces one
--- result [...] When a function call is the last (or the only) argument to another call,
--- all results from the first call go as arguments. >>
-function Font:write(canvas, x, y, text, h_align, v_align, scale_x, scale_y)
-  local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
-
-  local dx, dy
-  if h_align == "center" then
-    dx = tonumber(width * 0.5)
-  elseif h_align == "right" then
-    dx = width
-  else
-    dx = 0
-  end
-  if v_align == "middle" then
-    dy = tonumber(height * 0.5)
-  elseif v_align == "bottom" then
-    dy = height
-  else
-    dy = 0
-  end
-
-  if scale_y then
-    return self:blit(canvas, x - dx, y - dy, text, scale_x, scale_y)
-  elseif scale_x then
-    return self:blit(canvas, x - dx, y - dy, text, scale_x)
-  else
-    return self:blit(canvas, x - dx, y - dy, text)
   end
 end
 

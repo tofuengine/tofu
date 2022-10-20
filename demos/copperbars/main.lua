@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,12 @@ function Main:__ctor()
   local palette = Palette.default("famicube")
   Display.palette(palette)
 
-  self.font = Font.default(0, 11)
+  local canvas = Canvas.default()
+  local image = canvas:image()
+  local width, _ = image:size()
+  local half_width = width * 0.5
+
+  self.font = Font.default(0, 1)
 
   local step = 255 / SHADES
 
@@ -49,16 +54,16 @@ function Main:__ctor()
   for i = SHADES, 0, -1 do
     local v = step * (SHADES - i)
     program:color(0, v, 0x00, 0x00)
-    program:skip(240, 0)
+    program:skip(half_width, 0) -- Wait half-width on the same raster-line...
     program:color(0, 0x00, 0x00, v)
-    program:skip(-240, 1)
+    program:skip(-half_width, 1) --- ... then rewind back to the beginning of the next line.
   end
   for i = 0, SHADES do
     local v = step * (SHADES - i)
     program:color(0, v, 0x00, v)
-    program:skip(240, 0)
+    program:skip(half_width, 0)
     program:color(0, 0x00, v, 0x00)
-    program:skip(-240, 1)
+    program:skip(-half_width, 1)
   end
   program:color(0, 0x00, 0x00, 0x00)
   self.program = program
@@ -69,7 +74,8 @@ end
 
 function Main:update(_)
   local canvas = Canvas.default()
-  local _, height = canvas:size()
+  local image = canvas:image()
+  local _, height = image:size()
 
   local t = System.time() * 2.5
   local y = math.sin(t) * height * 0.25 + height * 0.5
@@ -80,9 +86,10 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

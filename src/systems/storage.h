@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
@@ -64,22 +65,41 @@ typedef struct Storage_Configuration_s {
     const char *path;
 } Storage_Configuration_t;
 
+typedef struct Storage_Cache_Entry_Value_s {
+    void *data;
+    size_t size;
+} Storage_Cache_Entry_Value_t;
+
+typedef struct Storage_Cache_Entry_s {
+    char *key;
+    Storage_Cache_Entry_Value_t value;
+} Storage_Cache_Entry_t;
+
+typedef struct Storage_Cache_Stream_s {
+    const uint8_t *ptr;
+    size_t size;
+    size_t position;
+} Storage_Cache_Stream_t;
 
 typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
     struct {
-        char base[PLATFORM_PATH_MAX];
-        char user[PLATFORM_PATH_MAX];
+        char base[PLATFORM_PATH_MAX]; // The folder whence the engine is running.
+        char user[PLATFORM_PATH_MAX]; // User-dependent folder, where the engine can save.
         // TODO: add the possibility to save to a shared folder, e.g. for saving hiscores.
         // char shared[PLATFORM_PATH_MAX];
-        char local[PLATFORM_PATH_MAX];
+        char local[PLATFORM_PATH_MAX]; // Identity-derived folder.
     } path;
+
+    Storage_Cache_Entry_t *cache;
 
     FS_Context_t *context;
 
     Storage_Resource_t **resources;
 } Storage_t;
+
+typedef void (*Storage_Scan_Callback_t)(void *user_data, const char *name);
 
 #define S_SCHARS(r)         ((r)->var.string.chars)
 #define S_SLENTGH(r)        ((r)->var.string.length)
@@ -92,11 +112,13 @@ typedef struct Storage_s {
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
-extern bool Storage_set_identity(Storage_t *storage, const char *identity);
+extern void Storage_scan(const Storage_t *storage, Storage_Scan_Callback_t callback, void *user_data);
 
-extern const char *Storage_get_base_path(const Storage_t *storage);
-extern const char *Storage_get_user_path(const Storage_t *storage);
-extern const char *Storage_get_local_path(const Storage_t *storage);
+extern bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
+extern bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
+extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
+
+extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);

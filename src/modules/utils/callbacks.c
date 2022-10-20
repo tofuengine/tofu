@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 #include "callbacks.h"
 
 #include <config.h>
+#include <libs/stb.h>
 
 #pragma pack(push, 1)
 typedef struct rgba_s {
@@ -45,6 +46,12 @@ typedef struct rgba_s {
 void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    struct {
+        GL_Color_t key;
+        GL_Pixel_t value;
+    } *cache = NULL; // Stores past executed colors matches.
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
     const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data;
@@ -55,9 +62,27 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
             *(dst++) = closure->transparent;
         } else {
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
-            *(dst++) = GL_palette_find_nearest_color(closure->palette, color);
+
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+            const int position = hmgeti(cache, color);
+            if (position != -1) {
+                const GL_Pixel_t index = cache[position].value;
+                *(dst++) = index;
+                continue;
+            }
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+
+            const GL_Pixel_t index = GL_palette_find_nearest_color(closure->palette, color);
+            *(dst++) = index;
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+            hmput(cache, color, index);
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
         }
     }
+
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    hmfree(cache);
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)

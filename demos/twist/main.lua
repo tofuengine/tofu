@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
 
 local Main = Class.define()
@@ -34,9 +35,10 @@ function Main:__ctor()
   --Display.palette(Palette.default("pico-8"))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 8, 8)
+  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(0, 255)
 
   local cw, ch = self.bank:size(Bank.NIL)
@@ -52,8 +54,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
-  canvas:clear()
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(0)
 
   local time = System.time() * 7.5
 
@@ -63,11 +66,11 @@ function Main:render(_)
   for row = 1, self.rows do
 --    local cell_id = math.tointeger((math.sin(time + row * 0.5) + 1) * 0.5 * 9)
     local cell_id = ((math.sin(time * 0.5 + row * 0.75) + 1) * 0.5) * 9
-    self.bank:blit(canvas, x, y, cell_id)
+    canvas:sprite(x, y, self.bank, cell_id)
     y = y + ch
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

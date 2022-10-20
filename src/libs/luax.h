@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -125,6 +125,8 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
     #define LUAX_OPTIONAL_INTEGER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_UNSIGNED(L, idx)                (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : (lua_Unsigned)lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_UNSIGNED(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : (lua_Unsigned)lua_tointeger((L), (idx)))
     #define LUAX_NUMBER(L, idx)                  (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0.0f : lua_tonumber((L), (idx)))
     #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                  (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
@@ -142,6 +144,8 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                 (lua_tointeger((L), (idx)))
     #define LUAX_OPTIONAL_INTEGER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_UNSIGNED(L, idx)                ((lua_Unsigned)lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_UNSIGNED(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : (lua_Unsigned)lua_tointeger((L), (idx)))
     #define LUAX_NUMBER(L, idx)                  (lua_tonumber((L), (idx)))
     #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                  (lua_tostring((L), (idx)))
@@ -175,6 +179,7 @@ extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf,
 
 extern luaX_Reference luaX_ref(lua_State *L, int idx);
 extern void luaX_unref(lua_State *L, luaX_Reference ref);
+extern int luaX_pushref(lua_State *L, luaX_Reference ref);
 
 extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[]);
 

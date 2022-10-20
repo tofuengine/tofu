@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 #include "file.h"
 
 #include <config.h>
-#include <libs/luax.h>
 #include <systems/storage.h>
 
 #include "udt.h"
@@ -36,7 +35,8 @@ static int file_store_2ss_0(lua_State *L);
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "load", file_load_1s_1s },
             { "store", file_store_2ss_0 },

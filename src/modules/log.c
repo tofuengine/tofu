@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 #include <libs/path.h>
 #include <systems/storage.h>
 
@@ -49,7 +48,8 @@ int log_loader(lua_State *L)
     Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
 
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){
+    return luaX_newmodule(L,
+        (luaX_Script){
             .data = S_SCHARS(script),
             .size = S_SLENTGH(script),
             .name = file

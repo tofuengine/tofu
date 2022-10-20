@@ -84,9 +84,9 @@ static const uint8_t fx[32] = {
 	/* W */ FX_GVOL_SLIDE,
 	/* X */ FX_SETPAN,
 	/* Y */ FX_PANBRELLO,
-	/* Z */ FX_FLT_CUTOFF,
+	/* Z */ FX_MACRO,
 	/* ? */ FX_NONE,
-	/* ? */ FX_NONE,
+	/* / */ FX_MACROSMOOTH,
 	/* ? */ FX_NONE,
 	/* ? */ FX_NONE,
 	/* ? */ FX_NONE
@@ -140,9 +140,16 @@ static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
 			e->fxt = FX_SETPAN;
 			e->fxp = l << 4;
 			break;
-		case 0x9:	/* 0x91 = set surround */
-			e->fxt = FX_SURROUND;
-			e->fxp = l;
+		case 0x9:
+			if (l == 0 || l == 1) {
+				/* 0x91 = set surround */
+				e->fxt = FX_SURROUND;
+				e->fxp = l;
+			} else if (l == 0xe || l == 0xf) {
+				/* 0x9f Play reverse (MPT) */
+				e->fxt = FX_REVERSE;
+				e->fxp = l - 0xe;
+			}
 			break;
 		case 0xa:	/* High offset */
 			e->fxt = FX_HIOFFSET;
@@ -161,16 +168,12 @@ static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
 			e->fxt = FX_IT_ROWDELAY;
 			e->fxp = l;
 			break;
+		case 0xf:	/* Set parametered macro */
+			e->fxt = FX_MACRO_SET;
+			e->fxp = l;
+			break;
 		default:
 			e->fxt = e->fxp = 0;
-		}
-		break;
-	case FX_FLT_CUTOFF:
-		if (e->fxp > 0x7f && e->fxp < 0x90) {	/* Resonance */
-			e->fxt = FX_FLT_RESN;
-			e->fxp = (e->fxp - 0x80) * 16;
-		} else {	/* Cutoff */
-			e->fxp *= 2;
 		}
 		break;
 	case FX_TREMOR:
@@ -250,6 +253,34 @@ static void fix_name(uint8_t *s, int l)
 	for (i--; i >= 0 && s[i] == ' '; i--) {
 		s[i] = 0;
 	}
+}
+
+
+static int load_it_midi_config(struct module_data *m, HIO_HANDLE *f)
+{
+	int i;
+
+	m->midi = (struct midi_macro_data *) calloc(1, sizeof(struct midi_macro_data));
+	if (m->midi == NULL)
+		return -1;
+
+	/* Skip global MIDI macros */
+	if (hio_seek(f, 9 * 32, SEEK_CUR) < 0)
+		return -1;
+
+	/* SFx macros */
+	for (i = 0; i < 16; i++) {
+		if (hio_read(m->midi->param[i].data, 1, 32, f) < 32)
+			return -1;
+		m->midi->param[i].data[31] = '\0';
+	}
+	/* Zxx macros */
+	for (i = 0; i < 128; i++) {
+		if (hio_read(m->midi->fixed[i].data, 1, 32, f) < 32)
+			return -1;
+		m->midi->fixed[i].data[31] = '\0';
+	}
+	return 0;
 }
 
 
@@ -598,7 +629,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	return 0;
 }
 
-static void force_sample_length(struct xmp_sample *xxs, int len)
+static void force_sample_length(struct xmp_sample *xxs, struct extra_sample_data *xtra, int len)
 {
 	xxs->len = len;
 
@@ -607,6 +638,14 @@ static void force_sample_length(struct xmp_sample *xxs, int len)
 
 	if (xxs->lps >= xxs->len)
 		xxs->flg &= ~XMP_SAMPLE_LOOP;
+
+	if (xtra) {
+		if (xtra->sue > xxs->len)
+			xtra->sue = xxs->len;
+
+		if(xtra->sus >= xxs->len)
+			xxs->flg &= ~(XMP_SAMPLE_SLOOP | XMP_SAMPLE_SLOOP_BIDIR);
+	}
 }
 
 static int load_it_sample(struct module_data *m, int i, int start,
@@ -614,7 +653,8 @@ static int load_it_sample(struct module_data *m, int i, int start,
 {
 	struct it_sample_header ish;
 	struct xmp_module *mod = &m->mod;
-	struct xmp_sample *xxs, *xsmp;
+	struct extra_sample_data *xtra;
+	struct xmp_sample *xxs;
 	int j, k;
 	uint8_t buf[80];
 
@@ -638,7 +678,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	}
 
 	xxs = &mod->xxs[i];
-	xsmp = &m->xsmp[i];
+	xtra = &m->xtra[i];
 
 	memcpy(ish.dosname, buf + 4, 12);
 	ish.zero = buf[16];
@@ -676,14 +716,8 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	xxs->flg |= ish.flags & IT_SMP_BSLOOP ? XMP_SAMPLE_SLOOP_BIDIR : 0;
 
 	if (ish.flags & IT_SMP_SLOOP) {
-		memcpy(xsmp, xxs, sizeof (struct xmp_sample));
-		xsmp->lps = ish.sloopbeg;
-		xsmp->lpe = ish.sloopend;
-		xsmp->flg |= XMP_SAMPLE_LOOP;
-		xsmp->flg &= ~XMP_SAMPLE_LOOP_BIDIR;
-		if (ish.flags & IT_SMP_BSLOOP) {
-			xsmp->flg |= XMP_SAMPLE_LOOP_BIDIR;
-		}
+		xtra->sus = ish.sloopbeg;
+		xtra->sue = ish.sloopend;
 	}
 
 	if (sample_mode) {
@@ -783,9 +817,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				   "resizing to %ld",
 				   i, xxs->len, min_size, left, left << 3);
 
-				force_sample_length(xxs, left << 3);
-				if (ish.flags & IT_SMP_SLOOP)
-					force_sample_length(xsmp, left << 3);
+				force_sample_length(xxs, xtra, left << 3);
 			}
 
 			decbuf = malloc(xxs->len * 2);
@@ -807,21 +839,6 @@ static int load_it_sample(struct module_data *m, int i, int start,
 						  ish.convert & IT_CVT_DIFF);
 			}
 
-			if (ish.flags & IT_SMP_SLOOP) {
-				long pos = hio_tell(f);
-				if (pos < 0) {
-					free(decbuf);
-					return -1;
-				}
-				ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD |
-							cvt, &m->xsmp[i], decbuf);
-				if (ret < 0) {
-					free(decbuf);
-					return -1;
-				}
-				hio_seek(f, pos, SEEK_SET);
-			}
-
 			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], decbuf);
 			if (ret < 0) {
@@ -831,16 +848,6 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 			free(decbuf);
 		} else {
-			if (ish.flags & IT_SMP_SLOOP) {
-				long pos = hio_tell(f);
-				if (pos < 0) {
-					return -1;
-				}
-				if (libxmp_load_sample(m, f, cvt, &m->xsmp[i], NULL) < 0)
-					return -1;
-				hio_seek(f, pos, SEEK_SET);
-			}
-
 			if (libxmp_load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
 				return -1;
 		}
@@ -1113,6 +1120,17 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++)
 		pp_pat[i] = hio_read32l(f);
 
+	if ((ifh.flags & IT_MIDI_CONFIG) || (ifh.special & IT_SPEC_MIDICFG)) {
+		/* Skip edit history if it exists. */
+		if (ifh.special & IT_EDIT_HISTORY) {
+			int skip = hio_read16l(f) * 8;
+			if (hio_error(f) || (skip && hio_seek(f, skip, SEEK_CUR) < 0))
+				goto err3;
+		}
+		if (load_it_midi_config(m, f) < 0)
+			goto err3;
+	}
+
 	m->c4rate = C4_NTSC_RATE;
 
 	identify_tracker(m, &ifh);
@@ -1128,14 +1146,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (libxmp_init_instrument(m) < 0)
 		goto err4;
-
-	/* Alloc extra samples for sustain loop */
-	if (mod->smp > 0) {
-		m->xsmp = (struct xmp_sample *)calloc(mod->smp, sizeof(struct xmp_sample));
-		if (m->xsmp == NULL) {
-			goto err4;
-		}
-	}
 
 	D_(D_INFO "# of instruments: %d", mod->ins);
 

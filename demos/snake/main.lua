@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,12 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Log = require("tofu.core.log")
 local System = require("tofu.core.system")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Source = require("tofu.sound.source")
 local Grid = require("tofu.util.grid")
 
@@ -90,7 +89,8 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.font = Font.default(palette:match(0, 0, 0), palette:match(255, 255, 255))
   self.grid = Grid.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
@@ -122,8 +122,10 @@ function Main:reset()
 end
 
 function Main:process()
+  local controller = Controller.default()
+
   if self.state == "game-over" then
-    if Input.is_pressed("start") then
+    if controller:is_pressed("start") then
       self:reset()
     end
     return
@@ -132,22 +134,22 @@ function Main:process()
   if not self.can_move then
     return
   end
-  if Input.is_pressed("up") then
+  if controller:is_pressed("up") then
     if self.direction ~= "down" then
       self.direction = "up"
       self.can_move = false
     end
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     if self.direction ~= "up" then
       self.direction = "down"
       self.can_move = false
     end
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     if self.direction ~= "right" then
       self.direction = "left"
       self.can_move = false
     end
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     if self.direction ~= "left" then
       self.direction = "right"
       self.can_move = false
@@ -199,9 +201,7 @@ function Main:update(delta_time)
       self.sources["eat"].instance:play()
       self.length = self.length + 1
       self:generate_food()
-    elseif value == 0 then
-      self.sources["blip"].instance:play()
-    else
+    elseif value ~= 0 then
       self.sources["hit"].instance:play()
       self.state = "game-over"
       break
@@ -215,8 +215,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
-  canvas:clear()
+  local image = canvas:image()
+  local width, height = image:size()
+  image:clear(0)
 
   self.grid:scan(function(column, row, value)
       local x = column * CELL_SIZE
@@ -232,15 +233,15 @@ function Main:render(_)
 
     if self.state == "game-over" then
       local points <const> = (self.length - INITIAL_LENGTH) * 10
-      self.font:write(canvas, width * 0.5, height * 0.25,
+      canvas:write(width * 0.5, height * 0.25, self.font,
         "GAME OVER", "center", "middle", 4, 4)
-      self.font:write(canvas, width * 0.5, height * 0.50,
+      canvas:write(width * 0.5, height * 0.50, self.font,
         string.format("Your final score is %d", points), "center", "middle", 2, 2)
-      self.font:write(canvas, width * 0.5, height * 0.75,
+      canvas:write(width * 0.5, height * 0.75, self.font,
         "-- press start --", "center", "middle", 2, 2)
     end
 
-    self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+    canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

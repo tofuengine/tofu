@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Display = require("tofu.graphics.display")
 local Canvas = require("tofu.graphics.canvas")
 local Font = require("tofu.graphics.font")
@@ -60,18 +60,20 @@ function Main:__ctor()
 end
 
 function Main:process()
+  local controller <const> = Controller.default()
+
   self.dx = 0
   self.dy = 0
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.dx = self.dx - 1
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     self.dx = self.dx + 1
   end
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     self.dy = self.dy - 1
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     self.dy = self.dy + 1
   end
 end
@@ -104,7 +106,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(0)
   self.map:draw(canvas)
 
   local camera = self.map:camera_from_id("right")

@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Program = require("tofu.graphics.program")
 local Font = require("tofu.graphics.font")
@@ -32,12 +32,11 @@ local Timer = require("tofu.timers.timer")
 
 local Background = Class.define()
 
-function Background:__ctor(canvas, transparent, palette)
-  local _, height = canvas:size()
+function Background:__ctor(_, height, transparent, palette)
   local half_height = height // 2
   local quarter_height = height // 4
 
-  self.font = Font.new(Canvas.new("assets/images/font-8x8.png", transparent, palette:match(255, 255, 255)),
+  self.font = Font.new(Image.new("assets/images/font-8x8.png", transparent, palette:match(255, 255, 255)),
       8, 8)
 
   self.timer = Timer.new(10, 0, function(_)
@@ -85,9 +84,9 @@ function Background:render(canvas)
   end
   self.canvas:pop()
 --]]
-  local width, _ = canvas:size()
+  local width, _ = canvas:image():size()
 
-  self.font:write(canvas, width, 0, string.format("%d FPS", System.fps()), "right", "top")
+  canvas:write(width, 0, self.font, string.format("%d FPS", System.fps()), "right", "top")
 --  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
 end
 

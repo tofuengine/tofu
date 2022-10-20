@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,14 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Controller = require("tofu.input.controller")
+local Cursor = require("tofu.input.cursor")
 
 local Main = Class.define()
 
@@ -50,22 +52,18 @@ local INDICES <const> = {
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  local canvas = Canvas.default()
-
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 12, 12)
+  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 12, 12)
   self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
-
-  Input.auto_repeat("x", 0.25)
-  Input.auto_repeat("y", 0.5)
-  Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!
 end
 
 function Main:process()
+  local controller = Controller.default()
+
   for _, id in ipairs(IDS) do
-    self.down[id] = Input.is_down(id)
-    if Input.is_pressed(id) then
+    self.down[id] = controller:is_down(id)
+    if controller:is_pressed(id) then
       self.scale[id] = 3.0
     end
   end
@@ -101,10 +99,11 @@ function Main:render(_)
   local t = System.time()
 
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
   local cw, ch = self.bank:size(Bank.NIL)
-  local width, height = canvas:size()
+  local width, height = image:size()
 
   local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5
   for index, id in ipairs(IDS) do
@@ -119,27 +118,29 @@ function Main:render(_)
       ox = (cw * s - cw) * 0.5
       oy = (ch * s - ch) * 0.5
     end
-    self.bank:blit(canvas, x - ox, y - oy + dy, INDICES[index], s, s)
+    canvas:sprite(x - ox, y - oy + dy, self.bank, INDICES[index], s, s)
     x = x + cw
   end
 
+  local controller = Controller.default()
   local cy = height * 0.5
-  local lx, ly, la, lm = Input.stick("left")
-  local rx, ry, ra, rm = Input.stick("right")
-  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
-  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
-  local tl, tr = Input.triggers()
+  local lx, ly, la, lm = controller:stick("left")
+  local rx, ry, ra, rm = controller:stick("right")
+  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, controller:is_down("lt"))
+  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, controller:is_down("rt"))
+  local tl, tr = controller:triggers()
   draw_trigger(canvas, 24, cy + 12, 8, tl)
   draw_trigger(canvas, 232, cy + 12, 8, tr)
 
-  local mx, my = Input.cursor()
+  local cursor = Cursor.default()
+  local mx, my = cursor:position()
   canvas:line(mx - 3, my, mx - 1, my, 2)
   canvas:line(mx + 1, my, mx + 3, my, 2)
   canvas:line(mx, my - 3, mx, my - 1, 2)
   canvas:line(mx, my + 1, mx, my + 3, 2)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, height, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, height, self.font, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
     "right", "bottom")
 end
 

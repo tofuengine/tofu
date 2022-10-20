@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,8 @@ function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.timerA = Timer.new(0.5, 50, function()
       --local o = Object.new()
@@ -61,7 +62,9 @@ end
 function Main:render(_)
   --local x = X.new()
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
+
   canvas:circle("fill", self.x, self.y, 5, 15)
 end
 

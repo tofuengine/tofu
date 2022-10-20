@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 #include <systems/audio.h>
 
 #include "udt.h"
@@ -43,7 +42,8 @@ static int speakers_halt_0_0(lua_State *L);
 int speakers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "volume", speakers_volume_v_v },
             { "mix", speakers_mix_v_v },
@@ -98,7 +98,7 @@ static int speakers_mix_1n_4nnnn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
 
     const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -121,7 +121,7 @@ static int speakers_mix_5nnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float left_to_left = LUAX_NUMBER(L, 2);
     float left_to_right = LUAX_NUMBER(L, 3);
     float right_to_left = LUAX_NUMBER(L, 4);
@@ -154,7 +154,7 @@ static int speakers_pan_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float pan = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -171,7 +171,7 @@ static int speakers_balance_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float balance = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -187,7 +187,7 @@ static int speakers_gain_1n_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
 
     const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -202,7 +202,7 @@ static int speakers_gain_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = LUAX_UNSIGNED(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,6 @@
 #include <config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/luax.h>
 
 #include "utils/map.h"
 #include "udt.h"
@@ -45,7 +44,8 @@ static int tweener_evaluate_2on_1n(lua_State *L);
 int tweener_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L,
+        (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "new", tweener_new_4sNNN_1o },
             { "__gc", tweener_gc_1o_0 },

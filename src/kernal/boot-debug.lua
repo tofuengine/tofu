@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,15 +25,12 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Log = require("tofu.core.log")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 local Speakers = require("tofu.sound.speakers")
 local Pool = require("tofu.timers.pool")
-
-local Main = require("main")
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
@@ -42,6 +39,7 @@ function Tofu:__ctor()
     -- TODO: add an "splash" state that emulates Amiga's boot.
     ["normal"] = {
       enter = function(me)
+          local Main = require("main") -- Lazy require, to trap and display errors in the constructor!
           me.main = Main.new()
         end,
       leave = function(me)
@@ -77,7 +75,7 @@ function Tofu:__ctor()
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
-          local width, _ = canvas:size()
+          local width, _ = canvas:image():size()
 
           local title = {
               "Software Failure.",
@@ -115,19 +113,16 @@ function Tofu:__ctor()
           me.font = nil
         end,
       process = function(_, _)
-          if Input.is_pressed("start") then
-            System.quit()
-          end
         end,
       update = function(_, _)
         end,
       render = function(me, _)
           local on = (math.floor(System.time()) % 2) == 0
           local canvas = Canvas.default()
-          canvas:clear()
+          canvas:image():clear(0)
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
           for _, line in ipairs(me.lines) do
-            me.font:write(canvas, line.x, line.y, line.text)
+            canvas:write(line.x, line.y, me.font, line.text)
           end
         end
     }

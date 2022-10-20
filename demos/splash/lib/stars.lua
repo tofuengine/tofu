@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local Bank = require("tofu.graphics.bank")
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Timer = require("tofu.timers.timer")
 local Arrays = require("tofu.util.arrays")
 
@@ -36,13 +36,11 @@ local MAX_STARS_COUNT = 32
 
 local Stars = Class.define()
 
-function Stars:__ctor(canvas, transparent, _)
-  local width, height = canvas:size()
-
+function Stars:__ctor(width, height, transparent, _)
   local area = { x0 = 0, y0 = 0, x1 = width - 1, y1 = height - 1 }
 
   self.pool = {}
-  self.bank = Bank.new(Canvas.new("assets/images/atlas.png", transparent), STAR_WIDTH, STAR_HEIGHT)
+  self.bank = Bank.new(Image.new("assets/images/atlas.png", transparent), STAR_WIDTH, STAR_HEIGHT)
   self.timer = Timer.new(0.5, 0, function(_)
       if #self.pool >= MAX_STARS_COUNT then
         return
@@ -82,7 +80,7 @@ end
 
 function Stars:render(canvas)
   for _, star in ipairs(self.pool) do
-    self.bank:blit(canvas, star.x, star.y, star.cell_id, star.scale, star.scale, star.rotation)
+    canvas:sprite(star.x, star.y, self.bank, star.cell_id, star.scale, star.scale, star.rotation)
   end
 end
 

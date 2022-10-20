@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
@@ -45,7 +45,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:transparent(0, false)
 
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
   self.m = Vector.new(width - 1, height - 1)
   self.c = Vector.new(self.m)
   self.c:scale(0.5)
@@ -66,7 +67,8 @@ function Main:on_focus_lost()
 end
 
 function Main:process()
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     self.fan = not self.fan
   end
 end
@@ -113,7 +115,7 @@ function Main:render(_)
     end
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

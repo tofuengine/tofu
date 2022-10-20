@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -79,7 +79,7 @@ function Sprite:render(canvas)
   for id = self.from, self.to, self.step do
     local i = math.abs((id - self.from)) * self.scale
     for j = i, i + self.scale - 1 do
-      self.bank:blit(canvas, x, y - j, id, self.scale, self.scale, rotation)
+      canvas:sprite(x, y - j, self.bank, id, self.scale, self.scale, rotation)
     end
   end
 

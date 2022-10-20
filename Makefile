@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2019-2021 Marco Lizza
+# Copyright (c) 2019-2022 Marco Lizza
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -55,9 +55,6 @@ endif
 
 KERNAL=kernal.pak
 
-# CppCheck
-# 	cppcheck --force --enable=all $(srcdir) > /dev/null
-
 PACKER=$(extrasdir)/pakgen.lua
 PACKERFLAGS=--encrypted
 
@@ -98,12 +95,12 @@ CWARNINGS=-std=c99 \
 
 CFLAGS=-D_DEFAULT_SOURCE \
 	-DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor \
-	-DGIF_FLIP_VERT \
 	-DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
 	-DDR_FLAC_NO_STDIO \
 	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION \
 	-DLIBXMP_BUILDING_STATIC \
-	-I$(srcdir) -I$(externaldir)
+	-I$(srcdir) \
+	-I$(externaldir)
 ifneq ($(PLATFORM),windows)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
@@ -119,8 +116,10 @@ ifeq ($(BUILD),release)
 	COPTS=-O3 -ffast-math -DNDEBUG -fomit-frame-pointer
 else ifeq ($(BUILD),profile)
 	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DPROFILE -pg
-else ifeq ($(BUILD),sanitize)
-	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -fsanitize=address -fno-omit-frame-pointer
+else ifeq ($(BUILD),sanitize-address)
+	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DSANITIZE -fsanitize=address -fno-omit-frame-pointer
+else ifeq ($(BUILD),sanitize-leak)
+	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DSANITIZE -fsanitize=leak -fno-omit-frame-pointer
 else
 #	COPTS=-Og -ggdb3 -DDEBUG
 #	COPTS=-O0 -ggdb3 -DDEBUG
@@ -135,6 +134,8 @@ LINKER=$(COMPILER)
 
 ifeq ($(PLATFORM),windows)
 	LFLAGS=-lgdi32 -lpsapi
+else ifeq ($(PLATFORM),rpi)
+	LFLAGS=-lm -lpthread -lX11 -ldl -latomic
 else
 	LFLAGS=-lm -lpthread -lX11 -ldl
 endif
@@ -145,8 +146,10 @@ ifeq ($(BUILD),release)
 	LOPTS=-fomit-frame-pointer
 else ifeq ($(BUILD),profile)
 	LOPTS=-pg
-else ifeq ($(BUILD),sanitize)
+else ifeq ($(BUILD),sanitize-address)
 	LOPTS=-fsanitize=address -fno-omit-frame-pointer
+else ifeq ($(BUILD),sanitize-leak)
+	LOPTS=-fsanitize=leak -fno-omit-frame-pointer
 else
 	LOPTS=
 endif
@@ -163,12 +166,10 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/libs/sl/*.c) \
 	$(wildcard $(srcdir)/modules/*.c) \
 	$(wildcard $(srcdir)/modules/utils/*.c) \
-	$(wildcard $(srcdir)/resources/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
 	$(wildcard $(srcdir)/utils/*.c)
 # Source files list (external)
 SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
-	$(wildcard $(externaldir)/gif-h/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
 	$(wildcard $(externaldir)/lua/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
@@ -184,12 +185,10 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/libs/sl/*.h) \
 	$(wildcard $(srcdir)/modules/*.h) \
 	$(wildcard $(srcdir)/modules/utils/*.h) \
-	$(wildcard $(srcdir)/resources/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
 	$(wildcard $(srcdir)/utils/*.h)
 # Include files list (external)
 INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
-	$(wildcard $(externaldir)/gif-h/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
@@ -232,6 +231,7 @@ all: engine
 .PHONY: check
 check:
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
+	@cppcheck --force --enable=all $(srcdir) > /dev/null
 	@echo "Checking complete!"
 
 engine: $(builddir) $(builddir)/$(TARGET) $(builddir)/$(KERNAL)
@@ -425,6 +425,16 @@ copperbars: engine
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/copperbars
 	@$(builddir)/$(TARGET) --path=./demos/copperbars
 
+scroller: engine
+	@echo "Launching *scroller* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/scroller
+	@$(builddir)/$(TARGET) --path=./demos/scroller
+
+cellular: engine
+	@echo "Launching *cellular* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/cellular
+	@$(builddir)/$(TARGET) --path=./demos/cellular
+
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
@@ -434,7 +444,7 @@ demo: engine
 valgrind: engine
 	@echo "Valgrind *$(DEMO)* application!"
 	@export LIBGL_ALWAYS_SOFTWARE=1
-	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) ./demos/$(DEMO)
+	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --path=./demos/$(DEMO)
 	@export LIBGL_ALWAYS_SOFTWARE=0
 
 .PHONY: clean

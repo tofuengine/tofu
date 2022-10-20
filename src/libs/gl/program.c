@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -120,6 +120,14 @@ void GL_program_clear(GL_Program_t *program)
     arrpush(program->entries, end_of_data);
 }
 
+void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
+{
+    arrdeln(program->entries, position, length);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#endif  /* VERBOSE_DEBUG */
+}
+
 void GL_program_nop(GL_Program_t *program, int position)
 {
     program->entries = _insert(program->entries, position,
@@ -132,10 +140,10 @@ void GL_program_wait(GL_Program_t *program, int position, size_t x, size_t y)
             (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = x }, { .size = y } } });
 }
 
-void GL_program_skip(GL_Program_t *program, int position, size_t delta_x, size_t delta_y)
+void GL_program_skip(GL_Program_t *program, int position, int delta_x, int delta_y)
 {
     program->entries = _insert(program->entries, position,
-            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_SKIP, .args = { { .size = delta_x }, { .size = delta_y} } });
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_SKIP, .args = { { .integer = delta_x }, { .integer = delta_y} } });
 }
 
 void GL_program_modulo(GL_Program_t *program, int position, int amount)

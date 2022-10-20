@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local Bank = require("tofu.graphics.bank")
-local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Arrays = require("tofu.util.arrays")
 
@@ -116,7 +116,7 @@ end
 
 function Scene:__ctor(camera, palette, index)
   self.camera = camera
-  self.bank = Bank.new(Canvas.new("assets/texture.png", index), "assets/texture.sheet")
+  self.bank = Bank.new(Image.new("assets/texture.png", index), "assets/texture.sheet")
   self.font = nil
 
   self.lut = _build_table(palette, FOG_LEVELS, FOG_COLOR, { index })
@@ -251,11 +251,11 @@ local function _draw_entity(canvas, entity, bank, font)
   if DEBUG then
     canvas:rectangle('line', entity.sx, entity.y, entity.width, entity.height, 15)
   end
-  bank:blit(canvas, entity.sx, entity.sy, entity.cell_id, entity.scale, entity.scale)
+  canvas:sprite(entity.sx, entity.sy, bank, entity.cell_id, entity.scale, entity.scale)
   if DEBUG then
-    font:write(canvas, entity.sx, entity.sy - 8,
+    canvas:write(entity.sx, entity.sy - 8, font,
       string.format("%.3f %.3f %.3f", entity.x, entity.y, entity.z), "center", "middle")
-    font:write(canvas, entity.sx, entity.sy,
+    canvas:write(entity.sx, entity.sy, font,
       string.format("%.3f %.3f %.3f", entity.px, entity.py, entity.pz), "center", "middle")
   end
 end

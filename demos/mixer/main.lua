@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,23 +24,19 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
+local Storage = require("tofu.io.storage")
 local Source = require("tofu.sound.source")
 
 local Main = Class.define()
 
 local SOURCES <const> = {
-  { name = "assets/1ch-22050-16.flac", type = "sample" },
-  { name = "assets/2ch-48000-16.flac", type = "music" },
-  { name = "assets/last_ninja_3.it", type = "module" },
-  { name = "assets/c64_operationwolf.mod", type = "module" },
-  { name = "assets/nightbeat-turrican_ii_theme.s3m", type = "module" },
-  --{ name = "assets/db_ab.xm", type = "module" },
-  { name = "assets/turrican_iii.xm", type = "module" },
+  { name = "assets/flac/1ch-22050-16.flac", type = "sample" },
+  { name = "assets/flac/2ch-48000-16.flac", type = "music" }
 }
 
 function Main:__ctor()
@@ -56,6 +52,12 @@ function Main:__ctor()
     local instance = Source.new(source.name, source.type)
     table.insert(self.sources, { instance = instance, pan = 0.0, balance = 0.0 })
   end
+  Storage.scan(function(name)
+    if name:find("^assets/mods/") then
+      local instance = Source.new(name, "module")
+      table.insert(self.sources, { instance = instance, pan = 0.0, balance = 0.0 })
+    end
+  end)
 
   self.sources[2].instance:looped(true)
   self.sources[3].instance:looped(true)
@@ -68,7 +70,8 @@ end
 local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
 function Main:process()
-  if Input.is_pressed("a") then
+  local controller = Controller.default()
+  if controller:is_pressed("a") then
     local source = self.sources[self.current]
     if self.property == 1 then
       source.instance:play()
@@ -80,7 +83,7 @@ function Main:process()
       local ll, lr, rl, rr = source.instance:mix()
       source.instance:mix(lr, ll, rr, rl)
     end
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     local source = self.sources[self.current]
     if self.property == 4 then
       local gain = source.instance:gain()
@@ -92,7 +95,7 @@ function Main:process()
       source.balance = math.max(-1.0, source.balance - 0.05)
       source.instance:balance(source.balance)
     end
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     local source = self.sources[self.current]
     if self.property == 4 then
       local gain = source.instance:gain()
@@ -104,13 +107,13 @@ function Main:process()
       source.balance = math.min(1.0, source.balance + 0.05)
       source.instance:balance(source.balance)
     end
-  elseif Input.is_pressed("up") then
+  elseif controller:is_pressed("up") then
     self.current = math.max(self.current - 1, 1)
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.current = math.min(self.current + 1, #self.sources)
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.property = math.max(self.property - 1, 1)
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.property = math.min(self.property + 1, #PROPERTIES)
   end
 end
@@ -120,9 +123,10 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
-  local width, height = canvas:size()
+  local width, height = image:size()
 
   local x, y = 0, 0
   for index, source in ipairs(self.sources) do
@@ -130,11 +134,11 @@ function Main:render(_)
         self.current == index and "*" or " ",
         source.instance:is_playing() and "!" or " ",
         source.pan, source.instance:gain())
-    local _, th = self.font:write(canvas, x, y, text)
+    local _, th = canvas:write(x, y, self.font, text)
     y = y + th
   end
-  self.font:write(canvas, x, y, PROPERTIES[self.property])
-  self.font:write(canvas, width, height, System.fps(), "right", "bottom")
+  canvas:write(x, y, self.font, PROPERTIES[self.property])
+  canvas:write(width, height, self.font, System.fps(), "right", "bottom")
 end
 
 return Main

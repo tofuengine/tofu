@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.controller:controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
@@ -54,12 +54,6 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  local a = Palette.default("gameboy")
-  local b = Palette.default("pico-8-ext")
-  local c = Palette.default("pico-8-ext")
-  a:merge(b)
-  b:merge(c)
-
   PALETTE = Palette.new(3, 3, 2) --"famicube")
   STEPS = PALETTE:size()
   LEVELS = STEPS
@@ -67,7 +61,8 @@ function Main:__ctor()
   Display.palette(PALETTE)
 
   local canvas = Canvas.default()
-  local width, height = canvas:size()
+  local image = canvas:image()
+  local width, height = image:size()
 
   self.lut = build_table(PALETTE, LEVELS, TARGET)
   self.font = Font.default(0, PALETTE:match(0, 255, 0))
@@ -77,7 +72,8 @@ function Main:__ctor()
 end
 
 function Main:process()
-  if Input.is_pressed("y") then
+  local controller = Controller.default()
+  if controller:is_pressed("y") then
     self.mode = (self.mode + 1) % 10
   end
 end
@@ -87,8 +83,9 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, height = canvas:size()
-  canvas:clear()
+  local image = canvas:image()
+  local width, height = image:size()
+  image:clear(0)
 
   for i = 0, STEPS - 1 do
     local y = self.height * i
@@ -104,23 +101,23 @@ function Main:render(_)
     for i = 0, STEPS - 1 do
       local y = self.height * i
       canvas:shift(self.lut[i])
-      canvas:blit(0, y, canvas, 0, y, width, self.height)
+      canvas:blit(0, y, image, 0, y, width, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
       canvas:shift(self.lut[i])
-      canvas:blit(i, 0, canvas, i, 0, 1, height)
-      canvas:blit(width - 1 - i, 0, canvas, width - 1 - i, 0, 1, height)
+      canvas:blit(i, 0, image, i, 0, 1, height)
+      canvas:blit(width - 1 - i, 0, image, width - 1 - i, 0, 1, height)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     canvas:shift(self.lut[index])
-    canvas:blit(0, 0, canvas, 0, 0, width, height / 2)
+    canvas:blit(0, 0, image, 0, 0, width, height / 2)
   end
   canvas:pop()
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

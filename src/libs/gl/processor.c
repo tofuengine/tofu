@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,83 +22,110 @@
  * SOFTWARE.
  */
 
-#include "copperlist.h"
+#include "processor.h"
 
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#define LOG_CONTEXT "gl-copperlist"
+#define LOG_CONTEXT "gl-processor"
 
-GL_Copperlist_t *GL_copperlist_create(void)
+GL_Processor_t *GL_processor_create(void)
 {
-    GL_Copperlist_t *copperlist = malloc(sizeof(GL_Copperlist_t));
-    if (!copperlist) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate copperlist");
+    GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
+    if (!processor) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
         return NULL;
     }
 
-    *copperlist = (GL_Copperlist_t){ 0 };
+    *processor = (GL_Processor_t){ 0 };
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
 #endif  /* VERBOSE_DEBUG */
 
-    GL_copperlist_reset(copperlist);
+#ifdef __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
+    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
+  #if GL_MAX_PALETTE_COLORS == 256
+    GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
+  #elif GL_MAX_PALETTE_COLORS == 128
+    GL_palette_set_quantized(processor->state.palette, 2, 3, 2);
+  #elif GL_MAX_PALETTE_COLORS == 64
+    GL_palette_set_quantized(processor->state.palette, 2, 2, 2);
+  #elif GL_MAX_PALETTE_COLORS == 32
+    GL_palette_set_quantized(processor->state.palette, 2, 2, 1);
+  #elif GL_MAX_PALETTE_COLORS == 16
+    GL_palette_set_quantized(processor->state.palette, 1, 2, 1);
+  #elif GL_MAX_PALETTE_COLORS == 8
+    GL_palette_set_quantized(processor->state.palette, 1, 1, 1);
+  #else
+    #error "Too few palette entries!"
+  #endif
+#else
+    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
+    GL_palette_set_greyscale(processor->state.palette, GL_MAX_PALETTE_COLORS);
+#endif
 
-    return copperlist;
+    GL_processor_reset(processor);
+
+    return processor;
 }
 
-void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
+void GL_processor_destroy(GL_Processor_t *processor)
 {
-    if (copperlist->entries) {
-        arrfree(copperlist->entries);
+    if (processor->state.program) {
+        GL_program_destroy(processor->state.program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist entries at %p freed", copperlist->entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
 #endif  /* VERBOSE_DEBUG */
     }
 
-    free(copperlist);
+    free(processor);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p freed", processor);
 #endif  /* VERBOSE_DEBUG */
 }
 
-void GL_copperlist_reset(GL_Copperlist_t *copperlist)
+void GL_processor_reset(GL_Processor_t *processor)
 {
     // Palette is not part of the "reset" operation.
-    GL_copperlist_set_shifting(copperlist, NULL, NULL, 0);
-    GL_copperlist_set_program(copperlist, NULL);
+    GL_processor_set_shifting(processor, NULL, NULL, 0);
+    GL_processor_set_program(processor, NULL);
 }
 
-void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette)
+const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor)
 {
-    GL_palette_get_colors(palette, copperlist->state.colors);
+    return processor->state.palette;
+}
+
+void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette)
+{
+    GL_palette_copy(processor->state.palette, palette);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette copied");
 #endif  /* VERBOSE_DEBUG */
 }
 
 // TODO: change API, accepting a single array with successive from/to pairs.
-void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
+void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            copperlist->state.shifting[i] = (GL_Pixel_t)i;
+            processor->state.shifting[i] = (GL_Pixel_t)i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
-            copperlist->state.shifting[from[i]] = to[i];
+            processor->state.shifting[from[i]] = to[i];
         }
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries)
+static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    const GL_Color_t *colors = state->colors;
+    const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
 
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
+    const int count = processor->palette->size;
 #endif
 
     const size_t data_size = surface->data_size;
@@ -114,64 +141,68 @@ static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, co
             const int y = (index - 240) * 8;
             color = (GL_Color_t){ 0, 63 + y, 0, 255 };
         } else {
-            color = colors[index];
+            color = palette[index];
         }
         *(dst++) = color;
 #else
-        *(dst++) = colors[index];
+        *(dst++) = palette[index];
 #endif
     }
 }
 
 // TODO: use array of function pointers instead of mega-switch?
-// TODO: ditch wait-x? copperlist operations changes only once per scanline?
-void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, const Copperlist_State_t *state, GL_Program_Entry_t *entries)
+// TODO: ditch wait-x? processor operations changes only once per scanline?
+void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    Copperlist_State_t aux = *state; // Make a local copy, the copperlist could change it.
-    GL_Color_t *colors = aux.colors;
-    GL_Pixel_t *shifting = aux.shifting;
+    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
+    memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS); // Make a local copy, the processor could change it.
+    memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
-    size_t wait_y = 0, wait_x = 0;
+    size_t wait = 0;
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
+    const int count = processor->palette->size;
 #endif
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
 
-    const GL_Program_Entry_t *entry = entries;
+    const GL_Program_Entry_t *entry = state->program->entries;
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = pixels;
 
     const size_t dwidth = surface->width;
     const size_t dheight = surface->height;
 
-    for (size_t y = 0; y < dheight; ++y) {
+    size_t i = 0;
+    for (size_t h = dheight; h; --h) {
         GL_Color_t *dst_eod = dst_sod + dwidth;
         GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
 
-        for (size_t x = 0; x < dwidth; ++x) {
-            // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
+        for (size_t w = dwidth; w; --w) {
+            // Note: there's no length indicator for the processor program. That means that the interpreter would run
             // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
             // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
             // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
-            // is used to mark the end of the copperlist.
-#ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
-            if (y >= wait_y && x >= wait_x) {
+            // is used to mark the end of the processor.
+#ifdef __PROCESSOR_ONE_COMMAND_PER_PIXEL__
+            if (i >= wait) {
 #else
-            while (y >= wait_y && x >= wait_x) {
+            while (i >= wait) {
 #endif
                 switch (entry->command) {
                     case GL_PROGRAM_COMMAND_NOP: {
                         break;
                     }
                     case GL_PROGRAM_COMMAND_WAIT: {
-                        wait_x = entry->args[0].size;
-                        wait_y = entry->args[1].size;
+                        size_t x = entry->args[0].size;
+                        size_t y = entry->args[1].size;
+                        wait = y * dwidth + x;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_SKIP: {
-                        wait_x += entry->args[0].size;
-                        wait_y += entry->args[1].size;
+                        int dx = entry->args[0].integer;
+                        int dy = entry->args[1].integer;
+                        wait += dy * dwidth + dx;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_MODULO: {
@@ -187,7 +218,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
                     case GL_PROGRAM_COMMAND_COLOR: {
                         const GL_Pixel_t index = entry->args[0].pixel;
                         const GL_Color_t color = entry->args[1].color;
-                        colors[index] = color;
+                        palette[index] = color;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_SHIFT: {
@@ -210,15 +241,17 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
                 const int v = (index - 240) * 8;
                 color = (GL_Color_t){ 0, 63 + v, 0, 255 };
             } else {
-                color = colors[index];
+                color = palette[index];
             }
             *(dst++) = color;
 #else
-            *(dst++) = colors[index];
+            *(dst++) = palette[index];
 #endif
             if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
                 dst = dst_sod;
             }
+
+            ++i;
         }
 
         src += modulo;
@@ -226,34 +259,27 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Color_t *pixels, c
     }
 }
 
-static inline GL_Program_Entry_t *_copy(GL_Program_Entry_t *entries, const GL_Program_t *program)
-{
-    size_t length = arrlenu(program->entries);
-    arrsetlen(entries, length);
-    memcpy(entries, program->entries, sizeof(GL_Program_Entry_t) * length);
-    return entries;
-}
-
 // FIXME: make a copy or track the reference? (also for xform and palettes)
-void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
+void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program)
 {
-    if (program) {
+    if (processor->state.program) { // Deallocate current program, is present.
+       GL_program_destroy(processor->state.program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p copied at entries %p", program, copperlist->entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
-        copperlist->entries = _copy(copperlist->entries, program);
-    } else {
-       arrfree(copperlist->entries);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist entries at %p freed", copperlist->entries);
-#endif  /* VERBOSE_DEBUG */
-        copperlist->entries = NULL;
+        processor->state.program = NULL;
     }
 
-    copperlist->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
+    if (program) {
+        processor->state.program = GL_program_clone(program);
+#ifdef VERBOSE_DEBUG
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
+#endif  /* VERBOSE_DEBUG */
+    }
+    processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
 }
 
-void GL_copperlist_surface_to_rgba(const GL_Copperlist_t *copperlist, const GL_Surface_t *surface, GL_Color_t *pixels)
+void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    copperlist->surface_to_rgba(surface, pixels, &copperlist->state, copperlist->entries);
+    processor->surface_to_rgba(&processor->state, surface, pixels);
 }

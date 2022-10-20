@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,35 @@
  * SOFTWARE.
  */
 
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(SANITIZE)
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
 #endif
+
+#if defined(DEBUG) && !defined(SANITIZE)
+  #define STBDS_REALLOC(c,p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+  #define STBDS_FREE(c,p)      stb_leakcheck_free((p))
+#endif
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
+
+#if defined(DEBUG) && !defined(SANITIZE)
+  #define STBI_MALLOC(s)    stb_leakcheck_realloc(NULL, (s), __FILE__, __LINE__)
+  #define STBI_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+  #define STBI_FREE(p)      stb_leakcheck_free((p))
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+
+#if defined(DEBUG) && !defined(SANITIZE)
+  #define STBIW_MALLOC(s)    stb_leakcheck_realloc(NULL, (s), __FILE__, __LINE__)
+  #define STBIW_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+  #define STBIW_FREE(p)      stb_leakcheck_free((p))
+#endif
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-void *memdup(const void *ptr, size_t size)
+void *stb_memdup(const void *ptr, size_t size)
 {
     void *copy = malloc(size);
     if (copy) {

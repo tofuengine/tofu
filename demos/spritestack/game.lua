@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,12 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Tweener = require("tofu.generators.tweener")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -48,8 +49,8 @@ function Game:__ctor()
   Display.palette(palette)
 
   self.palette = palette
-  self.bank = Bank.new(Canvas.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
---  self.bank = Bank.new(Canvas.new("assets/images/racing-car-small-red.png", 0), 32, 32)
+  self.bank = Bank.new(Image.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
+--  self.bank = Bank.new(Image.new("assets/images/racing-car-small-red.png", 0), 32, 32)
   self.font = Font.default(0, 31)
   self.tweener = Tweener.new("sine-out")
 
@@ -71,13 +72,14 @@ end
 -- https://daytona500news.blogspot.com/2012/01/super-sprint-intricate-design-details.html
 -- http://samd.site/2020/04/10/sprite-stacking.html
 -- https://medium.com/@avsnoopy/beginners-guide-to-sprite-stacking-in-gamemaker
-   -- -studio-2-and-magica-voxel-part-1-f7a1394569c0
+-- -studio-2-and-magica-voxel-part-1-f7a1394569c0
 function Game:process()
   self.force = 0
   self.torque = 0
 
-  if Input.is_pressed("start") then
-    local cx, cy = Canvas.default():center()
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
+    local cx, cy = Canvas.default():image():center()
     for _ = 1, CHUNK_SIZE do
       local sprite = Sprite.new(self.bank, 15, 11, 1, self.palette)
 --      local sprite = Sprite.new(self.bank, 31, 19, 1)
@@ -85,22 +87,22 @@ function Game:process()
       table.insert(self.sprites, sprite)
     end
   end
-  if Input.is_down("up") then
+  if controller:is_down("up") then
     self.force = self.force + THROTTLE
   end
-  if Input.is_down("down") then
+  if controller:is_down("down") then
     self.force = self.force - BRAKE
   end
-  if Input.is_down("left") then
+  if controller:is_down("left") then
     self.torque = self.torque - TORQUE * Math.sign(self.force)
   end
-  if Input.is_down("right") then
+  if controller:is_down("right") then
     self.torque = self.torque + TORQUE * Math.sign(self.force)
   end
-  if Input.is_pressed("select") then
+  if controller:is_pressed("select") then
     self.sprites = {}
   end
-  if Input.is_pressed("y") then
+  if controller:is_pressed("y") then
     self.running = not self.running
   end
 end
@@ -117,15 +119,16 @@ end
 
 function Game:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
-  canvas:clear()
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(0)
 
   for _, sprite in ipairs(self.sprites) do
     sprite:render(canvas)
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, 0, string.format("#%d sprites", #self.sprites), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Game

@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ function Main:render(_)
   local canvas = Canvas.default()
 
   -- ... and clear it w/ default background palette colour (i.e. palette index #0).
-  canvas:clear()
+  canvas:clear(0)
 
   -- Get the canvas width and height.
   local canvas_width, canvas_height = canvas:size()

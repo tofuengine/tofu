@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,11 +57,14 @@
 #include "batch.h"
 #include "body.h"
 #include "canvas.h"
+#include "controller.h"
+#include "cursor.h"
 #include "display.h"
 #include "file.h"
 #include "font.h"
 #include "grid.h"
-#include "input.h"
+#include "image.h"
+#include "keyboard.h"
 #include "log.h"
 #include "math.h"
 #include "noise.h"
@@ -69,6 +72,7 @@
 #include "program.h"
 #include "source.h"
 #include "speakers.h"
+#include "storage.h"
 #include "system.h"
 #include "tweener.h"
 #include "wave.h"
@@ -105,7 +109,9 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },
-            { "tofu.events.input", input_loader },
+            { "tofu.input.controller", controller_loader },
+            { "tofu.input.cursor", cursor_loader },
+            { "tofu.input.keyboard", keyboard_loader },
             { "tofu.generators.noise", noise_loader },
             { "tofu.generators.tweener", tweener_loader },
             { "tofu.generators.wave", wave_loader },
@@ -114,10 +120,12 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.graphics.canvas", canvas_loader },
             { "tofu.graphics.display", display_loader },
             { "tofu.graphics.font", font_loader },
+            { "tofu.graphics.image", image_loader },
             { "tofu.graphics.palette", palette_loader },
             { "tofu.graphics.program", program_loader },
             { "tofu.graphics.xform", xform_loader },
             { "tofu.io.file", file_loader },
+            { "tofu.io.storage", storage_loader },
             { "tofu.physics.body", body_loader },
             { "tofu.physics.world", world_loader },
             { "tofu.sound.source", source_loader },

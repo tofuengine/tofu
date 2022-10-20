@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,32 +36,34 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Cursor = require("tofu.input.cursor")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
+local PALETTE <const> = Palette.default("famicube")
+local FOREGROUND <const> = PALETTE:match(255, 255, 255)
+
+local MIN_DISTANCE <const> = 8
+
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("famicube")
---  local palette = Palette.new(PALETTE)
-  Display.palette(palette)
+  Display.palette(PALETTE)
 
   local canvas = Canvas.default()
   canvas:transparent(0, false)
-  canvas:foreground(palette:match(255, 255, 255))
 
-  local width, height = canvas:size()
+  local width, height = canvas:image():size()
 
-  self.font = Font.default(0, palette:match(255, 255, 255))
+  self.font = Font.default(0, FOREGROUND)
   self.colors = {
-      palette:match( 15,  15,  15),
-      palette:match( 31,  31,  31),
-      palette:match( 31,  31,  63),
-      palette:match( 63,  63, 127),
-      palette:match(191, 191, 223)
+      PALETTE:match( 15,  15,  15),
+      PALETTE:match( 31,  31,  31),
+      PALETTE:match( 31,  31,  63),
+      PALETTE:match( 63,  63, 127),
+      PALETTE:match(191, 191, 223)
     }
   self.step = 4
   self.lines = {}
@@ -72,32 +74,33 @@ function Main:__ctor()
 end
 
 function Main:process()
-  local cx, cy = Input.cursor()
+  local cursor = Cursor.default()
+  local cx, cy = cursor:position()
   self.c.x = cx
   self.c.y = cy
 
-  if Input.is_down("a") then
+  if cursor:is_down("left") then
     self.a.x = cx
     self.a.y = cy
     self.changed = true
-  elseif Input.is_down("b") then
+  elseif cursor:is_down("right") then
     self.b.x = cx
     self.b.y = cy
     self.changed = true
   end
-end
 
-function Main:update(_) -- delta_time
   if self.changed then
-    self.changed = false
-
     local dx = self.b.x - self.a.x
     local dy = self.b.y - self.a.y
     local d = ((dx * dx) + (dy * dy)) ^ 0.5
-    self.v = { x = dx / d, y = dy / d }
-    self.d = d
+    if d >= MIN_DISTANCE then
+      self.v = { x = dx / d, y = dy / d }
+      self.d = d
+    end
   end
+end
 
+function Main:update(_) -- delta_time
   local lines = {}
   for index, color in ipairs(self.colors) do
     local points = {}
@@ -127,15 +130,16 @@ end
 
 function Main:render(_) -- ratio
   local canvas = Canvas.default()
-  canvas:clear()
+  local image = canvas:image()
+  image:clear(0)
 
   for _, line in ipairs(self.lines) do
     canvas:polyline(line.points, line.color)
   end
 
-  canvas:square("fill", self.c.x - 1, self.c.y - 1, 3)
+  canvas:square("fill", self.c.x - 1, self.c.y - 1, 3, FOREGROUND)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

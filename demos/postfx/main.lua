@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,12 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local Sprite = require("lib/sprite")
@@ -42,29 +43,29 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ [0] = false, [13] = true })
-  canvas:background(63)
 
   self.sprites = {}
-  self.bank = Bank.new(Canvas.new("assets/images/diamonds.png", 13), 16, 16)
+  self.bank = Bank.new(Image.new("assets/images/diamonds.png", 13), 16, 16)
   self.font = Font.default(13, 0)
   self.speed = 1.0
   self.running = true
 end
 
 function Main:process()
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+  if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
       table.insert(self.sprites, Sprite.new(Canvas.default(), self.bank, #self.sprites))
     end
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.speed = self.speed * 0.5
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.speed = self.speed * 2.0
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.speed = 1.0
-  elseif Input.is_pressed("select") then
+  elseif controller:is_pressed("select") then
     self.sprites = {}
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     self.running = not self.running
   end
 end
@@ -80,13 +81,14 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
-  canvas:clear()
+  local image = canvas:image()
+  local width, _ = image:size()
+  image:clear(63)
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end
-  self.font:write(canvas, 0,0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, 0, string.format("#%d sprites", #self.sprites), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Main

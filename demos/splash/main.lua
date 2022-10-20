@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -41,14 +41,16 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  canvas:background(background_index) -- Use it as background colour and transparent! :)
   canvas:transparent({ [0] = false, [background_index] = true })
 
+  self.background_index = background_index -- Use it as background colour and transparent! :)
+
+  local width, height = canvas:image():size()
   self.objects = {
-      Background.new(canvas, background_index, palette),
-      Wave.new(canvas, background_index, palette),
-      Logo.new(canvas, background_index, palette),
-      Stars.new(canvas, background_index, palette)
+      Background.new(width, height, background_index, palette),
+      Wave.new(width, height, background_index, palette),
+      Logo.new(width, height, background_index, palette),
+      Stars.new(width, height, background_index, palette)
     }
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")
@@ -67,7 +69,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear()
+  canvas:clear(self.background_index)
 
   for _, object in ipairs(self.objects) do
     object:render(canvas)

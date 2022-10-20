@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2021 Marco Lizza
+Copyright (c) 2019-2022 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,10 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Input = require("tofu.events.input")
+local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
-local Batch = require("tofu.graphics.batch")
 local Canvas = require("tofu.graphics.canvas")
+local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
@@ -39,6 +39,8 @@ local INITIAL_BUNNIES = 15000
 local LITTER_SIZE = 250
 local MAX_BUNNIES = 32768
 
+local WIDTH <const>, HEIGHT <const> = Canvas.default():image():size()
+
 local Main = Class.define()
 
 function Main:__ctor()
@@ -46,11 +48,9 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
-  canvas:background(0)
 
   self.bunnies = {}
-  self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
-  self.batch = Batch.new(self.bank, 5000)
+  self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
   self.speed = 1.0
   self.running = true
@@ -58,30 +58,32 @@ function Main:__ctor()
 
   local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.bank, self.batch))
+    table.insert(self.bunnies, Bunny.new(self.bank, WIDTH, HEIGHT))
   end
 end
 
 function Main:process()
-  if Input.is_pressed("start") then
+  local controller = Controller.default()
+
+  if controller:is_pressed("start") then
     local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.bank, self.batch))
+      table.insert(self.bunnies, Bunny.new(self.bank, WIDTH, HEIGHT))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
     end
-  elseif Input.is_pressed("left") then
+  elseif controller:is_pressed("left") then
     self.speed = self.speed * 0.5
-  elseif Input.is_pressed("right") then
+  elseif controller:is_pressed("right") then
     self.speed = self.speed * 2.0
-  elseif Input.is_pressed("down") then
+  elseif controller:is_pressed("down") then
     self.speed = 1.0
-  elseif Input.is_pressed("select") then
+  elseif controller:is_pressed("select") then
     self.bunnies = {}
-  elseif Input.is_pressed("x") then
+  elseif controller:is_pressed("x") then
     self.static = not self.static
-  elseif Input.is_pressed("y") then
+  elseif controller:is_pressed("y") then
     self.running = not self.running
   end
 end
@@ -91,8 +93,6 @@ function Main:update(delta_time)
     return
   end
 
-  self.batch:clear()
-
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time * self.speed)
   end
@@ -100,13 +100,14 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
-  canvas:clear()
+  canvas:image():clear(0)
 
-  self.batch:blit(canvas)
+  for _, bunny in ipairs(self.bunnies) do
+    bunny:render(canvas)
+  end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
-  self.font:write(canvas, width, 0, string.format("#%d bunnies", #self.bunnies), "right")
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(WIDTH, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
 end
 
 return Main

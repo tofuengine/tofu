@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@
 #include "systems/display.h"
 #include "systems/environment.h"
 #include "systems/input.h"
-#include "systems/physics.h"
 #include "systems/storage.h"
 #include "systems/interpreter.h"
 #include "utils/configuration.h"
@@ -40,7 +39,6 @@ typedef struct Engine_s {
     Display_t *display;
     Input_t *input;
     Audio_t *audio;
-    Physics_t *physics;
     Environment_t *environment;
     Interpreter_t *interpreter;
 } Engine_t;

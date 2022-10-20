@@ -30,7 +30,6 @@
 #endif
 
 #include "format.h"
-#include "list.h"
 #include "hio.h"
 #include "loader.h"
 #include "load_helpers.h"
@@ -396,17 +395,9 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 	}
 
 	free(m->xtra);
+	free(m->midi);
 	m->xtra = NULL;
-
-#ifndef LIBXMP_CORE_DISABLE_IT
-	if (m->xsmp != NULL) {
-		for (i = 0; i < mod->smp; i++) {
-			libxmp_free_sample(&m->xsmp[i]);
-		}
-		free(m->xsmp);
-		m->xsmp = NULL;
-	}
-#endif
+	m->midi = NULL;
 
 	libxmp_free_scan(ctx);
 

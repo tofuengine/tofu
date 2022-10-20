@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2022 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,10 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 }
 #endif
 
-extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset)
+extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_Surface_t *surface = context->surface;
+    const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -108,9 +109,10 @@ extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, co
     }
 }
 
-void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset, int scale_x, int scale_y)
+void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset, int scale_x, int scale_y)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_Surface_t *surface = context->surface;
+    const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
