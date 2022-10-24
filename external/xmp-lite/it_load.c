@@ -201,7 +201,7 @@ static void xlat_volfx(struct xmp_event *event)
 	event->vol = 0;
 
 	if (b <= 64) {
-		event->vol = b;
+		event->vol = b + 1;
 	} else if (b >= 65 && b <= 74) {	/* A */
 		event->f2t = FX_F_VSLIDE_UP_2;
 		event->f2p = b - 65;
@@ -251,7 +251,8 @@ static void fix_name(uint8_t *s, int l)
 			s[i] = ' ';
 	}
 	for (i--; i >= 0 && s[i] == ' '; i--) {
-		s[i] = 0;
+		if (s[i] == ' ')
+			s[i] = 0;
 	}
 }
 
@@ -444,7 +445,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	xxi->vol = 0x40;
 
 	if (k) {
-		xxi->sub = (struct xmp_subinstrument *)calloc(k, sizeof(struct xmp_subinstrument));
+		xxi->sub = (struct xmp_subinstrument *) calloc(k, sizeof(struct xmp_subinstrument));
 		if (xxi->sub == NULL) {
 			return -1;
 		}
@@ -595,7 +596,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	xxi->vol = i2h.gbv >> 1;
 
 	if (k) {
-		xxi->sub = (struct xmp_subinstrument *)calloc(k, sizeof(struct xmp_subinstrument));
+		xxi->sub = (struct xmp_subinstrument *) calloc(k, sizeof(struct xmp_subinstrument));
 		if (xxi->sub == NULL)
 			return -1;
 
@@ -659,7 +660,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	uint8_t buf[80];
 
 	if (sample_mode) {
-		mod->xxi[i].sub = (struct xmp_subinstrument *)calloc(1, sizeof(struct xmp_subinstrument));
+		mod->xxi[i].sub = (struct xmp_subinstrument *) calloc(1, sizeof(struct xmp_subinstrument));
 		if (mod->xxi[i].sub == NULL) {
 			return -1;
 		}
@@ -839,7 +840,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 						  ish.convert & IT_CVT_DIFF);
 			}
 
-			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD | cvt,
+			ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], decbuf);
 			if (ret < 0) {
 				free(decbuf);
@@ -1057,18 +1058,18 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	if (mod->ins) {
-		pp_ins = (uint32_t *)calloc(mod->ins, sizeof(uint32_t));
+		pp_ins = (uint32_t *) calloc(sizeof(uint32_t), mod->ins);
 		if (pp_ins == NULL)
 			goto err;
 	} else {
 		pp_ins = NULL;
 	}
 
-	pp_smp = (uint32_t *)calloc(mod->smp, sizeof(uint32_t));
+	pp_smp = (uint32_t *) calloc(sizeof(uint32_t), mod->smp);
 	if (pp_smp == NULL)
 		goto err2;
 
-	pp_pat = (uint32_t *)calloc(mod->pat, sizeof(uint32_t));
+	pp_pat = (uint32_t *) calloc(sizeof(uint32_t), mod->pat);
 	if (pp_pat == NULL)
 		goto err3;
 
@@ -1125,10 +1126,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (ifh.special & IT_EDIT_HISTORY) {
 			int skip = hio_read16l(f) * 8;
 			if (hio_error(f) || (skip && hio_seek(f, skip, SEEK_CUR) < 0))
-				goto err3;
+				goto err4;
 		}
 		if (load_it_midi_config(m, f) < 0)
-			goto err3;
+			goto err4;
 	}
 
 	m->c4rate = C4_NTSC_RATE;
@@ -1314,7 +1315,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Song message */
 	if (ifh.special & IT_HAS_MSG) {
-		if ((m->comment = (char *)malloc(ifh.msglen)) != NULL) {
+		if ((m->comment = (char *) malloc(ifh.msglen)) != NULL) {
 			hio_seek(f, start + ifh.msgofs, SEEK_SET);
 
 			D_(D_INFO "message length : %d", ifh.msglen);

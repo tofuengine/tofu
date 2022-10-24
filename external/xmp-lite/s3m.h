@@ -102,6 +102,4 @@ struct s3m_instrument_header {
 	uint32_t magic;	/* 'SCRS' */
 };
 
-extern const struct format_loader libxmp_loader_s3m;
-
 #endif  /* LIBXMP_LOADERS_S3M_H */

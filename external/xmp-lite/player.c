@@ -1474,7 +1474,7 @@ static void next_order(struct context_data *ctx)
 	int mark;
 
 	do {
-   		p->ord++;
+		p->ord++;
 
 		/* Restart module */
 		mark = HAS_QUIRK(QUIRK_MARKER) && p->ord < mod->len && mod->xxo[p->ord] == 0xff;
@@ -1490,7 +1490,6 @@ static void next_order(struct context_data *ctx)
 					p->ord = m->seq_data[p->sequence].entry_point;
 				}
 			}
-
 			/* This might be a marker, so delay updating global
 			 * volume until an actual pattern is found */
 			reset_gvol = 1;
@@ -1586,7 +1585,19 @@ static void update_from_ord_info(struct context_data *ctx)
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 }
 
-LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
+void libxmp_reset_flow(struct context_data *ctx)
+{
+	struct flow_control *f = &ctx->p.flow;
+	f->jumpline = 0;
+	f->jump = -1;
+	f->pbreak = 0;
+	f->loop_chn = 0;
+	f->delay = 0;
+	f->rowdelay = 0;
+	f->rowdelay_set = 0;
+}
+
+int xmp_start_player(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1660,20 +1671,15 @@ LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 		goto err;
 	}
 
-	f->delay = 0;
-	f->jumpline = 0;
-	f->jump = -1;
-	f->loop_chn = 0;
-	f->pbreak = 0;
-	f->rowdelay_set = 0;
+	libxmp_reset_flow(ctx);
 
-	f->loop = (struct pattern_loop *)calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
+	f->loop = (struct pattern_loop *) calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
 	if (f->loop == NULL) {
 		ret = -XMP_ERROR_SYSTEM;
 		goto err;
 	}
 
-	p->xc_data = (struct channel_data *)calloc(p->virt.virt_channels, sizeof(struct channel_data));
+	p->xc_data = (struct channel_data *) calloc(p->virt.virt_channels, sizeof(struct channel_data));
 	if (p->xc_data == NULL) {
 		ret = -XMP_ERROR_SYSTEM;
 		goto err1;
@@ -1719,7 +1725,7 @@ static void check_end_of_module(struct context_data *ctx)
 	}
 }
 
-LIBXMP_EXPORT int xmp_play_frame(xmp_context opaque)
+int xmp_play_frame(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1823,7 +1829,7 @@ LIBXMP_EXPORT int xmp_play_frame(xmp_context opaque)
 	return 0;
 }
 
-LIBXMP_EXPORT int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
+int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1880,7 +1886,7 @@ LIBXMP_EXPORT int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size
 	return ret;
 }
 
-LIBXMP_EXPORT void xmp_end_player(xmp_context opaque)
+void xmp_end_player(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1902,7 +1908,7 @@ LIBXMP_EXPORT void xmp_end_player(xmp_context opaque)
 	libxmp_mixer_off(ctx);
 }
 
-LIBXMP_EXPORT void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
+void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -1919,7 +1925,7 @@ LIBXMP_EXPORT void xmp_get_module_info(xmp_context opaque, struct xmp_module_inf
 	info->vol_base = m->volbase;
 }
 
-LIBXMP_EXPORT void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
+void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;

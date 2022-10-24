@@ -32,7 +32,6 @@
 #include "format.h"
 #include "hio.h"
 #include "loader.h"
-#include "load_helpers.h"
 #include "scan.h"
 
 static int test_module(struct xmp_test_info *info, HIO_HANDLE *h)
@@ -62,7 +61,7 @@ static int test_module(struct xmp_test_info *info, HIO_HANDLE *h)
 	return -XMP_ERROR_FORMAT;
 }
 
-LIBXMP_EXPORT int xmp_test_module(const char *path, struct xmp_test_info *info)
+int xmp_test_module(const char *path, struct xmp_test_info *info)
 {
 	HIO_HANDLE *h;
 	int ret = libxmp_get_filetype(path);
@@ -84,7 +83,7 @@ LIBXMP_EXPORT int xmp_test_module(const char *path, struct xmp_test_info *info)
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_test_module_from_memory(const void *mem, long size, struct xmp_test_info *info)
+int xmp_test_module_from_memory(const void *mem, long size, struct xmp_test_info *info)
 {
 	HIO_HANDLE *h;
 	int ret;
@@ -102,7 +101,7 @@ LIBXMP_EXPORT int xmp_test_module_from_memory(const void *mem, long size, struct
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_test_module_from_file(void *file, struct xmp_test_info *info)
+int xmp_test_module_from_file(void *file, struct xmp_test_info *info)
 {
 	HIO_HANDLE *h;
 	int ret;
@@ -116,7 +115,7 @@ LIBXMP_EXPORT int xmp_test_module_from_file(void *file, struct xmp_test_info *in
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_test_module_from_callbacks(size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata,
+int xmp_test_module_from_callbacks(size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata,
 									struct xmp_test_info *info)
 {
 	HIO_HANDLE *h;
@@ -227,7 +226,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	return -XMP_ERROR_LOAD;
 }
 
-LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, const char *path)
+int xmp_load_module(xmp_context opaque, const char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	HIO_HANDLE *h;
@@ -262,7 +261,7 @@ LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, const char *path)
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, const void *mem, long size)
+int xmp_load_module_from_memory(xmp_context opaque, const void *mem, long size)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -291,7 +290,7 @@ LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, const void *me
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file)
+int xmp_load_module_from_file(xmp_context opaque, void *file)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -316,7 +315,7 @@ LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file)
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
+int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -341,7 +340,7 @@ LIBXMP_EXPORT int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*re
 	return ret;
 }
 
-LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
+void xmp_release_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -411,7 +410,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 	m->dirname = NULL;
 }
 
-LIBXMP_EXPORT void xmp_scan_module(xmp_context opaque)
+void xmp_scan_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 

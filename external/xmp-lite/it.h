@@ -188,6 +188,4 @@ struct it_sample_header {
 	uint8_t vit;		/* Vibrato waveform */
 };
 
-extern const struct format_loader libxmp_loader_it;
-
 #endif /* LIBXMP_LOADERS_IT_H */

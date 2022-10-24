@@ -965,6 +965,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	is_toneporta = 0;
 	is_release = 0;
 	reset_env = 0;
+	reset_susloop = 0;
 	use_ins_vol = 0;
 	candidate_ins = xc->ins;
 	sample_mode = !HAS_QUIRK(QUIRK_VIRTUAL);

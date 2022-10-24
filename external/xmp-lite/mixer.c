@@ -103,7 +103,7 @@ MIX_FN(stereo_a500_filter);
  * bit 2: 0=unfiltered, 1=filtered
  */
 
-typedef void (*MIX_FP)(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int);
+typedef void (*MIX_FP) (struct mixer_voice *, int32_t *, int, int, int, int, int, int, int);
 
 static MIX_FP nearest_mixers[] = {
 	libxmp_mix_mono_8bit_nearest,

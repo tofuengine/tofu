@@ -14,6 +14,7 @@
 #define XM_LOOP_FORWARD 1
 #define XM_LOOP_PINGPONG 2
 #define XM_SAMPLE_16BIT 0x10
+#define XM_SAMPLE_STEREO 0x20
 #define XM_ENVELOPE_ON 0x01
 #define XM_ENVELOPE_SUSTAIN 0x02
 #define XM_ENVELOPE_LOOP 0x04
@@ -96,7 +97,5 @@ struct xm_event {
 	uint8_t fx_type;	/* Effect type */
 	uint8_t fx_parm;	/* Effect parameter */
 };
-
-extern const struct format_loader libxmp_loader_xm;
 
 #endif  /* LIBXMP_LOADERS_XM_H */

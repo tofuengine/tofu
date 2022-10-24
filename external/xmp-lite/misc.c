@@ -24,7 +24,7 @@
 
 #include <errno.h>
 
-LIBXMP_EXPORT int xmp_syserrno (void)
+int xmp_syserrno (void)
 {
 	return errno;
 }
