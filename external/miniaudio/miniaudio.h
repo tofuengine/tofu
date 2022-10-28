@@ -13058,7 +13058,7 @@ MA_API const char* ma_log_level_to_string(ma_uint32 logLevel)
     }
 }
 
-#if defined(MA_DEBUG_OUTPUT)
+#if defined(MA_DEBUG_OUTPUT_DEFAULT_CALLBACK)
 
 /* Customize this to use a specific tag in __android_log_print() for debug output messages. */
 #ifndef MA_ANDROID_LOG_TAG
@@ -13116,7 +13116,7 @@ MA_API ma_result ma_log_init(const ma_allocation_callbacks* pAllocationCallbacks
     #endif
 
     /* If we're using debug output, enable it. */
-    #if defined(MA_DEBUG_OUTPUT)
+    #if defined(MA_DEBUG_OUTPUT_DEFAULT_CALLBACK)
     {
         ma_log_register_callback(pLog, ma_log_callback_init(ma_log_callback_debug, NULL)); /* Doesn't really matter if this fails. */
     }
