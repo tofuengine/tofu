@@ -232,11 +232,11 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 		return;
 
 	if (s >= XMP_NAME_SIZE)
-		s = XMP_NAME_SIZE -1;
+		s = XMP_NAME_SIZE - 1;
 
 	memset(t, 0, s + 1);
 
-	s = hio_read(buf, 1, s, f);
+	s = hio_read(buf, sizeof(uint8_t), s, f);
 	buf[s] = 0;
 	libxmp_copy_adjust(t, buf, s);
 }

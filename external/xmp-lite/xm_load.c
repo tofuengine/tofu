@@ -51,7 +51,7 @@ static int xm_test(HIO_HANDLE *f, char *t, const int start)
 {
 	uint8_t buf[20];
 
-	if (hio_read(buf, sizeof(uint8_t), 17, f) < 17)	/* ID text */
+	if (!hio_readn(buf, 17, f))	/* ID text */
 		return -1;
 
 	if (memcmp(buf, "Extended Module: ", 17))
@@ -71,7 +71,7 @@ static int load_xm_pattern(struct module_data *m, int num, int version,
 	struct xmp_event *event;
 	uint8_t *pat, b;
 	int j, k, r;
-	int size, size_read;
+	int size;
 
 	xph.length = hio_read32l(f);
 	xph.packing = hio_read8(f);
@@ -104,10 +104,7 @@ static int load_xm_pattern(struct module_data *m, int num, int version,
 	size = xph.datasize;
 	pat = patbuf;
 
-	size_read = hio_read(patbuf, 1, size, f);
-	if (size_read < size) {
-		memset(patbuf + size_read, 0, size - size_read);
-	}
+	hio_readn(patbuf, size, f);
 
 	for (j = 0; j < r; j++) {
 		for (k = 0; k < mod->chn; k++) {
@@ -405,8 +402,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		 * sample header size (if it exists). This is NOT considered to
 		 * be part of the instrument header.
 		 */
-		size_t instr_header_len = XM_INST_HEADER_SIZE + 4;
-		if (hio_read(buf, sizeof(uint8_t), instr_header_len, f) != instr_header_len) {
+		if (!hio_readn(buf, XM_INST_HEADER_SIZE + 4, f)) {
 			D_(D_WARN "short read in instrument header data");
 			break;
 		}
@@ -471,7 +467,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		} else {
 			uint8_t *b = buf;
 
-			if (hio_read(buf, sizeof(uint8_t), 208, f) != 208) {
+			if (!hio_readn(buf, 208, f)) {
 				D_(D_CRIT "short read in instrument data");
 				return -1;
 			}
@@ -557,7 +553,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			}
 			xxs = &mod->xxs[sample_num];
 
-			if (hio_read(buf, sizeof(uint8_t), 40, f) != 40) {
+			if (!hio_readn(buf, 40, f)) {
 				D_(D_CRIT "short read in sample data");
 				return -1;
 			}
@@ -683,7 +679,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
+	if (!hio_readn(buf, 80, f)) {
 		D_(D_CRIT "error reading header");
 		return -1;
 	}
@@ -742,7 +738,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 
 	memset(xfh.order, 0, sizeof(xfh.order));
-	if (hio_read(xfh.order, sizeof(uint8_t), len, f) != (size_t)len) {	/* Pattern order table */
+	if (!hio_readn(xfh.order, len, f)) {	/* Pattern order table */
 		D_(D_CRIT "error reading orders");
 		return -1;
 	}

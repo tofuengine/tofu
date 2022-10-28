@@ -444,3 +444,14 @@ size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 	}
 	return result;
 }
+
+bool hio_readn(void *buf, size_t bytes_to_read, HIO_HANDLE *h)
+{
+	size_t bytes_read = h->vtable.read(buf, sizeof(uint8_t), bytes_to_read, h->user_data);
+	if (bytes_read != bytes_to_read) {
+		memset((uint8_t *)buf + bytes_read, 0x00, bytes_to_read - bytes_read);
+		h->error = EOF;
+		return false;
+	}
+	return true;
+}

@@ -282,7 +282,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, const char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
-	if (hio_read(xxs->data, sizeof(unsigned char), size, h) != (size_t)size) {
+	if (!hio_readn(xxs->data, size, h)) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}

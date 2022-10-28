@@ -57,7 +57,7 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 	uint8_t buf[4];
 
 	hio_seek(f, start + 1080, SEEK_SET);
-	if (hio_read(buf, sizeof(uint8_t), 4, f) < 4) {
+	if (!hio_readn(buf, 4, f)) {
 		return -1;
 	}
 
@@ -104,9 +104,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->period_type = PERIOD_MODRNG;
 
-    hio_read(mh.name, sizeof(uint8_t), 20, f);
+    hio_readn(mh.name, 20, f);
     for (i = 0; i < 31; i++) {
-	hio_read(mh.ins[i].name, sizeof(uint8_t), 22, f);	/* Instrument name */
+	hio_readn(mh.ins[i].name, 22, f);	/* Instrument name */
 	mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
 	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
 	mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
@@ -115,9 +115,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
     mh.len = hio_read8(f);
     mh.restart = hio_read8(f);
-    hio_read(mh.order, sizeof(uint8_t), 128, f);
+    hio_readn(mh.order, 128, f);
     memset(magic, 0, sizeof(magic));
-    hio_read(magic, sizeof(uint8_t), 4, f);
+    hio_readn(magic, 4, f);
     if (hio_error(f)) {
         return -1;
     }
@@ -223,8 +223,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    return -1;
 	}
 
-	size_t len = 64 * 4 * mod->chn;
-	if (hio_read(patbuf, sizeof(uint8_t), len, f) < len) {
+	if (!hio_readn(patbuf, 64 * 4 * mod->chn, f)) {
 	    free(patbuf);
 	    return -1;
 	}
