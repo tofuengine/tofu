@@ -454,6 +454,7 @@ static int loop_reposition(struct context_data *ctx, struct mixer_voice *vi,
 	return loop_changed;
 }
 
+
 /* Prepare the mixer for the next tick */
 void libxmp_mixer_prepare(struct context_data *ctx)
 {

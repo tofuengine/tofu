@@ -88,6 +88,7 @@ static void convert_stereo_to_mono(uint8_t *p, int l, int r)
 }
 #endif
 
+
 int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_sample *xxs, const void *buffer)
 {
 	int bytelen, extralen, i;

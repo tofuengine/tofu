@@ -102,7 +102,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 	p->virt.maxvoc = libxmp_mixer_numvoices(ctx, num);
 
 	p->virt.voice_array = (struct mixer_voice *) calloc(p->virt.maxvoc,
-				sizeof(struct mixer_voice));
+						sizeof(struct mixer_voice));
 	if (p->virt.voice_array == NULL)
 		goto err;
 
@@ -125,7 +125,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 #endif
 
 	p->virt.virt_channel = (struct virt_channel *) malloc(p->virt.virt_channels *
-				sizeof(struct virt_channel));
+							sizeof(struct virt_channel));
 	if (p->virt.virt_channel == NULL)
 		goto err2;
 

@@ -116,7 +116,7 @@ int xmp_test_module_from_file(void *file, struct xmp_test_info *info)
 }
 
 int xmp_test_module_from_callbacks(size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata,
-									struct xmp_test_info *info)
+				struct xmp_test_info *info)
 {
 	HIO_HANDLE *h;
 	int ret;

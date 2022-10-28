@@ -250,6 +250,7 @@ static int check_envelope_fade(struct xmp_envelope *env, int x)
 	return 0;
 }
 
+
 #ifndef LIBXMP_CORE_DISABLE_IT
 
 /* Impulse Tracker's filter effects are implemented using its MIDI macros.

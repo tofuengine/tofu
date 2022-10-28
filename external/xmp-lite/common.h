@@ -337,7 +337,7 @@ struct module_data {
 	struct xmp_module mod;
 
 	char *dirname;			/* file dirname */
-	char *basename;		/* file basename */
+	char *basename;			/* file basename */
 	const char *filename;		/* Module file name */
 	char *comment;			/* Comments, if any */
 	uint8_t md5[16];		/* MD5 message digest */
@@ -427,7 +427,7 @@ struct player_data {
 	unsigned char sequence_control[XMP_MAX_MOD_LENGTH];
 
 	int smix_vol;			/* SFX volume */
-	int master_vol;		/* Music volume */
+	int master_vol;			/* Music volume */
 	int gvol;
 
 	struct flow_control flow;
@@ -440,7 +440,7 @@ struct player_data {
 	char channel_mute[XMP_MAX_CHANNELS];
 
 	struct virt_control {
-		int num_tracks;	/* Number of tracks */
+		int num_tracks;		/* Number of tracks */
 		int virt_channels;	/* Number of virtual channels */
 		int virt_used;		/* Number of voices currently in use */
 		int maxvoc;		/* Number of sound card voices */
@@ -469,7 +469,7 @@ struct mixer_data {
 	int interp;		/* interpolation type */
 	int dsp;		/* dsp effect flags */
 	char *buffer;		/* output buffer */
-	int32_t *buf32;	/* temporary buffer for 32 bit samples */
+	int32_t *buf32;		/* temporary buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
@@ -486,15 +486,18 @@ struct context_data {
 	int state;
 };
 
-char *libxmp_adjust_string(char *s);
-void libxmp_load_prologue(struct context_data *);
-void libxmp_load_epilogue(struct context_data *);
-int  libxmp_prepare_scan(struct context_data *);
-void libxmp_free_scan(struct context_data *ctx);
-int libxmp_set_player_mode(struct context_data *ctx);
-void libxmp_reset_flow(struct context_data *);
 
-char *libxmp_strdup(const char *);
-int libxmp_get_filetype (const char *);
+/* Prototypes */
+
+char	*libxmp_adjust_string	(char *);
+int	libxmp_prepare_scan	(struct context_data *);
+void	libxmp_free_scan	(struct context_data *);
+void	libxmp_load_prologue	(struct context_data *);
+void	libxmp_load_epilogue	(struct context_data *);
+int	libxmp_set_player_mode	(struct context_data *);
+void	libxmp_reset_flow	(struct context_data *);
+
+char *	libxmp_strdup		(const char *);
+int 	libxmp_get_filetype	(const char *);
 
 #endif /* LIBXMP_COMMON_H */
