@@ -121,7 +121,6 @@ static int keyboard_is_available_1o_1b(lua_State *L)
 }
 
 static const Map_Entry_t _buttons[Input_Keyboard_Buttons_t_CountOf] = {
-    // TODO: add more keys? Function keys?
     { "1", INPUT_KEYBOARD_BUTTON_1 },
     { "2", INPUT_KEYBOARD_BUTTON_2 },
     { "3", INPUT_KEYBOARD_BUTTON_3 },
@@ -163,7 +162,19 @@ static const Map_Entry_t _buttons[Input_Keyboard_Buttons_t_CountOf] = {
     { "left", INPUT_KEYBOARD_BUTTON_LEFT },
     { "right", INPUT_KEYBOARD_BUTTON_RIGHT },
     { "enter", INPUT_KEYBOARD_BUTTON_ENTER },
-    { "space", INPUT_KEYBOARD_BUTTON_SPACE }
+    { "space", INPUT_KEYBOARD_BUTTON_SPACE },
+    { "f1", INPUT_KEYBOARD_BUTTON_F1 },
+    { "f2", INPUT_KEYBOARD_BUTTON_F2 },
+    { "f3", INPUT_KEYBOARD_BUTTON_F3 },
+    { "f4", INPUT_KEYBOARD_BUTTON_F4 },
+    { "f5", INPUT_KEYBOARD_BUTTON_F5 },
+    { "f6", INPUT_KEYBOARD_BUTTON_F6 },
+    { "f7", INPUT_KEYBOARD_BUTTON_F7 },
+    { "f8", INPUT_KEYBOARD_BUTTON_F8 },
+    { "f9", INPUT_KEYBOARD_BUTTON_F9 },
+    { "f10", INPUT_KEYBOARD_BUTTON_F10 },
+    { "f11", INPUT_KEYBOARD_BUTTON_F11 },
+    { "f12", INPUT_KEYBOARD_BUTTON_F12 }
 };
 
 static int keyboard_is_down_2os_1b(lua_State *L)
