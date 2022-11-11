@@ -380,6 +380,8 @@ void Engine_run(Engine_t *engine)
         Environment_process(engine->environment, elapsed);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
+        glfwPollEvents();
+
         Input_process(engine->input);
 
         events = _prepare_events(engine, events);

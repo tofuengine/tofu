@@ -528,8 +528,6 @@ void Input_process(Input_t *input)
         _controller_handler
     };
 
-    glfwPollEvents();
-
     for (size_t i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
         handlers[i](input);
     }
