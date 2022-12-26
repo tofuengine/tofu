@@ -30,7 +30,7 @@
 #include <libs/stb.h>
 
 #include "internals.h"
-#include "cache.h"
+#include "callbacks.h"
 #include "pak.h"
 #include "std.h"
 
@@ -118,9 +118,9 @@ bool FS_attach_archive(FS_Context_t *context, const char *path)
     return true;
 }
 
-bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void *user_data)
+bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data)
 {
-    FS_Mount_t *mount = FS_cache_mount(callbacks, user_data);
+    FS_Mount_t *mount = FS_callbacks_mount(callbacks, user_data);
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach cache w/ user-data `%p`", user_data);
         return false;

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_CACHE_H__
-#define __FS_CACHE_H__
+#ifndef __FS_CALLBACKS_H__
+#define __FS_CALLBACKS_H__
 
 #include "fs.h"
 
-extern FS_Mount_t *FS_cache_mount(FS_Cache_Callbacks_t callbacks, void *user_data);
+extern FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data);
 
-#endif /* __FS_CACHE_H__ */
+#endif /* __FS_CALLBACKS_H__ */

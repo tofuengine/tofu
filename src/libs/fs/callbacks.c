@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "std.h"
+#include "callbacks.h"
 
 #include "internals.h"
 
@@ -30,35 +30,35 @@
 #include <libs/path.h>
 #include <libs/stb.h>
 
-#define LOG_CONTEXT "fs-cache"
+#define LOG_CONTEXT "fs-callbacks"
 
 typedef struct Std_Mount_s {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
-    FS_Cache_Callbacks_t callbacks;
+    FS_Callbacks_t callbacks;
     void *user_data;
 } Cache_Mount_t;
 
 typedef struct Std_Handle_s {
     Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
-    FS_Cache_Callbacks_t callbacks;
+    FS_Callbacks_t callbacks;
     void *stream;
 } Cache_Handle_t;
 
-static void _cache_mount_ctor(FS_Mount_t *mount, FS_Cache_Callbacks_t callbacks, void *user_data);
-static void _cache_mount_dtor(FS_Mount_t *mount);
-static void _cache_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data);
-static bool _cache_mount_contains(const FS_Mount_t *mount, const char *name);
-static FS_Handle_t *_cache_mount_open(const FS_Mount_t *mount, const char *name);
+static void _callbacks_mount_ctor(FS_Mount_t *mount, FS_Callbacks_t callbacks, void *user_data);
+static void _callbacks_mount_dtor(FS_Mount_t *mount);
+static void _callbacks_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data);
+static bool _callbacks_mount_contains(const FS_Mount_t *mount, const char *name);
+static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *name);
 
-static void _cache_handle_ctor(FS_Handle_t *handle, FS_Cache_Callbacks_t callbacks, void *stream);
-static void _cache_handle_dtor(FS_Handle_t *handle);
-static size_t _cache_handle_size(FS_Handle_t *handle);
-static size_t _cache_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
-static bool _cache_handle_seek(FS_Handle_t *handle, long offset, int whence);
-static long _cache_handle_tell(FS_Handle_t *handle);
-static bool _cache_handle_eof(FS_Handle_t *handle);
+static void _callbacks_handle_ctor(FS_Handle_t *handle, FS_Callbacks_t callbacks, void *stream);
+static void _callbacks_handle_dtor(FS_Handle_t *handle);
+static size_t _callbacks_handle_size(FS_Handle_t *handle);
+static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
+static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence);
+static long _callbacks_handle_tell(FS_Handle_t *handle);
+static bool _callbacks_handle_eof(FS_Handle_t *handle);
 
-FS_Mount_t *FS_cache_mount(FS_Cache_Callbacks_t callbacks, void *user_data)
+FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data)
 {
     FS_Mount_t *mount = malloc(sizeof(Cache_Mount_t));
     if (!mount) {
@@ -66,51 +66,51 @@ FS_Mount_t *FS_cache_mount(FS_Cache_Callbacks_t callbacks, void *user_data)
         return NULL;
     }
 
-    _cache_mount_ctor(mount, callbacks, user_data);
+    _callbacks_mount_ctor(mount, callbacks, user_data);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount %p initialized as cache w/ user-data %p", mount, user_data);
 
     return mount;
 }
 
-static void _cache_mount_ctor(FS_Mount_t *mount, FS_Cache_Callbacks_t callbacks, void *user_data)
+static void _callbacks_mount_ctor(FS_Mount_t *mount, FS_Callbacks_t callbacks, void *user_data)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
     *cache_mount = (Cache_Mount_t){
             .vtable = (Mount_VTable_t){
-                .dtor = _cache_mount_dtor,
-                .scan = _cache_mount_scan,
-                .contains = _cache_mount_contains,
-                .open = _cache_mount_open
+                .dtor = _callbacks_mount_dtor,
+                .scan = _callbacks_mount_scan,
+                .contains = _callbacks_mount_contains,
+                .open = _callbacks_mount_open
             },
             .callbacks = callbacks,
             .user_data = user_data
         };
 }
 
-static void _cache_mount_dtor(FS_Mount_t *mount)
+static void _callbacks_mount_dtor(FS_Mount_t *mount)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
     *cache_mount = (Cache_Mount_t){ 0 };
 }
 
-static void _cache_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data)
+static void _callbacks_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
     cache_mount->callbacks.scan(cache_mount->user_data, callback, user_data);
 }
 
-static bool _cache_mount_contains(const FS_Mount_t *mount, const char *name)
+static bool _callbacks_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
     return cache_mount->callbacks.contains(cache_mount->user_data, name);
 }
 
-static FS_Handle_t *_cache_mount_open(const FS_Mount_t *mount, const char *name)
+static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *name)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
@@ -122,30 +122,30 @@ static FS_Handle_t *_cache_mount_open(const FS_Mount_t *mount, const char *name)
 
     void *stream = cache_mount->callbacks.open(cache_mount->user_data, name);
 
-    _cache_handle_ctor(handle, cache_mount->callbacks, stream);
+    _callbacks_handle_ctor(handle, cache_mount->callbacks, stream);
 
     return handle;
 }
 
-static void _cache_handle_ctor(FS_Handle_t *handle, FS_Cache_Callbacks_t callbacks, void *stream)
+static void _callbacks_handle_ctor(FS_Handle_t *handle, FS_Callbacks_t callbacks, void *stream)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
     *cache_handle = (Cache_Handle_t){
             .vtable = (Handle_VTable_t){
-                .dtor = _cache_handle_dtor,
-                .size = _cache_handle_size,
-                .read = _cache_handle_read,
-                .seek = _cache_handle_seek,
-                .tell = _cache_handle_tell,
-                .eof = _cache_handle_eof
+                .dtor = _callbacks_handle_dtor,
+                .size = _callbacks_handle_size,
+                .read = _callbacks_handle_read,
+                .seek = _callbacks_handle_seek,
+                .tell = _callbacks_handle_tell,
+                .eof = _callbacks_handle_eof
             },
             .callbacks = callbacks,
             .stream = stream
         };
 }
 
-static void _cache_handle_dtor(FS_Handle_t *handle)
+static void _callbacks_handle_dtor(FS_Handle_t *handle)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
@@ -154,14 +154,14 @@ static void _cache_handle_dtor(FS_Handle_t *handle)
     *cache_handle = (Cache_Handle_t){ 0 };
 }
 
-static size_t _cache_handle_size(FS_Handle_t *handle)
+static size_t _callbacks_handle_size(FS_Handle_t *handle)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
     return cache_handle->callbacks.size(cache_handle->stream);
 }
 
-static size_t _cache_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)
+static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
@@ -172,7 +172,7 @@ static size_t _cache_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes
     return bytes_read;
 }
 
-static bool _cache_handle_seek(FS_Handle_t *handle, long offset, int whence)
+static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
@@ -183,14 +183,14 @@ static bool _cache_handle_seek(FS_Handle_t *handle, long offset, int whence)
     return seeked;
 }
 
-static long _cache_handle_tell(FS_Handle_t *handle)
+static long _callbacks_handle_tell(FS_Handle_t *handle)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
     return cache_handle->callbacks.tell(cache_handle->stream);
 }
 
-static bool _cache_handle_eof(FS_Handle_t *handle)
+static bool _callbacks_handle_eof(FS_Handle_t *handle)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 

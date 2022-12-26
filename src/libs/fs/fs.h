@@ -40,7 +40,7 @@ typedef struct FS_Handle_s FS_Handle_t;
 
 typedef void (*FS_Scan_Callback_t)(void *user_data, const char *name);
 
-typedef struct FS_Cache_Callbacks_s {
+typedef struct FS_Callbacks_s {
     void   (*scan)    (void *user_data, FS_Scan_Callback_t callback, void *callback_user_data);
     bool   (*contains)(void *user_data, const char *name);
     void * (*open)    (void *user_data, const char *name);
@@ -50,7 +50,7 @@ typedef struct FS_Cache_Callbacks_s {
     bool   (*seek)    (void *stream, long offset, int whence);
     long   (*tell)    (void *stream);
     bool   (*eof)     (void *stream);
-} FS_Cache_Callbacks_t;
+} FS_Callbacks_t;
 
 typedef struct FS_Context_s FS_Context_t;
 
@@ -60,7 +60,7 @@ extern void FS_destroy(FS_Context_t *context);
 extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path);
 extern bool FS_attach_folder(FS_Context_t *context, const char *path);
 extern bool FS_attach_archive(FS_Context_t *context, const char *path);
-extern bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void *user_data);
+extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data);
 
 extern void FS_scan(const FS_Context_t *context, FS_Scan_Callback_t callback, void *user_data);
 
