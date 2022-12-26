@@ -25,8 +25,6 @@
 #include "storage.h"
 
 #include <config.h>
-#include <libs/ascii85.h>
-#include <libs/base64.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
@@ -39,122 +37,6 @@
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
-
-static void _cache_scan(void *user_data, FS_Scan_Callback_t callback, void *callback_user_data)
-{
-    Storage_t *storage = (Storage_t *)user_data;
-    Storage_Cache_Entry_t *cache = storage->cache;
-
-    for (size_t i = 0; i < shlenu(cache); ++i) {
-        const char *name = cache[i].key;
-        callback(callback_user_data, name);
-    }
-}
-
-static bool _cache_contains(void *user_data, const char *name)
-{
-    Storage_t *storage = (Storage_t *)user_data;
-    Storage_Cache_Entry_t *cache = storage->cache;
-
-    return shgeti(cache, name) != -1;
-}
-
-static void *_cache_open(void *user_data, const char *name)
-{
-    Storage_t *storage = (Storage_t *)user_data;
-    Storage_Cache_Entry_t *cache = storage->cache;
-
-    int index = shgeti(cache, name);
-    if (index == -1) {
-        return NULL;
-    }
-
-    const Storage_Cache_Entry_Value_t *value = &cache[index].value;
-
-    Storage_Cache_Stream_t *stream = malloc(sizeof(Storage_Cache_Stream_t));
-    if (!stream) {
-        return NULL;
-    }
-
-    *stream = (Storage_Cache_Stream_t){
-        .ptr = (const uint8_t *)value->data,
-        .size = value->size,
-        .position = 0
-    };
-
-    return stream;
-}
-
-static void _cache_close(void *stream)
-{
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
-
-    free(cache_stream);
-}
-
-static size_t _cache_size(void *stream)
-{
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
-
-    return cache_stream->size;
-}
-
-static size_t _cache_read(void *stream, void *buffer, size_t bytes_requested)
-{
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
-
-    size_t bytes_available = cache_stream->size - cache_stream->position;
-
-    size_t bytes_to_copy = bytes_available > bytes_requested ? bytes_requested : bytes_available;
-
-    memcpy(buffer, cache_stream->ptr + cache_stream->position, bytes_to_copy);
-
-    cache_stream->position += bytes_to_copy;
-
-    return bytes_to_copy;
-}
-
-static bool _cache_seek(void *stream, long offset, int whence)
-{
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
-
-    long position;
-
-    switch (whence) {
-        default:
-        case SEEK_SET:
-            position = offset;
-            break;
-        case SEEK_CUR:
-            position = (long)cache_stream->position + offset;
-            break;
-        case SEEK_END:
-            position = (long)(cache_stream->size - 1) + offset;
-            break;
-    }
-
-    if (position < 0 || (size_t)position >= cache_stream->size) {
-        return false;
-    }
-
-    cache_stream->position = (size_t)position;
-
-    return true;
-}
-
-static long _cache_tell(void *stream)
-{
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
-
-    return (long)cache_stream->position;
-}
-
-static bool _cache_eof(void *stream)
-{
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
-
-    return cache_stream->position >= cache_stream->size;
-}
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
@@ -182,26 +64,13 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_split(path, storage->path.base, NULL); // Get the folder name, in case we are pointing straight to a PAK!
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "base path is `%s`", storage->path.base);
 
-    path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependend folder.
+    path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependent folder.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user path is `%s`", storage->path.user);
 
-    // This would be correct to do, since the local path is initialized, but it's also very pedant.
-    // Storage_set_identity(storage, DEFAULT_IDENTITY);
-
-    storage->context = FS_create();
-    if (!storage->context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
-        free(storage);
-        return NULL;
-    }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
-
-    FS_attach_folder_or_archive(storage->context, path);
-
-    // FIXME: move to a separate function.
-    char executable[PATH_MAX] = { 0 };
+    char executable[PATH_MAX] = { 0 }; // From the executable path obtain the kernal file path.
     path_expand(configuration->executable, executable);
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "executable is `%s`", executable);
+
     char executable_path[PATH_MAX] = { 0 };
     path_split(executable, executable_path, NULL);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "executable path is `%s`", executable_path);
@@ -210,26 +79,43 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     path_join(kernal_path, executable_path, __ENGINE_KERNAL_NAME__);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal path is `%s`", kernal_path);
 
-    bool attached = FS_attach_folder_or_archive(storage->context, kernal_path);
-    if (!attached) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach `%s`", kernal_path);
-        free(storage);
-        return NULL;
+    // This would be correct to do, since the local path is initialized, but it's also very pedant.
+    // Storage_set_identity(storage, DEFAULT_IDENTITY);
+
+    storage->context = FS_create();
+    if (!storage->context) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
+        goto error_free;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
+
+    storage->cache = Storage_Cache_create(storage->context);
+    if (!storage->cache) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create storage cache");
+        goto error_destroy_context;
     }
 
-    FS_attach_cache(storage->context, (FS_Cache_Callbacks_t){
-            .scan = _cache_scan,
-            .contains = _cache_contains,
-            .open = _cache_open,
-            .close = _cache_close,
-            .size = _cache_size,
-            .read = _cache_read,
-            .seek = _cache_seek,
-            .tell = _cache_tell,
-            .eof = _cache_eof
-        }, storage);
+    bool kernal_attached = FS_attach_folder_or_archive(storage->context, kernal_path);
+    if (!kernal_attached) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach kernal at `%s`", kernal_path);
+        goto error_destroy_cache;
+    }
+
+    bool attached = FS_attach_folder_or_archive(storage->context, path);
+    if (!attached) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach folder/archive at `%s`", path);
+        goto error_destroy_cache;
+    }
 
     return storage;
+
+error_destroy_cache:
+    Storage_Cache_destroy(storage->cache);
+error_destroy_context:
+    FS_destroy(storage->context);
+error_free:
+    free(storage);
+    return NULL;
 }
 
 static void _release(Storage_Resource_t *resource)
@@ -267,14 +153,11 @@ void Storage_destroy(Storage_t *storage)
     arrfree(storage->resources);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache emptied");
 
+    Storage_Cache_destroy(storage->cache);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache destroyed");
+
     FS_destroy(storage->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system context destroyed");
-
-    for (size_t i = 0; i < shlenu(storage->cache); ++i) {
-        free(storage->cache[i].value.data);
-    }
-    shfree(storage->cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache freed");
 
     free(storage);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
@@ -302,65 +185,17 @@ void Storage_scan(const Storage_t *storage, Storage_Scan_Callback_t callback, vo
 
 bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
-    bool valid = base64_is_valid(encoded_data);
-    if (!valid) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` is not Base64 encoded");
-        return false;
-    }
-
-    size_t size = base64_decoded_size(encoded_data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Base64 data `%.32s` is %d byte(s) long", encoded_data, size);
-
-    void *data = malloc(sizeof(char) * size);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", size, encoded_data);
-        return false;
-    }
-    
-    base64_decode(data, size, encoded_data);
-
-    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
-    shput(storage->cache, name, value);
-
-    return true;
+    return Storage_Cache_inject_base64(storage->cache, name, encoded_data, length);
 }
 
 bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
-    int32_t max_size = ascii85_get_max_decoded_length(strlen(encoded_data));
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Ascii85 data `%.32s` is %d byte(s) long", encoded_data, max_size);
-
-    void *data = malloc(sizeof(char) * max_size);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", max_size, encoded_data);
-        return false;
-    }
-
-    int32_t size = ascii85_decode(encoded_data, length, data, max_size);
-    if (size < 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` can't be decoded as Ascii85");
-        free(data);
-        return false;
-    }
-
-    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = (size_t)size };
-    shput(storage->cache, name, value);
-
-    return true;
+    return Storage_Cache_inject_ascii85(storage->cache, name, encoded_data, length);
 }
 
 bool Storage_inject_raw(Storage_t *storage, const char *name, const void *raw_data, size_t size)
 {
-    void *data = stb_memdup(raw_data, size);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for data %p", size, data);
-        return false;
-    }
-    
-    Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
-    shput(storage->cache, name, value);
-
-    return true;
+    return Storage_Cache_inject_raw(storage->cache, name, raw_data, size);
 }
 
 bool Storage_set_identity(Storage_t *storage, const char *identity)

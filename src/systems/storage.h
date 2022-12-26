@@ -27,6 +27,8 @@
 
 #include <libs/fs/fs.h>
 
+#include "storage/cache.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -65,22 +67,6 @@ typedef struct Storage_Configuration_s {
     const char *path;
 } Storage_Configuration_t;
 
-typedef struct Storage_Cache_Entry_Value_s {
-    void *data;
-    size_t size;
-} Storage_Cache_Entry_Value_t;
-
-typedef struct Storage_Cache_Entry_s {
-    char *key;
-    Storage_Cache_Entry_Value_t value;
-} Storage_Cache_Entry_t;
-
-typedef struct Storage_Cache_Stream_s {
-    const uint8_t *ptr;
-    size_t size;
-    size_t position;
-} Storage_Cache_Stream_t;
-
 typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
@@ -92,9 +78,9 @@ typedef struct Storage_s {
         char local[PLATFORM_PATH_MAX]; // Identity-derived folder.
     } path;
 
-    Storage_Cache_Entry_t *cache;
-
     FS_Context_t *context;
+
+    Storage_Cache_t *cache;
 
     Storage_Resource_t **resources;
 } Storage_t;

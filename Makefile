@@ -167,6 +167,7 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/modules/*.c) \
 	$(wildcard $(srcdir)/modules/utils/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
+	$(wildcard $(srcdir)/systems/storage/*.c) \
 	$(wildcard $(srcdir)/utils/*.c)
 # Source files list (external)
 SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
@@ -186,6 +187,7 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/modules/*.h) \
 	$(wildcard $(srcdir)/modules/utils/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
+	$(wildcard $(srcdir)/systems/storage/*.h) \
 	$(wildcard $(srcdir)/utils/*.h)
 # Include files list (external)
 INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
@@ -195,8 +197,6 @@ INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
 	$(wildcard $(externaldir)/stb/*.h) \
 	$(wildcard $(externaldir)/xmp-lite/*.h) \
-	$(wildcard $(externaldir)/noise/*.h) \
-	$(wildcard $(externaldir)/chipmunk/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h)
 
