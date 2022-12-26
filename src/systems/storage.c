@@ -55,8 +55,6 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             }
         };
 
-    sh_new_arena(storage->cache); // Use `sh_new_arena()` for string hashmaps that you never delete from.
-
     char path[PLATFORM_PATH_MAX] = { 0 };
     path_expand(configuration->path, path);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path is `%s`", path);

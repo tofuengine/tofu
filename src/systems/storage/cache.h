@@ -55,6 +55,7 @@ typedef struct Storage_Cache_s {
 
 extern Storage_Cache_t *Storage_Cache_create(FS_Context_t *context);
 extern void Storage_Cache_destroy(Storage_Cache_t *cache);
+
 extern bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_Cache_inject_ascii85(Storage_Cache_t *cache, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_Cache_inject_raw(Storage_Cache_t *cache, const char *name, const void *raw_data, size_t size);
