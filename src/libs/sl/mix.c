@@ -134,7 +134,7 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
 #endif
 }
 
-// Thread the stereo source as two separate mono channels and pan them individually.
+// Treat the stereo source as two separate mono channels and pan them individually.
 SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
 {
 #if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
@@ -207,4 +207,3 @@ SL_Mix_t mix_balance(float balance)
     }
 #endif
 }
-
