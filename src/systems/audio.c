@@ -137,17 +137,14 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     audio->context = SL_context_create();
     if (!audio->context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the sound context");
-        free(audio);
-        return NULL;
+        goto error_free;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context created at %p", audio->context);
 
     ma_result result = ma_mutex_init(&audio->driver.lock);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the synchronization object");
-        SL_context_destroy(audio->context);
-        free(audio);
-        return NULL;
+        goto error_destroy_context;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
 
@@ -158,7 +155,11 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
             .onFree = _free
         }, &audio->driver.log);
     ma_log_callback log_callback = ma_log_callback_init(_log_callback, (void *)audio);
-    ma_log_register_callback(&audio->driver.log, log_callback);
+    result = ma_log_register_callback(&audio->driver.log, log_callback);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize logging");
+        goto error_deinitialize_mutex;
+    }
 
     ma_context_config context_config = ma_context_config_init();
     context_config.pLog = &audio->driver.log;
@@ -172,11 +173,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     result = ma_context_init(NULL, 0, &context_config, &audio->driver.context);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio context");
-        ma_log_uninit(&audio->driver.log);
-        ma_mutex_uninit(&audio->driver.lock);
-        SL_context_destroy(audio->context);
-        free(audio);
-        return NULL;
+        goto error_deinitialize_log;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio driver context created");
 
@@ -186,11 +183,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     result = ma_context_enumerate_devices(&audio->driver.context, _enum_callback, &closure);
     if (result != MA_SUCCESS || (!closure.found && configuration->device_index != -1)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect audio device for context %p", audio->driver.context);
-        ma_log_uninit(&audio->driver.log);
-        ma_mutex_uninit(&audio->driver.lock);
-        SL_context_destroy(audio->context);
-        free(audio);
-        return NULL;
+        goto error_deinitialize_context;
     }
 
     ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
@@ -216,12 +209,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio device");
-        ma_context_uninit(&audio->driver.context);
-        ma_log_uninit(&audio->driver.log);
-        ma_mutex_uninit(&audio->driver.lock);
-        SL_context_destroy(audio->context);
-        free(audio);
-        return NULL;
+        goto error_deinitialize_context;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
 
@@ -232,13 +220,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     result = ma_device_start(&audio->driver.device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
-        ma_device_uninit(&audio->driver.device);
-        ma_context_uninit(&audio->driver.context);
-        ma_log_uninit(&audio->driver.log);
-        ma_mutex_uninit(&audio->driver.lock);
-        SL_context_destroy(audio->context);
-        free(audio);
-        return NULL;
+        goto error_deinitialize_context;
     }
 #endif
 
@@ -251,7 +233,25 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->driver.device.playback.internalPeriodSizeInFrames);
 
     return audio;
+
+error_deinitialize_context:
+    ma_context_uninit(&audio->driver.context);
+error_deinitialize_log:
+    ma_log_uninit(&audio->driver.log);
+error_deinitialize_mutex:
+    ma_mutex_uninit(&audio->driver.lock);
+error_destroy_context:
+    SL_context_destroy(audio->context);
+error_free:
+    free(audio);
+    return NULL;
 }
+
+// Note on the goto-clean-up style: we could just use an extended `XXX_destroy()` function
+// that check if every pointer is valid and destroy the resource accordingly. However, this
+// won´t be applicable every time (like for `miniaudio`) structures aren´t used as pointers.
+
+// TODO: should we use an approach similar to miniaudio's and use structures w/o pointers?
 
 void Audio_destroy(Audio_t *audio)
 {
@@ -259,7 +259,7 @@ void Audio_destroy(Audio_t *audio)
     ma_context_uninit(&audio->driver.context);
     ma_log_uninit(&audio->driver.log);
     ma_mutex_uninit(&audio->driver.lock);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio uninitialized");
 
     SL_context_destroy(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");

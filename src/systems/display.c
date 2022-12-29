@@ -209,19 +209,10 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     return true;
 }
 
-static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *present_area, GL_Size_t *canvas_size)
+static GLFWwindow *_window_create(const Display_Configuration_t *configuration, GL_Rectangle_t *present_area, GL_Size_t *canvas_size)
 {
-    glfwSetErrorCallback(_error_callback);
-
-    if (!glfwInit()) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
-        return NULL;
-    }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLFW initialized");
-
     GL_Rectangle_t window_rectangle;
     if (!_compute_size(configuration->window.width, configuration->window.height, configuration->window.scale, configuration->fullscreen, present_area, &window_rectangle, canvas_size)) {
-        glfwTerminate();
         return NULL;
     }
 
@@ -249,7 +240,6 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
-        glfwTerminate();
         return NULL;
     }
     glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
@@ -257,9 +247,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return NULL;
+        goto error_destroy_window;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLAD initialized");
 
@@ -286,6 +274,15 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
 
     return window;
+
+error_destroy_window:
+    glfwDestroyWindow(window);
+    return NULL;
+}
+
+static void _window_destroy(GLFWwindow *window)
+{
+    glfwDestroyWindow(window);
 }
 
 static bool _shader_initialize(Display_t *display, const char *effect)
@@ -352,12 +349,19 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
+    glfwSetErrorCallback(_error_callback);
+
+    if (!glfwInit()) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
+        goto error_free;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLFW initialized");
+
     GL_Rectangle_t vram_rectangle;
-    display->window = _window_initialize(&display->configuration, &vram_rectangle, &display->canvas.size);
+    display->window = _window_create(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
-        free(display);
-        return NULL;
+        goto error_terminate_glfw;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
 
@@ -367,10 +371,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     display->canvas.surface = GL_surface_create(display->canvas.size.width, display->canvas.size.height);
     if (!display->canvas.surface) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics surface");
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
+        goto error_destroy_window;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p created", display->canvas.surface);
 
@@ -381,11 +382,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     display->canvas.processor = GL_processor_create();
     if (!display->canvas.processor) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create processor");
-        GL_surface_destroy(display->canvas.surface);
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
+        goto error_destroy_surface;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p created", display->canvas.processor);
 
@@ -393,25 +390,14 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_processor_destroy(display->canvas.processor);
-        GL_surface_destroy(display->canvas.surface);
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
+        goto error_destroy_processor;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
 
     glGenTextures(1, &display->vram.texture); //allocate the memory for texture
     if (display->vram.texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
-        free(display->vram.pixels);
-        GL_processor_destroy(display->canvas.processor);
-        GL_surface_destroy(display->canvas.surface);
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
+        goto error_free_vram;
     }
     glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
@@ -434,14 +420,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     bool shader = _shader_initialize(display, configuration->effect);
     if (!shader) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
-        glDeleteBuffers(1, &display->vram.texture);
-        free(display->vram.pixels);
-        GL_processor_destroy(display->canvas.processor);
-        GL_surface_destroy(display->canvas.surface);
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        free(display);
-        return NULL;
+        goto error_delete_buffers;
     }
 
 #ifdef DEBUG
@@ -455,6 +434,22 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     return display;
+
+error_delete_buffers:
+    glDeleteBuffers(1, &display->vram.texture);
+error_free_vram:
+    free(display->vram.pixels);
+error_destroy_processor:
+    GL_processor_destroy(display->canvas.processor);
+error_destroy_surface:
+    GL_surface_destroy(display->canvas.surface);
+error_destroy_window:
+    _window_destroy(display->window);
+error_terminate_glfw:
+    glfwTerminate();
+error_free:
+    free(display);
+    return NULL;
 }
 
 void Display_destroy(Display_t *display)
@@ -474,7 +469,7 @@ void Display_destroy(Display_t *display)
     GL_surface_destroy(display->canvas.surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p destroyed", display->canvas.surface);
 
-    glfwDestroyWindow(display->window);
+    _window_destroy(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
 
     glfwTerminate();

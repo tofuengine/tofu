@@ -416,8 +416,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
     } else {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load resource `%s`", name);
-        free(resource);
-        return NULL;
+        goto error_free_resource;
     }
     resource->name = stb_memdup(name, strlen(name) + 1);
 
@@ -434,6 +433,10 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", name, resource);
 
     return resource;
+
+error_free_resource:
+    free(resource);
+    return NULL;
 }
 
 static void _stbi_write_func(void *context, void *data, int size)

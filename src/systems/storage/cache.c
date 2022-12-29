@@ -99,9 +99,7 @@ static size_t _cache_read(void *stream, void *buffer, size_t bytes_requested)
     Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
 
     size_t bytes_available = cache_stream->size - cache_stream->position;
-
     size_t bytes_to_copy = bytes_available > bytes_requested ? bytes_requested : bytes_available;
-
     memcpy(buffer, cache_stream->ptr + cache_stream->position, bytes_to_copy);
 
     cache_stream->position += bytes_to_copy;
@@ -225,6 +223,7 @@ bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const
 
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
     shput(cache->entries, name, value);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Base64 buffer `%.16s` w/ size of %d byte(s) injected", encoded_data, size);
 
     return true;
 }
@@ -249,6 +248,7 @@ bool Storage_Cache_inject_ascii85(Storage_Cache_t *cache, const char *name, cons
 
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = (size_t)size };
     shput(cache->entries, name, value);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Ascii85 buffer `%.16s` w/ size of %d byte(s) injected", encoded_data, size);
 
     return true;
 }
@@ -263,6 +263,7 @@ bool Storage_Cache_inject_raw(Storage_Cache_t *cache, const char *name, const vo
     
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
     shput(cache->entries, name, value);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "raw buffer w/ size of %d byte(s) injected", size);
 
     return true;
 }

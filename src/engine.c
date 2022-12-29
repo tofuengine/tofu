@@ -92,11 +92,14 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "engine version mismatch (required %d.%d.%d, current %d.%d.%d)",
             configuration->system.version.major, configuration->system.version.minor, configuration->system.version.revision,
             TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION);
-        Configuration_destroy(configuration);
-        return NULL;
+        goto error_destroy_configuration;
     }
 
     return configuration;
+
+error_destroy_configuration:
+    Configuration_destroy(configuration);
+    return NULL;
 }
 
 static inline void _information(void)
@@ -134,51 +137,43 @@ Engine_t *Engine_create(int argc, const char *argv[])
         });
     if (!engine->storage) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
-        free(engine);
-        return NULL;
+        goto error_free;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "storage ready");
 
     engine->configuration = _configure(engine->storage, argc, argv);
     if (!engine->configuration) {
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        goto error_destroy_storage;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "configuration ready");
 
     bool set = Storage_set_identity(engine->storage, engine->configuration->system.identity);
     if (!set) {
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't set identity");
+        goto error_destroy_configuration;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "identity set to `%s`", engine->configuration->system.identity);
 
     const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
     if (!icon) {
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load icon");
+        goto error_destroy_configuration;
     }
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
 
     const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
     if (!effect) {
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load effect");
+        goto error_destroy_configuration;
     }
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
 
     const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
     if (!mappings) {
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load mappings");
+        goto error_destroy_configuration;
     }
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
 
     engine->display = Display_create(&(const Display_Configuration_t){
             .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
@@ -194,12 +189,10 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .effect = S_SCHARS(effect)
         });
     if (!engine->display) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create display");
+        goto error_destroy_configuration;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "display ready");
 
     const GL_Size_t phyisical_size = Display_get_physical_size(engine->display);
     const GL_Size_t virtual_size = Display_get_virtual_size(engine->display);
@@ -234,12 +227,9 @@ Engine_t *Engine_create(int argc, const char *argv[])
         }, Display_get_window(engine->display));
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
-        Display_destroy(engine->display);
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        goto error_destroy_display;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "input ready");
 
     engine->audio = Audio_create(&(const Audio_Configuration_t){
             .device_index = engine->configuration->audio.device_index,
@@ -247,42 +237,43 @@ Engine_t *Engine_create(int argc, const char *argv[])
         });
     if (!engine->audio) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
-        Input_destroy(engine->input);
-        Display_destroy(engine->display);
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        goto error_destroy_input;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "audio ready");
 
     engine->environment = Environment_create(argc, argv, engine->display, engine->input);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
-        Audio_destroy(engine->audio);
-        Input_destroy(engine->input);
-        Display_destroy(engine->display);
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        goto error_destroy_audio;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "environment ready");
 
     engine->interpreter = Interpreter_create(engine->storage);
     if (!engine->interpreter) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter");
-        Environment_destroy(engine->environment);
-        Audio_destroy(engine->audio);
-        Input_destroy(engine->input);
-        Display_destroy(engine->display);
-        Configuration_destroy(engine->configuration);
-        Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
+        goto error_destroy_environment;
     }
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "interpreter ready");
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "engine: %s", TOFU_VERSION_STRING);
-
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "engine is up and running");
     return engine;
+
+    // Goto clean-up section.
+error_destroy_environment:
+    Environment_destroy(engine->environment);
+error_destroy_audio:
+    Audio_destroy(engine->audio);
+error_destroy_input:
+    Input_destroy(engine->input);
+error_destroy_display:
+    Display_destroy(engine->display);
+error_destroy_configuration:
+    Configuration_destroy(engine->configuration);
+error_destroy_storage:
+    Storage_destroy(engine->storage);
+error_free:
+    free(engine);
+    return NULL;
 }
 
 void Engine_destroy(Engine_t *engine)
