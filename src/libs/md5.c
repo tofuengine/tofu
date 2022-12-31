@@ -287,4 +287,3 @@ static void _decode(uint32_t *output, const uint8_t *input, uint32_t len)
             | (((uint32_t)input[j + 3]) << 24);
     }
 }
-

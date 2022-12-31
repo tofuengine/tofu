@@ -89,11 +89,14 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
         }, &props->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create data converter");
-        free(props);
-        return NULL;
+        goto error_free;
     }
 
     return props;
+
+error_free:
+    free(props);
+    return NULL;
 }
 
 void SL_props_destroy(SL_Props_t *props)

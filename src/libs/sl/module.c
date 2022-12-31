@@ -192,40 +192,57 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
             .completed = false
         };
 
-    module->context  = xmp_create_context();
+    module->context = xmp_create_context();
+    if (!module->context) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
+        return false;
+    }
 
     int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &callbacks);
     if (loaded != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
-        xmp_free_context(module->context);
-        return false;
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load module");
+        goto error_free_context;
     }
 
     ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, MODULE_OUTPUT_CHANNELS_PER_FRAME, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
-        xmp_release_module(module->context);
-        xmp_free_context(module->context);
-        return false;
+        goto error_release_module;
     }
 
     module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!module->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
-        ma_pcm_rb_uninit(&module->buffer);
-        xmp_release_module(module->context);
-        xmp_free_context(module->context);
-        return false;
+        goto error_deinitialize_ring_buffer;
     }
 
-    xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
+    int started = xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
+    if (started != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
+        goto error_destroy_properties;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module player started");
 
     return true;
+
+error_destroy_properties:
+    SL_props_destroy(module->props);
+error_deinitialize_ring_buffer:
+    ma_pcm_rb_uninit(&module->buffer);
+error_release_module:
+    xmp_release_module(module->context);
+error_free_context:
+    xmp_free_context(module->context);
+    return false;
 }
 
 static void _module_dtor(SL_Source_t *source)
 {
     Module_t *module = (Module_t *)source;
+
+    xmp_end_player(module->context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module player stopped");
 
     SL_props_destroy(module->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module properties deinitialized");
@@ -233,7 +250,6 @@ static void _module_dtor(SL_Source_t *source)
     ma_pcm_rb_uninit(&module->buffer);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module ring-buffer deinitialized");
 
-    xmp_end_player(module->context);
     xmp_release_module(module->context);
     xmp_free_context(module->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module context deinitialized");
@@ -304,5 +320,6 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }
+
     return true;
 }

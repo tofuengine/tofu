@@ -52,7 +52,7 @@ static void _std_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback
 static bool _std_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name);
 
-static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream);
+static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream, size_t size);
 static void _std_handle_dtor(FS_Handle_t *handle);
 static size_t _std_handle_size(FS_Handle_t *handle);
 static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -156,6 +156,18 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
     return exists;
 }
 
+static size_t _size(FILE *stream)
+{
+    fseek(stream, 0L, SEEK_END);
+    size_t size = (size_t)ftell(stream);
+#ifdef __DEBUG_FS_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is %d bytes long", handle, size);
+#endif
+    fseek(stream, 0L, SEEK_SET);
+
+    return size;
+}
+
 static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
@@ -172,27 +184,23 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
     FS_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", name);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
 
-    _std_handle_ctor(handle, stream);
+    _std_handle_ctor(handle, stream, _size(stream));
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", name, handle);
 
     return handle;
+
+error_close:
+    fclose(stream);
+    return NULL;
 }
 
-static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream)
+static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream, size_t size)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    fseek(stream, 0L, SEEK_END);
-    size_t size = (size_t)ftell(stream);
-#ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is %d bytes long", handle, size);
-#endif
-    rewind(stream);
 
     *std_handle = (Std_Handle_t){
             .vtable = (Handle_VTable_t){

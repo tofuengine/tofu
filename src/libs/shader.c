@@ -34,7 +34,7 @@ Shader_t *shader_create(void)
     Shader_t *shader = malloc(sizeof(Shader_t));
     if (!shader) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate shader");
-        return NULL;
+        goto error_exit;
     }
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader created at %p", shader);
@@ -45,12 +45,16 @@ Shader_t *shader_create(void)
     shader->id = glCreateProgram();
     if (shader->id == 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create shader program");
-        free(shader);
-        return NULL;
+        goto error_free;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d created", shader->id);
 
     return shader;
+
+error_free:
+    free(shader);
+error_exit:
+    return NULL;
 }
 
 void shader_destroy(Shader_t *shader)
@@ -105,7 +109,7 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
         GLint length = 0;
         glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
 
-        GLchar description[length];
+        GLchar description[length]; // FIXME: remove VLAs!!!
         glGetShaderInfoLog(shader_id, length, NULL, description);
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "shader compile error: %s", description);
     } else {

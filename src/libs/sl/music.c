@@ -208,8 +208,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     music->length_in_frames = music->decoder->totalPCMFrameCount;
     if (music->length_in_frames == 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create music w/ zero length");
-        drflac_close(music->decoder);
-        return false;
+        goto error_close_decoder;
     }
 
     size_t channels = music->decoder->channels;
@@ -220,8 +219,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
-        drflac_close(music->decoder);
-        return false;
+        goto error_close_decoder;
     }
 
 #ifdef __SL_MUSIC_PRELOAD__
@@ -237,12 +235,16 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     music->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!music->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
-        ma_pcm_rb_uninit(&music->buffer);
-        drflac_close(music->decoder);
-        return false;
+        goto error_deinitialize_ringbuffer;
     }
 
     return true;
+
+error_deinitialize_ringbuffer:
+    ma_pcm_rb_uninit(&music->buffer);
+error_close_decoder:
+    drflac_close(music->decoder);
+    return false;
 }
 
 static void _music_dtor(SL_Source_t *source)
@@ -332,5 +334,6 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }
+
     return true;
 }

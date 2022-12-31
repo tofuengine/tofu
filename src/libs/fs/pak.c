@@ -178,16 +178,11 @@ bool FS_pak_is_valid(const char *path)
         return false;
     }
 
-    bool validated = _pak_validate_archive(stream, path);
-    if (!validated) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't validate file `%s` as archive", path);
-        fclose(stream);
-        return false;
-    }
+    bool is_valid = _pak_validate_archive(stream, path);
 
     fclose(stream);
 
-    return true;
+    return is_valid;
 }
 
 static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
@@ -213,10 +208,14 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
     }
 
     char *name = malloc(header.chars + 1);
+    if (!name) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate entry's name");
+        return false;
+    }
+
     entries_read = fread(name, sizeof(char), header.chars, stream);
     if (entries_read != header.chars) {
-        free(name);
-        return false;
+        goto error_free;
     }
     name[header.chars] = '\0';
 
@@ -232,6 +231,10 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
 
     return true;
+
+error_free:
+    free(name);
+    return false;
 }
 
 static void _free_directory(Pak_Entry_t *directory)
@@ -265,30 +268,26 @@ FS_Mount_t *FS_pak_mount(const char *path)
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read header from file `%s`", path);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
 
     bool seeked = fseek(stream, -((long)sizeof(Pak_Index_t)), SEEK_END) == 0; // Cast to fix on x64 Windows build.
     if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
 
     Pak_Index_t index;
     entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
     if (entries_read != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read directory-header from archive `%s`", path);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
 
     seeked = fseek(stream, (long)index.offset, SEEK_SET) == 0;
     if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
 
     Pak_Entry_t *directory = NULL;
@@ -297,14 +296,10 @@ FS_Mount_t *FS_pak_mount(const char *path)
         bool read = _read_entry(&entry, stream);
         if (!read) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read entry #%d (%d total) from archive `%s`", i, index.entries, entries_read, path);
-            _free_directory(directory);
-            fclose(stream);
-            return NULL;
+            goto error_free_directory;
         }
         arrpush(directory, entry);
     }
-
-    fclose(stream);
 
     qsort(directory, index.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ %d entries sorted", index.entries);
@@ -312,15 +307,22 @@ FS_Mount_t *FS_pak_mount(const char *path)
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for archive `%s`", path);
-        _free_directory(directory);
-        return NULL;
+        goto error_free_directory;
     }
+
+    fclose(stream);
 
     _pak_mount_ctor(mount, path, index.entries, directory, header.flags.encrypted);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized w/ %d entries (encrypted is %d) for archive `%s`", index.entries, header.flags.encrypted, path);
 
     return mount;
+
+error_free_directory:
+    _free_directory(directory);
+error_close:
+    fclose(stream);
+    return NULL;
 }
 
 static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, bool encrypted)
@@ -394,16 +396,14 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     bool seeked = fseek(stream, (long)entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
     if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", name);
-        fclose(stream);
-        return NULL;
+        goto error_close;
     }
 
     _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags.encrypted, entry->id);
@@ -411,6 +411,10 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
 
     return handle;
+
+error_close:
+    fclose(stream);
+    return NULL;
 }
 
 static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH])
@@ -526,7 +530,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
 
-    if (pak_handle->encrypted) {
+    if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the seeked position.
         size_t index = position - pak_handle->beginning_of_stream;
         xor_adjust(&pak_handle->cipher_context, index);
 #ifdef __DEBUG_FS_CALLS__
