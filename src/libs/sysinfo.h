@@ -29,13 +29,13 @@
 
 #define SYSINFO_NAME_LENGTH 128
 
-typedef struct System_Information_s {
+typedef struct SysInfo_Data_s {
     char system[SYSINFO_NAME_LENGTH];
     char release[SYSINFO_NAME_LENGTH];
     char version[SYSINFO_NAME_LENGTH];
     char architecture[SYSINFO_NAME_LENGTH];
-} System_Information_t;
+} SysInfo_Data_t;
 
-extern bool SI_inspect(System_Information_t *buffer);
+extern bool SysInfo_inspect(SysInfo_Data_t *buffer);
 
 #endif  /* __LIBS_SYSINFO_H__ */

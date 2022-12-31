@@ -42,7 +42,7 @@
   #include <sys/utsname.h>
 #endif
 
-bool SI_inspect(System_Information_t *si)
+bool SysInfo_inspect(SysInfo_Data_t *si)
 {
 #if PLATFORM_ID == PLATFORM_WINDOWS
   OSVERSIONINFO version;
@@ -63,7 +63,7 @@ bool SI_inspect(System_Information_t *si)
     {
       version.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
       if (!GetVersionEx (&version))
-        abort ();
+        abort();
     }
 
   /* Determine major-major Windows version.  */

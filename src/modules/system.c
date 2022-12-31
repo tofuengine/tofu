@@ -114,8 +114,8 @@ static int system_information_0_1t(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    System_Information_t si;
-    bool result = SI_inspect(&si);
+    SysInfo_Data_t si;
+    bool result = SysInfo_inspect(&si);
     if (!result) {
         return luaL_error(L, "can't get system information");
     }
