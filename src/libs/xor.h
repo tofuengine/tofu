@@ -28,13 +28,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define XOR_MAX_KEY_LENGTH  256
+
 typedef struct xor_context_s {
-    uint8_t K[256];
+    uint8_t K[XOR_MAX_KEY_LENGTH];
     size_t n, i;
 } xor_context_t;
 
 extern void xor_schedule(xor_context_t *context, const uint8_t *key, size_t size);
 extern void xor_process(xor_context_t *context, uint8_t *out, const uint8_t *in, size_t size);
-extern void xor_adjust(xor_context_t *context, size_t index);
+extern void xor_seek(xor_context_t *context, size_t index);
 
 #endif  /* __LIBS_XOR_H__ */

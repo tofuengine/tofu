@@ -532,7 +532,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the seeked position.
         size_t index = position - pak_handle->beginning_of_stream;
-        xor_adjust(&pak_handle->cipher_context, index);
+        xor_seek(&pak_handle->cipher_context, index);
 #ifdef __DEBUG_FS_CALLS__
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "cipher context adjusted to %d", index);
 #endif
