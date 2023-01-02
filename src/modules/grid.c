@@ -24,13 +24,13 @@
 
 #include "grid.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/interpreter.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "grid"
 #define MODULE_NAME "tofu.util.grid"

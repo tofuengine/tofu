@@ -24,15 +24,15 @@
 
 #include "canvas.h"
 
-#include <config.h>
+#include "internal/map.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/interpreter.h>
-
-#include "udt.h"
-#include "utils/map.h"
 
 #define LOG_CONTEXT "canvas"
 #define MODULE_NAME "tofu.graphics.canvas"

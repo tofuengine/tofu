@@ -25,7 +25,7 @@
 #ifndef __CONFIGURATION_H__
 #define __CONFIGURATION_H__
 
-#include <platform.h>
+#include <core/platform.h>
 
 #include <stdbool.h>
 #include <stddef.h>

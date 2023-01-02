@@ -24,16 +24,15 @@
 
 #include "configuration.h"
 
+#include <core/resolution.h>
+#include <core/version.h>
 #include <libs/imath.h>
 #include <libs/log.h>
-#include <version.h>
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "utils/resolution.h"
 
 #define LOG_CONTEXT "configuration"
 

@@ -24,11 +24,11 @@
 
 #include "noise.h"
 
-#include <config.h>
-#include <libs/log.h>
+#include "internal/map.h"
+#include "internal/udt.h"
 
-#include "udt.h"
-#include "utils/map.h"
+#include <core/config.h>
+#include <libs/log.h>
 
 #define LOG_CONTEXT "noise"
 #define META_TABLE  "Tofu_Generators_Noise_mt"

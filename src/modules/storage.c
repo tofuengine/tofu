@@ -24,11 +24,11 @@
 
 #include "storage.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <systems/interpreter.h>
 #include <systems/storage.h>
-
-#include "udt.h"
 
 static int storage_inject_3ssS_0(lua_State *L);
 static int storage_scan_1f_0(lua_State *L);

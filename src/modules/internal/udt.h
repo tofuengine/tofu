@@ -25,8 +25,6 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
-#include <chipmunk/chipmunk.h>
-
 #include <libs/easing.h>
 #include <libs/luax.h>
 #include <libs/noise.h>
@@ -36,6 +34,8 @@
 #include <libs/sl/sl.h>
 #include <systems/display.h>
 #include <systems/input.h>
+
+#include <chipmunk/chipmunk.h>
 
 typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,

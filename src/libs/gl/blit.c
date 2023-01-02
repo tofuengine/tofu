@@ -24,7 +24,7 @@
 
 #include "blit.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/imath.h>
 #include <libs/sincos.h>

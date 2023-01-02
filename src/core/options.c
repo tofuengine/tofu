@@ -24,7 +24,7 @@
 
 #include "options.h"
 
-#include <platform.h>
+#include <core/platform.h>
 
 #include <stdbool.h>
 #include <string.h>

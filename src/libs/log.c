@@ -24,7 +24,7 @@
 
 #include "log.h"
 
-#include <platform.h>
+#include <core/platform.h>
 
 #include <stdarg.h>
 #include <string.h>

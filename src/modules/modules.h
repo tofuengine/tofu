@@ -25,8 +25,6 @@
 #ifndef __MODULES_MODULES_H__
 #define __MODULES_MODULES_H__
 
-#include <stdbool.h>
-
 #include <lua/lua.h>
 
 extern void modules_initialize(lua_State *L, int nup);

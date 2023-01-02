@@ -24,15 +24,15 @@
 
 #include "image.h"
 
-#include <config.h>
+#include "internal/callbacks.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/storage.h>
-
-#include "udt.h"
-#include "utils/callbacks.h"
 
 #define LOG_CONTEXT "image"
 #define MODULE_NAME "tofu.graphics.image"

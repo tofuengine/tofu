@@ -24,7 +24,7 @@
 
 #include "primitive.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/imath.h>
 
 #define REGION_INSIDE   0

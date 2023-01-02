@@ -26,7 +26,7 @@
 
 #include "blit.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 

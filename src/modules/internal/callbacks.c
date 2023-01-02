@@ -24,7 +24,7 @@
 
 #include "callbacks.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/stb.h>
 
 #pragma pack(push, 1)

@@ -25,11 +25,11 @@
 #ifndef __SYSTEMS_ENVIRONMENT_H__
 #define __SYSTEMS_ENVIRONMENT_H__
 
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "display.h"
 #include "input.h"
+
+#include <stdbool.h>
+#include <stddef.h>
 
 typedef struct Environment_Stats_s {
     size_t fps;

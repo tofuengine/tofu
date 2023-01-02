@@ -24,7 +24,7 @@
 
 #include "callbacks.h"
 
-#include "internals.h"
+#include "internal.h"
 
 #include <libs/log.h>
 #include <libs/path.h>

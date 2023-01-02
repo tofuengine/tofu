@@ -24,12 +24,12 @@
 
 #include "program.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
 #include <systems/display.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "program"
 #define META_TABLE  "Tofu_Graphics_Program_mt"

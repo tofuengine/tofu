@@ -24,12 +24,12 @@
 
 #include "tweener.h"
 
-#include <config.h>
+#include "internal/map.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-
-#include "utils/map.h"
-#include "udt.h"
 
 #define LOG_CONTEXT "tweener"
 #define META_TABLE  "Tofu_Generators_Tweener_mt"

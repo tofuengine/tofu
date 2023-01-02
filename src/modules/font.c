@@ -24,13 +24,13 @@
 
 #include "font.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <systems/storage.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "font"
 #define MODULE_NAME "tofu.graphics.font"

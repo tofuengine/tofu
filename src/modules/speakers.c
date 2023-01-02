@@ -24,11 +24,11 @@
 
 #include "speakers.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <systems/audio.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "speakers"
 

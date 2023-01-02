@@ -25,10 +25,10 @@
 #ifndef __SL_PROPS_H__
 #define __SL_PROPS_H__
 
-#include <miniaudio/miniaudio.h>
-
 #include "common.h"
 #include "context.h"
+
+#include <miniaudio/miniaudio.h>
 
 #include <stdbool.h>
 #include <stddef.h>

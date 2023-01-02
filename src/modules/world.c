@@ -24,15 +24,15 @@
 
 #include "world.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <libs/path.h>
 #include <systems/storage.h>
 
 #include <chipmunk/chipmunk.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "world"
 #define MODULE_NAME "tofu.physics.world"

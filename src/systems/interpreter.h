@@ -25,13 +25,12 @@
 #ifndef __SYSTEMS_INTERPRETER_H__
 #define __SYSTEMS_INTERPRETER_H__
 
-#include <config.h>
+#include "storage.h"
 
+#include <core/config.h>
 #include <libs/luax.h>
 
 #include <stdbool.h>
-
-#include "storage.h"
 
 typedef enum lua_Warning_States_e {
     WARNING_STATE_DISABLED,

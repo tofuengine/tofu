@@ -160,15 +160,15 @@ endif
 
 # Source files list (src)
 SOURCES:=$(wildcard $(srcdir)/*.c) \
+	$(wildcard $(srcdir)/core/*.c) \
 	$(wildcard $(srcdir)/libs/*.c) \
 	$(wildcard $(srcdir)/libs/fs/*.c) \
 	$(wildcard $(srcdir)/libs/gl/*.c) \
 	$(wildcard $(srcdir)/libs/sl/*.c) \
 	$(wildcard $(srcdir)/modules/*.c) \
-	$(wildcard $(srcdir)/modules/utils/*.c) \
+	$(wildcard $(srcdir)/modules/internal/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
-	$(wildcard $(srcdir)/systems/storage/*.c) \
-	$(wildcard $(srcdir)/utils/*.c)
+	$(wildcard $(srcdir)/systems/storage/*.c)
 # Source files list (external)
 SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
@@ -180,15 +180,15 @@ SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
 	$(wildcard $(externaldir)/chipmunk/*.c)
 # Include files list (src)
 INCLUDES:=$(wildcard $(srcdir)/*.h) \
+	$(wildcard $(srcdir)/core/*.h) \
 	$(wildcard $(srcdir)/libs/*.h) \
 	$(wildcard $(srcdir)/libs/fs/*.h) \
 	$(wildcard $(srcdir)/libs/gl/*.h) \
 	$(wildcard $(srcdir)/libs/sl/*.h) \
 	$(wildcard $(srcdir)/modules/*.h) \
-	$(wildcard $(srcdir)/modules/utils/*.h) \
+	$(wildcard $(srcdir)/modules/internal/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
-	$(wildcard $(srcdir)/systems/storage/*.h) \
-	$(wildcard $(srcdir)/utils/*.h)
+	$(wildcard $(srcdir)/systems/storage/*.h)
 # Include files list (external)
 INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \

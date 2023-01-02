@@ -24,15 +24,15 @@
 
 #include "fs.h"
 
-#include <config.h>
+#include "callbacks.h"
+#include "internal.h"
+#include "pak.h"
+#include "std.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-
-#include "internals.h"
-#include "callbacks.h"
-#include "pak.h"
-#include "std.h"
 
 struct FS_Context_s {
     FS_Mount_t **mounts;

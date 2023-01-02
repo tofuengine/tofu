@@ -24,23 +24,22 @@
 
 #include "sysinfo.h"
 
-#include <platform.h>
+#include <core/platform.h>
 #include <libs/log.h>
 
 #include <string.h>
 
-#define LOG_CONTEXT "sysinfo"
-
 /* This file provides an implementation only for the native Windows API.  */
 #if PLATFORM_ID == PLATFORM_WINDOWS
-#include <windows.h>
-
-#ifndef VER_PLATFORM_WIN32_CE
-  #define VER_PLATFORM_WIN32_CE 3
-#endif
+  #include <windows.h>
+  #ifndef VER_PLATFORM_WIN32_CE
+    #define VER_PLATFORM_WIN32_CE 3
+  #endif
 #elif PLATFORM_ID == PLATFORM_LINUX
   #include <sys/utsname.h>
 #endif
+
+#define LOG_CONTEXT "sysinfo"
 
 bool SysInfo_inspect(SysInfo_Data_t *si)
 {

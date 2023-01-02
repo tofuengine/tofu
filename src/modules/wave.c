@@ -24,11 +24,11 @@
 
 #include "wave.h"
 
-#include <config.h>
-#include <libs/log.h>
+#include "internal/map.h"
+#include "internal/udt.h"
 
-#include "utils/map.h"
-#include "udt.h"
+#include <core/config.h>
+#include <libs/log.h>
 
 #define LOG_CONTEXT "wave"
 #define META_TABLE  "Tofu_Generators_Wave_mt"

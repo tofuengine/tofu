@@ -24,18 +24,17 @@
 
 #include "engine.h"
 
-#include <config.h>
-#include <platform.h>
+#include <core/config.h>
+#include <core/options.h>
+#include <core/platform.h>
+#include <core/version.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
-#include <version.h>
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
 #endif
-
-#include "utils/options.h"
 
 #define EVENTS_INITIAL_CAPACITY 8
 
@@ -104,8 +103,8 @@ error_destroy_configuration:
 
 static inline void _information(void)
 {
-    System_Information_t si = { 0 };
-    bool result = SI_inspect(&si);
+    SysInfo_Data_t si = { 0 };
+    bool result = SysInfo_inspect(&si);
     if (!result) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
         return;

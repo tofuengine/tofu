@@ -27,7 +27,7 @@
 
 // TODO: rename Display to Video?
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/gl/gl.h>
 #include <libs/shader.h>
 

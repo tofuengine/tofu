@@ -24,8 +24,9 @@
 
 #include "pak.h"
 
-#include "internals.h"
+#include "internal.h"
 
+#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/md5.h>
 #include <libs/path.h>

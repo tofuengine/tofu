@@ -25,12 +25,12 @@
 #ifndef __GL_PALETTE_H__
 #define __GL_PALETTE_H__
 
-#include <config.h>
+#include "common.h"
+
+#include <core/config.h>
 
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "common.h"
 
 // FIXME: move to `common.h`
 #define GL_MAX_PALETTE_COLORS       256

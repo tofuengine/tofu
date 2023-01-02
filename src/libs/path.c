@@ -24,9 +24,9 @@
 
 #include "path.h"
 
+#include <core/platform.h>
 #include <libs/fs/fs.h>
 #include <libs/log.h>
-#include <platform.h>
 
 #include <stdlib.h>
 #include <string.h>

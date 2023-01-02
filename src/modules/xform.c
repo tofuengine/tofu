@@ -24,13 +24,13 @@
 
 #include "xform.h"
 
-#include <config.h>
+#include "internal/map.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-
-#include "udt.h"
-#include "utils/map.h"
 
 #include <math.h>
 

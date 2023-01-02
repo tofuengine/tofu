@@ -24,11 +24,11 @@
 
 #include "batch.h"
 
-#include <config.h>
-#include <libs/log.h>
+#include "internal/callbacks.h"
+#include "internal/udt.h"
 
-#include "udt.h"
-#include "utils/callbacks.h"
+#include <core/config.h>
+#include <libs/log.h>
 
 #define LOG_CONTEXT "batch"
 #define META_TABLE  "Tofu_Graphics_Batch_mt"

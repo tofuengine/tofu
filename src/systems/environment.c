@@ -24,14 +24,15 @@
 
 #include "environment.h"
 
-#include <config.h>
+#include <core/config.h>
+#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include <malloc.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
-    #include "windows.h"
-    #include "psapi.h"
+  #include <windows.h>
+  #include <psapi.h>
 #endif
 
 #define LOG_CONTEXT "environment"

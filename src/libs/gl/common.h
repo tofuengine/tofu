@@ -25,10 +25,10 @@
 #ifndef __GL_COMMON_H__
 #define __GL_COMMON_H__
 
+#include <core/platform.h>
+
 #include <stddef.h>
 #include <stdint.h>
-
-#include <platform.h>
 
 typedef uint8_t GL_Pixel_t;
 

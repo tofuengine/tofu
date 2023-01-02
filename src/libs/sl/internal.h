@@ -37,7 +37,7 @@
 #elif SL_BYTES_PER_SAMPLE == 4
   #define INTERNAL_FORMAT   ma_format_f32
 #else
-  #error Wrong internal format.
+  #error "Wrong internal format"
 #endif
 
 typedef struct Source_VTable_s {

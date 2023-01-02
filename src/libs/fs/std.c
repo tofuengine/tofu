@@ -24,14 +24,15 @@
 
 #include "std.h"
 
+#include "internal.h"
+
+#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 
 #include <dirent.h>
 #include <sys/stat.h>
-
-#include "internals.h"
 
 #define LOG_CONTEXT "fs-std"
 

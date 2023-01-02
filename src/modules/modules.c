@@ -49,9 +49,6 @@
 //   void cursor_1o_2nn();
 //
 
-#include <libs/log.h>
-#include <libs/luax.h>
-
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
 #include "bank.h"
 #include "batch.h"
@@ -78,6 +75,9 @@
 #include "wave.h"
 #include "world.h"
 #include "xform.h"
+
+#include <libs/log.h>
+#include <libs/luax.h>
 
 #define LOG_CONTEXT "modules"
 

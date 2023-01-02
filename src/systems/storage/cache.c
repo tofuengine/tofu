@@ -24,7 +24,7 @@
 
 #include "cache.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/ascii85.h>
 #include <libs/base64.h>
 #include <libs/fs/fs.h>

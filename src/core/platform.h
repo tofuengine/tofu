@@ -25,6 +25,8 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
+#define PLATFORM_H_INCLUDED
+
 #define PLATFORM_UNKNOWN    0
 #define PLATFORM_WINDOWS    1
 #define PLATFORM_ANDROID    2

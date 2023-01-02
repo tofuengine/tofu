@@ -24,13 +24,13 @@
 
 #include "source.h"
 
-#include <config.h>
+#include "internal/map.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <systems/audio.h>
 #include <systems/storage.h>
-
-#include "udt.h"
-#include "utils/map.h"
 
 typedef enum Source_Types_e {
     SOURCE_TYPE_MUSIC,

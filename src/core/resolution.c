@@ -39,7 +39,14 @@ static const Resolution_Variant_t _resolutions[] = {
     // Arcade
     { "arcade-cps", { 384, 224 } },
     // Atari
+    { "atari-lynx", { 160, 102 } },
     { "atari-vcs2600", { 160, 192 } },
+    // Sega
+    { "sega-dreamcast", { 640, 480 } },
+    { "sega-gamegear", { 160, 144 } },
+    { "sega-mastersystem", { 256, 192 } },
+    { "sega-genesis-pal", { 256, 240 } },
+    { "sega-genesis-ntsc", { 256, 224 } },
     // Nintendo
     { "nintendo-nes", { 256, 240 } },
     { "nintendo-snes", { 256, 224 } },
@@ -54,6 +61,7 @@ static const Resolution_Variant_t _resolutions[] = {
     // Generic VGA
     { "vga-mode13h", { 320, 200 } },
     { "vga-modex", { 320, 240 } },
+    { "vga-modeq", { 256, 256 } },
     { "vga-qvga", { 320, 240 } },
     { "vga-wqvga", { 400, 240 } },
     { "vga-hvga", { 480, 320 } },

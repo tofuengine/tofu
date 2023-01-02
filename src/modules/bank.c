@@ -24,12 +24,12 @@
 
 #include "bank.h"
 
-#include <config.h>
+#include "internal/callbacks.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <systems/storage.h>
-
-#include "udt.h"
-#include "utils/callbacks.h"
 
 #include <math.h>
 

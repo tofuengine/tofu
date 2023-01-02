@@ -58,7 +58,7 @@ GL_Processor_t *GL_processor_create(void)
   #elif GL_MAX_PALETTE_COLORS == 8
     GL_palette_set_quantized(processor->state.palette, 1, 1, 1);
   #else
-    #error "Too few palette entries!"
+    #error "Too few palette entries"
   #endif
 #else
     Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);

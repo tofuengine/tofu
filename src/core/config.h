@@ -25,6 +25,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define CONFIG_H_INCLUDED
+
 // Constant MACROs have no prefix.
 #define FPS_AVERAGE_SAMPLES         128
 

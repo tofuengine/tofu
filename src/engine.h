@@ -25,13 +25,13 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include "systems/audio.h"
-#include "systems/display.h"
-#include "systems/environment.h"
-#include "systems/input.h"
-#include "systems/storage.h"
-#include "systems/interpreter.h"
-#include "utils/configuration.h"
+#include <core/configuration.h>
+#include <systems/audio.h>
+#include <systems/display.h>
+#include <systems/environment.h>
+#include <systems/input.h>
+#include <systems/storage.h>
+#include <systems/interpreter.h>
 
 typedef struct Engine_s {
     Storage_t *storage;

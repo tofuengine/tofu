@@ -24,13 +24,13 @@
 
 #include "system.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
+#include <core/version.h>
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
 #include <systems/environment.h>
-#include <version.h>
-
-#include "udt.h"
 
 #include <time.h>
 

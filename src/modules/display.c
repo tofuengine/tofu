@@ -24,12 +24,12 @@
 
 #include "display.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "display"
 

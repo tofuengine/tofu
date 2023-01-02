@@ -24,12 +24,12 @@
 
 #include "palette.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <systems/storage.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "palette"
 #define MODULE_NAME "tofu.graphics.palette"

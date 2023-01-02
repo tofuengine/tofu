@@ -25,9 +25,10 @@
 #ifndef __SYSTEMS_STORAGE_H__
 #define __SYSTEMS_STORAGE_H__
 
-#include <libs/fs/fs.h>
-
 #include "storage/cache.h"
+
+#include <core/platform.h>
+#include <libs/fs/fs.h>
 
 #include <stdbool.h>
 #include <stddef.h>

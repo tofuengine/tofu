@@ -25,7 +25,7 @@
 #ifndef __SYSTEMS_INPUT_H__
 #define __SYSTEMS_INPUT_H__
 
-#include <config.h>
+#include <core/config.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>

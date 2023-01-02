@@ -24,7 +24,7 @@
 
 #include "tile.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/imath.h>
 
 #ifdef __DEBUG_GRAPHICS__

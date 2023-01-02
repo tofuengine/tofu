@@ -24,14 +24,14 @@
 
 #include "math.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/sincos.h>
 #include <systems/storage.h>
-
-#include "udt.h"
 
 #include <stdint.h>
 #include <math.h>

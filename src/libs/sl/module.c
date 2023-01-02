@@ -24,12 +24,13 @@
 
 #include "module.h"
 
-#include "internals.h"
+#include "internal.h"
 #include "mix.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+
 #include <xmp-lite/xmp.h>
 
 #include <stdint.h>

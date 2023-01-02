@@ -24,7 +24,7 @@
 
 #include "context.h"
 
-#include "internals.h"
+#include "internal.h"
 #include "mix.h"
 
 #include <libs/log.h>
