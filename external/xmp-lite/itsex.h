@@ -1,5 +1,5 @@
-#ifndef __ITSEX_H__
-#define __ITSEX_H__
+#ifndef LIBXMP_IT_SEX_H
+#define LIBXMP_IT_SEX_H
 
 #include "hio.h"
 
