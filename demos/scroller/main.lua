@@ -24,13 +24,13 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Controller = require("tofu.controller:controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
+local Controller = require("tofu.input.controller")
 
 local Main = Class.define()
 
