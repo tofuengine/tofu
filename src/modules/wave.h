@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_WAVE_H__
-#define __MODULES_WAVE_H__
+#ifndef TOFU_MODULES_WAVE_H
+#define TOFU_MODULES_WAVE_H
 
 #include <lua/lua.h>
 
 extern int wave_loader(lua_State *L);
 
-#endif  /* __MODULES_WAVE_H__ */
+#endif  /* TOFU_MODULES_WAVE_H */

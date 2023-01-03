@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __UTILS_OPTIONS_H__
-#define __UTILS_OPTIONS_H__
+#ifndef TOFU_CORE_OPTIONS_H
+#define TOFU_CORE_OPTIONS_H
 
 typedef struct options_s {
     const char *path;
@@ -31,4 +31,4 @@ typedef struct options_s {
 
 extern options_t options_parse_command_line(int argc, const char *argv[]);
 
-#endif /* __UTILS_OPTIONS_H__ */
+#endif /* TOFU_CORE_OPTIONS_H */

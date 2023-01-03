@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_STORAGE_CACHE_H__
-#define __SYSTEMS_STORAGE_CACHE_H__
+#ifndef TOFU_SYSTEMS_STORAGE_CACHE_H
+#define TOFU_SYSTEMS_STORAGE_CACHE_H
 
 #include <libs/fs/fs.h>
 
@@ -60,4 +60,4 @@ extern bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name
 extern bool Storage_Cache_inject_ascii85(Storage_Cache_t *cache, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_Cache_inject_raw(Storage_Cache_t *cache, const char *name, const void *raw_data, size_t size);
 
-#endif  /* __SYSTEMS_STORAGE_CACHE_H__ */
+#endif  /* TOFU_SYSTEMS_STORAGE_CACHE_H */

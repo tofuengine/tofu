@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_QUEUE_H__
-#define __GL_QUEUE_H__
+#ifndef TOFU_LIBS_GL_QUEUE_H
+#define TOFU_LIBS_GL_QUEUE_H
 
 #include "common.h"
 #include "sheet.h"
@@ -58,4 +58,4 @@ void GL_queue_blit(const GL_Queue_t *queue, const GL_Context_t *context); // FIX
 void GL_queue_blit_s(const GL_Queue_t *queue, const GL_Context_t *context);
 void GL_queue_blit_sr(const GL_Queue_t *queue, const GL_Context_t *context);
 
-#endif  /* __GL_QUEUE_H__ */
+#endif  /* TOFU_LIBS_GL_QUEUE_H */

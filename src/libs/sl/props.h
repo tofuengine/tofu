@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_PROPS_H__
-#define __SL_PROPS_H__
+#ifndef TOFU_LIBS_SL_PROPS_H
+#define TOFU_LIBS_SL_PROPS_H
 
 #include "common.h"
 #include "context.h"
@@ -64,4 +64,4 @@ extern void SL_props_set_speed(SL_Props_t *props, float speed);
 
 extern void SL_props_on_group_changed(SL_Props_t *props, size_t group_id);
 
-#endif  /* __SL_PROPS_H__ */
+#endif  /* TOFU_LIBS_SL_PROPS_H */

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_COMMON_H__
-#define __GL_COMMON_H__
+#ifndef TOFU_LIBS_GL_COMMON_H
+#define TOFU_LIBS_GL_COMMON_H
 
 #include <core/platform.h>
 
@@ -104,4 +104,4 @@ typedef enum GL_Functions_e {
 // FIXME: does this makes sense?
 #define GL_CELL_NIL     ((GL_Cell_t)-1)
 
-#endif  /* __GL_COMMON_H__ */
+#endif  /* TOFU_LIBS_GL_COMMON_H */

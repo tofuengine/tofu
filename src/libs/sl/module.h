@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_MODULE_H__
-#define __SL_MODULE_H__
+#ifndef TOFU_LIBS_SL_MODULE_H
+#define TOFU_LIBS_SL_MODULE_H
 
 #include "common.h"
 #include "context.h"
@@ -31,4 +31,4 @@
 
 extern SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callbacks);
 
-#endif  /* __SL_MODULE_H__ */
+#endif  /* TOFU_LIBS_SL_MODULE_H */

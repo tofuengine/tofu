@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_LUAX_H__
-#define __LIBS_LUAX_H__
+#ifndef TOFU_LIBS_LUAX_H
+#define TOFU_LIBS_LUAX_H
 
 #include <lua/lua.h>
 #include <lua/lualib.h>
@@ -189,4 +189,4 @@ extern void luaX_pushvalues(lua_State *L, int nup);
 extern int luaX_pushupvalues(lua_State *L);
 extern int luaX_upvaluescount(lua_State *L); // UNUSED
 
-#endif  /* __LIBS_LUAX_H__ */
+#endif  /* TOFU_LIBS_LUAX_H */

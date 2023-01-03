@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_DR_LIBS_H__
-#define __LIBS_DR_LIBS_H__
+#ifndef TOFU_LIBS_DR_LIBS_H
+#define TOFU_LIBS_DR_LIBS_H
 
 #include <dr_libs/dr_flac.h>
 
-#endif  /* __LIBS_DR_LIBS_H__ */
+#endif  /* TOFU_LIBS_DR_LIBS_H */

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_WORLD_H__
-#define __MODULES_WORLD_H__
+#ifndef TOFU_MODULES_WORLD_H
+#define TOFU_MODULES_WORLD_H
 
 #include <lua/lua.h>
 
 extern int world_loader(lua_State *L);
 
-#endif  /* __MODULES_WORLD_H__ */
+#endif  /* TOFU_MODULES_WORLD_H */

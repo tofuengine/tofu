@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_STORAGE_H__
-#define __SYSTEMS_STORAGE_H__
+#ifndef TOFU_SYSTEMS_STORAGE_H
+#define TOFU_SYSTEMS_STORAGE_H
 
 #include "storage/cache.h"
 
@@ -114,4 +114,4 @@ extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); //
 
 extern bool Storage_update(Storage_t *storage, float delta_time);
 
-#endif  /* __SYSTEMS_STORAGE_H__ */
+#endif  /* TOFU_SYSTEMS_STORAGE_H */

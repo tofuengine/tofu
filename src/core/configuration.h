@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __CONFIGURATION_H__
-#define __CONFIGURATION_H__
+#ifndef TOFU_CORE_CONFIGURATION_H
+#define TOFU_CORE_CONFIGURATION_H
 
 #include <core/platform.h>
 
@@ -79,4 +79,4 @@ extern void Configuration_destroy(Configuration_t *configuration);
 
 extern void Configuration_override(Configuration_t *configuration, int argc, const char *argv[]);
 
-#endif  /* __CONFIGURATION_H__ */
+#endif  /* TOFU_CORE_CONFIGURATION_H */

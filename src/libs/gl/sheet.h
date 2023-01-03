@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_SHEET_H__
-#define __GL_SHEET_H__
+#ifndef TOFU_LIBS_GL_SHEET_H
+#define TOFU_LIBS_GL_SHEET_H
 
 #include <stdbool.h>
 
@@ -51,4 +51,4 @@ extern void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Context_t *contex
 extern void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset);
 extern void GL_sheet_tile_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset, int scale_x, int scale_y);
 
-#endif  /* __GL_SHEET_H__ */
+#endif  /* TOFU_LIBS_GL_SHEET_H */

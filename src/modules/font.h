@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_FONT_H__
-#define __MODULES_FONT_H__
+#ifndef TOFU_MODULES_FONT_H
+#define TOFU_MODULES_FONT_H
 
 #include <lua/lua.h>
 
 extern int font_loader(lua_State *L);
 
-#endif  /* __MODULES_FONT_H__ */
+#endif  /* TOFU_MODULES_FONT_H */

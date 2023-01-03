@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_SINCOS_H__
-#define __LIBS_SINCOS_H__
+#ifndef TOFU_LIBS_SINCOS_H
+#define TOFU_LIBS_SINCOS_H
 
 #define SINCOS_PERIOD  512
 
@@ -31,4 +31,4 @@ extern void fsincos(int rotation, float *sin, float *cos);
 extern int fator(float angle);
 extern float frtoa(int rotation);
 
-#endif  /* __LIBS_SINCOS_H__ */
+#endif  /* TOFU_LIBS_SINCOS_H */

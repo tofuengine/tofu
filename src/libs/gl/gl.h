@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_H__
-#define __GL_H__
+#ifndef TOFU_LIBS_GL_H
+#define TOFU_LIBS_GL_H
 
 #include "blit.h"
 #include "common.h"
@@ -38,4 +38,4 @@
 #include "tile.h"
 #include "xform.h"
 
-#endif  /* __GL_H__ */
+#endif  /* TOFU_LIBS_GL_H */

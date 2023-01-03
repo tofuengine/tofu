@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_SYSINFO_H__
-#define __LIBS_SYSINFO_H__
+#ifndef TOFU_LIBS_SYSINFO_H
+#define TOFU_LIBS_SYSINFO_H
 
 #include <stdbool.h>
 
@@ -38,4 +38,4 @@ typedef struct SysInfo_Data_s {
 
 extern bool SysInfo_inspect(SysInfo_Data_t *buffer);
 
-#endif  /* __LIBS_SYSINFO_H__ */
+#endif  /* TOFU_LIBS_SYSINFO_H */

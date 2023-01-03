@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __VERSION_H__
-#define __VERSION_H__
+#ifndef TOFU_CORE_VERSION_H
+#define TOFU_CORE_VERSION_H
 
 #define TOFU_VERSION_MAJOR          0
 #define TOFU_VERSION_MINOR          13
@@ -39,4 +39,4 @@
 #define _TOFU_MAKE_VERSION(m, n, r)     _TOFU_CONCAT_VERSION(m, n, r)
 #define TOFU_VERSION_STRING             _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 
-#endif  /* __VERSION_H__ */
+#endif  /* TOFU_CORE_VERSION_H */

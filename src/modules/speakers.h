@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_SPEAKERS_H__
-#define __MODULES_SPEAKERS_H__
+#ifndef TOFU_MODULES_SPEAKERS_H
+#define TOFU_MODULES_SPEAKERS_H
 
 #include <lua/lua.h>
 
 extern int speakers_loader(lua_State *L);
 
-#endif  /* __MODULES_SPEAKERS_H__ */
+#endif  /* TOFU_MODULES_SPEAKERS_H */

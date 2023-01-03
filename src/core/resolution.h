@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __UTILS_RESOLUTION_H__
-#define __UTILS_RESOLUTION_H__
+#ifndef TOFU_CORE_RESOLUTION_H
+#define TOFU_CORE_RESOLUTION_H
 
 #include <stddef.h>
 
@@ -33,4 +33,4 @@ typedef struct Resolution_s {
 
 extern const Resolution_t *Resolution_find(const char *id);
 
-#endif  /* __UTILS_RESOLUTION_H__ */
+#endif  /* TOFU_CORE_RESOLUTION_H */

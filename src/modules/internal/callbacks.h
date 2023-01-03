@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_UTILS_CALLBACKS_H__
-#define __MODULES_UTILS_CALLBACKS_H__
+#ifndef TOFU_MODULES_INTERNAL_CALLBACKS_H
+#define TOFU_MODULES_INTERNAL_CALLBACKS_H
 
 #include <libs/gl/gl.h>
 
@@ -41,4 +41,4 @@ typedef struct Callback_Indexes_Closure_s {
 extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels);
 extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels);
 
-#endif  /* __MODULES_UTILS_CALLBACKS_H__ */
+#endif  /* TOFU_MODULES_INTERNAL_CALLBACKS_H */

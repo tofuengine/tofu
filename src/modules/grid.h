@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_GRID_H__
-#define __MODULES_GRID_H__
+#ifndef TOFU_MODULES_GRID_H
+#define TOFU_MODULES_GRID_H
 
 #include <lua/lua.h>
 
 extern int grid_loader(lua_State *L);
 
-#endif  /* __MODULES_GRID_H__ */
+#endif  /* TOFU_MODULES_GRID_H */

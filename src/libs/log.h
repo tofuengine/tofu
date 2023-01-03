@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_LOG_H__
-#define __LIBS_LOG_H__
+#ifndef TOFU_LIBS_LOG_H
+#define TOFU_LIBS_LOG_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -46,4 +46,4 @@ extern void Log_configure(bool enabled, FILE *stream);
 extern void Log_write(Log_Levels_t level, const char *context, const char *text, ...);
 extern void Log_assert(bool condition, Log_Levels_t level, const char *context, const char *text, ...);
 
-#endif  /* __LIBS_LOG_H__ */
+#endif  /* TOFU_LIBS_LOG_H */

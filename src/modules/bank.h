@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_BANK_H__
-#define __MODULES_BANK_H__
+#ifndef TOFU_MODULES_BANK_H
+#define TOFU_MODULES_BANK_H
 
 #include <lua/lua.h>
 
 extern int bank_loader(lua_State *L); // TODO: rename `Bank` to `Sheet`?
 
-#endif  /* __MODULES_BANK_H__ */
+#endif  /* TOFU_MODULES_BANK_H */

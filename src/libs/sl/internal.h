@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_INTERNALS_H__
-#define __SL_INTERNALS_H__
+#ifndef TOFU_LIBS_SL_INTERNALS_H
+#define TOFU_LIBS_SL_INTERNALS_H
 
 #include "common.h"
 #include "source.h"
@@ -53,4 +53,4 @@ struct SL_Source_s {
     SL_Props_t *props;
 };
 
-#endif  /* __SL_INTERNALS_H__ */
+#endif  /* TOFU_LIBS_SL_INTERNALS_H */

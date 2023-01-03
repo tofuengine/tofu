@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_AUDIO_H__
-#define __SYSTEMS_AUDIO_H__
+#ifndef TOFU_SYSTEMS_AUDIO_H
+#define TOFU_SYSTEMS_AUDIO_H
 
 #include <core/config.h>
 #include <libs/sl/sl.h>
@@ -78,4 +78,4 @@ extern bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source);
 
 extern bool Audio_update(Audio_t *audio, float delta_time);
 
-#endif  /* __SYSTEMS_AUDIO_H__ */
+#endif  /* TOFU_SYSTEMS_AUDIO_H */

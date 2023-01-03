@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_H__
-#define __FS_H__
+#ifndef TOFU_LIBS_FS_H
+#define TOFU_LIBS_FS_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -70,4 +70,4 @@ extern bool FS_seek(FS_Handle_t *handle, long offset, int whence);
 extern long FS_tell(FS_Handle_t *handle);
 extern bool FS_eof(FS_Handle_t *handle);
 
-#endif /* __FS_H__ */
+#endif /* TOFU_LIBS_FS_H */

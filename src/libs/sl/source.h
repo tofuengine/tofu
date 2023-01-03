@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_SOURCE_H__
-#define __SL_SOURCE_H__
+#ifndef TOFU_LIBS_SL_SOURCE_H
+#define TOFU_LIBS_SL_SOURCE_H
 
 #include "common.h"
 
@@ -53,4 +53,4 @@ extern bool SL_source_reset(SL_Source_t *source);
 
 extern void SL_source_on_group_changed(SL_Source_t *source, size_t group_id);
 
-#endif  /* __SL_SOURCE_H__ */
+#endif  /* TOFU_LIBS_SL_SOURCE_H */

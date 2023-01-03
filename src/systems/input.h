@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_INPUT_H__
-#define __SYSTEMS_INPUT_H__
+#ifndef TOFU_SYSTEMS_INPUT_H
+#define TOFU_SYSTEMS_INPUT_H
 
 #include <core/config.h>
 
@@ -259,4 +259,4 @@ extern Input_Button_t Input_controller_get_button(const Input_Controller_t *cont
 extern Input_Controller_Triggers_t Input_controller_get_triggers(const Input_Controller_t *controller);
 extern Input_Controller_Stick_t Input_controller_get_stick(const Input_Controller_t *controller, Input_Controller_Sticks_t stick);
 
-#endif  /* __SYSTEMS_INPUT_H__ */
+#endif  /* TOFU_SYSTEMS_INPUT_H */

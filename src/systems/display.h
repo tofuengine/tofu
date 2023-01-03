@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_DISPLAY_H__
-#define __SYSTEMS_DISPLAY_H__
+#ifndef TOFU_SYSTEMS_DISPLAY_H
+#define TOFU_SYSTEMS_DISPLAY_H
 
 // TODO: rename Display to Video?
 
@@ -97,4 +97,4 @@ extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Color_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 
-#endif  /* __SYSTEMS_DISPLAY_H__ */
+#endif  /* TOFU_SYSTEMS_DISPLAY_H */

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_FILE_H__
-#define __MODULES_FILE_H__
+#ifndef TOFU_MODULES_FILE_H
+#define TOFU_MODULES_FILE_H
 
 #include <lua/lua.h>
 
 extern int file_loader(lua_State *L);
 
-#endif  /* __MODULES_FILE_H__ */
+#endif  /* TOFU_MODULES_FILE_H */

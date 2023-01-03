@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_CONTEXT_H__
-#define __SL_CONTEXT_H__
+#ifndef TOFU_LIBS_SL_CONTEXT_H
+#define TOFU_LIBS_SL_CONTEXT_H
 
 #include "common.h"
 #include "source.h"
@@ -55,4 +55,4 @@ extern void SL_context_halt(SL_Context_t *context);
 extern bool SL_context_update(SL_Context_t *context, float delta_time);
 extern void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested);
 
-#endif  /* __SL_CONTEXT_H__ */
+#endif  /* TOFU_LIBS_SL_CONTEXT_H */

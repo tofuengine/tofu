@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_PAK_H__
-#define __FS_PAK_H__
+#ifndef TOFU_LIBS_FS_PAK_H
+#define TOFU_LIBS_FS_PAK_H
 
 #include "fs.h"
 
 extern bool FS_pak_is_valid(const char *path);
 extern FS_Mount_t *FS_pak_mount(const char *path);
 
-#endif /* __FS_PAK_H__ */
+#endif /* TOFU_LIBS_FS_PAK_H */

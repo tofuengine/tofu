@@ -24,7 +24,8 @@
 
 #include "configuration.h"
 
-#include <core/resolution.h>
+#include "resolution.h"
+
 #include <core/version.h>
 #include <libs/imath.h>
 #include <libs/log.h>

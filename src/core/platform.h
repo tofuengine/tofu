@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __PLATFORM_H__
-#define __PLATFORM_H__
+#ifndef TOFU_CORE_PLATFORM_H
+#define TOFU_CORE_PLATFORM_H
 
 #define PLATFORM_H_INCLUDED
 
@@ -109,4 +109,4 @@
   #define PLATFORM_PATH_USER          "~/Library/Application Support/tofuengine"
 #endif
 
-#endif  /* __PLATFORM_H__ */
+#endif  /* TOFU_CORE_PLATFORM_H */

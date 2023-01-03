@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_UDT_H__
-#define __MODULES_UDT_H__
+#ifndef TOFU_MODULES_INTERNAL_UDT_H
+#define TOFU_MODULES_INTERNAL_UDT_H
 
 #include <libs/easing.h>
 #include <libs/luax.h>
@@ -257,4 +257,4 @@ typedef struct Grid_Object_s {
     size_t data_size;
 } Grid_Object_t;
 
-#endif  /* __MODULES_UDT_H__ */
+#endif  /* TOFU_MODULES_INTERNAL_UDT_H */

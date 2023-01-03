@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_CONTEXT_TILE_H__
-#define __GL_CONTEXT_TILE_H__
+#ifndef TOFU_LIBS_GL_CONTEXT_TILE_H
+#define TOFU_LIBS_GL_CONTEXT_TILE_H
 
 #include "common.h"
 #include "context.h"
@@ -31,4 +31,4 @@
 extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset);
 extern void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset, int scale_x, int scale_y);
 
-#endif  /* __GL_CONTEXT_TILE_H__ */
+#endif  /* TOFU_LIBS_GL_CONTEXT_TILE_H */

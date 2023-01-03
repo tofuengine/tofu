@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_PALETTE_H__
-#define __GL_PALETTE_H__
+#ifndef TOFU_LIBS_GL_PALETTE_H
+#define TOFU_LIBS_GL_PALETTE_H
 
 #include "common.h"
 
@@ -47,4 +47,4 @@ extern size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t 
 extern void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio);
 // TODO: add other functions, too...
 
-#endif  /* __GL_PALETTE_H__ */
+#endif  /* TOFU_LIBS_GL_PALETTE_H */

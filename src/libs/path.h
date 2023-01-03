@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_PATH_H__
-#define __LIBS_PATH_H__
+#ifndef TOFU_LIBS_PATH_H
+#define TOFU_LIBS_PATH_H
 
 #include <stdbool.h>
 
@@ -38,4 +38,4 @@ extern void path_split(const char *path, char *folder, char *file);
 extern void path_join(char *path, const char *folder, const char *file);
 extern void path_lua_to_fs(char *path, const char *modname);
 
-#endif  /* __LIBS_PATH_H__ */
+#endif  /* TOFU_LIBS_PATH_H */

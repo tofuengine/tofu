@@ -51,8 +51,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LIBS_MD5_H__
-#define __LIBS_MD5_H__
+#ifndef TOFU_LIBS_MD5_H
+#define TOFU_LIBS_MD5_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -69,4 +69,4 @@ extern void md5_init(md5_context_t *context);
 extern void md5_update(md5_context_t *context, const uint8_t *msg, size_t len);
 extern void md5_final(md5_context_t *context, uint8_t *digest);
 
-#endif  /* __LIBS_MD5_H__ */
+#endif  /* TOFU_LIBS_MD5_H */

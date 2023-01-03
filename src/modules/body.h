@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_BODY_H__
-#define __MODULES_BODY_H__
+#ifndef TOFU_MODULES_BODY_H
+#define TOFU_MODULES_BODY_H
 
 #include <lua/lua.h>
 
 extern int body_loader(lua_State *L);
 
-#endif  /* __MODULES_BODY_H__ */
+#endif  /* TOFU_MODULES_BODY_H */

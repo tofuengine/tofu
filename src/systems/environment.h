@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_ENVIRONMENT_H__
-#define __SYSTEMS_ENVIRONMENT_H__
+#ifndef TOFU_SYSTEMS_ENVIRONMENT_H
+#define TOFU_SYSTEMS_ENVIRONMENT_H
 
 #include "display.h"
 #include "input.h"
@@ -76,4 +76,4 @@ extern void Environment_process(Environment_t *environment, float frame_time);
 
 extern bool Environment_update(Environment_t *environment, float delta_time);
 
-#endif  /* __SYSTEMS_ENVIRONMENT_H__ */
+#endif  /* TOFU_SYSTEMS_ENVIRONMENT_H */

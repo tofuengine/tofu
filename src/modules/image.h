@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_IMAGE_H__
-#define __MODULES_IMAGE_H__
+#ifndef TOFU_MODULES_IMAGE_H
+#define TOFU_MODULES_IMAGE_H
 
 #include <lua/lua.h>
 
 extern int image_loader(lua_State *L);
 
-#endif  /* __MODULES_IMAGE_H__ */
+#endif  /* TOFU_MODULES_IMAGE_H */

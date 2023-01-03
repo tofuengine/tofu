@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#ifndef TOFU_CORE_ENGINE_H
+#define TOFU_CORE_ENGINE_H
 
-#include <core/configuration.h>
+#include "configuration.h"
+
 #include <systems/audio.h>
 #include <systems/display.h>
 #include <systems/environment.h>
@@ -48,4 +49,4 @@ extern void Engine_destroy(Engine_t *engine);
 
 extern void Engine_run(Engine_t *engine);
 
-#endif  /* __ENGINE_H__ */
+#endif  /* TOFU_CORE_ENGINE_H */

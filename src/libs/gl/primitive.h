@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_CONTEXT_PRIMITIVE_H__
-#define __GL_CONTEXT_PRIMITIVE_H__
+#ifndef TOFU_LIBS_GL_CONTEXT_PRIMITIVE_H
+#define TOFU_LIBS_GL_CONTEXT_PRIMITIVE_H
 
 #include "common.h"
 #include "context.h"
@@ -39,4 +39,4 @@ extern void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v
 extern void GL_context_filled_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index);
 extern void GL_context_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index);
 
-#endif  /* __GL_CONTEXT_PRIMITIVE_H__ */
+#endif  /* TOFU_LIBS_GL_CONTEXT_PRIMITIVE_H */

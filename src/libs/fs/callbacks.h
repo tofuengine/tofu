@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_CALLBACKS_H__
-#define __FS_CALLBACKS_H__
+#ifndef TOFU_LIBS_FS_CALLBACKS_H
+#define TOFU_LIBS_FS_CALLBACKS_H
 
 #include "fs.h"
 
 extern FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data);
 
-#endif /* __FS_CALLBACKS_H__ */
+#endif /* TOFU_LIBS_FS_CALLBACKS_H */

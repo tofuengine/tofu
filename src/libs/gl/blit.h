@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_CONTEXT_BLIT_H__
-#define __GL_CONTEXT_BLIT_H__
+#ifndef TOFU_LIBS_GL_CONTEXT_BLIT_H
+#define TOFU_LIBS_GL_CONTEXT_BLIT_H
 
 #include "common.h"
 #include "context.h"
@@ -32,4 +32,4 @@ extern void GL_context_blit(const GL_Context_t *context, GL_Point_t position, co
 extern void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
 extern void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
 
-#endif  /* __GL_CONTEXT_BLIT_H__ */
+#endif  /* TOFU_LIBS_GL_CONTEXT_BLIT_H */

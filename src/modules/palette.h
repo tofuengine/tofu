@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_PALETTE_H__
-#define __MODULES_PALETTE_H__
+#ifndef TOFU_MODULES_PALETTE_H
+#define TOFU_MODULES_PALETTE_H
 
 #include <lua/lua.h>
 
 extern int palette_loader(lua_State *L);
 
-#endif  /* __MODULES_PALETTE_H__ */
+#endif  /* TOFU_MODULES_PALETTE_H */

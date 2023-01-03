@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_INTERPRETER_H__
-#define __SYSTEMS_INTERPRETER_H__
+#ifndef TOFU_SYSTEMS_INTERPRETER_H
+#define TOFU_SYSTEMS_INTERPRETER_H
 
 #include "storage.h"
 
@@ -58,4 +58,4 @@ extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);
 
-#endif  /* __SYSTEMS_INTERPRETER_H__ */
+#endif  /* __ TOFU_SYSTEMS_INTERPRETER_H__ */

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_CURSOR_H__
-#define __MODULES_CURSOR_H__
+#ifndef TOFU_MODULES_CURSOR_H
+#define TOFU_MODULES_CURSOR_H
 
 #include <lua/lua.h>
 
 extern int cursor_loader(lua_State *L);
 
-#endif  /* __MODULES_CURSOR_H__ */
+#endif  /* TOFU_MODULES_CURSOR_H */

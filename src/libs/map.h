@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef LIBS_MAP_H
-#define LIBS_MAP_H
+#ifndef TOFU_LIBS_MAP_H
+#define TOFU_LIBS_MAP_H
 
 typedef int Map_Entry_Value_t;
 
@@ -37,4 +37,4 @@ typedef struct Map_Entry_s {
 extern const Map_Entry_t *map_find_key(const char *key, const Map_Entry_t *table);
 extern const Map_Entry_t *map_find_value(Map_Entry_Value_t value, const Map_Entry_t *table);
 
-#endif  /* LIBS_MAP_H */
+#endif  /* TOFU_LIBS_MAP_H */

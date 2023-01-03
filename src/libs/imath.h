@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_IMATH_H__
-#define __LIBS_IMATH_H__
+#ifndef TOFU_LIBS_IMATH_H
+#define TOFU_LIBS_IMATH_H
 
 #include <math.h>
 
@@ -60,4 +60,4 @@ extern int ifloor(float x);
 extern int iceil(float x);
 #endif
 
-#endif  /* __LIBS_IMATH_H__ */
+#endif  /* TOFU_LIBS_IMATH_H */

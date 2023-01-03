@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef TOFU_CORE_CONFIG_H
+#define TOFU_CORE_CONFIG_H
 
 #define CONFIG_H_INCLUDED
 
@@ -113,4 +113,4 @@
   #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #endif
 
-#endif  /* __CONFIG_H__ */
+#endif  /* TOFU_CORE_CONFIG_H */

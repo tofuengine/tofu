@@ -22,8 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_FMATH_H__
-#define __LIBS_FMATH_H__
+#ifndef TOFU_LIBS_FMATH_H
+#define TOFU_LIBS_FMATH_H
+
+#include <core/config.h>
 
 #include <math.h>
 
@@ -70,4 +72,4 @@ extern float ffloor(float x);
 extern float fceil(float x);
 #endif
 
-#endif  /* __LIBS_FMATH_H__ */
+#endif  /* TOFU_LIBS_FMATH_H */

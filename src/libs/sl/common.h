@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_COMMON_H__
-#define __SL_COMMON_H__
+#ifndef TOFU_LIBS_SL_COMMON_H
+#define TOFU_LIBS_SL_COMMON_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -63,4 +63,4 @@ typedef struct SL_Group_s {
     float gain;
 } SL_Group_t;
 
-#endif  /* __SL_COMMON_H__ */
+#endif  /* TOFU_LIBS_SL_COMMON_H */
