@@ -32,8 +32,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <miniaudio/miniaudio.h>
-
 #include <stdint.h>
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called

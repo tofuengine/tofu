@@ -26,5 +26,6 @@
 #define TOFU_LIBS_DR_LIBS_H
 
 #include <dr_libs/dr_flac.h>
+#include <miniaudio/miniaudio.h>
 
 #endif  /* TOFU_LIBS_DR_LIBS_H */

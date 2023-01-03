@@ -27,8 +27,7 @@
 
 #include <core/config.h>
 #include <libs/sl/sl.h>
-
-#include <miniaudio/miniaudio.h>
+#include <libs/dr_libs.h>
 
 #include <stdbool.h>
 

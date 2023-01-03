@@ -32,8 +32,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <miniaudio/miniaudio.h>
-
 #include <stdint.h>
 
 #define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f

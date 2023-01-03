@@ -28,7 +28,7 @@
 #include "common.h"
 #include "context.h"
 
-#include <miniaudio/miniaudio.h>
+#include <libs/dr_libs.h>
 
 #include <stdbool.h>
 #include <stddef.h>
