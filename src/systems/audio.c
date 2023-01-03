@@ -332,7 +332,7 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
     ma_mutex_lock(&audio->driver.lock);
     if (reset) {
         bool success = SL_source_reset(source);
-        LOG_IF_W(success, LOG_CONTEXT, "can't reset source %p", source);
+        LOG_IF_W(!success, LOG_CONTEXT, "can't reset source %p", source);
     }
     if (!SL_context_is_tracked(audio->context, source)) {
         SL_context_track(audio->context, source);

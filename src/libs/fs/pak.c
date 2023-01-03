@@ -373,7 +373,7 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
     const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
-    LOG_IF_T(!exists, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
+    LOG_IF_T(exists, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
     return exists;
 }
 
@@ -561,7 +561,7 @@ static bool _pak_handle_eof(FS_Handle_t *handle)
 
     bool end_of_file = position > pak_handle->end_of_stream;
 #ifdef __DEBUG_FS_CALLS__
-    LOG_IF_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

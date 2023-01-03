@@ -151,7 +151,7 @@ void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
     shader->locations = malloc(sizeof(GLuint) * count);
     for (size_t i = 0; i < count; ++i) {
         GLint location = glGetUniformLocation(shader->id, ids[i]);
-        LOG_IF_W(location != -1, LOG_CONTEXT, "uniform `%s` not found for program #%d", ids[i], shader->id);
+        LOG_IF_W(location == -1, LOG_CONTEXT, "uniform `%s` not found for program #%d", ids[i], shader->id);
         shader->locations[i] = location;
     }
 }

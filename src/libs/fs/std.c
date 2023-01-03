@@ -153,7 +153,7 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
     path_join(path, std_mount->path, name);
 
     bool exists = path_exists(path);
-    LOG_IF_D(!exists, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
+    LOG_IF_D(exists, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
     return exists;
 }
 
@@ -266,7 +266,7 @@ static bool _std_handle_eof(FS_Handle_t *handle)
 
     bool end_of_file = feof(std_handle->stream) != 0;
 #ifdef __DEBUG_FS_CALLS__
-    LOG_IF_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

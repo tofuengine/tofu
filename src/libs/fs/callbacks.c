@@ -196,7 +196,7 @@ static bool _callbacks_handle_eof(FS_Handle_t *handle)
 
     bool end_of_file =  cache_handle->callbacks.eof(cache_handle->stream);
 #ifdef __DEBUG_FS_CALLS__
-    LOG_IF_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

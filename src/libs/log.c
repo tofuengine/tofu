@@ -119,7 +119,7 @@ void Log_write(Log_Levels_t level, const char *context, const char *text, ...)
 
 void Log_write_if(bool condition, Log_Levels_t level, const char *context, const char *text, ...)
 {
-    if (condition) {
+    if (!condition) {
         return;
     }
     va_list args;
