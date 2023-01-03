@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
-// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
+// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many sound-cards
 // and converting from lower sample rates is simpler.
 #define SL_BYTES_PER_SAMPLE     2
 #define SL_SAMPLES_PER_CHANNEL  1
@@ -38,6 +38,8 @@
 #define SL_FRAMES_PER_SECOND    22050
 
 #define SL_BYTES_PER_FRAME      (SL_CHANNELS_PER_FRAME * SL_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+
+#define SL_MIXING_BUFFER_SIZE_IN_FRAMES 128
 
 #define SL_GROUPS_AMOUNT        256
 #define SL_FIRST_GROUP          0

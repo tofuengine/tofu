@@ -42,19 +42,28 @@
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
 #define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
-// An XM module is generated in stereo mode, which means that we need to handle a stereo source.
+// Modules are generated in stereo mode, which means that we need to handle a stereo source (i.e. we have two channels per frame)
 #define MODULE_OUTPUT_FORMAT                ma_format_s16
 #define MODULE_OUTPUT_BYTES_PER_SAMPLE      2
 #define MODULE_OUTPUT_SAMPLES_PER_CHANNEL   1
 #define MODULE_OUTPUT_CHANNELS_PER_FRAME    2
 #define MODULE_OUTPUT_BYTES_PER_FRAME       (MODULE_OUTPUT_CHANNELS_PER_FRAME * MODULE_OUTPUT_SAMPLES_PER_CHANNEL * MODULE_OUTPUT_BYTES_PER_SAMPLE)
 
+#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
 #define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
 #define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
-#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
 #define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
+
+#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+  #define mix_additive  mix_1on2_additive
+#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+  #define mix_additive  mix_2on2_additive
+#else
+  #error "Mixing buffer has wrong number of channels"
+#endif
 
 #define LOG_CONTEXT "sl-module"
 
@@ -317,7 +326,7 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
         ma_pcm_rb_commit_read(buffer, frames_consumed);
 
-        mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
+        mix_additive(cursor, converted_buffer, frames_generated, mix);
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }

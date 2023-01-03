@@ -36,12 +36,23 @@
 
 #define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
 
+// Samples differs from musics and modules since they are *mono* in nature. We have just *one* channel per frame.
+// This means that we will be using the `mix_1on2_additive()` mixing function to duplicate the mono channel to stereo.
+#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
 #define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
 #define MIXING_BUFFER_CHANNELS_PER_FRAME    1
-#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
 #define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
+
+#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+  #define mix_additive  mix_1on2_additive
+#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+  #define mix_additive  mix_2on2_additive
+#else
+  #error "Mixing buffer has wrong number of channels"
+#endif
 
 #define LOG_CONTEXT "sl-sample"
 
@@ -54,6 +65,8 @@ typedef struct Sample_s {
 
     drflac *decoder;
     size_t length_in_frames;
+
+    uint8_t mixing_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     ma_audio_buffer buffer;
     size_t frames_completed;
@@ -279,7 +292,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
     ma_audio_buffer *buffer = &sample->buffer;
     const bool looped = sample->props->looped;
 
-    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    uint8_t *converted_buffer = sample->mixing_buffer;
 
     const SL_Mix_t mix = sample->props->precomputed_mix;
 
@@ -310,7 +323,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
         sample->frames_completed += frames_consumed;
 
-        mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
+        mix_additive(cursor, converted_buffer, frames_generated, mix);
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }
