@@ -25,6 +25,8 @@
 #ifndef TOFU_LIBS_IMATH_H
 #define TOFU_LIBS_IMATH_H
 
+#include <core/config.h>
+
 #include <math.h>
 
 #define IABS(v)         ((v) > 0 ? (v) : -(v))
