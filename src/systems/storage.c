@@ -92,18 +92,21 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create storage cache");
         goto error_destroy_context;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache %p for context %p created for path `%s`", storage->cache, storage->context);
 
     bool kernal_attached = FS_attach_folder_or_archive(storage->context, kernal_path);
     if (!kernal_attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach kernal at `%s`", kernal_path);
         goto error_destroy_cache;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "kernal attached w/ path `%s`", kernal_path);
 
     bool attached = FS_attach_folder_or_archive(storage->context, path);
     if (!attached) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach folder/archive at `%s`", path);
         goto error_destroy_cache;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "folder/archive attached w/ path `%s`", path);
 
     return storage;
 

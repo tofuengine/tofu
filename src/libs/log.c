@@ -35,25 +35,25 @@
 
 // http://jafrog.com/2013/11/23/colors-in-terminal.html
 #ifdef USE_COLORS
-  #define COLOR_BLACK         "\x1b[30m"
-  #define COLOR_RED           "\x1b[31m"
-  #define COLOR_GREEN         "\x1b[32m"
-  #define COLOR_YELLOW        "\x1b[33m"
-  #define COLOR_BLUE          "\x1b[34m"
-  #define COLOR_MAGENTA       "\x1b[35m"
-  #define COLOR_CYAN          "\x1b[36m"
-  #define COLOR_WHITE         "\x1b[37m"
+  #define COLOR_BLACK       "\x1b[30m"
+  #define COLOR_RED         "\x1b[31m"
+  #define COLOR_GREEN       "\x1b[32m"
+  #define COLOR_YELLOW      "\x1b[33m"
+  #define COLOR_BLUE        "\x1b[34m"
+  #define COLOR_MAGENTA     "\x1b[35m"
+  #define COLOR_CYAN        "\x1b[36m"
+  #define COLOR_WHITE       "\x1b[37m"
   
-  #define COLOR_BLACK_HC      "\x1b[90m"
-  #define COLOR_RED_HC        "\x1b[91m"
-  #define COLOR_GREEN_HC      "\x1b[92m"
-  #define COLOR_YELLOW_HC     "\x1b[93m"
-  #define COLOR_BLUE_HC       "\x1b[94m"
-  #define COLOR_MAGENTA_HC    "\x1b[95m"
-  #define COLOR_CYAN_HC       "\x1b[96m"
-  #define COLOR_WHITE_HC      "\x1b[97m"
+  #define COLOR_BLACK_HC    "\x1b[90m"
+  #define COLOR_RED_HC      "\x1b[91m"
+  #define COLOR_GREEN_HC    "\x1b[92m"
+  #define COLOR_YELLOW_HC   "\x1b[93m"
+  #define COLOR_BLUE_HC     "\x1b[94m"
+  #define COLOR_MAGENTA_HC  "\x1b[95m"
+  #define COLOR_CYAN_HC     "\x1b[96m"
+  #define COLOR_WHITE_HC    "\x1b[97m"
   
-  #define COLOR_OFF           "\x1b[0m"
+  #define COLOR_OFF         "\x1b[0m"
 #endif
 
 #ifdef USE_COLORS
@@ -62,14 +62,14 @@ static const char *_colors[Log_Levels_t_CountOf] = {
 };
 #endif
 
-static const char *_prefixes[Log_Levels_t_CountOf] = {
-    "A", "T", "D", "I", "W", "E", "F", "N"
+static const char _prefixes[Log_Levels_t_CountOf] = {
+    'A', 'T', 'D', 'I', 'W', 'E', 'F', 'N'
 };
 
 static Log_Levels_t _level;
 static FILE *_stream;
 
-static void write(Log_Levels_t level, const char *context, const char *text, va_list args)
+static void _write(Log_Levels_t level, const char *context, const char *text, va_list args)
 {
     if (level < _level) {
         return;
@@ -80,9 +80,9 @@ static void write(Log_Levels_t level, const char *context, const char *text, va_
     }
 
 #ifdef USE_COLORS
-    fprintf(_stream, "%s[%s/%s]%s %s", COLOR_WHITE, _prefixes[level], context, COLOR_OFF, _colors[level]);
+    fprintf(_stream, "%s[%c/%s]%s %s", COLOR_WHITE, _prefixes[level], context, COLOR_OFF, _colors[level]);
 #else
-    fprintf(_stream, "[%s/%s] ", _prefixes[level], context);
+    fprintf(_stream, "[%c/%s] ", _prefixes[level], context);
 #endif
     vfprintf(_stream, text, args);
 #ifdef USE_COLORS
@@ -113,7 +113,7 @@ void Log_write(Log_Levels_t level, const char *context, const char *text, ...)
 {
     va_list args;
     va_start(args, text);
-    write(level, context, text, args);
+    _write(level, context, text, args);
     va_end(args);
 }
 
@@ -124,6 +124,6 @@ void Log_assert(bool condition, Log_Levels_t level, const char *context, const c
     }
     va_list args;
     va_start(args, text);
-    write(level, context, text, args);
+    _write(level, context, text, args);
     va_end(args);
 }

@@ -68,10 +68,10 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 static const char *_kickstart_lua = "return require(\"" BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
-    METHOD_PROCESS,
-    METHOD_UPDATE,
-    METHOD_RENDER,
-    Methods_t_CountOf
+    ENTRY_POINT_METHOD_PROCESS,
+    ENTRY_POINT_METHOD_UPDATE,
+    ENTRY_POINT_METHOD_RENDER,
+    Entry_Point_Methods_t_CountOf
 } Entry_Point_Methods_t;
 
 static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
@@ -361,13 +361,13 @@ bool Interpreter_process(const Interpreter_t *interpreter, const char *events[])
     } else {
         lua_pushnil(interpreter->state);
     }
-    return _method_call(interpreter->state, METHOD_PROCESS, 1, 0) == LUA_OK;
+    return _method_call(interpreter->state, ENTRY_POINT_METHOD_PROCESS, 1, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
     lua_pushnumber(interpreter->state, (lua_Number)delta_time);
-    if (_method_call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+    if (_method_call(interpreter->state, ENTRY_POINT_METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
 
@@ -414,7 +414,7 @@ bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     // TODO: pass the default `Canvas` instance?
     lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
-    return _method_call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
+    return _method_call(interpreter->state, ENTRY_POINT_METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
