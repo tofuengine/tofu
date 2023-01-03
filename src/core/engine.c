@@ -74,7 +74,7 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
+        LOG_F(LOG_CONTEXT, "configuration file is missing");
         return NULL;
     }
 
@@ -83,12 +83,12 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
 
     Log_configure(configuration->system.debug, NULL);
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "game identity is `%s`", configuration->system.identity);
+    LOG_I(LOG_CONTEXT, "game identity is `%s`", configuration->system.identity);
 
     if (configuration->system.version.major > TOFU_VERSION_MAJOR
         || configuration->system.version.minor > TOFU_VERSION_MINOR
         || configuration->system.version.revision > TOFU_VERSION_REVISION) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "engine version mismatch (required %d.%d.%d, current %d.%d.%d)",
+        LOG_F(LOG_CONTEXT, "engine version mismatch (required %d.%d.%d, current %d.%d.%d)",
             configuration->system.version.major, configuration->system.version.minor, configuration->system.version.revision,
             TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION);
         goto error_destroy_configuration;
@@ -106,12 +106,12 @@ static inline void _information(void)
     SysInfo_Data_t si = { 0 };
     bool result = SysInfo_inspect(&si);
     if (!result) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
+        LOG_E(LOG_CONTEXT, "can't get system information");
         return;
     }
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Tofu Engine v%s (%s build)", TOFU_VERSION_STRING, PLATFORM_NAME);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
+    LOG_I(LOG_CONTEXT, "Tofu Engine v%s (%s build)", TOFU_VERSION_STRING, PLATFORM_NAME);
+    LOG_I(LOG_CONTEXT, "running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
 }
 
 Engine_t *Engine_create(int argc, const char *argv[])
@@ -120,7 +120,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
 
     Engine_t *engine = malloc(sizeof(Engine_t));
     if (!engine) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate engine");
+        LOG_E(LOG_CONTEXT, "can't allocate engine");
         return NULL;
     }
 
@@ -135,44 +135,44 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .path = options.path
         });
     if (!engine->storage) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
+        LOG_F(LOG_CONTEXT, "can't initialize storage");
         goto error_free;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "storage ready");
+    LOG_I(LOG_CONTEXT, "storage ready");
 
     engine->configuration = _configure(engine->storage, argc, argv);
     if (!engine->configuration) {
         goto error_destroy_storage;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "configuration ready");
+    LOG_I(LOG_CONTEXT, "configuration ready");
 
     bool set = Storage_set_identity(engine->storage, engine->configuration->system.identity);
     if (!set) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't set identity");
+        LOG_F(LOG_CONTEXT, "can't set identity");
         goto error_destroy_configuration;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "identity set to `%s`", engine->configuration->system.identity);
+    LOG_D(LOG_CONTEXT, "identity set to `%s`", engine->configuration->system.identity);
 
     const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
     if (!icon) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load icon");
+        LOG_F(LOG_CONTEXT, "can't load icon");
         goto error_destroy_configuration;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
+    LOG_D(LOG_CONTEXT, "icon `%s` loaded", engine->configuration->system.icon);
 
     const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
     if (!effect) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load effect");
+        LOG_F(LOG_CONTEXT, "can't load effect");
         goto error_destroy_configuration;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
+    LOG_D(LOG_CONTEXT, "effect `%s` loaded", engine->configuration->display.effect);
 
     const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
     if (!mappings) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load mappings");
+        LOG_F(LOG_CONTEXT, "can't load mappings");
         goto error_destroy_configuration;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
+    LOG_I(LOG_CONTEXT, "mappings `%s` loaded", engine->configuration->system.mappings);
 
     engine->display = Display_create(&(const Display_Configuration_t){
             .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
@@ -188,10 +188,10 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .effect = S_SCHARS(effect)
         });
     if (!engine->display) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create display");
+        LOG_F(LOG_CONTEXT, "can't create display");
         goto error_destroy_configuration;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "display ready");
+    LOG_I(LOG_CONTEXT, "display ready");
 
     const GL_Size_t phyisical_size = Display_get_physical_size(engine->display);
     const GL_Size_t virtual_size = Display_get_virtual_size(engine->display);
@@ -225,36 +225,36 @@ Engine_t *Engine_create(int argc, const char *argv[])
             }
         }, Display_get_window(engine->display));
     if (!engine->input) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
+        LOG_F(LOG_CONTEXT, "can't initialize input");
         goto error_destroy_display;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "input ready");
+    LOG_I(LOG_CONTEXT, "input ready");
 
     engine->audio = Audio_create(&(const Audio_Configuration_t){
             .device_index = engine->configuration->audio.device_index,
             .master_volume = engine->configuration->audio.master_volume
         });
     if (!engine->audio) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
+        LOG_F(LOG_CONTEXT, "can't initialize audio");
         goto error_destroy_input;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "audio ready");
+    LOG_I(LOG_CONTEXT, "audio ready");
 
     engine->environment = Environment_create(argc, argv, engine->display, engine->input);
     if (!engine->environment) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
+        LOG_F(LOG_CONTEXT, "can't initialize environment");
         goto error_destroy_audio;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "environment ready");
+    LOG_I(LOG_CONTEXT, "environment ready");
 
     engine->interpreter = Interpreter_create(engine->storage);
     if (!engine->interpreter) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
+        LOG_F(LOG_CONTEXT, "can't initialize interpreter");
         goto error_destroy_environment;
     }
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "interpreter ready");
+    LOG_I(LOG_CONTEXT, "interpreter ready");
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "engine is up and running");
+    LOG_I(LOG_CONTEXT, "engine is up and running");
     return engine;
 
     // Goto clean-up section.
@@ -286,7 +286,7 @@ void Engine_destroy(Engine_t *engine)
     Storage_destroy(engine->storage);
 
     free(engine);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "engine freed");
+    LOG_D(LOG_CONTEXT, "engine freed");
 
 #ifdef STB_LEAKCHECK_INCLUDED
     stb_leakcheck_dumpmem();
@@ -337,14 +337,14 @@ void Engine_run(Engine_t *engine)
             NULL
         });
     if (!booted) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
+        LOG_F(LOG_CONTEXT, "can't initialize interpreter");
         return;
     }
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
+    LOG_I(LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using `double` to keep the min resolution consistent over time!
     // For intervals (i.e. deltas), `float` is sufficient.

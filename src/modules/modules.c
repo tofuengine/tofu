@@ -95,7 +95,7 @@ static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
     lua_pop(L, nup);
 #else
     for (const luaL_Reg *module = modules; module->func; ++module) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "preloading module `%s`", module->name);
+        LOG_D(LOG_CONTEXT, "preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
         luaX_preload(L, module->name, module->func, nup);
     }

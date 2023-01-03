@@ -42,11 +42,11 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
     GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
     if (!xform) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate xform");
+        LOG_E(LOG_CONTEXT, "can't allocate xform");
         return NULL;
     }
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform created at %p", xform);
+    LOG_D(LOG_CONTEXT, "xform created at %p", xform);
 #endif  /* VERBOSE_DEBUG */
 
     *xform = (GL_XForm_t){
@@ -67,13 +67,13 @@ void GL_xform_destroy(GL_XForm_t *xform)
     if (xform->table) {
         arrfree(xform->table);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform table at %p freed", xform->table);
+        LOG_D(LOG_CONTEXT, "xform table at %p freed", xform->table);
 #endif  /* VERBOSE_DEBUG */
     }
 
     free(xform);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p freed", xform);
+    LOG_D(LOG_CONTEXT, "xform %p freed", xform);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -96,7 +96,7 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
     if (xform->table) {
         arrfree(xform->table);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform table at %p freed", xform->table);
+        LOG_D(LOG_CONTEXT, "xform table at %p freed", xform->table);
 #endif  /* VERBOSE_DEBUG */
     }
 

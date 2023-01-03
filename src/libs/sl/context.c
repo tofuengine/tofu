@@ -52,22 +52,22 @@ SL_Context_t *SL_context_create(void)
             };
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
+    LOG_D(LOG_CONTEXT, "context created");
     return context;
 }
 
 void SL_context_destroy(SL_Context_t *context)
 {
     arrfree(context->sources);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context sources freed");
+    LOG_D(LOG_CONTEXT, "context sources freed");
 
     free(context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
+    LOG_D(LOG_CONTEXT, "context freed");
 }
 
 static void _fire_on_group_changed(const SL_Context_t *context, size_t group_id)
 {
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "context group #%d changed, firing event", group_id);
+    LOG_T(LOG_CONTEXT, "context group #%d changed, firing event", group_id);
 
     SL_Source_t **current = context->sources;
     for (size_t count = arrlenu(context->sources); count; --count) {
@@ -119,12 +119,12 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source)
     size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p already tracked for context %p", source, context);
+            LOG_W(LOG_CONTEXT, "source %p already tracked for context %p", source, context);
             return;
         }
     }
     arrpush(context->sources, source);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for context %p", source, context);
+    LOG_D(LOG_CONTEXT, "source %p tracked for context %p", source, context);
     SL_source_on_group_changed(source, SL_ANY_GROUP); // Propagate, to the attached source, to precompute the mix matrix.
 }
 
@@ -134,7 +134,7 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked from context %p", source, context);
+            LOG_D(LOG_CONTEXT, "source %p untracked from context %p", source, context);
             return;
         }
     }

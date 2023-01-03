@@ -93,7 +93,7 @@ static int cursor_new_0_1o(lua_State *L)
             .cursor = cursor,
         }, OBJECT_TYPE_CURSOR, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cursor %p allocated w/ cursor %p", self, cursor);
+    LOG_D(LOG_CONTEXT, "cursor %p allocated w/ cursor %p", self, cursor);
 
     return 1;
 }
@@ -105,7 +105,7 @@ static int cursor_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Cursor_Object_t *self = (Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cursor %p finalized", self);
+    LOG_D(LOG_CONTEXT, "cursor %p finalized", self);
 
     return 0;
 }

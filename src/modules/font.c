@@ -116,7 +116,7 @@ static int font_new_3osS_1o(lua_State *L)
         }, OBJECT_TYPE_FONT, META_TABLE);
     _generate_alphabeth(self->glyphs, alphabeth);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -150,7 +150,7 @@ static int font_new_4onnS_1o(lua_State *L)
         }, OBJECT_TYPE_FONT, META_TABLE);
     _generate_alphabeth(self->glyphs, alphabeth);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -174,12 +174,12 @@ static int font_gc_1o_0(lua_State *L)
     Font_Object_t *self = (Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
 
     GL_sheet_destroy(self->sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
 
     luaX_unref(L, self->atlas.reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
+    LOG_D(LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p finalized", self);
+    LOG_D(LOG_CONTEXT, "font %p finalized", self);
 
     return 0;
 }

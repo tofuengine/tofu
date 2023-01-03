@@ -36,7 +36,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
 {
     GL_Queue_t *queue = malloc(sizeof(GL_Queue_t));
     if (!queue) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate queue");
+        LOG_E(LOG_CONTEXT, "can't allocate queue");
         return NULL;
     }
 
@@ -44,7 +44,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
     if (capacity > 0) {
         bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate queue sprites");
+            LOG_E(LOG_CONTEXT, "can't allocate queue sprites");
             goto error_free;
         }
     }
@@ -53,7 +53,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
             .sheet = sheet,
             .sprites = sprites
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p attached", queue);
+    LOG_D(LOG_CONTEXT, "queue %p attached", queue);
 
     return queue;
 
@@ -65,20 +65,20 @@ error_free:
 void GL_queue_destroy(GL_Queue_t *queue)
 {
     arrfree(queue->sprites);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue sprites freed");
+    LOG_D(LOG_CONTEXT, "queue sprites freed");
 
     free(queue);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p freed", queue);
+    LOG_D(LOG_CONTEXT, "queue %p freed", queue);
 }
 
 bool GL_queue_resize(GL_Queue_t *queue, size_t capacity)
 {
     bool allocated = arrsetcap(queue->sprites, capacity); // FIXME: should be `!!`?
     if (!allocated) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resize queue slots");
+        LOG_E(LOG_CONTEXT, "can't resize queue slots");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p capacity reset to %d", queue, capacity);
+    LOG_D(LOG_CONTEXT, "queue %p capacity reset to %d", queue, capacity);
     return true;
 }
 
@@ -88,10 +88,10 @@ bool GL_queue_grow(GL_Queue_t *queue, size_t amount)
     capacity += amount;
     bool allocated = arrsetcap(queue->sprites, capacity); // FIXME: should be `!!`?
     if (!allocated) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't grow queue slots");
+        LOG_E(LOG_CONTEXT, "can't grow queue slots");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p capacity grown by %d slots to %d", queue, amount, capacity);
+    LOG_D(LOG_CONTEXT, "queue %p capacity grown by %d slots to %d", queue, amount, capacity);
     return true;
 }
 

@@ -90,7 +90,7 @@ static int palette_new_0_1o(lua_State *L)
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_set_greyscale(self->palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "greyscale palette %p allocated w/ %d color(s)", self, GL_MAX_PALETTE_COLORS);
+    LOG_D(LOG_CONTEXT, "greyscale palette %p allocated w/ %d color(s)", self, GL_MAX_PALETTE_COLORS);
 
     return 1;
 }
@@ -112,7 +112,7 @@ static int palette_new_1n_1o(lua_State *L)
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_set_greyscale(self->palette, levels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, levels);
+    LOG_D(LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, levels);
 
     return 1;
 }
@@ -125,13 +125,13 @@ static int palette_new_1t_1o(lua_State *L)
     // idx #1: LUA_TTABLE
 
     size_t size = lua_rawlen(L, 1);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of %d color(s)", size);
+    LOG_D(LOG_CONTEXT, "setting custom palette of %d color(s)", size);
 
     if (size == 0) {
         return luaL_error(L, "palette can't be empty!");
     } else
     if (size > GL_MAX_PALETTE_COLORS) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has too many colors (%d) - clamping to %d", size, GL_MAX_PALETTE_COLORS);
+        LOG_W(LOG_CONTEXT, "palette has too many colors (%d) - clamping to %d", size, GL_MAX_PALETTE_COLORS);
         size = GL_MAX_PALETTE_COLORS;
     }
 
@@ -169,7 +169,7 @@ static int palette_new_1t_1o(lua_State *L)
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_copy(self->palette, palette);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, size);
+    LOG_D(LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, size);
 
     return 1;
 }
@@ -181,7 +181,7 @@ static int palette_new_1o_1o(lua_State *L)
     LUAX_SIGNATURE_END
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cloning palette %p", other);
+    LOG_D(LOG_CONTEXT, "cloning palette %p", other);
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = other->size
@@ -189,7 +189,7 @@ static int palette_new_1o_1o(lua_State *L)
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_copy(self->palette, other->palette);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated", self);
+    LOG_D(LOG_CONTEXT, "palette %p allocated", self);
 
     return 1;
 }
@@ -215,7 +215,7 @@ static int palette_new_3n_1o(lua_State *L)
         return luaL_error(L, "too many bits to fit palette (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
+    LOG_D(LOG_CONTEXT, "generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = size
@@ -223,7 +223,7 @@ static int palette_new_3n_1o(lua_State *L)
         OBJECT_TYPE_PALETTE, META_TABLE);
 
     GL_palette_set_quantized(self->palette, red_bits, green_bits, blue_bits);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d colors(s)", self, size);
+    LOG_D(LOG_CONTEXT, "palette %p allocated w/ %d colors(s)", self, size);
 
     lua_pushinteger(L, size);
 
@@ -248,7 +248,7 @@ static int palette_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p finalized", self);
+    LOG_D(LOG_CONTEXT, "palette %p finalized", self);
 
     return 0;
 }
@@ -431,7 +431,7 @@ static int palette_merge_6ononnB_0(lua_State *L)
     size_t size = GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
 
     self->size = size;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p has now %d color(s)", self, size);
+    LOG_D(LOG_CONTEXT, "palette %p has now %d color(s)", self, size);
 
     return 0;
 }

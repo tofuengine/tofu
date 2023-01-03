@@ -108,7 +108,7 @@ static bool _has_errors(void)
             case GL_STACK_OVERFLOW: { message = "STACK_OVERFLOW"; } break;
             default: { message = "UNKNOWN"; } break;
         }
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "OpenGL error #%04x: `GL_%s`", code, message);
+        LOG_E(LOG_CONTEXT, "OpenGL error #%04x: `GL_%s`", code, message);
 
         result = true;
     }
@@ -118,37 +118,37 @@ static bool _has_errors(void)
 
 static void _error_callback(int error, const char *description)
 {
-    Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", description);
+    LOG_E(LOG_CONTEXT, "%s", description);
 }
 
 static void _size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "viewport size set to %dx%d", width, height);
+    LOG_D(LOG_CONTEXT, "viewport size set to %dx%d", width, height);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "projection/model matrix reset, going otho-2D");
+    LOG_D(LOG_CONTEXT, "projection/model matrix reset, going otho-2D");
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
     glDisable(GL_STENCIL_TEST); // Ditto.
     glDisable(GL_BLEND); // Blending is disabled.
     glDisable(GL_ALPHA_TEST);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "optimizing OpenGL features");
+    LOG_D(LOG_CONTEXT, "optimizing OpenGL features");
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // TODO: configurable?
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting OpenGL clear-color");
+    LOG_D(LOG_CONTEXT, "setting OpenGL clear-color");
 
 #ifdef __DEBUG_TRIANGLES_WINDING__
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "enabling OpenGL debug");
+    LOG_D(LOG_CONTEXT, "enabling OpenGL debug");
 #endif
 }
 
@@ -158,23 +158,23 @@ static void _close_callback(GLFWwindow *window)
 
     // The close flag has been set before this callback is called, so we can override it.
     glfwSetWindowShouldClose(window, configuration->quit_on_close ? GLFW_TRUE : GLFW_FALSE);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "closing flag set to `%s`", configuration->quit_on_close ? "true" : "false");
+    LOG_D(LOG_CONTEXT, "closing flag set to `%s`", configuration->quit_on_close ? "true" : "false");
 }
 
 static bool _compute_size(size_t width, size_t height, size_t scale, bool fullscreen, GL_Rectangle_t *present_area, GL_Rectangle_t *window_area, GL_Size_t *canvas_size)
 {
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
+    LOG_D(LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
 
     canvas_size->width = width > 0 ? width : (size_t)display_width; // width/height set to `0` means fit the display
     canvas_size->height = height > 0 ? height : (size_t)display_height;
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas size is %dx%d", canvas_size->width, canvas_size->height);
+    LOG_D(LOG_CONTEXT, "canvas size is %dx%d", canvas_size->width, canvas_size->height);
 
     const size_t max_scale = (size_t)imin(display_width / (int)canvas_size->width, display_height / (int)canvas_size->height);
     if (max_scale == 0) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "requested display size can't fit display!");
+        LOG_F(LOG_CONTEXT, "requested display size can't fit display!");
         return false;
     }
 
@@ -182,7 +182,7 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     const size_t window_width = canvas_size->width * window_scale;
     const size_t window_height = canvas_size->height * window_scale;
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window size is %dx%d (%dx)", window_width, window_height, window_scale);
+    LOG_D(LOG_CONTEXT, "window size is %dx%d (%dx)", window_width, window_height, window_scale);
 
     const int x = (display_width - (int)window_width) / 2;
     const int y = (display_height - (int)window_height) / 2;
@@ -239,17 +239,17 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
 
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
+        LOG_F(LOG_CONTEXT, "can't create window");
         return NULL;
     }
     glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p created (and made current context)", window);
+    LOG_D(LOG_CONTEXT, "window %p created (and made current context)", window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
+        LOG_F(LOG_CONTEXT, "can't initialize GLAD");
         goto error_destroy_window;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLAD initialized");
+    LOG_D(LOG_CONTEXT, "GLAD initialized");
 
     glfwSetWindowUserPointer(window, (void *)configuration);
     // glfwSetWindowFocusCallback(window, window_focus_callback)
@@ -259,19 +259,19 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     if (configuration->icon.pixels) {
         glfwSetWindowIcon(window, 1, &configuration->icon);
     } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "icon is missing");
+        LOG_W(LOG_CONTEXT, "icon is missing");
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
+    LOG_D(LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 
     glfwSetWindowSize(window, (int)window_rectangle.width, (int)window_rectangle.height);
     if (!configuration->fullscreen) {
         glfwSetWindowPos(window, window_rectangle.x, window_rectangle.y);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", window_rectangle.x, window_rectangle.y);
+        LOG_D(LOG_CONTEXT, "window position is <%d, %d>", window_rectangle.x, window_rectangle.y);
     }
     glfwShowWindow(window); // This is not required for fullscreen window, but it makes sense anyway.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
+    LOG_D(LOG_CONTEXT, "window shown");
 
     return window;
 
@@ -288,7 +288,7 @@ static void _window_destroy(GLFWwindow *window)
 static bool _shader_initialize(Display_t *display, const char *effect)
 {
     if (!effect) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "shader is null");
+        LOG_E(LOG_CONTEXT, "shader is null");
         return false;
     }
 
@@ -297,7 +297,7 @@ static bool _shader_initialize(Display_t *display, const char *effect)
         return false;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading shader %p", display->shader);
+    LOG_D(LOG_CONTEXT, "loading shader %p", display->shader);
 
     const size_t length = strlen(FRAGMENT_SHADER) + strlen(effect);
     char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
@@ -311,10 +311,10 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     }
 
     shader_prepare(display->shader, _uniforms, Uniforms_t_CountOf);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p prepared", display->shader);
+    LOG_D(LOG_CONTEXT, "shader %p prepared", display->shader);
 
     shader_use(display->shader);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p active", display->shader);
+    LOG_D(LOG_CONTEXT, "shader %p active", display->shader);
 
     shader_send(display->shader, UNIFORM_TEXTURE, SHADER_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
     shader_send(display->shader, UNIFORM_SCREEN_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
@@ -330,7 +330,7 @@ static bool _shader_initialize(Display_t *display, const char *effect)
             (GLfloat)display->vram.size.height / (GLfloat)display->configuration.window.height
         });
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p initialized", display->shader);
+    LOG_D(LOG_CONTEXT, "shader %p initialized", display->shader);
 
     free(code);
 
@@ -341,7 +341,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 {
     Display_t *display = malloc(sizeof(Display_t));
     if (!display) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate display");
+        LOG_E(LOG_CONTEXT, "can't allocate display");
         return NULL;
     }
 
@@ -352,51 +352,51 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glfwSetErrorCallback(_error_callback);
 
     if (!glfwInit()) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
+        LOG_F(LOG_CONTEXT, "can't initialize GLFW");
         goto error_free;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLFW initialized");
+    LOG_D(LOG_CONTEXT, "GLFW initialized");
 
     GL_Rectangle_t vram_rectangle;
     display->window = _window_create(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
+        LOG_F(LOG_CONTEXT, "can't initialize window");
         goto error_terminate_glfw;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
+    LOG_D(LOG_CONTEXT, "window %p initialized", display->window);
 
     display->vram.position = (GL_Point_t){ .x = vram_rectangle.x, .y = vram_rectangle.y };
     display->vram.size = (GL_Size_t){ .width = vram_rectangle.width, .height = vram_rectangle.height };
 
     display->canvas.surface = GL_surface_create(display->canvas.size.width, display->canvas.size.height);
     if (!display->canvas.surface) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics surface");
+        LOG_F(LOG_CONTEXT, "can't create graphics surface");
         goto error_destroy_window;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p created", display->canvas.surface);
+    LOG_D(LOG_CONTEXT, "graphics surface %p created", display->canvas.surface);
 
     // TODO: implement a small boot effect?
     GL_surface_clear(display->canvas.surface, 0);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p cleared", display->canvas.surface);
+    LOG_D(LOG_CONTEXT, "graphics surface %p cleared", display->canvas.surface);
 
     display->canvas.processor = GL_processor_create();
     if (!display->canvas.processor) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create processor");
+        LOG_F(LOG_CONTEXT, "can't create processor");
         goto error_destroy_surface;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p created", display->canvas.processor);
+    LOG_D(LOG_CONTEXT, "processor %p created", display->canvas.processor);
 
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
+        LOG_F(LOG_CONTEXT, "can't allocate VRAM buffer");
         goto error_destroy_processor;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
+    LOG_D(LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
 
     glGenTextures(1, &display->vram.texture); //allocate the memory for texture
     if (display->vram.texture == 0) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
+        LOG_F(LOG_CONTEXT, "can't allocate VRAM texture");
         goto error_free_vram;
     }
     glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
@@ -408,7 +408,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
+    LOG_D(LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -419,7 +419,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     bool shader = _shader_initialize(display, configuration->effect);
     if (!shader) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
+        LOG_F(LOG_CONTEXT, "can't initialize shader");
         goto error_delete_buffers;
     }
 
@@ -427,11 +427,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    LOG_I(LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
+    LOG_I(LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
+    LOG_I(LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
+    LOG_I(LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
+    LOG_I(LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     return display;
 
@@ -455,28 +455,28 @@ error_free:
 void Display_destroy(Display_t *display)
 {
     shader_destroy(display->shader);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p destroyed", display->shader);
+    LOG_D(LOG_CONTEXT, "shader %p destroyed", display->shader);
 
     glDeleteBuffers(1, &display->vram.texture);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
+    LOG_D(LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
 
     free(display->vram.pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
+    LOG_D(LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
 
     GL_processor_destroy(display->canvas.processor);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p destroyed", display->canvas.processor);
+    LOG_D(LOG_CONTEXT, "processor %p destroyed", display->canvas.processor);
 
     GL_surface_destroy(display->canvas.surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p destroyed", display->canvas.surface);
+    LOG_D(LOG_CONTEXT, "graphics surface %p destroyed", display->canvas.surface);
 
     _window_destroy(display->window);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
+    LOG_D(LOG_CONTEXT, "window %p destroyed", display->window);
 
     glfwTerminate();
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display terminated");
+    LOG_D(LOG_CONTEXT, "display terminated");
 
     free(display);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
+    LOG_D(LOG_CONTEXT, "display freed");
 }
 
 void Display_close(Display_t *display)

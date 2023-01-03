@@ -34,17 +34,17 @@ GL_Processor_t *GL_processor_create(void)
 {
     GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
     if (!processor) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
+        LOG_E(LOG_CONTEXT, "can't allocate processor");
         return NULL;
     }
 
     *processor = (GL_Processor_t){ 0 };
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
+    LOG_D(LOG_CONTEXT, "processor created at %p", processor);
 #endif  /* VERBOSE_DEBUG */
 
 #ifdef __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
-    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
+    LOG_W(LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
   #if GL_MAX_PALETTE_COLORS == 256
     GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
   #elif GL_MAX_PALETTE_COLORS == 128
@@ -61,7 +61,7 @@ GL_Processor_t *GL_processor_create(void)
     #error "Too few palette entries"
   #endif
 #else
-    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
+    LOG_W(LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
     GL_palette_set_greyscale(processor->state.palette, GL_MAX_PALETTE_COLORS);
 #endif
 
@@ -75,13 +75,13 @@ void GL_processor_destroy(GL_Processor_t *processor)
     if (processor->state.program) {
         GL_program_destroy(processor->state.program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
+        LOG_D(LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
 #endif  /* VERBOSE_DEBUG */
     }
 
     free(processor);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p freed", processor);
+    LOG_D(LOG_CONTEXT, "processor %p freed", processor);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -101,7 +101,7 @@ void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palet
 {
     GL_palette_copy(processor->state.palette, palette);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette copied");
+    LOG_D(LOG_CONTEXT, "palette copied");
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -265,7 +265,7 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
     if (processor->state.program) { // Deallocate current program, is present.
        GL_program_destroy(processor->state.program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
+        LOG_D(LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
         processor->state.program = NULL;
     }
@@ -273,7 +273,7 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
     if (program) {
         processor->state.program = GL_program_clone(program);
 #ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
+        LOG_D(LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
 #endif  /* VERBOSE_DEBUG */
     }
     processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;

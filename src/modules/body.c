@@ -107,7 +107,7 @@ static int body_new_4snnn_1o(lua_State *L)
     if (!body) {
         return luaL_error(L, "can't create body");
     }
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
+//    LOG_D(LOG_CONTEXT, "body %p created for world %p", body, physics->world);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
@@ -129,7 +129,7 @@ static int body_new_4snnn_1o(lua_State *L)
         self->shape = cpCircleShapeNew(body, self->size.circle.radius, self->size.circle.offset);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created", self);
+    LOG_D(LOG_CONTEXT, "body %p created", self);
 
     return 1;
 }
@@ -142,12 +142,12 @@ static int body_gc_1o_0(lua_State *L)
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     cpShapeFree(self->shape);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
+    LOG_D(LOG_CONTEXT, "shape %p destroyed", self->shape);
 
     cpBodyFree(self->body);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p destroyed", self->body);
+    LOG_D(LOG_CONTEXT, "body %p destroyed", self->body);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p finalized", self);
+    LOG_D(LOG_CONTEXT, "body %p finalized", self);
 
     return 0;
 }

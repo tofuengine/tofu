@@ -71,13 +71,13 @@ FS_Mount_t *FS_std_mount(const char *path)
 {
     FS_Mount_t *mount = malloc(sizeof(Std_Mount_t));
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
     }
 
     _std_mount_ctor(mount, path);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
+    LOG_D(LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
 
     return mount;
 }
@@ -124,7 +124,7 @@ static void _read_directory(const char *path, size_t path_length, FS_Scan_Callba
         struct stat sb;
         int result = stat(subpath, &sb);
         if (result == -1) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't stat file `%s`", subpath);
+            LOG_E(LOG_CONTEXT, "can't stat file `%s`", subpath);
             continue;
         }
 
@@ -153,7 +153,7 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
     path_join(path, std_mount->path, name);
 
     bool exists = path_exists(path);
-    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
+    LOG_IF_D(!exists, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
     return exists;
 }
 
@@ -162,7 +162,7 @@ static size_t _size(FILE *stream)
     fseek(stream, 0L, SEEK_END);
     size_t size = (size_t)ftell(stream);
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is %d bytes long", handle, size);
+    LOG_D(LOG_CONTEXT, "handle %p is %d bytes long", handle, size);
 #endif
     fseek(stream, 0L, SEEK_SET);
 
@@ -178,19 +178,19 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
 
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
         return NULL;
     }
 
     FS_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", name);
+        LOG_E(LOG_CONTEXT, "can't allocate handle for file `%s`", name);
         goto error_close;
     }
 
     _std_handle_ctor(handle, stream, _size(stream));
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", name, handle);
+    LOG_D(LOG_CONTEXT, "file `%s` opened w/ handle %p", name, handle);
 
     return handle;
 
@@ -237,7 +237,7 @@ static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 
     size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
 }
@@ -248,7 +248,7 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
     bool seeked = fseek(std_handle->stream, offset, whence) == 0;
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    LOG_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
     return seeked;
 }
@@ -266,7 +266,7 @@ static bool _std_handle_eof(FS_Handle_t *handle)
 
     bool end_of_file = feof(std_handle->stream) != 0;
 #ifdef __DEBUG_FS_CALLS__
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

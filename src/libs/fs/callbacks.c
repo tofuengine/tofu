@@ -62,13 +62,13 @@ FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data)
 {
     FS_Mount_t *mount = malloc(sizeof(Cache_Mount_t));
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for cache w/ user-data %p", user_data);
+        LOG_E(LOG_CONTEXT, "can't allocate mount for cache w/ user-data %p", user_data);
         return NULL;
     }
 
     _callbacks_mount_ctor(mount, callbacks, user_data);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount %p initialized as cache w/ user-data %p", mount, user_data);
+    LOG_D(LOG_CONTEXT, "mount %p initialized as cache w/ user-data %p", mount, user_data);
 
     return mount;
 }
@@ -116,7 +116,7 @@ static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *n
 
     FS_Handle_t *handle = malloc(sizeof(Cache_Handle_t));
     if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", name);
+        LOG_E(LOG_CONTEXT, "can't allocate handle for file `%s`", name);
         return NULL;
     }
 
@@ -167,7 +167,7 @@ static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t b
 
     size_t bytes_read = cache_handle->callbacks.read(cache_handle->stream, buffer, bytes_requested);
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
 }
@@ -178,7 +178,7 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
     bool seeked = cache_handle->callbacks.seek(cache_handle->stream, offset, whence);
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    LOG_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
     return seeked;
 }
@@ -196,7 +196,7 @@ static bool _callbacks_handle_eof(FS_Handle_t *handle)
 
     bool end_of_file =  cache_handle->callbacks.eof(cache_handle->stream);
 #ifdef __DEBUG_FS_CALLS__
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

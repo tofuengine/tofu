@@ -44,7 +44,7 @@ FS_Context_t *FS_create(void)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
     if (!context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate context");
+        LOG_E(LOG_CONTEXT, "can't allocate context");
         return NULL;
     }
 
@@ -63,10 +63,10 @@ void FS_destroy(FS_Context_t *context)
     }
 
     arrfree(context->mounts);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context mount(s) freed");
+    LOG_D(LOG_CONTEXT, "context mount(s) freed");
 
     free(context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
+    LOG_D(LOG_CONTEXT, "context freed");
 }
 
 bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
@@ -77,7 +77,7 @@ bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
     if (FS_pak_is_valid(path)) {
         return FS_attach_archive(context, path);
     } else {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
+        LOG_E(LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
         return false;
     }
 }
@@ -85,13 +85,13 @@ bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
 bool FS_attach_folder(FS_Context_t *context, const char *path)
 {
     if (!FS_std_is_valid(path)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is not a folder", path);
+        LOG_D(LOG_CONTEXT, "path `%s` is not a folder", path);
         return false;
     }
 
     FS_Mount_t *mount = FS_std_mount(path); // Path need to be already resolved.
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't attach archive `%s`", path);
         return false;
     }
 
@@ -103,13 +103,13 @@ bool FS_attach_folder(FS_Context_t *context, const char *path)
 bool FS_attach_archive(FS_Context_t *context, const char *path)
 {
     if (!FS_pak_is_valid(path)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is not an archive", path);
+        LOG_D(LOG_CONTEXT, "path `%s` is not an archive", path);
         return false;
     }
 
     FS_Mount_t *mount = FS_pak_mount(path); // Path need to be already resolved.
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't attach archive `%s`", path);
         return false;
     }
 
@@ -122,7 +122,7 @@ bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, v
 {
     FS_Mount_t *mount = FS_callbacks_mount(callbacks, user_data);
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach cache w/ user-data `%p`", user_data);
+        LOG_E(LOG_CONTEXT, "can't attach cache w/ user-data `%p`", user_data);
         return false;
     }
 

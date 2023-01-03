@@ -77,7 +77,7 @@ static int bank_new_1o_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -112,7 +112,7 @@ static int bank_new_2os_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -142,7 +142,7 @@ static int bank_new_3onn_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -165,12 +165,12 @@ static int bank_gc_1o_0(lua_State *L)
     Bank_Object_t *self = (Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
 
     GL_sheet_destroy(self->sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
 
     luaX_unref(L, self->atlas.reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
+    LOG_D(LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", self);
+    LOG_D(LOG_CONTEXT, "bank %p finalized", self);
 
     return 0;
 }

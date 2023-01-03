@@ -96,7 +96,7 @@ static int noise_new_1sNN_1o(lua_State *L)
             .frequency = frequency
         }, OBJECT_TYPE_NOISE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "noise %p allocated", self);
+    LOG_D(LOG_CONTEXT, "noise %p allocated", self);
 
     return 1;
 }
@@ -110,7 +110,7 @@ static int noise_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "noise %p finalized", self);
+    LOG_D(LOG_CONTEXT, "noise %p finalized", self);
 
     return 0;
 }

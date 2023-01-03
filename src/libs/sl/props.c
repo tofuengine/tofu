@@ -65,7 +65,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
 {
     SL_Props_t *props = malloc(sizeof(SL_Props_t));
     if (!props) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate properties");
+        LOG_E(LOG_CONTEXT, "can't allocate properties");
         return NULL;
     }
 
@@ -88,7 +88,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
             .onFree = _free
         }, &props->converter);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create data converter");
+        LOG_E(LOG_CONTEXT, "failed to create data converter");
         goto error_free;
     }
 
@@ -107,10 +107,10 @@ void SL_props_destroy(SL_Props_t *props)
             .onRealloc = _realloc,
             .onFree = _free
         });
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data converted deinitialized");
+    LOG_D(LOG_CONTEXT, "data converted deinitialized");
 
     free(props);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "properties freed");
+    LOG_D(LOG_CONTEXT, "properties freed");
 }
 
 void SL_props_set_group(SL_Props_t *props, size_t group_id)

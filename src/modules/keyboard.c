@@ -91,7 +91,7 @@ static int keyboard_new_0_1o(lua_State *L)
             .keyboard = keyboard,
         }, OBJECT_TYPE_KEYBOARD, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "keyboard %p allocated w/ keyboard %p", self, keyboard);
+    LOG_D(LOG_CONTEXT, "keyboard %p allocated w/ keyboard %p", self, keyboard);
 
     return 1;
 }
@@ -103,7 +103,7 @@ static int keyboard_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Keyboard_Object_t *self = (Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "keyboard %p finalized", self);
+    LOG_D(LOG_CONTEXT, "keyboard %p finalized", self);
 
     return 0;
 }

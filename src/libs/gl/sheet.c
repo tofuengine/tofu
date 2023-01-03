@@ -62,7 +62,7 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
     size_t amount = columns * rows;
     GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * amount);
     if (!cells) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d cells", amount);
+        LOG_E(LOG_CONTEXT, "can't allocate %d cells", amount);
         return NULL;
     }
     size_t k = 0;
@@ -86,7 +86,7 @@ static GL_Sheet_t *_allocate(const GL_Surface_t *atlas, GL_Rectangle_t *cells, s
 {
     GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
     if (!sheet) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sheet");
+        LOG_E(LOG_CONTEXT, "can't allocate sheet");
         return NULL;
     }
 
@@ -112,7 +112,7 @@ GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size
         goto error_free;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p created (fixed)", sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p created (fixed)", sheet);
 
     return sheet;
 
@@ -133,7 +133,7 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t 
         goto error_free;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p created", sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p created", sheet);
 
     return sheet;
 
@@ -145,10 +145,10 @@ error_free:
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
     free(sheet->cells);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
+    LOG_D(LOG_CONTEXT, "sheet cells freed");
 
     free(sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p freed", sheet);
 }
 
 GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y)

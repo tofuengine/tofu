@@ -91,16 +91,16 @@ static int world_new_2NN_1o(lua_State *L)
     if (!space) {
         return luaL_error(L, "can't create space");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "space %p created", space);
+    LOG_D(LOG_CONTEXT, "space %p created", space);
 
     cpSpaceSetGravity(space, (cpVect){ .x = x, .y = y });
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "gravity set to <%.3f, %.3f> for space %p", x, y, space);
+    LOG_T(LOG_CONTEXT, "gravity set to <%.3f, %.3f> for space %p", x, y, space);
 
     World_Object_t *self = (World_Object_t *)luaX_newobject(L, sizeof(World_Object_t), &(World_Object_t){
             .space = space
         }, OBJECT_TYPE_WORLD, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p created", self);
+    LOG_D(LOG_CONTEXT, "world %p created", self);
 
     return 1;
 }
@@ -132,12 +132,12 @@ static int world_gc_1o_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     _release(L, self);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p entries cleared", self);
+    LOG_D(LOG_CONTEXT, "world %p entries cleared", self);
 
     cpSpaceFree(self->space);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
+    LOG_D(LOG_CONTEXT, "world space %p destroyed", self->space);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p finalized", self);
+    LOG_D(LOG_CONTEXT, "world %p finalized", self);
 
     return 0;
 }
@@ -257,7 +257,7 @@ static int world_add_2oo_0(lua_State *L)
     luaX_Reference reference = luaX_ref(L, 2);
 
     hmput(self->entries, body, reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p bound to world %p", body, self);
+    LOG_D(LOG_CONTEXT, "body %p bound to world %p", body, self);
 
     return 0;
 }
@@ -285,7 +285,7 @@ static int world_remove_2oo_0(lua_State *L)
     luaX_unref(L, reference);
 
     int deleted = hmdel(self->entries, body);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p found and removed from world %p (%d)", body, self, deleted);
+    LOG_D(LOG_CONTEXT, "body %p found and removed from world %p (%d)", body, self, deleted);
 
     return 0;
 }
@@ -298,10 +298,10 @@ static int world_clear_1o_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     cpSpaceDestroy(self->space);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
+    LOG_D(LOG_CONTEXT, "world space %p destroyed", self->space);
 
     _release(L, self);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p entries cleared", self);
+    LOG_D(LOG_CONTEXT, "world %p entries cleared", self);
 
     return 0;
 }

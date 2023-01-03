@@ -43,10 +43,10 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate environment");
+        LOG_E(LOG_CONTEXT, "can't allocate environment");
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment allocated");
+    LOG_D(LOG_CONTEXT, "environment allocated");
 
     const char **args = NULL;
     for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
@@ -73,10 +73,10 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
 void Environment_destroy(Environment_t *environment)
 {
     arrfree(environment->args);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "arguments freed");
+    LOG_D(LOG_CONTEXT, "arguments freed");
 
     free(environment);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
+    LOG_D(LOG_CONTEXT, "environment freed");
 }
 
 const Environment_State_t *Environment_get_state(const Environment_t *environment)
@@ -140,7 +140,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     stats_time += frame_time;
     while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
         stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
+        LOG_I(LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
             stats->fps, stats->times[0], stats->times[1], stats->times[2], stats->times[3]);
     }
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */

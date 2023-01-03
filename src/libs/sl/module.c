@@ -86,7 +86,7 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
 static inline bool _rewind(Module_t *module)
 {
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding module %p", module);
+    LOG_T(LOG_CONTEXT, "rewinding module %p", module);
 
     xmp_restart_module(module->context);
 
@@ -97,7 +97,7 @@ static inline bool _rewind(Module_t *module)
 
 static inline bool _reset(Module_t *module)
 {
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "resetting module %p", module);
+    LOG_T(LOG_CONTEXT, "resetting module %p", module);
 
     ma_pcm_rb *buffer = &module->buffer;
     ma_pcm_rb_reset(buffer);
@@ -114,7 +114,7 @@ static inline bool _produce(Module_t *module)
     ma_pcm_rb *buffer = &module->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
     if (frames_to_produce == 0) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", module);
+        LOG_W(LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", module);
         return true;
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
     } else
@@ -134,11 +134,11 @@ static inline bool _produce(Module_t *module)
     ma_pcm_rb_commit_write(buffer, frames_to_produce);
 
     if (play_result == -XMP_END) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module %p reached end, marking as completed", module);
+        LOG_D(LOG_CONTEXT, "module %p reached end, marking as completed", module);
         module->completed = true;
     } else
     if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state %d, forcing end-of-data", module, play_result);
+        LOG_E(LOG_CONTEXT, "module %p in error state %d, forcing end-of-data", module, play_result);
         return false;
     }
 
@@ -149,18 +149,18 @@ SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callba
 {
     SL_Source_t *module = malloc(sizeof(Module_t));
     if (!module) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate module structure");
+        LOG_E(LOG_CONTEXT, "can't allocate module structure");
         return NULL;
     }
 
     bool cted = _module_ctor(module, context, callbacks);
     if (!cted) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module structure");
+        LOG_E(LOG_CONTEXT, "can't initialize module structure");
         free(module);
         return NULL;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module %p created", module);
+    LOG_D(LOG_CONTEXT, "module %p created", module);
     return module;
 }
 
@@ -204,35 +204,35 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 
     module->context = xmp_create_context();
     if (!module->context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
+        LOG_E(LOG_CONTEXT, "can't create module context");
         return false;
     }
 
     int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &callbacks);
     if (loaded != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load module");
+        LOG_E(LOG_CONTEXT, "can't load module");
         goto error_free_context;
     }
 
     ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, MODULE_OUTPUT_CHANNELS_PER_FRAME, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
+        LOG_E(LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
         goto error_release_module;
     }
 
     module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!module->props) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
+        LOG_E(LOG_CONTEXT, "can't initialize module properties");
         goto error_deinitialize_ring_buffer;
     }
 
     int started = xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
     if (started != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
+        LOG_E(LOG_CONTEXT, "can't initialize module properties");
         goto error_destroy_properties;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module player started");
+    LOG_D(LOG_CONTEXT, "module player started");
 
     return true;
 
@@ -252,17 +252,17 @@ static void _module_dtor(SL_Source_t *source)
     Module_t *module = (Module_t *)source;
 
     xmp_end_player(module->context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module player stopped");
+    LOG_D(LOG_CONTEXT, "module player stopped");
 
     SL_props_destroy(module->props);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module properties deinitialized");
+    LOG_D(LOG_CONTEXT, "module properties deinitialized");
 
     ma_pcm_rb_uninit(&module->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module ring-buffer deinitialized");
+    LOG_D(LOG_CONTEXT, "module ring-buffer deinitialized");
 
     xmp_release_module(module->context);
     xmp_free_context(module->context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module context deinitialized");
+    LOG_D(LOG_CONTEXT, "module context deinitialized");
 }
 
 static bool _module_reset(SL_Source_t *source)
@@ -271,7 +271,7 @@ static bool _module_reset(SL_Source_t *source)
 
     bool reset = _reset(module);
     if (!reset) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset module %p stream", source);
+        LOG_E(LOG_CONTEXT, "can't reset module %p stream", source);
         return false;
     }
 
@@ -303,10 +303,10 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
             if (!module->completed) {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
+                LOG_W(LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
                 return true;
             } else {
-                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
+                LOG_D(LOG_CONTEXT, "end-of-data reached for source %p", source);
                 return false;
             }
         }

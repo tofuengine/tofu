@@ -72,7 +72,7 @@ static int batch_new_2on_1o(lua_State *L)
     if (!queue) {
         return luaL_error(L, "can't create queue");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p created for bank %p w/ %d slots", queue, bank, capacity);
+    LOG_D(LOG_CONTEXT, "queue %p created for bank %p w/ %d slots", queue, bank, capacity);
 
     Batch_Object_t *self = (Batch_Object_t *)luaX_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
             .bank = {
@@ -82,7 +82,7 @@ static int batch_new_2on_1o(lua_State *L)
             .queue = queue
         }, OBJECT_TYPE_BATCH, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
+    LOG_D(LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
 
     return 1;
 }
@@ -95,12 +95,12 @@ static int batch_gc_1o_0(lua_State *L)
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
 
     luaX_unref(L, self->bank.reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
+    LOG_D(LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
 
     GL_queue_destroy(self->queue);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "queue %p destroyed", self->queue);
+    LOG_D(LOG_CONTEXT, "queue %p destroyed", self->queue);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p finalized", self);
+    LOG_D(LOG_CONTEXT, "batch %p finalized", self);
 
     return 0;
 }

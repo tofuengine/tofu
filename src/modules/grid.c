@@ -109,7 +109,7 @@ static int grid_new_3nnT_1o(lua_State *L)
             lua_pop(L, 1);
         }
     } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "grid content left uninitialized");
+        LOG_W(LOG_CONTEXT, "grid content left uninitialized");
     }
 
     Grid_Object_t *self = (Grid_Object_t *)luaX_newobject(L, sizeof(Grid_Object_t), &(Grid_Object_t){
@@ -119,7 +119,7 @@ static int grid_new_3nnT_1o(lua_State *L)
             .data_size = data_size
         }, OBJECT_TYPE_GRID, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
+    LOG_D(LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
 
     return 1;
 }
@@ -132,9 +132,9 @@ static int grid_gc_1o_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 
     free(self->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", self->data);
+    LOG_D(LOG_CONTEXT, "data %p freed", self->data);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", self);
+    LOG_D(LOG_CONTEXT, "grid %p finalized", self);
 
     return 0;
 }

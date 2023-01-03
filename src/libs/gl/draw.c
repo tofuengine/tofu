@@ -364,7 +364,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
 
 #ifdef __DEFENSIVE_CHECKS__
     if (source->width != mask->width || source->height != mask->height) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source and mask surfaces need to match in size");
+        LOG_W(LOG_CONTEXT, "source and mask surfaces need to match in size");
         return;
     }
 #endif

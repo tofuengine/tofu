@@ -97,7 +97,7 @@ static int wave_new_3sNN_1o(lua_State *L)
             .amplitude = amplitude
         }, OBJECT_TYPE_WAVE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "wave %p allocated", self);
+    LOG_D(LOG_CONTEXT, "wave %p allocated", self);
 
     return 1;
 }
@@ -111,7 +111,7 @@ static int wave_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "wave %p finalized", self);
+    LOG_D(LOG_CONTEXT, "wave %p finalized", self);
 
     return 0;
 }

@@ -115,7 +115,7 @@ static int xform_new_1S_1o(lua_State *L)
             .xform = xform
         }, OBJECT_TYPE_XFORM, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated", self);
+    LOG_D(LOG_CONTEXT, "xform %p allocated", self);
 
     return 1;
 }
@@ -129,7 +129,7 @@ static int xform_gc_1o_0(lua_State *L)
 
     GL_xform_destroy(self->xform);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
+    LOG_D(LOG_CONTEXT, "xform %p finalized", self);
 
     return 0;
 }
@@ -300,7 +300,7 @@ static int xform_table_2ot_0(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is a `pairs()` array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
+                LOG_W(LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }

@@ -156,7 +156,7 @@ static int tweener_new_4sNNN_1o(lua_State *L)
             .to = to
         }, OBJECT_TYPE_TWEENER, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "tweener %p allocated", self);
+    LOG_D(LOG_CONTEXT, "tweener %p allocated", self);
 
     return 1;
 }
@@ -170,7 +170,7 @@ static int tweener_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "tweener %p finalized", self);
+    LOG_D(LOG_CONTEXT, "tweener %p finalized", self);
 
     return 0;
 }

@@ -88,7 +88,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
             configuration->display.width = resolution->width;
             configuration->display.height = resolution->height;
         } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown resolution variant `%s`", value);
+            LOG_W(LOG_CONTEXT, "unknown resolution variant `%s`", value);
         }
     } else
     if (strcmp(fqn, "display-width") == 0) {
@@ -243,10 +243,10 @@ Configuration_t *Configuration_create(const char *data)
 {
     Configuration_t *configuration = malloc(sizeof(Configuration_t));
     if (!configuration) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate configuration");
+        LOG_E(LOG_CONTEXT, "can't allocate configuration");
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "configuration allocated");
+    LOG_D(LOG_CONTEXT, "configuration allocated");
 
     *configuration = (Configuration_t){
             .system = {
@@ -318,7 +318,7 @@ Configuration_t *Configuration_create(const char *data)
 void Configuration_destroy(Configuration_t *configuration)
 {
     free(configuration);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "configuration freed");
+    LOG_D(LOG_CONTEXT, "configuration freed");
 }
 
 void Configuration_override(Configuration_t *configuration, int argc, const char *argv[])

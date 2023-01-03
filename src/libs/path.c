@@ -85,7 +85,7 @@ void path_expand(const char *path, char *expanded)
 
     char *ptr = realpath(resolved, expanded);
     if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve path `%s`", resolved);
+        LOG_E(LOG_CONTEXT, "can't resolve path `%s`", resolved);
         return;
     }
 
@@ -154,7 +154,7 @@ bool path_is_folder(const char *path)
     struct stat path_stat;
     int result = _path_stat(path, &path_stat);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
         return false;
     }
 
@@ -170,7 +170,7 @@ bool path_is_file(const char *path)
     struct stat path_stat;
     int result = _path_stat(path, &path_stat);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
         return false;
     }
 

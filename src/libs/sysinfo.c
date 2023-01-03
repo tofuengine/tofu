@@ -251,7 +251,7 @@ bool SysInfo_inspect(SysInfo_Data_t *si)
     struct utsname uts;
     int result = uname(&uts);
     if (result == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
+        LOG_E(LOG_CONTEXT, "can't get system information");
         return false;
     }
     strncpy(si->system, uts.sysname, SYSINFO_NAME_LENGTH);

@@ -43,7 +43,7 @@ GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels,
     }
 
     callback(user_data, surface, pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
+    LOG_D(LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
 
     return surface;
 }
@@ -52,13 +52,13 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate (%dx%d) pixel-data", width, height);
+        LOG_E(LOG_CONTEXT, "can't allocate (%dx%d) pixel-data", width, height);
         return NULL;
     }
 
     GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
     if (!surface) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate surface");
+        LOG_E(LOG_CONTEXT, "can't allocate surface");
         goto error_free;
     }
 
@@ -70,7 +70,7 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .is_power_of_two = _is_power_of_two((int)width) && _is_power_of_two((int)height)
         };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
+    LOG_D(LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
 
     return surface;
 
@@ -82,10 +82,10 @@ error_free:
 void GL_surface_destroy(GL_Surface_t *surface)
 {
     free(surface->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface data at %p freed", surface->data);
+    LOG_D(LOG_CONTEXT, "surface data at %p freed", surface->data);
 
     free(surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
+    LOG_D(LOG_CONTEXT, "surface %p freed", surface);
 }
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)

@@ -153,15 +153,15 @@ static bool _pak_validate_archive(FILE *stream, const char *path)
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read header from file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't read header from file `%s`", path);
         return false;
     }
     if (strncmp(header.signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file `%s` is not a valid archive", path);
+        LOG_E(LOG_CONTEXT, "file `%s` is not a valid archive", path);
         return false;
     }
     if (header.version != PAK_VERSION) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
+        LOG_E(LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
         return false;
     }
     return true;
@@ -175,7 +175,7 @@ bool FS_pak_is_valid(const char *path)
 
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
         return false;
     }
 
@@ -210,7 +210,7 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
 
     char *name = malloc(header.chars + 1);
     if (!name) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate entry's name");
+        LOG_E(LOG_CONTEXT, "can't allocate entry's name");
         return false;
     }
 
@@ -229,7 +229,7 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
 
     char id[PAK_ID_LENGTH_SZ] = { 0 };
     _hash_file(name, entry->id, id);
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
+    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
 
     return true;
 
@@ -261,33 +261,33 @@ FS_Mount_t *FS_pak_mount(const char *path)
 {
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
         return NULL;
     }
 
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read header from file `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't read header from file `%s`", path);
         goto error_close;
     }
 
     bool seeked = fseek(stream, -((long)sizeof(Pak_Index_t)), SEEK_END) == 0; // Cast to fix on x64 Windows build.
     if (!seeked) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
         goto error_close;
     }
 
     Pak_Index_t index;
     entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
     if (entries_read != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read directory-header from archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't read directory-header from archive `%s`", path);
         goto error_close;
     }
 
     seeked = fseek(stream, (long)index.offset, SEEK_SET) == 0;
     if (!seeked) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
         goto error_close;
     }
 
@@ -296,18 +296,18 @@ FS_Mount_t *FS_pak_mount(const char *path)
         Pak_Entry_t entry = { 0 };
         bool read = _read_entry(&entry, stream);
         if (!read) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read entry #%d (%d total) from archive `%s`", i, index.entries, entries_read, path);
+            LOG_E(LOG_CONTEXT, "can't read entry #%d (%d total) from archive `%s`", i, index.entries, entries_read, path);
             goto error_free_directory;
         }
         arrpush(directory, entry);
     }
 
     qsort(directory, index.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ %d entries sorted", index.entries);
+    LOG_T(LOG_CONTEXT, "directory w/ %d entries sorted", index.entries);
 
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't allocate mount for archive `%s`", path);
         goto error_free_directory;
     }
 
@@ -315,7 +315,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
 
     _pak_mount_ctor(mount, path, index.entries, directory, header.flags.encrypted);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized w/ %d entries (encrypted is %d) for archive `%s`", index.entries, header.flags.encrypted, path);
+    LOG_D(LOG_CONTEXT, "mount initialized w/ %d entries (encrypted is %d) for archive `%s`", index.entries, header.flags.encrypted, path);
 
     return mount;
 
@@ -373,7 +373,7 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
     const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
-    Log_assert(!exists, LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
+    LOG_IF_T(!exists, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
     return exists;
 }
 
@@ -384,32 +384,32 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     Pak_Entry_t needle = { .name = (char *)name };
     const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", name);
+        LOG_E(LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
     }
 
     FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
+        LOG_E(LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
         return NULL;
     }
 
     bool seeked = fseek(stream, (long)entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
     if (!seeked) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
+        LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
         goto error_close;
     }
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
+    LOG_T(LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", name);
+        LOG_E(LOG_CONTEXT, "can't allocate handle for entry `%s`", name);
         goto error_close;
     }
 
     _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags.encrypted, entry->id);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
+    LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
 
     return handle;
 
@@ -444,7 +444,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, siz
         // The key is the entry's MD5 digest of the name.
         xor_schedule(&pak_handle->cipher_context, id, PAK_ID_LENGTH);
 #ifdef __DEBUG_FS_CALLS__
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "cipher context initialized");
+        LOG_T(LOG_CONTEXT, "cipher context initialized");
 #endif
     }
 }
@@ -461,7 +461,7 @@ static size_t _pak_handle_size(FS_Handle_t *handle)
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
+    LOG_D(LOG_CONTEXT, "handle %p is", std_handle);
 #endif  /* VERBOSE_DEBUG */
 
     return pak_handle->stream_size;
@@ -473,7 +473,7 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
+        LOG_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
         return 0;
     }
 
@@ -486,18 +486,18 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
+    LOG_T(LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 #endif
 
     if (pak_handle->encrypted) {
         xor_process(&pak_handle->cipher_context, buffer, buffer, bytes_read);
 #ifdef __DEBUG_FS_CALLS__
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
+        LOG_T(LOG_CONTEXT, "%d bytes decrypted", bytes_read);
 #endif
     }
 
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
 }
@@ -516,26 +516,26 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     if (whence == SEEK_END) {
         origin = pak_handle->end_of_stream;
     } else {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "wrong seek mode %d for handle %p", whence, handle);
+        LOG_E(LOG_CONTEXT, "wrong seek mode %d for handle %p", whence, handle);
         return false;
     }
 
     long position = origin + offset;
     if (position < pak_handle->beginning_of_stream || position > pak_handle->end_of_stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "offset %d (position %d) is outside valid range for handle %p", offset, position, handle);
+        LOG_E(LOG_CONTEXT, "offset %d (position %d) is outside valid range for handle %p", offset, position, handle);
         return false;
     }
 
     bool seeked = fseek(pak_handle->stream, position, SEEK_SET) == 0;
 #ifdef __DEBUG_FS_CALLS__
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    LOG_T(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the seeked position.
         size_t index = position - pak_handle->beginning_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
 #ifdef __DEBUG_FS_CALLS__
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "cipher context adjusted to %d", index);
+        LOG_T(LOG_CONTEXT, "cipher context adjusted to %d", index);
 #endif
     }
 
@@ -555,13 +555,13 @@ static bool _pak_handle_eof(FS_Handle_t *handle)
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
+        LOG_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
         return true;
     }
 
     bool end_of_file = position > pak_handle->end_of_stream;
 #ifdef __DEBUG_FS_CALLS__
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

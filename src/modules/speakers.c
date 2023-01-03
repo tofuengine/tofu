@@ -135,7 +135,7 @@ static int speakers_mix_5nnnnn_0(lua_State *L)
             .right_to_left = right_to_left,
             .right_to_right = right_to_right
         });
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d mix is [%.f, %.f, %.f, %.f]", group_id, left_to_left, left_to_right, right_to_left, right_to_right);
+    LOG_D(LOG_CONTEXT, "group #%d mix is [%.f, %.f, %.f, %.f]", group_id, left_to_left, left_to_right, right_to_left, right_to_right);
 
     return 0;
 }
@@ -160,7 +160,7 @@ static int speakers_pan_2nn_0(lua_State *L)
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     Audio_set_pan(audio, group_id, pan);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d pan is %.f", group_id, pan);
+    LOG_D(LOG_CONTEXT, "group #%d pan is %.f", group_id, pan);
 
     return 0;
 }
@@ -177,7 +177,7 @@ static int speakers_balance_2nn_0(lua_State *L)
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     Audio_set_balance(audio, group_id, balance);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d balance is %.f", group_id, balance);
+    LOG_D(LOG_CONTEXT, "group #%d balance is %.f", group_id, balance);
 
     return 0;
 }
@@ -208,7 +208,7 @@ static int speakers_gain_2nn_0(lua_State *L)
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     Audio_set_gain(audio, group_id, gain);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
+    LOG_D(LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
 
     return 0;
 }

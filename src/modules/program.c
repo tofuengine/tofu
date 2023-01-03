@@ -92,7 +92,7 @@ static int program_new_0_1o(lua_State *L)
         }, OBJECT_TYPE_PROGRAM, META_TABLE);
 
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
+    LOG_D(LOG_CONTEXT, "program %p allocated", self);
 #else  /* VERBOSE_DEBUG */
     (void)self;
 #endif  /* VERBOSE_DEBUG */
@@ -110,7 +110,7 @@ static int program_gc_1o_0(lua_State *L)
     GL_program_destroy(self->program);
 
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p finalized", self);
+    LOG_D(LOG_CONTEXT, "program %p finalized", self);
 #endif  /* VERBOSE_DEBUG */
 
     return 0;

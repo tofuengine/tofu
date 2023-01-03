@@ -96,7 +96,7 @@ static int _panic(lua_State *L)
     if (!message) {
         message = "error object is not a string";
     }
-    Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", message);
+    LOG_F(LOG_CONTEXT, "%s", message);
     return 0; // return to Lua to abort
 }
 
@@ -117,9 +117,9 @@ static void _warning(void *ud, const char *message, int tocont)
     }
 
     if (*warning_state == WARNING_STATE_READY) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "%s", message);
+        LOG_W(LOG_CONTEXT, "%s", message);
     } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "\t%s", message);
+        LOG_W(LOG_CONTEXT, "\t%s", message);
     }
 
     if (tocont) {
@@ -210,7 +210,7 @@ static int _searcher(lua_State *L)
 static bool _detect(lua_State *L, int index, const char *methods[])
 {
     if (lua_isnil(L, index)) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't find root instance");
+        LOG_F(LOG_CONTEXT, "can't find root instance");
         lua_pop(L, 1);
         return false;
     }
@@ -218,9 +218,9 @@ static bool _detect(lua_State *L, int index, const char *methods[])
     for (int i = 0; methods[i]; ++i) { // Push the methods on stack
         lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
         if (!lua_isnil(L, -1)) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "method `%s` found", methods[i]);
+            LOG_D(LOG_CONTEXT, "method `%s` found", methods[i]);
         } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "method `%s` is missing", methods[i]);
+            LOG_W(LOG_CONTEXT, "method `%s` is missing", methods[i]);
         }
     }
 
@@ -232,7 +232,7 @@ static inline int _raw_call(lua_State *L, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
+        LOG_E(LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         return luaL_error(L, "error #%d in call: %s", result, lua_tostring(L, -1));
     }
     return LUA_OK;
@@ -263,21 +263,21 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
 {
     Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
     if (!interpreter) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate interpreter");
+        LOG_E(LOG_CONTEXT, "can't allocate interpreter");
         return NULL;
     }
 
     *interpreter = (Interpreter_t){ 0 };
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %s.%s.%s", LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_RELEASE);
+    LOG_I(LOG_CONTEXT, "Lua: %s.%s.%s", LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_RELEASE);
 
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter VM");
+        LOG_F(LOG_CONTEXT, "can't create interpreter VM");
         free(interpreter);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p created", interpreter->state);
+    LOG_D(LOG_CONTEXT, "interpreter VM %p created", interpreter->state);
 
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
     lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
@@ -314,13 +314,13 @@ void Interpreter_destroy(Interpreter_t *interpreter)
 {
     lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
     lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p garbage-collected", interpreter->state);
+    LOG_D(LOG_CONTEXT, "interpreter VM %p garbage-collected", interpreter->state);
 
     lua_close(interpreter->state);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p destroyed", interpreter->state);
+    LOG_D(LOG_CONTEXT, "interpreter VM %p destroyed", interpreter->state);
 
     free(interpreter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
+    LOG_D(LOG_CONTEXT, "interpreter freed");
 }
 
 bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
@@ -335,16 +335,16 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     luaL_loadstring(interpreter->state, _kickstart_lua);
     int result = _raw_call(interpreter->state, 0, 1);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't load boot script");
+        LOG_F(LOG_CONTEXT, "can't load boot script");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "boot script loaded");
+    LOG_D(LOG_CONTEXT, "boot script loaded");
 
     if (!_detect(interpreter->state, -1, _methods)) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect entry-points");
+        LOG_F(LOG_CONTEXT, "can't detect entry-points");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry-points detected");
+    LOG_D(LOG_CONTEXT, "entry-points detected");
 
     return true;
 }
@@ -390,18 +390,18 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
+        LOG_D(LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         int post = lua_gc(interpreter->state, LUA_GCCOUNT);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
+        LOG_D(LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
 #else
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         int count = lua_gc(interpreter->state, LUA_GCCOUNT);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memory usage is %dKb", count);
+        LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
 #endif
 #endif
     }

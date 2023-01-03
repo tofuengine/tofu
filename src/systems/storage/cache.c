@@ -153,7 +153,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
 {
     Storage_Cache_t *cache = malloc(sizeof(Storage_Cache_t));
     if (!cache) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate storage cache");
+        LOG_E(LOG_CONTEXT, "can't allocate storage cache");
         return NULL;
     }
 
@@ -161,7 +161,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
 
     sh_new_arena(cache->entries); // Use `sh_new_arena()` for string hashmaps that you never delete from.
     if (!cache->entries) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate storage cache entries");
+        LOG_E(LOG_CONTEXT, "can't allocate storage cache entries");
         goto error_free;
     }
 
@@ -177,7 +177,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
             .eof = _cache_eof
         }, cache);
     if (!attached) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach storage cache callbacks");
+        LOG_E(LOG_CONTEXT, "can't attach storage cache callbacks");
         goto error_free_entries;
     }
 
@@ -196,26 +196,26 @@ void Storage_Cache_destroy(Storage_Cache_t *cache)
         free(cache->entries[i].value.data);
     }
     shfree(cache->entries);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache entries freed");
+    LOG_D(LOG_CONTEXT, "storage cache entries freed");
 
     free(cache);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage cache freed");
+    LOG_D(LOG_CONTEXT, "storage cache freed");
 }
 
 bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const char *encoded_data, size_t length)
 {
     bool valid = base64_is_valid(encoded_data);
     if (!valid) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` is not Base64 encoded", encoded_data);
+        LOG_E(LOG_CONTEXT, "data `%.16s` is not Base64 encoded", encoded_data);
         return false;
     }
 
     size_t size = base64_decoded_size(encoded_data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Base64 data `%.32s` is %d byte(s) long", encoded_data, size);
+    LOG_D(LOG_CONTEXT, "Base64 data `%.32s` is %d byte(s) long", encoded_data, size);
 
     void *data = malloc(sizeof(char) * size);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", size, encoded_data);
+        LOG_E(LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", size, encoded_data);
         return false;
     }
     
@@ -223,7 +223,7 @@ bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const
 
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
     shput(cache->entries, name, value);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Base64 buffer `%.16s` w/ size of %d byte(s) injected", encoded_data, size);
+    LOG_D(LOG_CONTEXT, "Base64 buffer `%.16s` w/ size of %d byte(s) injected", encoded_data, size);
 
     return true;
 }
@@ -231,24 +231,24 @@ bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const
 bool Storage_Cache_inject_ascii85(Storage_Cache_t *cache, const char *name, const char *encoded_data, size_t length)
 {
     int32_t max_size = ascii85_get_max_decoded_length(strlen(encoded_data));
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Ascii85 data `%.32s` is %d byte(s) long", encoded_data, max_size);
+    LOG_D(LOG_CONTEXT, "Ascii85 data `%.32s` is %d byte(s) long", encoded_data, max_size);
 
     void *data = malloc(sizeof(char) * max_size);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", max_size, encoded_data);
+        LOG_E(LOG_CONTEXT, "can't allocate %d byte(s) buffer for decoding data `%.16s`", max_size, encoded_data);
         return false;
     }
 
     int32_t size = ascii85_decode(encoded_data, length, data, max_size);
     if (size < 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "data `%.16s` can't be decoded as Ascii85", encoded_data);
+        LOG_E(LOG_CONTEXT, "data `%.16s` can't be decoded as Ascii85", encoded_data);
         free(data);
         return false;
     }
 
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = (size_t)size };
     shput(cache->entries, name, value);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "Ascii85 buffer `%.16s` w/ size of %d byte(s) injected", encoded_data, size);
+    LOG_D(LOG_CONTEXT, "Ascii85 buffer `%.16s` w/ size of %d byte(s) injected", encoded_data, size);
 
     return true;
 }
@@ -257,13 +257,13 @@ bool Storage_Cache_inject_raw(Storage_Cache_t *cache, const char *name, const vo
 {
     void *data = stb_memdup(raw_data, size);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d byte(s) buffer for data %p", size, data);
+        LOG_E(LOG_CONTEXT, "can't allocate %d byte(s) buffer for data %p", size, data);
         return false;
     }
     
     Storage_Cache_Entry_Value_t value = (Storage_Cache_Entry_Value_t){ .data = data, .size = size };
     shput(cache->entries, name, value);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "raw buffer w/ size of %d byte(s) injected", size);
+    LOG_D(LOG_CONTEXT, "raw buffer w/ size of %d byte(s) injected", size);
 
     return true;
 }

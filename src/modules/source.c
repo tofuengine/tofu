@@ -137,7 +137,7 @@ static int source_new_2sn_1o(lua_State *L)
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
+    LOG_D(LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
     const Map_Entry_t *entry = map_find_key(type, _types);
     if (!entry) {
@@ -155,14 +155,14 @@ static int source_new_2sn_1o(lua_State *L)
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p created, type #%d", source, type);
+    LOG_D(LOG_CONTEXT, "source %p created, type #%d", source, type);
 
     Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
         }, OBJECT_TYPE_SOURCE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
+    LOG_D(LOG_CONTEXT, "source %p allocated", self);
 
     return 1;
 }
@@ -179,12 +179,12 @@ static int source_gc_1o_0(lua_State *L)
     Audio_untrack(audio, self->source); // Make sure we aren't leaving dangling pointers...
 
     SL_source_destroy(self->source);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p destroyed", self->source);
+    LOG_D(LOG_CONTEXT, "source %p destroyed", self->source);
 
     FS_close(self->handle);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
+    LOG_D(LOG_CONTEXT, "handle %p closed", self->handle);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p finalized", self);
+    LOG_D(LOG_CONTEXT, "source %p finalized", self);
 
     return 0;
 }
