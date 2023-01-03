@@ -24,11 +24,11 @@
 
 #include "controller.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 #include <libs/path.h>
 #include <systems/input.h>
 #include <systems/storage.h>
@@ -79,7 +79,7 @@ int controller_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _buttons[Input_Controller_Buttons_t_CountOf] = {
+static const Map_Entry_t _buttons[Input_Controller_Buttons_t_CountOf + 1] = {
     { "up", INPUT_CONTROLLER_BUTTON_UP },
     { "down", INPUT_CONTROLLER_BUTTON_DOWN },
     { "left", INPUT_CONTROLLER_BUTTON_LEFT },
@@ -93,12 +93,14 @@ static const Map_Entry_t _buttons[Input_Controller_Buttons_t_CountOf] = {
     { "b", INPUT_CONTROLLER_BUTTON_B },
     { "a", INPUT_CONTROLLER_BUTTON_A },
     { "select", INPUT_CONTROLLER_BUTTON_SELECT },
-    { "start", INPUT_CONTROLLER_BUTTON_START }
+    { "start", INPUT_CONTROLLER_BUTTON_START },
+    { NULL, 0 }
 };
 
-static const Map_Entry_t _sticks[Input_Controller_Sticks_t_CountOf] = {
+static const Map_Entry_t _sticks[Input_Controller_Sticks_t_CountOf + 1] = {
     { "left", INPUT_CONTROLLER_STICK_LEFT },
-    { "right", INPUT_CONTROLLER_STICK_RIGHT }
+    { "right", INPUT_CONTROLLER_STICK_RIGHT },
+    { NULL, 0 }
 };
 
 static int controller_from_id_1n_1o(lua_State *L)
@@ -157,7 +159,11 @@ static int controller_is_down_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown controller button `%s`", id);
+    }
+
     lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).down);
 
     return 1;
@@ -172,7 +178,11 @@ static int controller_is_up_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown controller button `%s`", id);
+    }
+
     lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).down);
 
     return 1;
@@ -187,7 +197,11 @@ static int controller_is_pressed_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown controller button `%s`", id);
+    }
+
     lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).pressed);
 
     return 1;
@@ -202,7 +216,11 @@ static int controller_is_released_2os_1b(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Controller_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown controller button `%s`", id);
+    }
+
     lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)entry->value).released);
 
     return 1;
@@ -217,7 +235,11 @@ static int controller_stick_2os_4nnnn(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _sticks, Input_Controller_Sticks_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _sticks);
+    if (!entry) {
+        return luaL_error(L, "unknown controller stick `%s`", id);
+    }
+
     const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, (Input_Controller_Sticks_t)entry->value);
     lua_pushnumber(L, (lua_Number)stick.x);
     lua_pushnumber(L, (lua_Number)stick.y);

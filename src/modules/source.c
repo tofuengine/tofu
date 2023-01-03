@@ -24,11 +24,11 @@
 
 #include "source.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 #include <systems/audio.h>
 #include <systems/storage.h>
 
@@ -108,10 +108,11 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const Map_Entry_t _types[Source_Type_t_CountOf] = {
+static const Map_Entry_t _types[Source_Type_t_CountOf + 1] = {
     { "music", SOURCE_TYPE_MUSIC },
     { "sample", SOURCE_TYPE_SAMPLE },
     { "module", SOURCE_TYPE_MODULE },
+    { NULL, 0 }
 };
 
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
@@ -138,7 +139,11 @@ static int source_new_2sn_1o(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
-    const Map_Entry_t *entry = map_find_key(L, type, _types, Source_Type_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(type, _types);
+    if (!entry) {
+        return luaL_error(L, "unknown source type `%s`", type);
+    }
+
     SL_Source_t *source = _create_functions[entry->value](audio->context, (SL_Callbacks_t){
             .read = _handle_read,
             .seek = _handle_seek,

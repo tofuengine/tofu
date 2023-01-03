@@ -24,11 +24,11 @@
 
 #include "noise.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 
 #define LOG_CONTEXT "noise"
 #define META_TABLE  "Tofu_Generators_Noise_mt"
@@ -60,16 +60,17 @@ int noise_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
+static const Map_Entry_t _types[Noise_Types_t_CountOf + 1] = {
+    { "perlin", NOISE_TYPE_PERLIN },
+    { "simplex", NOISE_TYPE_SIMPLEX },
+    { "cellular", NOISE_TYPE_CELLULAR },
+    { NULL, 0 }
+};
+
 static const Noise_Function_t _functions[Noise_Types_t_CountOf] = {
     noise_perlin,
     noise_simplex,
     noise_cellular
-};
-
-static const Map_Entry_t _types[Noise_Types_t_CountOf] = {
-    { "perlin", NOISE_TYPE_PERLIN },
-    { "simplex", NOISE_TYPE_SIMPLEX },
-    { "cellular", NOISE_TYPE_CELLULAR }
 };
 
 static int noise_new_1sNN_1o(lua_State *L)
@@ -83,7 +84,10 @@ static int noise_new_1sNN_1o(lua_State *L)
     float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
     float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    const Map_Entry_t *entry = map_find_key(L, type, _types, Noise_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(type, _types);
+    if (!entry) {
+        return luaL_error(L, "unknown noise type `%s`", type);
+    }
 
     Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
             .type = (Noise_Types_t)entry->value,
@@ -118,7 +122,10 @@ static int noise_type_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
-    const Map_Entry_t *entry = map_find_value(L, self->type, _types, 6);
+    const Map_Entry_t *entry = map_find_value(self->type, _types);
+    if (!entry) {
+        return luaL_error(L, "noise uses unknown type %d", self->type);
+    }
 
     lua_pushstring(L, entry->key);
 
@@ -134,7 +141,11 @@ static int noise_type_2os_0(lua_State *L)
     Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
     const char *type = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, type, _types, 6);
+    const Map_Entry_t *entry = map_find_key(type, _types);
+    if (!entry) {
+        return luaL_error(L, "unknown noise type `%s`", type);
+    }
+
     self->type = (Noise_Types_t)entry->value;
     self->function = _functions[entry->value];
 

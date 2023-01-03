@@ -24,11 +24,11 @@
 
 #include "keyboard.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 #include <libs/path.h>
 #include <systems/input.h>
 #include <systems/storage.h>
@@ -120,7 +120,7 @@ static int keyboard_is_available_1o_1b(lua_State *L)
     return 1;
 }
 
-static const Map_Entry_t _buttons[Input_Keyboard_Buttons_t_CountOf] = {
+static const Map_Entry_t _buttons[Input_Keyboard_Buttons_t_CountOf + 1] = {
     { "1", INPUT_KEYBOARD_BUTTON_1 },
     { "2", INPUT_KEYBOARD_BUTTON_2 },
     { "3", INPUT_KEYBOARD_BUTTON_3 },
@@ -174,7 +174,8 @@ static const Map_Entry_t _buttons[Input_Keyboard_Buttons_t_CountOf] = {
     { "f9", INPUT_KEYBOARD_BUTTON_F9 },
     { "f10", INPUT_KEYBOARD_BUTTON_F10 },
     { "f11", INPUT_KEYBOARD_BUTTON_F11 },
-    { "f12", INPUT_KEYBOARD_BUTTON_F12 }
+    { "f12", INPUT_KEYBOARD_BUTTON_F12 },
+    { NULL, 0 }
 };
 
 static int keyboard_is_down_2os_1b(lua_State *L)
@@ -186,7 +187,11 @@ static int keyboard_is_down_2os_1b(lua_State *L)
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Keyboard_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown keyboard button `%s`", id);
+    }
+
     lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)entry->value).down);
 
     return 1;
@@ -201,7 +206,11 @@ static int keyboard_is_up_2os_1b(lua_State *L)
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Keyboard_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown keyboard button `%s`", id);
+    }
+
     lua_pushboolean(L, !Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)entry->value).down);
 
     return 1;
@@ -216,7 +225,11 @@ static int keyboard_is_pressed_2os_1b(lua_State *L)
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Keyboard_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown keyboard button `%s`", id);
+    }
+
     lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)entry->value).pressed);
 
     return 1;
@@ -231,7 +244,11 @@ static int keyboard_is_released_2os_1b(lua_State *L)
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
     const char *id = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, id, _buttons, Input_Keyboard_Buttons_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(id, _buttons);
+    if (!entry) {
+        return luaL_error(L, "unknown keyboard button `%s`", id);
+    }
+
     lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)entry->value).released);
 
     return 1;

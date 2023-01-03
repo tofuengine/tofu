@@ -24,11 +24,11 @@
 
 #include "wave.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 
 #define LOG_CONTEXT "wave"
 #define META_TABLE  "Tofu_Generators_Wave_mt"
@@ -60,11 +60,12 @@ int wave_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _forms[Wave_Types_t_CountOf] = {
+static const Map_Entry_t _forms[Wave_Types_t_CountOf + 1] = {
     { "sine", WAVE_TYPE_SINE },
     { "square", WAVE_TYPE_SQUARE },
     { "triangle", WAVE_TYPE_TRIANGLE },
-    { "sawtooth", WAVE_TYPE_SAWTOOTH }
+    { "sawtooth", WAVE_TYPE_SAWTOOTH },
+    { NULL, 0 }
 };
 
 static const Wave_Function_t _functions[Wave_Types_t_CountOf] = {
@@ -85,7 +86,11 @@ static int wave_new_3sNN_1o(lua_State *L)
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    const Map_Entry_t *entry = map_find_key(L, form, _forms, Wave_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(form, _forms);
+    if (!entry) {
+        return luaL_error(L, "unknown wave form type `%s`", form);
+    }
+
     Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
             .function = _functions[entry->value],
             .period = period,
@@ -119,7 +124,11 @@ static int wave_form_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
 
-    const Map_Entry_t *entry = map_find_value(L, self->form, _forms, Wave_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_value(self->form, _forms);
+    if (!entry) {
+        return luaL_error(L, "wave uses unknown form %d", self->form);
+    }
+
     lua_pushstring(L, entry->key);
 
     return 1;
@@ -134,7 +143,11 @@ static int wave_form_2os_0(lua_State *L)
     Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
     const char *form = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, form, _forms, Wave_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(form, _forms);
+    if (!entry) {
+        return luaL_error(L, "unknown wave form type `%s`", form);
+    }
+
     self->function = _functions[entry->value];
 
     return 0;

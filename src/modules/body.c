@@ -24,11 +24,11 @@
 
 #include "body.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 
 #include <chipmunk/chipmunk.h>
 
@@ -75,15 +75,17 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = {
+static const Map_Entry_t _kinds[Body_Kinds_t_CountOf + 1] = {
     { "box", BODY_KIND_BOX },
-    { "circle", BODY_KIND_CIRCLE }
+    { "circle", BODY_KIND_CIRCLE },
+    { NULL, 0 }
 };
 
-static const Map_Entry_t _types[3] = {
+static const Map_Entry_t _types[] = {
     { "dynamic", CP_BODY_TYPE_DYNAMIC },
     { "kinematic", CP_BODY_TYPE_KINEMATIC },
-    { "static", CP_BODY_TYPE_STATIC }
+    { "static", CP_BODY_TYPE_STATIC },
+    { NULL, 0 }
 };
 
 static int body_new_4snnn_1o(lua_State *L)
@@ -96,9 +98,9 @@ static int body_new_4snnn_1o(lua_State *L)
     LUAX_SIGNATURE_END
     const char *kind = LUAX_STRING(L, 1);
 
-    const Map_Entry_t *entry = map_find_key(L, kind, _kinds, Body_Kinds_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(kind, _kinds);
     if (!entry) {
-        return luaL_error(L, "unrecognized kind `%s`", kind);
+        return luaL_error(L, "unknown body kind `%s`", kind);
     }
 
     cpBody *body = cpBodyNew(0.0, 0.0);
@@ -223,7 +225,10 @@ static int body_type_1o_1s(lua_State *L)
 
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
-    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)type, _types, 3);
+    const Map_Entry_t *entry = map_find_value((Map_Entry_Value_t)type, _types);
+    if (!entry) {
+        return luaL_error(L, "body uses unknown type %d", type);
+    }
 
     lua_pushstring(L, entry->key);
 
@@ -240,7 +245,11 @@ static int body_type_2os_0(lua_State *L)
     const char *type = LUAX_STRING(L, 2);
 
     cpBody *body = self->body;
-    const Map_Entry_t *entry = map_find_key(L, type, _types, 3);
+    const Map_Entry_t *entry = map_find_key(type, _types);
+    if (!entry) {
+        return luaL_error(L, "unknown body type `%s`", type);
+    }
+
     cpBodySetType(body, (cpBodyType)entry->value);
 
     return 0;

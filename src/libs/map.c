@@ -26,31 +26,24 @@
 
 #include <string.h>
 
-const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size)
+const Map_Entry_t *map_find_key(const char *key, const Map_Entry_t *table)
 {
-    for (size_t i = 0; i < size; ++i) {
-        const Map_Entry_t *entry = &table[i];
-        if (!entry->key) {
-            continue;
-        }
+    for (const Map_Entry_t *entry = table; entry->key; ++entry) {
         if (strcasecmp(entry->key, key) == 0) {
             return entry;
         }
     }
 
-    luaL_error(L, "unknown value for key `%s`", key);
     return NULL;
 }
 
-const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size)
+const Map_Entry_t *map_find_value(Map_Entry_Value_t value, const Map_Entry_t *table)
 {
-    for (size_t i = 0; i < size; ++i) {
-        const Map_Entry_t *entry = &table[i];
+    for (const Map_Entry_t *entry = table; entry->key; ++entry) {
         if ((Map_Entry_Value_t)entry->value == value) {
             return entry;
         }
     }
 
-    luaL_error(L, "unknown key for value %d", value);
     return NULL;
 }

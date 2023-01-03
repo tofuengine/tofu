@@ -24,11 +24,11 @@
 
 #include "xform.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 
@@ -269,7 +269,7 @@ static int xform_table_1o_0(lua_State *L)
     return 0;
 }
 
-static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = {
+static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf + 1] = {
     { "h", GL_XFORM_REGISTER_H },
     { "v", GL_XFORM_REGISTER_V },
     { "a", GL_XFORM_REGISTER_A },
@@ -277,7 +277,8 @@ static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = {
     { "c", GL_XFORM_REGISTER_C },
     { "d", GL_XFORM_REGISTER_D },
     { "x", GL_XFORM_REGISTER_X },
-    { "y", GL_XFORM_REGISTER_Y }
+    { "y", GL_XFORM_REGISTER_Y },
+    { NULL, 0 }
 };
 
 static int xform_table_2ot_0(lua_State *L)
@@ -294,23 +295,32 @@ static int xform_table_2ot_0(lua_State *L)
     lua_pushnil(L);
     while (lua_next(L, 2)) {
         int index = LUAX_INTEGER(L, -2);
-        GL_XForm_Table_Entry_t entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
+        GL_XForm_Table_Entry_t table_entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
 
         lua_pushnil(L);
-        for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
+        for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is a `pairs()` array.
             if (i == GL_XForm_Registers_t_CountOf) {
                 Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
-            entry.count = i + 1;
-            entry.operations[i].id = (GL_XForm_Registers_t)map_find_key(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
-            entry.operations[i].value = LUAX_NUMBER(L, -1);
+
+            const char *id = LUAX_STRING(L, -2);
+            float value = LUAX_NUMBER(L, -1);
+
+            const Map_Entry_t *entry = map_find_key(id, _registers);
+            if (!entry) {
+                return luaL_error(L, "unknown register `%s`", id);
+            }
+
+            table_entry.count = i + 1;
+            table_entry.operations[i].id = (GL_XForm_Registers_t)entry->value;
+            table_entry.operations[i].value = value;
 
             lua_pop(L, 1);
         }
 
-        arrpush(table, entry);
+        arrpush(table, table_entry);
 
         lua_pop(L, 1);
     }

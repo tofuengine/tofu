@@ -22,10 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_UTILS_MAP_H__
-#define __MODULES_UTILS_MAP_H__
-
-#include <libs/luax.h>
+#ifndef LIBS_MAP_H
+#define LIBS_MAP_H
 
 typedef int Map_Entry_Value_t;
 
@@ -34,7 +32,9 @@ typedef struct Map_Entry_s {
     Map_Entry_Value_t value;
 } Map_Entry_t;
 
-extern const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size);
-extern const Map_Entry_t *map_find_value(lua_State *L, Map_Entry_Value_t value, const Map_Entry_t *table, size_t size);
+// The `table` array need to terminated with a null-entry, that is with the `key` field set to `NULL`.
 
-#endif  /* __MODULES_UTILS_MAP_H__ */
+extern const Map_Entry_t *map_find_key(const char *key, const Map_Entry_t *table);
+extern const Map_Entry_t *map_find_value(Map_Entry_Value_t value, const Map_Entry_t *table);
+
+#endif  /* LIBS_MAP_H */

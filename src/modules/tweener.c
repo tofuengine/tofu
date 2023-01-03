@@ -24,12 +24,12 @@
 
 #include "tweener.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
+#include <libs/map.h>
 
 #define LOG_CONTEXT "tweener"
 #define META_TABLE  "Tofu_Generators_Tweener_mt"
@@ -61,7 +61,7 @@ int tweener_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _easings[Easing_Types_t_CountOf] = {
+static const Map_Entry_t _easings[Easing_Types_t_CountOf + 1] = {
     { "linear", EASING_TYPE_LINEAR },
     { "quadratic-in", EASING_TYPE_QUADRATIC_IN },
     { "quadratic-out", EASING_TYPE_QUADRATIC_OUT },
@@ -92,7 +92,8 @@ static const Map_Entry_t _easings[Easing_Types_t_CountOf] = {
     { "back-in-out", EASING_TYPE_BACK_IN_OUT },
     { "bounce-in", EASING_TYPE_BOUNCE_IN },
     { "bounce-out", EASING_TYPE_BOUNCE_OUT },
-    { "bounce-in-out", EASING_TYPE_BOUNCE_IN_OUT }
+    { "bounce-in-out", EASING_TYPE_BOUNCE_IN_OUT },
+    { NULL, 0 }
 };
 
 static Easing_Function_t _functions[Easing_Types_t_CountOf] = {
@@ -142,7 +143,11 @@ static int tweener_new_4sNNN_1o(lua_State *L)
     float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
 
-    const Map_Entry_t *entry = map_find_key(L, easing, _easings, Easing_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(easing, _easings);
+    if (!entry) {
+        return luaL_error(L, "unknown tweener easing type `%s`", easing);
+    }
+
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
             .easing = (Easing_Types_t)entry->value,
             .function = _functions[entry->value],
@@ -178,7 +183,11 @@ static int tweener_easing_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
-    const Map_Entry_t *entry = map_find_value(L, self->easing, _easings, Easing_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_value(self->easing, _easings);
+    if (!entry) {
+        return luaL_error(L, "tweener uses unknown easing %d", self->easing);
+    }
+
     lua_pushstring(L, entry->key);
 
     return 1;
@@ -193,7 +202,11 @@ static int tweener_easing_2os_0(lua_State *L)
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
     const char *easing = LUAX_STRING(L, 2);
 
-    const Map_Entry_t *entry = map_find_key(L, easing, _easings, Easing_Types_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(easing, _easings);
+    if (!entry) {
+        return luaL_error(L, "unknown tweener easing type `%s`", easing);
+    }
+
     self->easing = (Easing_Types_t)entry->value;
     self->function = _functions[entry->value];
 

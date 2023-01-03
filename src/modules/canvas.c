@@ -24,11 +24,11 @@
 
 #include "canvas.h"
 
-#include "internal/map.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
 #include <libs/log.h>
+#include <libs/map.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
@@ -972,7 +972,7 @@ static int canvas_xform_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = {
+static const Map_Entry_t _comparators[GL_Comparators_t_CountOf + 1] = {
     { "never", GL_COMPARATOR_NEVER },
     { "less", GL_COMPARATOR_LESS },
     { "less-or-equal", GL_COMPARATOR_LESS_OR_EQUAL },
@@ -980,7 +980,8 @@ static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = {
     { "greater-or-equal", GL_COMPARATOR_GREATER_OR_EQUAL },
     { "equal", GL_COMPARATOR_EQUAL },
     { "not-equal", GL_COMPARATOR_NOT_EQUAL },
-    { "always", GL_COMPARATOR_ALWAYS }
+    { "always", GL_COMPARATOR_ALWAYS },
+    { NULL, 0 }
 };
 
 static int canvas_stencil_5ooosn_0(lua_State *L)
@@ -998,7 +999,11 @@ static int canvas_stencil_5ooosn_0(lua_State *L)
     const char *comparator = LUAX_STRING(L, 4);
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
 
-    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(comparator, _comparators);
+    if (!entry) {
+        return luaL_error(L, "unknown stencil comparator `%s`", comparator);
+    }
+
     GL_context_stencil(self->context, (GL_Point_t){ .x = 0, .y = 0 },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height  },
         mask->surface, (GL_Comparators_t)entry->value, threshold);
@@ -1029,7 +1034,11 @@ static int canvas_stencil_7onnoosn_0(lua_State *L)
     const char *comparator = LUAX_STRING(L, 6);
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 7);
 
-    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(comparator, _comparators);
+    if (!entry) {
+        return luaL_error(L, "unknown stencil comparator `%s`", comparator);
+    }
+
     GL_context_stencil(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height  },
         mask->surface, (GL_Comparators_t)entry->value, threshold);
@@ -1064,7 +1073,11 @@ static int canvas_stencil_11onnonnnnosn_0(lua_State *L)
     const char *comparator = LUAX_STRING(L, 10);
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 11);
 
-    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(comparator, _comparators);
+    if (!entry) {
+        return luaL_error(L, "unknown stencil comparator `%s`", comparator);
+    }
+
     GL_context_stencil(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
         mask->surface, (GL_Comparators_t)entry->value, threshold);
@@ -1081,7 +1094,7 @@ static int canvas_stencil_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _functions[GL_Functions_t_CountOf] = {
+static const Map_Entry_t _functions[GL_Functions_t_CountOf + 1] = {
     { "replace", GL_FUNCTIONS_REPLACE },
     { "add", GL_FUNCTIONS_ADD },
     { "add-clamped", GL_FUNCTIONS_ADD_CLAMPED },
@@ -1092,7 +1105,8 @@ static const Map_Entry_t _functions[GL_Functions_t_CountOf] = {
     { "multiply", GL_FUNCTIONS_MULTIPLY },
     { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
     { "min", GL_FUNCTIONS_MIN },
-    { "max", GL_FUNCTIONS_MAX }
+    { "max", GL_FUNCTIONS_MAX },
+    { NULL, 0 }
 };
 
 static int canvas_blend_3oos_0(lua_State *L)
@@ -1106,7 +1120,11 @@ static int canvas_blend_3oos_0(lua_State *L)
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_IMAGE);
     const char *function = LUAX_STRING(L, 3);
 
-    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(function, _functions);
+    if (!entry) {
+        return luaL_error(L, "unknown blend function `%s`", function);
+    }
+
     GL_context_blend(self->context, (GL_Point_t){ .x = 0, .y = 0 },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height },
         (GL_Functions_t)entry->value);
@@ -1129,7 +1147,11 @@ static int canvas_blend_5onnos_0(lua_State *L)
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_IMAGE);
     const char *function = LUAX_STRING(L, 5);
 
-    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(function, _functions);
+    if (!entry) {
+        return luaL_error(L, "unknown blend function `%s`", function);
+    }
+
     GL_context_blend(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height },
         (GL_Functions_t)entry->value);
@@ -1160,7 +1182,11 @@ static int canvas_blend_9onnonnnns_0(lua_State *L)
     size_t height = LUAX_UNSIGNED(L, 8);
     const char *function = LUAX_STRING(L, 9);
 
-    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(function, _functions);
+    if (!entry) {
+        return luaL_error(L, "unknown blend function `%s`", function);
+    }
+
     GL_context_blend(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         (GL_Functions_t)entry->value);
