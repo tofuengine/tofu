@@ -240,7 +240,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
     LOG_I(LOG_CONTEXT, "audio ready");
 
-    engine->environment = Environment_create(argc, argv, engine->display, engine->input);
+    engine->environment = Environment_create(engine->display, engine->input);
     if (!engine->environment) {
         LOG_F(LOG_CONTEXT, "can't initialize environment");
         goto error_destroy_audio;

@@ -38,7 +38,6 @@
 
 #define MAX_DATE_LENGTH 64
 
-static int system_args_0_1t(lua_State *L);
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
@@ -59,7 +58,6 @@ int system_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "args", system_args_0_1t },
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
@@ -78,23 +76,6 @@ int system_loader(lua_State *L)
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
         }, nup, NULL);
-}
-
-static int system_args_0_1t(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-    LUAX_SIGNATURE_END
-
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
-
-    lua_newtable(L); // Initially empty.
-    size_t count = arrlenu(environment->args);
-    for (size_t i = 0; i < count; ++i) {
-        lua_pushstring(L, environment->args[i]);
-        lua_rawseti(L, -2, (lua_Integer)(i + 1));
-    }
-
-    return 1;
 }
 
 static int system_version_0_3nnn(lua_State *L)

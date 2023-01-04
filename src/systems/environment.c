@@ -39,7 +39,7 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display, const Input_t *input)
+Environment_t *Environment_create(const Display_t *display, const Input_t *input)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
@@ -48,13 +48,7 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
     }
     LOG_D(LOG_CONTEXT, "environment allocated");
 
-    const char **args = NULL;
-    for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
-        arrpush(args, argv[i]); // Note, we don't need to clone/copy/allocate the strings (arguments are persisted)
-    }
-
     *environment = (Environment_t){
-        .args = args,
         .display = display,
         .input = input,
         .state = (Environment_State_t){
@@ -72,9 +66,6 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
 
 void Environment_destroy(Environment_t *environment)
 {
-    arrfree(environment->args);
-    LOG_D(LOG_CONTEXT, "arguments freed");
-
     free(environment);
     LOG_D(LOG_CONTEXT, "environment freed");
 }

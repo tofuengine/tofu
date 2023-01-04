@@ -57,13 +57,12 @@ typedef struct Environment_State_s {
 } Environment_State_t;
 
 typedef struct Environment_s {
-    const char **args;
     const Display_t *display;
     const Input_t *input;
     Environment_State_t state;
 } Environment_t;
 
-extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display, const Input_t *input);
+extern Environment_t *Environment_create(const Display_t *display, const Input_t *input);
 extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
