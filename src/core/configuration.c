@@ -292,9 +292,6 @@ Configuration_t *Configuration_create(const char *data)
 #endif
             }
         };
-    if (!data) {
-        return configuration;
-    }
 
     char context[PARAMETER_CONTEXT_LENGTH] = { 0 };
     for (const char *ptr = data; ptr;) {
@@ -319,20 +316,4 @@ void Configuration_destroy(Configuration_t *configuration)
 {
     free(configuration);
     LOG_D(LOG_CONTEXT, "configuration freed");
-}
-
-void Configuration_override(Configuration_t *configuration, int argc, const char *argv[])
-{
-    for (int i = 0; i < argc; ++i) {
-        if (strncmp(argv[i], "--", 2) != 0) { // Long-options only.
-            continue;
-        }
-        char pair[LINE_LENGTH] = { 0 };
-        strncpy(pair, argv[i] + 2, LINE_LENGTH - 1); // Skip "--" marker.
-        const char *key, *value;
-        if (!_parse_pair(pair, &key, &value)) {
-            continue;
-        }
-        _on_parameter(configuration, NULL, key, value); // Context is already fused in the parameter key.
-    }
 }

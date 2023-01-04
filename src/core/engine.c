@@ -70,7 +70,7 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static Configuration_t *_configure(Storage_t *storage, int argc, const char *argv[])
+static Configuration_t *_configure(Storage_t *storage)
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
@@ -79,7 +79,10 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
     }
 
     Configuration_t *configuration = Configuration_create(S_SCHARS(resource));
-    Configuration_override(configuration, argc, argv);
+    if (!configuration) {
+        LOG_F(LOG_CONTEXT, "can't create configuration");
+        return NULL;
+    }
 
     Log_configure(configuration->system.debug, NULL);
 

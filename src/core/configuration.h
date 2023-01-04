@@ -77,6 +77,4 @@ typedef struct Configuration_s {
 extern Configuration_t *Configuration_create(const char *data);
 extern void Configuration_destroy(Configuration_t *configuration);
 
-extern void Configuration_override(Configuration_t *configuration, int argc, const char *argv[]);
-
 #endif  /* TOFU_CORE_CONFIGURATION_H */
