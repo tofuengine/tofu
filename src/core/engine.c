@@ -25,7 +25,6 @@
 #include "engine.h"
 
 #include <core/config.h>
-#include <core/options.h>
 #include <core/platform.h>
 #include <core/version.h>
 #include <libs/log.h>
@@ -117,10 +116,8 @@ static inline void _information(void)
     LOG_I(LOG_CONTEXT, "running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
 }
 
-Engine_t *Engine_create(int argc, const char *argv[])
+Engine_t *Engine_create(const Engine_Options_t *options)
 {
-    options_t options = options_parse_command_line(argc, argv); // We do this early, since options could have effect on everything.
-
     Engine_t *engine = malloc(sizeof(Engine_t));
     if (!engine) {
         LOG_E(LOG_CONTEXT, "can't allocate engine");
@@ -134,8 +131,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
     _information();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
-            .executable = argv[0],
-            .path = options.path
+            .executable = options->executable,
+            .path = options->path
         });
     if (!engine->storage) {
         LOG_F(LOG_CONTEXT, "can't initialize storage");
@@ -143,7 +140,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
     LOG_I(LOG_CONTEXT, "storage ready");
 
-    engine->configuration = _configure(engine->storage, argc, argv);
+    engine->configuration = _configure(engine->storage);
     if (!engine->configuration) {
         goto error_destroy_storage;
     }

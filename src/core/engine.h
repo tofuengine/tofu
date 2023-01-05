@@ -34,6 +34,11 @@
 #include <systems/storage.h>
 #include <systems/interpreter.h>
 
+typedef struct Engine_Options_s {
+    const char *executable;
+    const char *path;
+} Engine_Options_t;
+
 typedef struct Engine_s {
     Storage_t *storage;
     Configuration_t *configuration;
@@ -44,7 +49,7 @@ typedef struct Engine_s {
     Interpreter_t *interpreter;
 } Engine_t;
 
-extern Engine_t *Engine_create(int argc, const char *argv[]);
+extern Engine_t *Engine_create(const Engine_Options_t *options);
 extern void Engine_destroy(Engine_t *engine);
 
 extern void Engine_run(Engine_t *engine);
