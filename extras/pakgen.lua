@@ -1,4 +1,4 @@
-#!/usr/bin/lua5.3
+#!/usr/bin/lua
 
 --[[
 MIT License
@@ -172,7 +172,7 @@ The `flags` field is a bitmask with the following significance:
 
 ]]
 local function compile_flags(config)
-  return bit32.lshift(config.encrypted and 1 or 0, 0)
+  return config.encrypted and 1 or 0 << 0
 end
 
 --[[

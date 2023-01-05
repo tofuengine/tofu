@@ -59,7 +59,7 @@ PACKER=$(extrasdir)/pakgen.lua
 PACKERFLAGS=--encrypted
 
 LUACHECK=luacheck
-LUACHECKFLAGS=--no-self --std lua53 -q
+LUACHECKFLAGS=--no-self --std lua54 -q
 
 VALGRIND=valgrind
 VALGRINDFLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
@@ -245,7 +245,7 @@ $(builddir):
 #
 # In case we want to embed pre-compiled scripts
 #
-#	@luac5.3 $< -o $@
+#	@luac $< -o $@
 
 $(builddir)/$(KERNAL): $(RESOURCES) Makefile
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)

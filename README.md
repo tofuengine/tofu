@@ -87,16 +87,20 @@ Guess what? Yup, that's yet another game engine/framework.
 In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, altought I've using Ubuntu for the development. One can issue the following commands to install all the required dependencies:
 
 ```bash
-sudo apt install git
 sudo apt install build-essential
 sudo apt install mingw-w64
+
 sudo apt install libx11-dev mesa-common-dev libgles2-mesa-dev
-sudo apt install lua5.3 liblua5.3-dev luarocks
-sudo luarocks install argparse
-sudo luarocks install luafilesystem
-sudo luarocks install luacheck
-sudo luarocks install luazen
-sudo apt install imagemagick
+
+sudo apt install lua5.4 liblua5.4-dev luarocks
+
+sudo update-alternatives --set lua-compiler /usr/bin/luac5.4
+sudo update-alternatives --set lua-interpreter /usr/bin/lua5.4
+
+sudo luarocks --lua-version=5.4 install argparse
+sudo luarocks --lua-version=5.4 install luafilesystem
+sudo luarocks --lua-version=5.4 install luacheck
+sudo luarocks --lua-version=5.4 install luazen
 ```
 
 Of course, `git` should also be installed to clone the repository.
