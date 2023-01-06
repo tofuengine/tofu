@@ -42,7 +42,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
 * [x] 2D physics-engine.
 * [x] Customizable application icon.
-* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
+* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root directory override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
 * [x] Up to 4 game-controller support. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
 * [x] Screen capture and recording.
@@ -112,7 +112,7 @@ Proceed in creating a local clone of the repository with the command
 git clone https://github.com/tofuengine/tofu.git
 ```
 
-into a suitable work folder. Change directory into the `tofu` folder you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
+into a suitable work directory. Move into the `tofu` directory you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
@@ -122,7 +122,7 @@ The build artifacts will be placed in the `build` directory.
 
 ## Sample projects
 
-Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-folder and can be launched using `make`, passing the name of the project as a target (e.g. `make bunnymark`).
+Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-directory and can be launched using `make`, passing the name of the project as a target (e.g. `make splash`).
 
 # Addenda
 
