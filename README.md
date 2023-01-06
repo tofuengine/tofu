@@ -94,9 +94,6 @@ sudo apt install libx11-dev mesa-common-dev libgles2-mesa-dev
 
 sudo apt install lua5.4 liblua5.4-dev luarocks
 
-sudo update-alternatives --set lua-compiler /usr/bin/luac5.4
-sudo update-alternatives --set lua-interpreter /usr/bin/lua5.4
-
 sudo luarocks --lua-version=5.4 install argparse
 sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck

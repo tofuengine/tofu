@@ -245,7 +245,7 @@ $(builddir):
 #
 # In case we want to embed pre-compiled scripts
 #
-#	@luac $< -o $@
+#	@luac5.4 $< -o $@
 
 $(builddir)/$(KERNAL): $(RESOURCES) Makefile
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)

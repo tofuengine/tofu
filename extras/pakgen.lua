@@ -1,4 +1,4 @@
-#!/usr/bin/lua
+#!/usr/bin/lua5.4
 
 --[[
 MIT License
