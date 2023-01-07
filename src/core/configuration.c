@@ -38,9 +38,8 @@
 #define LOG_CONTEXT "configuration"
 
 #define LINE_LENGTH                 256
-#define PARAMETER_LENGTH            128
+#define PARAMETER_LENGTH            LINE_LENGTH
 #define PARAMETER_CONTEXT_LENGTH    64
-#define PARAMETER_KEY_LENGTH        (PARAMETER_LENGTH - PARAMETER_CONTEXT_LENGTH)
 
 static inline void _parse_version(const char *version_string, int *major, int *minor, int *revision)
 {
@@ -52,10 +51,10 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
 {
     char fqn[PARAMETER_LENGTH] = { 0 };
     if (context && context[0] != '\0') { // Skip context if not provided.
-        strncpy(fqn, context, PARAMETER_CONTEXT_LENGTH);
+        strcpy(fqn, context);
         strcat(fqn, "-");
     }
-    strncat(fqn, key, PARAMETER_KEY_LENGTH);
+    strcat(fqn, key);
 
     if (strcmp(fqn, "system-identity") == 0) {
         strncpy(configuration->system.identity, value, MAX_VALUE_LENGTH - 1);
