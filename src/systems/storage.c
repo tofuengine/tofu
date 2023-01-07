@@ -85,14 +85,14 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         LOG_E(LOG_CONTEXT, "can't create file-system context for path `%s`", path);
         goto error_free;
     }
-    LOG_D(LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
+    LOG_D(LOG_CONTEXT, "file-system context %p created for path `%s`", storage->context, path);
 
     storage->cache = Storage_Cache_create(storage->context);
     if (!storage->cache) {
-        LOG_E(LOG_CONTEXT, "can't create storage cache");
+        LOG_E(LOG_CONTEXT, "can't create cache");
         goto error_destroy_context;
     }
-    LOG_D(LOG_CONTEXT, "storage cache %p for context %p created for path `%s`", storage->cache, storage->context);
+    LOG_D(LOG_CONTEXT, "cache %p created", storage->cache);
 
     bool kernal_attached = FS_attach_folder_or_archive(storage->context, kernal_path);
     if (!kernal_attached) {
