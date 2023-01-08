@@ -249,7 +249,7 @@ $(builddir):
 
 $(builddir)/$(KERNAL): $(RESOURCES) Makefile
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
-	@$(PACKER) $(PACKERFLAGS) --input=$(srcdir)/kernal --output=$(builddir)/$(KERNAL)
+	@$(PACKER) $(PACKERFLAGS) $(srcdir)/kernal --output=$(builddir)/$(KERNAL)
 
 $(builddir)/$(TARGET): $(OBJECTS) Makefile
 	@$(LINKER) $(OBJECTS) $(LOPTS) $(LWARNINGS) $(LFLAGS) -o $@
@@ -326,7 +326,7 @@ gamepad: engine
 gamepad-pak: engine
 	@echo "Launching *gamepad (PAK)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/gamepad
-	@$(PACKER) $(PACKERFLAGS) --input=./demos/gamepad --output=./demos/gamepad.pak
+	@$(PACKER) $(PACKERFLAGS) ./demos/gamepad --output=./demos/gamepad.pak
 	@$(builddir)/$(TARGET) --path=./demos/gamepad.pak
 
 hello-tofu: engine
@@ -412,7 +412,7 @@ threedee: engine
 threedee-pak: engine
 	@echo "Launching *threedee (PAK)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/threedee
-	@$(PACKER) $(PACKERFLAGS) --input=./demos/threedee --output=./demos/threedee.pak
+	@$(PACKER) $(PACKERFLAGS) ./demos/threedee --output=./demos/threedee.pak
 	@$(builddir)/$(TARGET) --path=./demos/threedee.pak
 
 noise: engine
