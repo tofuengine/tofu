@@ -25,39 +25,43 @@ SOFTWARE.
 ]]--
 
 -- Depends upon the following Lua "rocks".
---  1 luafilesystem
---  2 luazen
+--  1 argparse
+--  2 luafilesystem
+--  3 luazen
 
 --[[
 +---------+
 | HEADER  | sizeof(Pak_Header_t)
 +---------+
-| BLOB 0  |
+| BLOB 0  | N * sizeof(char)
 +---------+
-| BLOB 1  |
-+---------+
-    ...
-    ...
-    ...
-+---------+
-| BLOB n  |
-+---------+
-| ENTRY 0 | sizeof(uint16_t) + N * sizeof(char) + sizeof(uint32_t) + sizeof(uint32_t)
-+---------+
-| ENTRY 1 |
+| BLOB 1  |    "        "
 +---------+
     ...
     ...
     ...
 +---------+
-| ENTRY n |
+| BLOB n  |    "        "
++---------+
+| ENTRY 0 | sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint16_t) + N * sizeof(char)
++---------+
+| ENTRY 1 |    "                                                                 "
++---------+
+    ...
+    ...
+    ...
++---------+
+| ENTRY n |    "                                                                 "
 +---------+
 |  INDEX  | sizeof(Pak_Index_t)
 +---------+
 
+NOTE: `uint16_t` and `uint32_t` data is store in network-byte-ordering (i.e.
+      little-endian). See the `>` modifier below.
+
 ]]
 
-
+local argparse = require("argparse")
 local lfs = require("lfs")
 local luazen = require("luazen")
 
@@ -103,43 +107,19 @@ local function xor_cipher(key)
   end
 end
 
-local function parse_arguments(args)
-  local config = {
-      input = {},
-      output = nil,
-      encrypted = false
-    }
-  for _, arg in ipairs(args) do
-    if arg:starts_with("--input=") then
-      local path = arg:sub(9)
-      if path:ends_with("/") then
-        path = path:sub(1, -2)
-      end
-      table.insert(config.input, path)
-    elseif arg:starts_with("--output=") then
-      config.output = arg:sub(10)
-      if not config.output:ends_with(".pak") then
-        config.output = config.output .. ".pak"
-      end
-    elseif arg:starts_with("--encrypted") then
-      config.encrypted = true
-    end
-  end
-  return (config.input and config.output) and config or nil
-end
-
 local function attrdir(path, files)
-  for file in lfs.dir(path) do
-      if file ~= "." and file ~= ".." then
-        local pathfile = path .. "/" .. file
-        local mode = lfs.attributes(pathfile, "mode")
-        if mode == "directory" then
-            attrdir(pathfile, files)
-        else
-          local size = lfs.attributes(pathfile, "size")
-          table.insert(files, { pathfile = pathfile, size = size, name = nil })
-        end
-      end
+  local mode = lfs.attributes(path, "mode")
+  if mode == "file" then
+    local size = lfs.attributes(path, "size")
+    table.insert(files, { pathfile = path, size = size, name = nil })
+    return files
+  end
+
+  for entry in lfs.dir(path) do
+    if entry ~= "." and entry ~= ".." then
+      local subpath = path .. "/" .. entry
+      attrdir(subpath, files)
+    end
   end
   return files
 end
@@ -147,7 +127,7 @@ end
 local function fetch_files(paths)
   local files = {}
   for _, path in ipairs(paths) do
-    print(string.format("Fetching files from folder `%s`", path))
+    print(string.format("Fetching files from path `%s`", path))
     for _, file in ipairs(attrdir(path, {})) do
       file.name = file.pathfile:sub(1 + #path + 1)
       table.insert(files, file)
@@ -157,7 +137,6 @@ local function fetch_files(paths)
   table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
   return files
 end
-
 
 --[[
 
@@ -171,8 +150,8 @@ The `flags` field is a bitmask with the following significance:
 +-------+----------------------------------+
 
 ]]
-local function compile_flags(config)
-  return config.encrypted and 1 or 0 << 0
+local function compile_flags(flags)
+  return flags.encrypted and 1 or 0 << 0
 end
 
 --[[
@@ -189,36 +168,41 @@ end
          +------+
 
 ]]
-local function emit_header(output, config)
-  output:write(string.pack("c8", "TOFUPAK!"))
-  output:write(string.pack("I1", VERSION))
-  output:write(string.pack("I1", compile_flags(config)))
-  output:write(string.pack("I2", RESERVED_16b))
+local function emit_header(writer, flags)
+  writer:write(string.pack("c8", "TOFUPAK!"))
+  writer:write(string.pack("I1", VERSION))
+  writer:write(string.pack("I1", compile_flags(flags)))
+  writer:write(string.pack(">I2", RESERVED_16b))
 
   return 8 + 1 + 1 + 2
 end
 
-local function emit_entry(output, config, file, offset)
+local function emit_entry(writer, flags, file, offset)
   local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
 
   local id = luazen.md5(name)
 
-  local cipher = config.encrypted and xor_cipher(id) or nil
+  local cipher = flags.encrypted and xor_cipher(id) or nil
 
-  local input = io.open(file.pathfile, "rb")
+  local reader = io.open(file.pathfile, "rb")
+  if not reader then
+    print(string.format("*** can't access file `%s`", file.pathfile))
+    os.exit(0)
+  end
+
   local size = 0
   while true do
-    local block = input:read(8196)
+    local block = reader:read(8196)
     if not block then
       break
     end
     if cipher then
       block = cipher(block)
     end
-    output:write(block)
+    writer:write(block)
     size = size + #block
   end
-  input:close()
+  reader:close()
 
   return {
       id = string.to_hex(id),
@@ -229,22 +213,29 @@ local function emit_entry(output, config, file, offset)
     }
 end
 
-local function emit_entries(output, config, files, offset)
+local function emit_entries(writer, flags, files, offset)
   local size = 0
   local entries = {}
   local hash = {}
 
-  for _, file in ipairs(files) do
-    local entry = emit_entry(output, config, file, offset + size)
+  for index, file in ipairs(files) do
+    local entry = emit_entry(writer, flags, file, offset + size)
 
-    if hash[entry.name] then -- Check whether the (normalized) entry name appears twice.
-      print("*** entry w/ name `%s` is duplicated")
+    if hash[entry.id] then -- Check whether the (normalized) entry name appears twice.
+      print(string.format("*** entry w/ name `%s` is duplicated (clashing id is `%s`)", entry.name, entry.id))
       return nil, size
     end
-    hash[entry.name] = true
+    hash[entry.id] = true
 
-    print(string.format("> file `%s`, name: `%s`, id: `%s`, offset: %d, size: %d",
-      file.name, entry.name, entry.id, entry.offset, entry.size))
+    if not flags.quiet then
+      if flags.detailed then
+        print(string.format("> file `%s`\n  name: `%s`\n  id: `%s`\n  offset: %d\n  size: %d",
+          file.name, entry.name, entry.id, entry.offset, entry.size))
+      else
+        print(string.format("[%04x] `%s` -> `%s`",
+          index, entry.id, entry.name))
+      end
+    end
 
     table.insert(entries, entry)
     size = size + entry.size
@@ -272,9 +263,9 @@ entry has this format
 ]]
 local function emit_directory(output, entries)
   for _, entry in ipairs(entries) do
-    output:write(string.pack("I4", entry.offset))
-    output:write(string.pack("I4", entry.size))
-    output:write(string.pack("s2", entry.name))
+    output:write(string.pack(">I4", entry.offset))
+    output:write(string.pack(">I4", entry.size))
+    output:write(string.pack(">s2", entry.name))
   end
 end
 
@@ -293,9 +284,9 @@ unsurprisingly, as and index to locate the archive directory.
          +------+
 
 ]]
-local function emit_index(output, offset, entries)
-  output:write(string.pack("I4", offset))
-  output:write(string.pack("I4", entries))
+local function emit_index(writer, offset, entries)
+  writer:write(string.pack(">I4", offset))
+  writer:write(string.pack(">I4", entries))
 end
 
 --[[
@@ -303,51 +294,71 @@ end
 The trailer is the combination of both the directory and the index.
 
 ]]
-local function emit_trailer(output, entries, cursor)
-  emit_directory(output, entries)
-  emit_index(output, cursor, #entries)
+local function emit_trailer(writer, entries, cursor)
+  emit_directory(writer, entries)
+  emit_index(writer, cursor, #entries)
 end
 
-local function emit(config, files)
-  local output = io.open(config.output, "wb")
+local function emit(output, flags, files)
+  local writer = io.open(output, "wb")
+  if not writer then
+    print(string.format("*** can't create file `%s`", output))
+    os.exit(0)
+  end
 
-  local header_size = emit_header(output, config)
+  local header_size = emit_header(writer, flags)
 
-  local entries, entries_size = emit_entries(output, config, files, header_size)
+  local entries, entries_size = emit_entries(writer, flags, files, header_size)
   if not entries then
-    output:close()
-    os.remove(config.output)
+    writer:close()
+    os.remove(output)
     return false
   end
 
-  emit_trailer(output, entries, header_size + entries_size)
+  emit_trailer(writer, entries, header_size + entries_size)
 
-  output:close()
+  writer:close()
 
   return true
 end
 
 local function main(arg)
-  local config = parse_arguments(arg)
-  if not config then
-    print("Usage: pakgen --input=<input folder> --output=<output file> [--encrypted]")
-    return
-  end
+  -- https://argparse.readthedocs.io/en/stable/options.html#flags
+  local parser = argparse()
+    :name("pakgen")
+    :description("Package generator.")
+  parser:argument("input")
+    :description("Paths to be added to the package. Can be either single files or directories (which are recursively scanned).")
+    :args("+")
+  parser:option("-o --output")
+    :description("Name of the the generated package file.")
+    :default("a.pak")
+    :count(1)
+    :args(1)
+  parser:flag("-q --quiet")
+    :description("Enables quiet output during package creation.")
+  parser:flag("-d --detailed")
+    :description("Enables detailed output during package creation.")
+  parser:flag("-e --encrypted")
+    :description("Tells whether the package should be encrypted.")
+  local args = parser:parse(arg)
 
-  print("PakGen v0.4.1")
+  print("PakGen v0.5.0")
   print("=============")
 
   local flags = {}
-  if config.encrypted then
-    table.insert(flags, "encrypted")
+  for flag in ipairs({ "quiet", "detailed", "encrypted" }) do
+    if args[flag] then
+      table.insert(flags, flag)
+    end
   end
   local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
 
-  local files = fetch_files(config.input)
+  local files = fetch_files(args.input)
 
-  print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
+  print(string.format("Creating %s archive `%s` w/ %d entries", annotation, args.output, #files))
 
-  local success = emit(config, files)
+  local success = emit(args.output, flags, files)
 
   if success then
     print("Done!")
