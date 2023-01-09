@@ -56,8 +56,8 @@ SOFTWARE.
 |  INDEX  | sizeof(Pak_Index_t)
 +---------+
 
-NOTE: `uint16_t` and `uint32_t` data is store in network-byte-ordering (i.e.
-      little-endian). See the `>` modifier below.
+NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
+      See the `<` modifier below.
 
 ]]
 
@@ -172,7 +172,7 @@ local function emit_header(writer, flags)
   writer:write(string.pack("c8", "TOFUPAK!"))
   writer:write(string.pack("I1", VERSION))
   writer:write(string.pack("I1", compile_flags(flags)))
-  writer:write(string.pack(">I2", RESERVED_16b))
+  writer:write(string.pack("<I2", RESERVED_16b))
 
   return 8 + 1 + 1 + 2
 end
@@ -263,9 +263,9 @@ entry has this format
 ]]
 local function emit_directory(output, entries)
   for _, entry in ipairs(entries) do
-    output:write(string.pack(">I4", entry.offset))
-    output:write(string.pack(">I4", entry.size))
-    output:write(string.pack(">s2", entry.name))
+    output:write(string.pack("<I4", entry.offset))
+    output:write(string.pack("<I4", entry.size))
+    output:write(string.pack("<s2", entry.name))
   end
 end
 
@@ -285,8 +285,8 @@ unsurprisingly, as and index to locate the archive directory.
 
 ]]
 local function emit_index(writer, offset, entries)
-  writer:write(string.pack(">I4", offset))
-  writer:write(string.pack(">I4", entries))
+  writer:write(string.pack("<I4", offset))
+  writer:write(string.pack("<I4", entries))
 end
 
 --[[
