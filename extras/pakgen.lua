@@ -124,16 +124,20 @@ local function attrdir(path, files)
   return files
 end
 
-local function fetch_files(paths)
+local function fetch_files(paths, flags)
   local files = {}
   for _, path in ipairs(paths) do
-    print(string.format("Fetching files from path `%s`", path))
+    if not flags.quiet then
+      print(string.format("Fetching files from path `%s`", path))
+    end
     for _, file in ipairs(attrdir(path, {})) do
       file.name = file.pathfile:sub(1 + #path + 1)
       table.insert(files, file)
     end
   end
-  print(string.format("Optimizing..."))
+  if not flags.quiet then
+    print(string.format("Optimizing..."))
+  end
   table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
   return files
 end
@@ -187,7 +191,7 @@ local function emit_entry(writer, flags, file, offset)
   local reader = io.open(file.pathfile, "rb")
   if not reader then
     print(string.format("*** can't access file `%s`", file.pathfile))
-    os.exit(0)
+    os.exit(-1)
   end
 
   local size = 0
@@ -303,7 +307,7 @@ local function emit(output, flags, files)
   local writer = io.open(output, "wb")
   if not writer then
     print(string.format("*** can't create file `%s`", output))
-    os.exit(0)
+    os.exit(-1)
   end
 
   local header_size = emit_header(writer, flags)
@@ -332,7 +336,7 @@ local function main(arg)
     :args("+")
   parser:option("-o --output")
     :description("Name of the the generated package file.")
-    :default("a.pak")
+    :default("aout.pak")
     :count(1)
     :args(1)
   parser:flag("-q --quiet")
@@ -343,27 +347,33 @@ local function main(arg)
     :description("Tells whether the package should be encrypted.")
   local args = parser:parse(arg)
 
-  print("PakGen v0.5.0")
-  print("=============")
-
   local flags = {}
-  for flag in ipairs({ "quiet", "detailed", "encrypted" }) do
+  for _, flag in ipairs({ "quiet", "detailed", "encrypted" }) do
     if args[flag] then
-      table.insert(flags, flag)
+      flags[flag] = true
     end
   end
-  local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
 
-  local files = fetch_files(args.input)
+  if not flags.quiet then
+    print("PakGen v0.5.1")
+    print("=============")
+  end
 
-  print(string.format("Creating %s archive `%s` w/ %d entries", annotation, args.output, #files))
+  local files = fetch_files(args.input, flags)
+
+  if not flags.quiet then
+    local annotation = flags.encrypted and "encrypted" or "plain"
+    print(string.format("Creating %s archive `%s` w/ %d entries", annotation, args.output, #files))
+  end
 
   local success = emit(args.output, flags, files)
 
-  if success then
-    print("Done!")
-  else
-    print("Failed!")
+  if not flags.quiet then
+    if success then
+      print("Done!")
+    else
+      print("Failed!")
+    end
   end
 end
 
