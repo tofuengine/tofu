@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local argparse = require("argparse")
+
 function string:at(index)
   return self:sub(index, index)
 end
@@ -48,7 +50,7 @@ function string.to_hex(str)
     end)
 end
 
-local function convert(output, input)
+local function convert(output, flags, input)
   local sheet = {}
   for line in io.lines(input) do
     -- i0.png, 0, 0, 15, 21, 0, 0, 0, 0
@@ -62,54 +64,81 @@ local function convert(output, input)
       })
   end
 
-  print(string.format("  generating %d entries", #sheet))
+  if not flags.quiet then
+    print(string.format("  generating %d entries", #sheet))
+  end
 
-  local out = io.open(output, "wb")
+  local writer = io.open(output, "wb")
+  if not writer then
+    print(string.format("*** can't create file `%s`", output))
+    return false
+  end
+
   for index, entry in ipairs(sheet) do
-    print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
-    out:write(string.pack("I4", entry.x))
-    out:write(string.pack("I4", entry.y))
-    out:write(string.pack("I4", entry.width))
-    out:write(string.pack("I4", entry.height))
-  end
-  out:close()
-end
-
-local function parse_arguments(args)
-  local config = {
-      input = nil,
-      output = nil
-    }
-  for _, arg in ipairs(args) do
-    if arg:starts_with("--input=") then
-      config.input = arg:sub(9)
-      if not config.input:ends_with(".txt") then
-        config.input = config.input .. ".txt"
-      end
-    elseif arg:starts_with("--output=") then
-      config.output = arg:sub(10)
-      if not config.output:ends_with(".sheet") then
-        config.output = config.output .. ".sheet"
-      end
+    if not flags.quiet then
+      print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
     end
+
+    writer:write(string.pack("<I4", entry.x))
+    writer:write(string.pack("<I4", entry.y))
+    writer:write(string.pack("<I4", entry.width))
+    writer:write(string.pack("<I4", entry.height))
   end
-  return (config.input and config.output) and config or nil
+
+  writer:close()
+
+  return true
 end
 
 local function main(arg)
-  local config = parse_arguments(arg)
-  if not config then
-    print("Usage: sheetgen --input=<input file> --output=<output file>")
-    return
+  -- https://argparse.readthedocs.io/en/stable/options.html#flags
+  local parser = argparse()
+    :name("sheetgen")
+    :description("Sheet generator.")
+  parser:argument("input")
+    :description("Paths to the file to be converted.")
+    :args("1")
+  parser:option("-o --output")
+    :description("Name of the the generated sheet file.")
+    :default("aout.sheet")
+    :count(1)
+    :args(1)
+  parser:flag("-q --quiet")
+    :description("Enables quiet output during sheet generation.")
+  local args = parser:parse(arg)
+
+  if not args.input:ends_with(".txt") then
+    args.input = args.input .. ".txt"
+  end
+  if not args.output:ends_with(".sheet") then
+    args.output = args.output .. ".sheet"
   end
 
-  print("SheetGen v0.1.0")
-  print("===============")
+  local flags = {}
+  for _, flag in ipairs({ "quiet" }) do
+    flags[flag] = args[flag] and true or false
+  end
 
-  print(string.format("Converting file `%s` to `%s`", config.input, config.output))
-  convert(config.output, config.input)
+  if not flags.quiet then
+    print("SheetGen v0.2.0")
+    print("===============")
+  end
 
-  print("Done!")
+  if not flags.quiet then
+    print(string.format("Converting file `%s` to `%s`", args.input, args.output))
+  end
+
+  local success = convert(args.output, flags, args.input)
+
+  if not flags.quiet then
+    if success then
+      print("Done!")
+    else
+      print("Failed!")
+    end
+  end
+
+  os.exit(not success and -1 or 0)
 end
 
 main(arg)

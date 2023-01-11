@@ -108,6 +108,10 @@ local function xor_cipher(key)
 end
 
 local function attrdir(path, files)
+  if path:ends_with("/") then
+    path = path:sub(1, -2)
+  end
+
   local mode = lfs.attributes(path, "mode")
   if mode == "file" then
     local size = lfs.attributes(path, "size")
@@ -131,7 +135,8 @@ local function fetch_files(paths, flags)
       print(string.format("Fetching files from path `%s`", path))
     end
     for _, file in ipairs(attrdir(path, {})) do
-      file.name = file.pathfile:sub(1 + #path + 1)
+      local i, _ = string.find(path, "/") -- Check if the path is a straight current-directory file.
+      file.name = not i and path or file.pathfile:sub(1 + #path + 1)
       table.insert(files, file)
     end
   end
@@ -191,7 +196,7 @@ local function emit_entry(writer, flags, file, offset)
   local reader = io.open(file.pathfile, "rb")
   if not reader then
     print(string.format("*** can't access file `%s`", file.pathfile))
-    os.exit(-1)
+    return nil
   end
 
   local size = 0
@@ -224,6 +229,9 @@ local function emit_entries(writer, flags, files, offset)
 
   for index, file in ipairs(files) do
     local entry = emit_entry(writer, flags, file, offset + size)
+    if not entry then
+      return nil, 0
+    end
 
     if hash[entry.id] then -- Check whether the (normalized) entry name appears twice.
       print(string.format("*** entry w/ name `%s` is duplicated (clashing id is `%s`)", entry.name, entry.id))
@@ -307,7 +315,7 @@ local function emit(output, flags, files)
   local writer = io.open(output, "wb")
   if not writer then
     print(string.format("*** can't create file `%s`", output))
-    os.exit(-1)
+    return false
   end
 
   local header_size = emit_header(writer, flags)
@@ -349,9 +357,7 @@ local function main(arg)
 
   local flags = {}
   for _, flag in ipairs({ "quiet", "detailed", "encrypted" }) do
-    if args[flag] then
-      flags[flag] = true
-    end
+    flags[flag] = args[flag] and true or false
   end
 
   if not flags.quiet then
@@ -375,6 +381,8 @@ local function main(arg)
       print("Failed!")
     end
   end
+
+  os.exit(not success and -1 or 0)
 end
 
 main(arg)
