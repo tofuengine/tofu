@@ -28,6 +28,7 @@
 #include "tile.h"
 
 #include <core/config.h>
+#include <libs/bytes.h>
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -45,10 +46,10 @@ static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t
 
     for (size_t i = 0; i < count; ++i) {
         cells[i] = (GL_Rectangle_t){
-                .x = (int)rectangles[i].x,
-                .y = (int)rectangles[i].y,
-                .width = rectangles[i].width,
-                .height = rectangles[i].height
+                .x = bytes_from32le(rectangles[i].x),
+                .y = bytes_from32le(rectangles[i].y),
+                .width = bytes_from32le(rectangles[i].width),
+                .height = bytes_from32le(rectangles[i].height)
         };
     }
 
@@ -121,6 +122,7 @@ error_free:
     return NULL;
 }
 
+// TODO: move the `GL_Rectangle_u32_t` outside this context.
 GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *rectangles, size_t count)
 {
     GL_Rectangle_t *cells = _parse_cells(rectangles, count);
