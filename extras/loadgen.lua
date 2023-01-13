@@ -141,6 +141,10 @@ end
 end
 
 local function emit(output, flags, files)
+  if not output:ends_with(".lua") then
+    output = output .. ".lua"
+  end
+
   local writer = io.open(output, "w")
   if not writer then
     print(string.format("*** can't create file `%s`", output))
@@ -183,10 +187,6 @@ local function main(arg)
   parser:flag("-q --quiet")
     :description("Enables quiet output during operations.")
   local args = parser:parse(arg)
-
-  if not args.output:ends_with(".lua") then
-    args.output = args.output .. ".lua"
-  end
 
   local flags = {}
   for _, flag in ipairs({ "quiet" }) do

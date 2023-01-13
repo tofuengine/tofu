@@ -51,6 +51,13 @@ function string.to_hex(str)
 end
 
 local function convert(output, flags, input)
+  if not input:ends_with(".txt") then
+    input = input .. ".txt"
+  end
+  if not output:ends_with(".sheet") then
+    output = output .. ".sheet"
+  end
+
   local sheet = {}
   for line in io.lines(input) do
     -- i0.png, 0, 0, 15, 21, 0, 0, 0, 0
@@ -106,13 +113,6 @@ local function main(arg)
   parser:flag("-q --quiet")
     :description("Enables quiet output during sheet generation.")
   local args = parser:parse(arg)
-
-  if not args.input:ends_with(".txt") then
-    args.input = args.input .. ".txt"
-  end
-  if not args.output:ends_with(".sheet") then
-    args.output = args.output .. ".sheet"
-  end
 
   local flags = {}
   for _, flag in ipairs({ "quiet" }) do
