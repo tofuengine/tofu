@@ -56,7 +56,7 @@ endif
 KERNAL=kernal.pak
 
 PACKER=$(extrasdir)/pakgen.lua
-PACKERFLAGS=--encrypted
+PACKERFLAGS=--encrypted --quiet
 
 LUACHECK=luacheck
 LUACHECKFLAGS=--no-self --std lua54 -q
@@ -250,6 +250,7 @@ $(builddir):
 $(builddir)/$(KERNAL): $(RESOURCES) Makefile
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
 	@$(PACKER) $(PACKERFLAGS) $(srcdir)/kernal --output=$(builddir)/$(KERNAL)
+	@echo "Kernal packed!"
 
 $(builddir)/$(TARGET): $(OBJECTS) Makefile
 	@$(LINKER) $(OBJECTS) $(LOPTS) $(LWARNINGS) $(LFLAGS) -o $@
