@@ -86,8 +86,8 @@ local function convert(output, flags, input)
       print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
     end
 
-    writer:write(string.pack("<I4", entry.x))
-    writer:write(string.pack("<I4", entry.y))
+    writer:write(string.pack("<i4", entry.x))
+    writer:write(string.pack("<i4", entry.y))
     writer:write(string.pack("<I4", entry.width))
     writer:write(string.pack("<I4", entry.height))
   end

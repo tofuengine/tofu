@@ -101,7 +101,7 @@ static int font_new_3osS_1o(lua_State *L)
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
+    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }

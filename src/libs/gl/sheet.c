@@ -37,7 +37,7 @@
 
 #define LOG_CONTEXT "gl-sheet"
 
-static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t count)
+static GL_Rectangle_t *_parse_cells(const GL_Rectangle32_t *rectangles, size_t count)
 {
     GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * count);
     if (!cells) {
@@ -46,10 +46,10 @@ static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t
 
     for (size_t i = 0; i < count; ++i) {
         cells[i] = (GL_Rectangle_t){
-                .x = bytes_from32le(rectangles[i].x),
-                .y = bytes_from32le(rectangles[i].y),
-                .width = bytes_from32le(rectangles[i].width),
-                .height = bytes_from32le(rectangles[i].height)
+                .x = bytes_i32le(rectangles[i].x),
+                .y = bytes_i32le(rectangles[i].y),
+                .width = bytes_ui32le(rectangles[i].width),
+                .height = bytes_ui32le(rectangles[i].height)
         };
     }
 
@@ -122,8 +122,7 @@ error_free:
     return NULL;
 }
 
-// TODO: move the `GL_Rectangle_u32_t` outside this context.
-GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *rectangles, size_t count)
+GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle32_t *rectangles, size_t count)
 {
     GL_Rectangle_t *cells = _parse_cells(rectangles, count);
     if (!cells) {

@@ -65,10 +65,10 @@ typedef struct GL_Color_s {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct GL_Rectangle_u32_s {
-    uint32_t x, y;
+typedef struct GL_Rectangle32_s {
+    int32_t x, y;
     uint32_t width, height;
-} GL_Rectangle_u32_t;
+} GL_Rectangle32_t;
 #pragma pack(pop)
 
 typedef enum GL_Comparators_e {
