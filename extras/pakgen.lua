@@ -275,7 +275,7 @@ entry has this format
 ]]
 local function emit_directory(output, entries)
   for _, entry in ipairs(entries) do
-    output:write(string.pack("<I4", entry.offset))
+    output:write(string.pack("<i4", entry.offset))
     output:write(string.pack("<I4", entry.size))
     output:write(string.pack("<s2", entry.name))
   end
@@ -297,7 +297,7 @@ unsurprisingly, as and index to locate the archive directory.
 
 ]]
 local function emit_index(writer, offset, entries)
-  writer:write(string.pack("<I4", offset))
+  writer:write(string.pack("<i4", offset))
   writer:write(string.pack("<I4", entries))
 end
 

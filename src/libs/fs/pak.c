@@ -95,13 +95,13 @@ typedef struct Pak_Header_s {
 } Pak_Header_t;
 
 typedef struct Pak_Entry_Header_s {
-    uint32_t offset;
+    int32_t offset;
     uint32_t size;
     uint16_t chars;
 } Pak_Entry_Header_t;
 
 typedef struct Pak_Index_s {
-    uint32_t offset;
+    int32_t offset;
     uint32_t entries; // Redundant, we could check file offsets, but it's quicker that way.
 } Pak_Index_t;
 #pragma pack(pop)
@@ -208,9 +208,9 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
         return false;
     }
 
-    size_t chars = bytes_from16le(header.chars);
-    long offset = bytes_from32le(header.offset);
-    size_t size = bytes_from32le(header.size);
+    size_t chars = bytes_ui16le(header.chars);
+    long offset = bytes_i32le(header.offset);
+    size_t size = bytes_ui32le(header.size);
     
     char *name = malloc(chars + 1);
     if (!name) {
@@ -289,8 +289,8 @@ FS_Mount_t *FS_pak_mount(const char *path)
         goto error_close;
     }
 
-    long offset = bytes_from32le(index.offset); // Convert from network-byte order.
-    size_t entries = bytes_from32le(index.entries);
+    long offset = bytes_i32le(index.offset);
+    size_t entries = bytes_ui32le(index.entries);
 
     seeked = fseek(stream, offset, SEEK_SET) == 0;
     if (!seeked) {

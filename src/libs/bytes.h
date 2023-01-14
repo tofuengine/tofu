@@ -31,9 +31,13 @@ extern uint16_t bytes_swap16(uint16_t value);
 extern uint32_t bytes_swap32(uint32_t value);
 extern uint64_t bytes_swap64(uint64_t value);
 
-extern uint16_t bytes_from16le(uint16_t u16);
-extern uint16_t bytes_from16be(uint16_t u16);
-extern uint32_t bytes_from32le(uint32_t u32);
-extern uint32_t bytes_from32be(uint32_t u32);
+extern int16_t bytes_i16le(int16_t i16);
+extern uint16_t bytes_ui16le(uint16_t ui16);
+extern int16_t bytes_i16be(int16_t i16);
+extern uint16_t bytes_ui16be(uint16_t ui16);
+extern int32_t bytes_i32le(int32_t i32);
+extern uint32_t bytes_ui32le(uint32_t ui32);
+extern int32_t bytes_i32be(int32_t i32);
+extern uint32_t bytes_ui32be(uint32_t ui32);
 
 #endif  /* TOFU_LIBS_BYTES_H */

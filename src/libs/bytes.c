@@ -52,45 +52,89 @@ uint64_t bytes_swap64(uint64_t value)
             | ((value & 0x00000000000000FF) << 56));
 }
 
-uint16_t bytes_from16le(uint16_t u16)
+int16_t bytes_i16le(int16_t i16)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return u16;
+	return i16;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    return bytes_swap16(u16);
+    return bytes_swap16(i16);
 #else
 #    error unsupported endianness
 #endif
 }
 
-uint16_t bytes_from16be(uint16_t u16)
+uint16_t bytes_ui16le(uint16_t ui16)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    return bytes_swap16(u16);
+	return ui16;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return u16;
+    return bytes_swap16(ui16);
 #else
 #    error unsupported endianness
 #endif
 }
 
-uint32_t bytes_from32le(uint32_t u32)
+int16_t bytes_i16be(int16_t i16)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return u32;
+    return bytes_swap16(i16);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    return bytes_swap32(u32);
+	return i16;
 #else
 #    error unsupported endianness
 #endif
 }
 
-uint32_t bytes_from32be(uint32_t u32)
+uint16_t bytes_ui16be(uint16_t ui16)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    return bytes_swap32(u32);
+    return bytes_swap16(ui16);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return u32;
+	return ui16;
+#else
+#    error unsupported endianness
+#endif
+}
+
+int32_t bytes_i32le(int32_t i32)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return i32;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return bytes_swap32(i32);
+#else
+#    error unsupported endianness
+#endif
+}
+
+uint32_t bytes_ui32le(uint32_t ui32)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return ui32;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return bytes_swap32(ui32);
+#else
+#    error unsupported endianness
+#endif
+}
+
+int32_t bytes_i32be(int32_t i32)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return bytes_swap32(i32);
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return i32;
+#else
+#    error unsupported endianness
+#endif
+}
+
+uint32_t bytes_ui32be(uint32_t ui32)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return bytes_swap32(ui32);
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return ui32;
 #else
 #    error unsupported endianness
 #endif
