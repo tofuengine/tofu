@@ -66,13 +66,13 @@ int font_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static inline void _generate_alphabeth(GL_Cell_t glyphs[256], const char *alphabeth)
+static inline void _generate_alphabet(GL_Cell_t glyphs[256], const char *alphabet)
 {
-    if (alphabeth) {
+    if (alphabet) {
         for (size_t i = 0; i < 256; ++i) {
             glyphs[i] = GL_CELL_NIL;
         }
-        const uint8_t *ptr = (const uint8_t *)alphabeth; // Hack! Treat as unsigned! :)
+        const uint8_t *ptr = (const uint8_t *)alphabet; // Hack! Treat as unsigned! :)
         for (size_t i = 0; ptr[i] != '\0'; ++i) {
             glyphs[ptr[i]] = (GL_Cell_t)i;
         }
@@ -92,7 +92,7 @@ static int font_new_3osS_1o(lua_State *L)
     LUAX_SIGNATURE_END
     const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     const char *cells_file = LUAX_STRING(L, 2);
-    const char *alphabeth = LUAX_OPTIONAL_STRING(L, 3, NULL);
+    const char *alphabet = LUAX_OPTIONAL_STRING(L, 3, NULL);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
@@ -114,7 +114,7 @@ static int font_new_3osS_1o(lua_State *L)
             .sheet = sheet,
             .glyphs = { 0 }
         }, OBJECT_TYPE_FONT, META_TABLE);
-    _generate_alphabeth(self->glyphs, alphabeth);
+    _generate_alphabet(self->glyphs, alphabet);
 
     LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
@@ -133,7 +133,7 @@ static int font_new_4onnS_1o(lua_State *L)
     const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     size_t glyph_width = LUAX_UNSIGNED(L, 2);
     size_t glyph_height = LUAX_UNSIGNED(L, 3);
-    const char *alphabeth = LUAX_OPTIONAL_STRING(L, 4, NULL);
+    const char *alphabet = LUAX_OPTIONAL_STRING(L, 4, NULL);
 
     GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->surface, (GL_Size_t){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
@@ -148,7 +148,7 @@ static int font_new_4onnS_1o(lua_State *L)
             .sheet = sheet,
             .glyphs = { 0 }
         }, OBJECT_TYPE_FONT, META_TABLE);
-    _generate_alphabeth(self->glyphs, alphabeth);
+    _generate_alphabet(self->glyphs, alphabet);
 
     LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
