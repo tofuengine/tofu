@@ -276,8 +276,8 @@ FS_Mount_t *FS_pak_mount(const char *path)
         goto error_close;
     }
 
-    bool seeked = fseek(stream, -((long)sizeof(Pak_Index_t)), SEEK_END) == 0; // Cast to fix on x64 Windows build.
-    if (!seeked) {
+    bool sought = fseek(stream, -((long)sizeof(Pak_Index_t)), SEEK_END) == 0; // Cast to fix on x64 Windows build.
+    if (!sought) {
         LOG_E(LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
         goto error_close;
     }
@@ -292,8 +292,8 @@ FS_Mount_t *FS_pak_mount(const char *path)
     long offset = bytes_i32le(index.offset);
     size_t entries = bytes_ui32le(index.entries);
 
-    seeked = fseek(stream, offset, SEEK_SET) == 0;
-    if (!seeked) {
+    sought = fseek(stream, offset, SEEK_SET) == 0;
+    if (!sought) {
         LOG_E(LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
         goto error_close;
     }
@@ -401,8 +401,8 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         return NULL;
     }
 
-    bool seeked = fseek(stream, entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
-    if (!seeked) {
+    bool sought = fseek(stream, entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
+    if (!sought) {
         LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
         goto error_close;
     }
@@ -533,12 +533,12 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
         return false;
     }
 
-    bool seeked = fseek(pak_handle->stream, position, SEEK_SET) == 0;
+    bool sought = fseek(pak_handle->stream, position, SEEK_SET) == 0;
 #ifdef __DEBUG_FS_CALLS__
-    LOG_T(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    LOG_T(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
 
-    if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the seeked position.
+    if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the sought position.
         size_t index = position - pak_handle->beginning_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
 #ifdef __DEBUG_FS_CALLS__
@@ -546,7 +546,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 #endif
     }
 
-    return seeked;
+    return sought;
 }
 
 static long _pak_handle_tell(FS_Handle_t *handle)

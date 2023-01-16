@@ -246,11 +246,11 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    bool seeked = fseek(std_handle->stream, offset, whence) == 0;
+    bool sought = fseek(std_handle->stream, offset, whence) == 0;
 #ifdef __DEBUG_FS_CALLS__
-    LOG_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    LOG_D(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
-    return seeked;
+    return sought;
 }
 
 static long _std_handle_tell(FS_Handle_t *handle)

@@ -152,14 +152,14 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     Sample_t *sample = (Sample_t *)user_data;
     const SL_Callbacks_t *callbacks = &sample->callbacks;
 
-    bool seeked = false;
+    bool sought = false;
     if (origin == drflac_seek_origin_start) {
-        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
+        sought = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
     } else
     if (origin == drflac_seek_origin_current) {
-        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
+        sought = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
     }
-    return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
+    return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
 static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.

@@ -176,11 +176,11 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
-    bool seeked = cache_handle->callbacks.seek(cache_handle->stream, offset, whence);
+    bool sought = cache_handle->callbacks.seek(cache_handle->stream, offset, whence);
 #ifdef __DEBUG_FS_CALLS__
-    LOG_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+    LOG_D(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
-    return seeked;
+    return sought;
 }
 
 static long _callbacks_handle_tell(FS_Handle_t *handle)

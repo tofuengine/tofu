@@ -84,8 +84,8 @@ static inline bool _rewind(Music_t *music)
 {
     LOG_T(LOG_CONTEXT, "rewinding music %p", music);
 
-    drflac_bool32 seeked = drflac_seek_to_pcm_frame(music->decoder, 0);
-    if (!seeked) {
+    drflac_bool32 sought = drflac_seek_to_pcm_frame(music->decoder, 0);
+    if (!sought) {
         LOG_E(LOG_CONTEXT, "can't rewind music stream");
         return false;
     }
@@ -182,14 +182,14 @@ static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin
     Music_t *music = (Music_t *)user_data;
     const SL_Callbacks_t *callbacks = &music->callbacks;
 
-    bool seeked = false;
+    bool sought = false;
     if (origin == drflac_seek_origin_start) {
-        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
+        sought = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
     } else
     if (origin == drflac_seek_origin_current) {
-        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
+        sought = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
     }
-    return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
+    return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
 static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
