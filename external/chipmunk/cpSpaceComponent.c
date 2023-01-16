@@ -190,7 +190,7 @@ ComponentAdd(cpBody *root, cpBody *body){
 	}
 }
 
-static void
+static inline void
 FloodFillComponent(cpBody *root, cpBody *body)
 {
 	// Kinematic bodies cannot be put to sleep and prevent bodies they are touching from sleeping.

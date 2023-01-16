@@ -117,7 +117,8 @@ cpPolyShapeSegmentQuery(cpPolyShape *poly, cpVect a, cpVect b, cpFloat r2, cpSeg
 		if(d < 0.0f) continue;
 		
 		cpFloat bn = cpvdot(b, n);
-		cpFloat t = d/(an - bn);
+		// Avoid divide by zero. (d is always positive)
+		cpFloat t = d/cpfmax(an - bn, CPFLOAT_MIN);
 		if(t < 0.0f || 1.0f < t) continue;
 		
 		cpVect point = cpvlerp(a, b, t);
@@ -233,7 +234,7 @@ cpBoxShapeInit(cpPolyShape *poly, cpBody *body, cpFloat width, cpFloat height, c
 cpPolyShape *
 cpBoxShapeInit2(cpPolyShape *poly, cpBody *body, cpBB box, cpFloat radius)
 {
-	cpVect verts[] = {
+	cpVect verts[4] = {
 		cpv(box.r, box.b),
 		cpv(box.r, box.t),
 		cpv(box.l, box.t),

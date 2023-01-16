@@ -200,7 +200,7 @@ static inline cpFloat
 ClosestT(const cpVect a, const cpVect b)
 {
 	cpVect delta = cpvsub(b, a);
-	return -cpfclamp(cpvdot(delta, cpvadd(a, b))/cpvlengthsq(delta), -1.0f, 1.0f);
+	return -cpfclamp(cpvdot(delta, cpvadd(a, b))/(cpvlengthsq(delta) + CPFLOAT_MIN), -1.0f, 1.0f);
 }
 
 // Basically the same as cpvlerp(), except t = [-1, 1]
@@ -345,7 +345,7 @@ EPA(const struct SupportContext *ctx, const struct MinkowskiPoint v0, const stru
 //MARK: GJK Functions.
 
 // Recursive implementation of the GJK loop.
-static struct ClosestPoints
+static inline struct ClosestPoints
 GJKRecurse(const struct SupportContext *ctx, const struct MinkowskiPoint v0, const struct MinkowskiPoint v1, const int iteration)
 {
 	if(iteration > MAX_GJK_ITERATIONS){
@@ -674,7 +674,7 @@ CircleToPoly(const cpCircleShape *circle, const cpPolyShape *poly, struct cpColl
 	// If the closest points are nearer than the sum of the radii...
 	if(points.d <= circle->r + poly->r){
 		cpVect n = info->n = points.n;
-		cpCollisionInfoPushContact(info, cpvadd(points.a, cpvmult(n, circle->r)), cpvadd(points.b, cpvmult(n, poly->r)), 0);
+		cpCollisionInfoPushContact(info, cpvadd(points.a, cpvmult(n, circle->r)), cpvadd(points.b, cpvmult(n, -poly->r)), 0);
 	}
 }
 
