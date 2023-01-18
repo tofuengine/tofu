@@ -135,7 +135,7 @@ local function fetch_files(paths, flags)
       print(string.format("Fetching files from path `%s`", path))
     end
     for _, file in ipairs(attrdir(path, {})) do
-      file.name = file.pathfile == path and path or file.pathfile:sub(1 + #path) -- In case the path is the file itself.
+      file.name = file.pathfile == path and path or file.pathfile:sub(1 + #path + 1) -- In case the path is the file itself.
       print(string.format("%s %s %s", file.pathfile, path, file.name))
       table.insert(files, file)
     end
