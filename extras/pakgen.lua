@@ -135,8 +135,8 @@ local function fetch_files(paths, flags)
       print(string.format("Fetching files from path `%s`", path))
     end
     for _, file in ipairs(attrdir(path, {})) do
-      local i, _ = string.find(path, "/") -- Check if the path is a straight current-directory file.
-      file.name = not i and path or file.pathfile:sub(1 + #path + 1)
+      file.name = file.pathfile == path and path or file.pathfile:sub(1 + #path) -- In case the path is the file itself.
+      print(string.format("%s %s %s", file.pathfile, path, file.name))
       table.insert(files, file)
     end
   end
