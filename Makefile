@@ -133,7 +133,7 @@ endif
 LINKER=$(COMPILER)
 
 ifeq ($(PLATFORM),windows)
-	LFLAGS=-lgdi32 -lpsapi
+	LFLAGS=-lpthread -lgdi32 -lpsapi
 else ifeq ($(PLATFORM),rpi)
 	LFLAGS=-lm -lpthread -lX11 -ldl -latomic
 else
