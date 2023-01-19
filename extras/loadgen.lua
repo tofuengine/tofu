@@ -52,22 +52,19 @@ function string.to_hex(str)
     end)
 end
 
-local function attrdir(path, files)
-  if path:ends_with("/") then
-    path = path:sub(1, -2)
-  end
-
+local function attrdir(path, name, files)
   local mode = lfs.attributes(path, "mode")
   if mode == "file" then
     local size = lfs.attributes(path, "size")
-    table.insert(files, { pathfile = path, size = size, name = nil })
+    table.insert(files, { pathfile = path, size = size, name = not name and path or name })
     return files
   end
 
   for entry in lfs.dir(path) do
     if entry ~= "." and entry ~= ".." then
       local subpath = path .. "/" .. entry
-      attrdir(subpath, files)
+      local subname = not name and entry or name .. "/" .. entry
+      attrdir(subpath, subname, files)
     end
   end
   return files
@@ -79,8 +76,7 @@ local function fetch_files(paths, flags)
     if not flags.quiet then
       print(string.format("Fetching files from folder `%s`", path))
     end
-    for _, file in ipairs(attrdir(path, {})) do
-      file.name = file.pathfile == path and path or file.pathfile:sub(1 + #path + 1) -- In case the path is the file itself.
+    for _, file in ipairs(attrdir(path, nil, {})) do
       table.insert(files, file)
     end
   end
