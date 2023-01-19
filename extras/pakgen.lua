@@ -33,27 +33,15 @@ SOFTWARE.
 +---------+
 | HEADER  | sizeof(Pak_Header_t)
 +---------+
-| BLOB 0  | N * sizeof(char)
+| ENTRY 0 | sizeof(Pak_Entry_t) + sizeof(Entry) * sizeof(uint8_t)
 +---------+
-| BLOB 1  |    "        "
-+---------+
-    ...
-    ...
-    ...
-+---------+
-| BLOB n  |    "        "
-+---------+
-| ENTRY 0 | sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint16_t) + N * sizeof(char)
-+---------+
-| ENTRY 1 |    "                                                                 "
+| ENTRY 1 |    "                                             "
 +---------+
     ...
     ...
     ...
 +---------+
-| ENTRY n |    "                                                                 "
-+---------+
-|  INDEX  | sizeof(Pak_Index_t)
+| ENTRY n |    "                                            "
 +---------+
 
 NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
@@ -107,22 +95,19 @@ local function xor_cipher(key)
   end
 end
 
-local function attrdir(path, files)
-  if path:ends_with("/") then
-    path = path:sub(1, -2)
-  end
-
+local function attrdir(path, name, files)
   local mode = lfs.attributes(path, "mode")
   if mode == "file" then
     local size = lfs.attributes(path, "size")
-    table.insert(files, { pathfile = path, size = size, name = nil })
+    table.insert(files, { pathfile = path, size = size, name = not name and path or name })
     return files
   end
 
   for entry in lfs.dir(path) do
     if entry ~= "." and entry ~= ".." then
       local subpath = path .. "/" .. entry
-      attrdir(subpath, files)
+      local subname = not name and entry or name .. "/" .. entry
+      attrdir(subpath, subname, files)
     end
   end
   return files
@@ -134,9 +119,8 @@ local function fetch_files(paths, flags)
     if not flags.quiet then
       print(string.format("Fetching files from path `%s`", path))
     end
-    for _, file in ipairs(attrdir(path, {})) do
-      file.name = file.pathfile == path and path or file.pathfile:sub(1 + #path + 1) -- In case the path is the file itself.
-      print(string.format("%s %s %s", file.pathfile, path, file.name))
+
+    for _, file in ipairs(attrdir(path, nil, {})) do
       table.insert(files, file)
     end
   end
@@ -172,22 +156,51 @@ end
 +    8   |   1  | version   | file-format version (`0`)   |
 +    9   |   1  | flags     | archive flags (see above)   |
 +   10   |   2  | padding   | reserved for future uses    |
++   10   |   4  | entries   | number of entries           |
 +--------+------+-----------+-----------------------------+
-         |  12  |
+         |  16  |
          +------+
 
 ]]
-local function emit_header(writer, flags)
+local function emit_header(writer, flags, files)
   writer:write(string.pack("c8", "TOFUPAK!"))
   writer:write(string.pack("I1", VERSION))
   writer:write(string.pack("I1", compile_flags(flags)))
   writer:write(string.pack("<I2", RESERVED_16b))
+  writer:write(string.pack("I4", #files))
 
-  return 8 + 1 + 1 + 2
+  return true
 end
 
-local function emit_entry(writer, flags, file, offset)
+local HEADER_SIZE <const> = 16
+
+--[[
+
+Each archive entry is formed by an header telling the size and the name of the entry,
+follower by its content, as a sequence of bytes.
+
+Note that the offset of the entry in the file is not stored, as it is automatically
+calculated during the indexing process.
+
++--------+--------+----------+-----------------------------------------------------------+
++ OFFSET |  SIZE  | NAME     | DESCRIPTION                                               |
++--------+--------+----------+-----------------------------------------------------------+
++    0   |    4   | size (S) | length (in bytes) of the entry                            |
++    4   |    2   | chars(C) | # of characters of the entry's name                       |
++    6   |    C   | name     | sequence of characters, not null-terminated               |
++  6 + C |    S   |          | sequence of bytes                                         |
++--------+--------+----------+-----------------------------------------------------------+
+         |  6+C+S |
+         +--------+
+
+]]
+local function emit_entry(writer, flags, file)
   local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
+  local size = file.size
+  local header = 4 + 2 + #name
+
+  writer:write(string.pack("<I4", size))
+  writer:write(string.pack("<s2", name))
 
   local id = luazen.md5(name)
 
@@ -196,10 +209,9 @@ local function emit_entry(writer, flags, file, offset)
   local reader = io.open(file.pathfile, "rb")
   if not reader then
     print(string.format("*** can't access file `%s`", file.pathfile))
-    return nil
+    return nil, {}, 0
   end
 
-  local size = 0
   while true do
     local block = reader:read(8196)
     if not block then
@@ -209,106 +221,47 @@ local function emit_entry(writer, flags, file, offset)
       block = cipher(block)
     end
     writer:write(block)
-    size = size + #block
   end
   reader:close()
 
-  return {
-      id = string.to_hex(id),
-      offset = offset,
-      size = size,
+  return string.to_hex(id), {
       name = name,
-      file = file
-    }
+      size = size,
+    }, header
 end
 
-local function emit_entries(writer, flags, files, offset)
-  local size = 0
-  local entries = {}
+local function emit_entries(writer, flags, files)
+  local offset = HEADER_SIZE
   local hash = {}
 
   for index, file in ipairs(files) do
-    local entry = emit_entry(writer, flags, file, offset + size)
-    if not entry then
-      return nil, 0
+    local id, entry, header = emit_entry(writer, flags, file)
+    if not id then
+      return false
     end
 
-    if hash[entry.id] then -- Check whether the (normalized) entry name appears twice.
-      print(string.format("*** entry w/ name `%s` is duplicated (clashing id is `%s`)", entry.name, entry.id))
-      return nil, size
+    if hash[id] then -- Check whether the (normalized) entry name appears twice.
+      print(string.format("*** entry w/ name `%s` is duplicated (id `%s` already used for `%s`)", entry.name, id, hash[id]))
+      return false
     end
-    hash[entry.id] = true
+    hash[id] = entry.name
+
+    offset = offset + header
 
     if not flags.quiet then
       if flags.detailed then
         print(string.format("> file `%s`\n  name: `%s`\n  id: `%s`\n  offset: %d\n  size: %d",
-          file.name, entry.name, entry.id, entry.offset, entry.size))
+          file.name, entry.name, id, offset, entry.size))
       else
         print(string.format("[%04x] `%s` -> `%s`",
-          index, entry.id, entry.name))
+          index, id, entry.name))
       end
     end
 
-    table.insert(entries, entry)
-    size = size + entry.size
+    offset = offset + entry.size
   end
 
-  return entries, size
-end
-
---[[
-
-The directory precedes the index and it's formed by a sequence of entries. Each
-entry has this format
-
-+--------+------+---------+-----------------------------------------------------------+
-+ OFFSET | SIZE | NAME    | DESCRIPTION                                               |
-+--------+------+---------+-----------------------------------------------------------+
-+    0   |   4  | offset  | location of the entry, from the beginning of the file     |
-+    4   |   4  | size    | length (in bytes) of the entry                            |
-+    8   |   2  | chars   | # of characters of the entry's name                       |
-+   10   |   *  | name    | sequence of characters, not null-terminated               |
-+--------+------+---------+-----------------------------------------------------------+
-         | >10  |
-         +------+
-
-]]
-local function emit_directory(output, entries)
-  for _, entry in ipairs(entries) do
-    output:write(string.pack("<i4", entry.offset))
-    output:write(string.pack("<I4", entry.size))
-    output:write(string.pack("<s2", entry.name))
-  end
-end
-
---[[
-
-At the very end of the archive, the `index` structure is located. It serves,
-unsurprisingly, as and index to locate the archive directory.
-
-+--------+------+---------+-----------------------------------------------------------+
-+ OFFSET | SIZE | NAME    | DESCRIPTION                                               |
-+--------+------+---------+-----------------------------------------------------------+
-+    0   |   4  | offset  | location of the directory, from the beginning of the file |
-+    4   |   4  | entries | # of entries present in the directory                     |
-+--------+------+---------+-----------------------------------------------------------+
-         |   8  |
-         +------+
-
-]]
-local function emit_index(writer, offset, entries)
-  writer:write(string.pack("<i4", offset))
-  writer:write(string.pack("<I4", entries))
-end
-
---[[
-
-The trailer is the combination of both the directory and the index.
-
-]]
-local function emit_trailer(writer, entries, cursor)
-  emit_directory(writer, entries)
-  emit_index(writer, cursor, #entries)
+  return true
 end
 
 local function emit(output, flags, files)
@@ -318,16 +271,19 @@ local function emit(output, flags, files)
     return false
   end
 
-  local header_size = emit_header(writer, flags)
-
-  local entries, entries_size = emit_entries(writer, flags, files, header_size)
-  if not entries then
+  local header_done = emit_header(writer, flags, files)
+  if not header_done then
     writer:close()
     os.remove(output)
     return false
   end
 
-  emit_trailer(writer, entries, header_size + entries_size)
+  local entries_done = emit_entries(writer, flags, files)
+  if not entries_done then
+    writer:close()
+    os.remove(output)
+    return false
+  end
 
   writer:close()
 
@@ -361,7 +317,7 @@ local function main(arg)
   end
 
   if not flags.quiet then
-    print("PakGen v0.5.1")
+    print("PakGen v0.6.0")
     print("=============")
   end
 

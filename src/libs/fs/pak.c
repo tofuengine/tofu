@@ -47,27 +47,15 @@
 +---------+
 | HEADER  | sizeof(Pak_Header_t)
 +---------+
-| BLOB 0  | N * sizeof(char)
+| ENTRY 0 | sizeof(Pak_Entry_t) + sizeof(Entry) * sizeof(uint8_t)
 +---------+
-| BLOB 1  |    "        "
-+---------+
-    ...
-    ...
-    ...
-+---------+
-| BLOB n  |    "        "
-+---------+
-| ENTRY 0 | sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint16_t) + N * sizeof(char)
-+---------+
-| ENTRY 1 |    "                                                                 "
+| ENTRY 1 |    "                                             "
 +---------+
     ...
     ...
     ...
 +---------+
-| ENTRY n |    "                                                                 "
-+---------+
-|  INDEX  | sizeof(Pak_Index_t)
+| ENTRY n |    "                                            "
 +---------+
 
 NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
@@ -92,18 +80,17 @@ typedef struct Pak_Header_s {
 #endif
     } flags;
     uint16_t __reserved;
+    uint32_t entries;
 } Pak_Header_t;
 
 typedef struct Pak_Entry_Header_s {
-    int32_t offset;
+//    uint32_t checksum;
     uint32_t size;
     uint16_t chars;
+    // The struct is followed by:
+    //   - sizeof(uint8_t) * chars
+    //   - sizeof(uint8_t) * size
 } Pak_Entry_Header_t;
-
-typedef struct Pak_Index_s {
-    int32_t offset;
-    uint32_t entries; // Redundant, we could check file offsets, but it's quicker that way.
-} Pak_Index_t;
 #pragma pack(pop)
 
 typedef struct Pak_Entry_s {
@@ -113,7 +100,6 @@ typedef struct Pak_Entry_s {
     size_t size;
 } Pak_Entry_t;
 
-// TODO: ditch in-memory directory and seek always from file?
 typedef struct Pak_Mount_s {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
@@ -208,9 +194,8 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
         return false;
     }
 
-    size_t chars = bytes_ui16le(header.chars);
-    long offset = bytes_i32le(header.offset);
     size_t size = bytes_ui32le(header.size);
+    size_t chars = bytes_ui16le(header.chars);
     
     char *name = malloc(chars + 1);
     if (!name) {
@@ -220,6 +205,7 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
 
     entries_read = fread(name, sizeof(char), chars, stream);
     if (entries_read != chars) {
+        LOG_E(LOG_CONTEXT, "can't read entry's name");
         goto error_free;
     }
     name[chars] = '\0';
@@ -227,13 +213,19 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
     *entry = (Pak_Entry_t){
             .name = name,
             .id = { 0 },
-            .offset = offset,
+            .offset = ftell(stream),
             .size = size
         };
 
     char id[PAK_ID_LENGTH_SZ] = { 0 };
     _hash_file(name, entry->id, id);
-    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
+    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s` at %d w/ size %d", entry->name, entry->id, entry->offset, entry->size);
+
+    bool sought = fseek(stream, size, SEEK_CUR) != -1; // Skip the entry content.
+    if (!sought) {
+        LOG_E(LOG_CONTEXT, "can't skip entry `%s`", name);
+        goto error_free;
+    }
 
     return true;
 
@@ -276,27 +268,8 @@ FS_Mount_t *FS_pak_mount(const char *path)
         goto error_close;
     }
 
-    bool sought = fseek(stream, -((long)sizeof(Pak_Index_t)), SEEK_END) == 0; // Cast to fix on x64 Windows build.
-    if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
-        goto error_close;
-    }
-
-    Pak_Index_t index;
-    entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
-    if (entries_read != 1) {
-        LOG_E(LOG_CONTEXT, "can't read directory-header from archive `%s`", path);
-        goto error_close;
-    }
-
-    long offset = bytes_i32le(index.offset);
-    size_t entries = bytes_ui32le(index.entries);
-
-    sought = fseek(stream, offset, SEEK_SET) == 0;
-    if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't seek directory-header in archive `%s`", path);
-        goto error_close;
-    }
+    size_t entries = bytes_ui32le(header.entries);
+    LOG_T(LOG_CONTEXT, "archive `%s` contains %d entries", path, entries);
 
     Pak_Entry_t *directory = NULL;
     for (size_t i = 0; i < entries; ++i) {
@@ -401,7 +374,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         return NULL;
     }
 
-    bool sought = fseek(stream, entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
+    bool sought = fseek(stream, entry->offset, SEEK_SET) != -1; // Move to the found entry position into the file.
     if (!sought) {
         LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
         goto error_close;
