@@ -114,7 +114,7 @@ typedef struct Pak_Handle_s {
     Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
     size_t stream_size;
-    long beginning_of_stream;
+    long begin_of_stream; // Both begin and end markers are *inclusive*.
     long end_of_stream;
     bool encrypted;
     xor_context_t cipher_context;
@@ -126,7 +126,7 @@ static void _pak_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
 
-static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH]);
+static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_stream, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH]);
 static void _pak_handle_dtor(FS_Handle_t *handle);
 static size_t _pak_handle_size(FS_Handle_t *handle);
 static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -398,7 +398,7 @@ error_close:
     return NULL;
 }
 
-static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH])
+static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_stream, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH])
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -413,8 +413,8 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, siz
             },
             .stream = stream,
             .stream_size = size,
-            .beginning_of_stream = offset,
-            .end_of_stream = offset + (long)size - 1L,
+            .begin_of_stream = begin_of_stream,
+            .end_of_stream = begin_of_stream + (long)size - 1L,
             .encrypted = encrypted,
             .cipher_context = { { 0 } } // Uh! The first member of the structure is an array, need additional braces!
         };
@@ -488,7 +488,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
     long origin;
     if (whence == SEEK_SET) {
-        origin = pak_handle->beginning_of_stream;
+        origin = pak_handle->begin_of_stream;
     } else
     if (whence == SEEK_CUR) {
         origin = ftell(pak_handle->stream);
@@ -501,7 +501,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     }
 
     long position = origin + offset;
-    if (position < pak_handle->beginning_of_stream || position > pak_handle->end_of_stream) {
+    if (position < pak_handle->begin_of_stream || position > pak_handle->end_of_stream) {
         LOG_E(LOG_CONTEXT, "offset %d (position %d) is outside valid range for handle %p", offset, position, handle);
         return false;
     }
@@ -512,7 +512,7 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 #endif
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the sought position.
-        size_t index = position - pak_handle->beginning_of_stream;
+        size_t index = position - pak_handle->begin_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
 #ifdef __DEBUG_FS_CALLS__
         LOG_T(LOG_CONTEXT, "cipher context adjusted to %d", index);
@@ -526,7 +526,7 @@ static long _pak_handle_tell(FS_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    return ftell(pak_handle->stream) - pak_handle->beginning_of_stream;
+    return ftell(pak_handle->stream) - pak_handle->begin_of_stream;
 }
 
 static bool _pak_handle_eof(FS_Handle_t *handle)
