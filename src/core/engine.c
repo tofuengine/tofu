@@ -131,8 +131,8 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     _information();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
-            .executable = options->executable,
-            .path = options->path
+            .kernal_path = options->kernal_path,
+            .data_path = options->data_path
         });
     if (!engine->storage) {
         LOG_F(LOG_CONTEXT, "can't initialize storage");

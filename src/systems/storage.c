@@ -76,10 +76,10 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 
     bool kernal_attached = FS_attach_folder_or_archive(storage->context, configuration->kernal_path);
     if (!kernal_attached) {
-        LOG_E(LOG_CONTEXT, "can't attach kernal folder/archive at `%s`", configuration->configuration->kernal_path);
+        LOG_E(LOG_CONTEXT, "can't attach kernal folder/archive at `%s`", configuration->kernal_path);
         goto error_destroy_cache;
     }
-    LOG_D(LOG_CONTEXT, "kernal folder/archive attached w/ path `%s`", kernal_path);
+    LOG_D(LOG_CONTEXT, "kernal folder/archive attached w/ path `%s`", configuration->kernal_path);
 
     bool attached = FS_attach_folder_or_archive(storage->context, configuration->data_path);
     if (!attached) {

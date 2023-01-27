@@ -64,15 +64,14 @@ typedef struct Storage_Resource_s {
 } Storage_Resource_t;
 
 typedef struct Storage_Configuration_s {
-    const char *executable;
-    const char *path;
+    const char *kernal_path;
+    const char *data_path;
 } Storage_Configuration_t;
 
 typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
     struct {
-        char base[PLATFORM_PATH_MAX]; // The folder whence the engine is running.
         char user[PLATFORM_PATH_MAX]; // User-dependent folder, where the engine can save.
         // TODO: add the possibility to save to a shared folder, e.g. for saving hiscores.
         // char shared[PLATFORM_PATH_MAX];

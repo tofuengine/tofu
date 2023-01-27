@@ -35,8 +35,8 @@
 #include <systems/interpreter.h>
 
 typedef struct Engine_Options_s {
-    const char *executable;
-    const char *path;
+    char kernal_path[PLATFORM_PATH_MAX];
+    char data_path[PLATFORM_PATH_MAX];
 } Engine_Options_t;
 
 typedef struct Engine_s {

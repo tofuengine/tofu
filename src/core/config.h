@@ -99,6 +99,7 @@
 #define __ENGINE_PERFORMANCE_STATISTICS__
 #define __ENGINE_PERFORMANCES_PERIOD__ 10.0f
 #define __ENGINE_KERNAL_NAME__ "kernal.pak"
+#define __ENGINE_DATA_NAME__ "data.pak"
 #define __SYSTEM_HEAP_STATISTICS__
 #define __SYSTEM_HEAP_PERIOD__  5.0f
 
