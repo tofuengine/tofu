@@ -217,9 +217,9 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
             .size = size
         };
 
-    char id[PAK_ID_LENGTH_SZ] = { 0 };
-    _hash_file(name, entry->id, id);
-    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s` at %d w/ size %d", entry->name, entry->id, entry->offset, entry->size);
+    char id_hex[PAK_ID_LENGTH_SZ] = { 0 };
+    _hash_file(name, entry->id, id_hex);
+    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s` at %d w/ size %d", entry->name, id_hex, entry->offset, entry->size);
 
     bool sought = fseek(stream, size, SEEK_CUR) != -1; // Skip the entry content.
     if (!sought) {
