@@ -49,43 +49,23 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     *storage = (Storage_t){
             .configuration = *configuration,
             .path = {
-                .base = { 0 },
                 .user = { 0 },
                 .local = { 0 }
             }
         };
 
-    char path[PLATFORM_PATH_MAX] = { 0 };
-    path_expand(configuration->path, path);
-    LOG_D(LOG_CONTEXT, "path is `%s`", path);
-
-    path_split(path, storage->path.base, NULL); // Get the folder name, in case we are pointing straight to a PAK!
-    LOG_D(LOG_CONTEXT, "base path is `%s`", storage->path.base);
-
     path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependent folder.
     LOG_D(LOG_CONTEXT, "user path is `%s`", storage->path.user);
-
-    char executable[PATH_MAX] = { 0 }; // From the executable path obtain the kernal file path.
-    path_expand(configuration->executable, executable);
-    LOG_T(LOG_CONTEXT, "executable is `%s`", executable);
-
-    char executable_path[PATH_MAX] = { 0 };
-    path_split(executable, executable_path, NULL);
-    LOG_D(LOG_CONTEXT, "executable path is `%s`", executable_path);
-
-    char kernal_path[PLATFORM_PATH_MAX] = { 0 };
-    path_join(kernal_path, executable_path, __ENGINE_KERNAL_NAME__);
-    LOG_D(LOG_CONTEXT, "kernal path is `%s`", kernal_path);
 
     // This would be correct to do, since the local path is initialized, but it's also very pedant.
     // Storage_set_identity(storage, DEFAULT_IDENTITY);
 
     storage->context = FS_create();
     if (!storage->context) {
-        LOG_E(LOG_CONTEXT, "can't create file-system context for path `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't create file-system context");
         goto error_free;
     }
-    LOG_D(LOG_CONTEXT, "file-system context %p created for path `%s`", storage->context, path);
+    LOG_D(LOG_CONTEXT, "file-system context %p created", storage->context);
 
     storage->cache = Storage_Cache_create(storage->context);
     if (!storage->cache) {
@@ -94,19 +74,19 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     }
     LOG_D(LOG_CONTEXT, "cache %p created", storage->cache);
 
-    bool kernal_attached = FS_attach_folder_or_archive(storage->context, kernal_path);
+    bool kernal_attached = FS_attach_folder_or_archive(storage->context, configuration->kernal_path);
     if (!kernal_attached) {
-        LOG_E(LOG_CONTEXT, "can't attach kernal at `%s`", kernal_path);
+        LOG_E(LOG_CONTEXT, "can't attach kernal folder/archive at `%s`", configuration->configuration->kernal_path);
         goto error_destroy_cache;
     }
-    LOG_D(LOG_CONTEXT, "kernal attached w/ path `%s`", kernal_path);
+    LOG_D(LOG_CONTEXT, "kernal folder/archive attached w/ path `%s`", kernal_path);
 
-    bool attached = FS_attach_folder_or_archive(storage->context, path);
+    bool attached = FS_attach_folder_or_archive(storage->context, configuration->data_path);
     if (!attached) {
-        LOG_E(LOG_CONTEXT, "can't attach folder/archive at `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't attach data folder/archive at `%s`", configuration->data_path);
         goto error_destroy_cache;
     }
-    LOG_D(LOG_CONTEXT, "folder/archive attached w/ path `%s`", path);
+    LOG_D(LOG_CONTEXT, "data folder/archive attached w/ path `%s`", configuration->data_path);
 
     return storage;
 

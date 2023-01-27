@@ -47,7 +47,7 @@ static int keyboard_is_released_2os_1b(lua_State *L);
 
 int keyboard_loader(lua_State *L)
 {
-    char file[PATH_MAX] = { 0 };
+    char file[PLATFORM_PATH_MAX] = { 0 };
     path_lua_to_fs(file, MODULE_NAME);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
