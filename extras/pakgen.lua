@@ -232,19 +232,12 @@ end
 
 local function emit_entries(writer, flags, files)
   local offset = HEADER_SIZE
-  local hash = {}
 
   for index, file in ipairs(files) do
     local id, entry, header = emit_entry(writer, flags, file)
     if not id then
       return false
     end
-
-    if hash[id] then -- Check whether the (normalized) entry name appears twice.
-      print(string.format("*** entry w/ name `%s` is duplicated (id `%s` already used for `%s`)", entry.name, id, hash[id]))
-      return false
-    end
-    hash[id] = entry.name
 
     offset = offset + header
 
