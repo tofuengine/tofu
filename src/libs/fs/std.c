@@ -49,7 +49,6 @@ typedef struct Std_Handle_s {
 
 static void _std_mount_ctor(FS_Mount_t *mount, const char *path);
 static void _std_mount_dtor(FS_Mount_t *mount);
-static void _std_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data);
 static bool _std_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name);
 
@@ -89,7 +88,6 @@ static void _std_mount_ctor(FS_Mount_t *mount, const char *path)
     *std_mount = (Std_Mount_t){
             .vtable = (Mount_VTable_t){
                 .dtor = _std_mount_dtor,
-                .scan = _std_mount_scan,
                 .contains = _std_mount_contains,
                 .open = _std_mount_open
             },
@@ -104,45 +102,6 @@ static void _std_mount_dtor(FS_Mount_t *mount)
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
     *std_mount = (Std_Mount_t){ 0 };
-}
-
-static void _read_directory(const char *path, size_t path_length, FS_Scan_Callback_t callback, void *user_data)
-{
-    DIR *dp = opendir(path);
-    if (!dp) {
-        return;
-    }
-
-    for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-        if (strcasecmp(entry->d_name, "..") == 0 || strcasecmp(entry->d_name, ".") == 0) {
-            continue;
-        }
-
-        char subpath[PLATFORM_PATH_MAX] = { 0 };
-        path_join(subpath, path, entry->d_name);
-
-        struct stat sb;
-        int result = stat(subpath, &sb);
-        if (result == -1) {
-            LOG_E(LOG_CONTEXT, "can't stat file `%s`", subpath);
-            continue;
-        }
-
-        if (S_ISDIR(sb.st_mode)) {
-            _read_directory(subpath, path_length, callback, user_data);
-        } else {
-            callback(user_data, subpath + path_length + 1); // Skip base path and separator.
-        }
-    }
-
-    closedir(dp);
-}
-
-static void _std_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data)
-{
-    const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
-
-    _read_directory(std_mount->path, strlen(std_mount->path), callback, user_data);
 }
 
 static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)

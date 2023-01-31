@@ -144,26 +144,6 @@ void Storage_destroy(Storage_t *storage)
     LOG_D(LOG_CONTEXT, "storage freed");
 }
 
-typedef struct Scan_Callback_Closure_s {
-    Storage_Scan_Callback_t callback;
-    void *user_data;
-} Scan_Callback_Closure_t;
-
-static void _scan_callback(void *user_data, const char *name)
-{
-    const Scan_Callback_Closure_t *closure = (const Scan_Callback_Closure_t *)user_data;
-
-    closure->callback(closure->user_data, name);
-}
-
-void Storage_scan(const Storage_t *storage, Storage_Scan_Callback_t callback, void *user_data)
-{
-    FS_scan(storage->context, _scan_callback, &(Scan_Callback_Closure_t){ // The closure is pedantic, as the callback signatures match.
-            .callback = callback,
-            .user_data = user_data
-        });
-}
-
 bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
 {
     return Storage_Cache_inject_base64(storage->cache, name, encoded_data, length);

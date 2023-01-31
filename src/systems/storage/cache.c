@@ -35,17 +35,6 @@
 
 #define LOG_CONTEXT "storage-cache"
 
-static void _cache_scan(void *user_data, FS_Scan_Callback_t callback, void *callback_user_data)
-{
-    Storage_Cache_t *cache = (Storage_Cache_t *)user_data;
-    Storage_Cache_Entry_t *entries = cache->entries;
-
-    for (size_t i = 0; i < shlenu(entries); ++i) {
-        const char *name = entries[i].key;
-        callback(callback_user_data, name);
-    }
-}
-
 static bool _cache_contains(void *user_data, const char *name)
 {
     Storage_Cache_t *cache = (Storage_Cache_t *)user_data;
@@ -166,7 +155,6 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
     }
 
     bool attached = FS_attach_from_callbacks(context, (FS_Callbacks_t){
-            .scan = _cache_scan,
             .contains = _cache_contains,
             .open = _cache_open,
             .close = _cache_close,

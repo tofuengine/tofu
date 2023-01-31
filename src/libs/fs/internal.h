@@ -29,7 +29,6 @@
 
 typedef struct Mount_VTable_s {
     void         (*dtor)    (FS_Mount_t *mount);
-    void         (*scan)    (const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data);
     bool         (*contains)(const FS_Mount_t *mount, const char *name);
     FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *name);
 } Mount_VTable_t;
