@@ -94,7 +94,6 @@ typedef struct Pak_Entry_Header_s {
 #pragma pack(pop)
 
 typedef struct Pak_Entry_s {
-    char *name;
     uint8_t id[PAK_ID_LENGTH];
     long offset;
     size_t size;
@@ -180,6 +179,9 @@ static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char 
         md5_update(&context, &c, 1);
     }
     md5_final(&context, id);
+    if (!sz) {
+        return;
+    }
     for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
         sprintf(sz + i * 2, "%02x", id[i]);
     }
@@ -190,56 +192,43 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
     Pak_Entry_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Entry_Header_t), 1, stream);
     if (entries_read != 1) {
+        LOG_E(LOG_CONTEXT, "can't read entry at offset %ld", ftell(stream));
         return false;
     }
 
     size_t size = bytes_ui32le(header.size);
     size_t chars = bytes_ui16le(header.chars);
-    
-    char *name = malloc(chars + 1);
-    if (!name) {
-        LOG_E(LOG_CONTEXT, "can't allocate entry's name");
+
+    *entry = (Pak_Entry_t){ 0 };
+
+    char name[PLATFORM_PATH_MAX] = { 0 };
+    entries_read = fread(name, sizeof(char), chars, stream);
+    if (entries_read != chars) {
+        LOG_E(LOG_CONTEXT, "can't read entry's name at offset %ld", ftell(stream));
         return false;
     }
 
-    entries_read = fread(name, sizeof(char), chars, stream);
-    if (entries_read != chars) {
-        LOG_E(LOG_CONTEXT, "can't read entry's name");
-        goto error_free;
-    }
-    name[chars] = '\0';
-
-    *entry = (Pak_Entry_t){
-            .name = name,
-            .id = { 0 },
-            .offset = ftell(stream),
-            .size = size
-        };
-
     char id_hex[PAK_ID_LENGTH_SZ] = { 0 };
     _hash_file(name, entry->id, id_hex);
-    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s` at %d w/ size %d", entry->name, id_hex, entry->offset, entry->size);
+
+    entry->offset = ftell(stream);
+    entry->size = size;
 
     bool sought = fseek(stream, size, SEEK_CUR) != -1; // Skip the entry content.
     if (!sought) {
         LOG_E(LOG_CONTEXT, "can't skip entry `%s`", name);
-        goto error_free;
+        return false;
     }
 
-    return true;
+    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s` at %d w/ size %d", name, id_hex, entry->offset, entry->size);
 
-error_free:
-    free(name);
-    return false;
+    return true;
 }
 
 static void _free_directory(Pak_Entry_t *directory)
 {
     if (!directory) { // Corner case, array empty.
         return;
-    }
-    for (size_t i = 0; i < arrlenu(directory); ++i) {
-        free(directory[i].name);
     }
     arrfree(directory);
 }
@@ -248,7 +237,7 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
     const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
-    return strcasecmp(l->name, r->name);
+    return memcmp(l->id, r->id, PAK_ID_LENGTH);
 }
 
 // Precondition: the path need to be pre-validated as being an archive.
@@ -333,22 +322,21 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
     _free_directory(pak_mount->directory);
 }
 
-static void _pak_mount_scan(const FS_Mount_t *mount, FS_Scan_Callback_t callback, void *user_data)
+static inline const Pak_Entry_t *_pak_find_entry(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    for (size_t index = 0; index < pak_mount->entries; ++index) {
-        const Pak_Entry_t *entry = &pak_mount->directory[index];
-        callback(user_data, entry->name);
-    }
+    Pak_Entry_t needle = { 0 };
+    _hash_file(name, needle.id, NULL);
+
+    return bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 }
 
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t needle = { .name = (char *)name };
-    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    const Pak_Entry_t *entry = _pak_find_entry(mount, name);
 
     bool exists = entry; // FIXME: should be `!!`?
     LOG_IF_T(exists, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
@@ -359,8 +347,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t needle = { .name = (char *)name };
-    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    const Pak_Entry_t *entry = _pak_find_entry(mount, name);
     if (!entry) {
         LOG_E(LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
