@@ -42,6 +42,7 @@ typedef enum Storage_Resource_Types_e {
     Storage_Resource_Types_t_CountOf
 } Storage_Resource_Types_t;
 
+// TODO: store a digest instead of the full name? Less fragmentation?
 typedef struct Storage_Resource_s {
     char *name; // Resources are references by a name, which can is (base-path) relative.
     Storage_Resource_Types_t type;

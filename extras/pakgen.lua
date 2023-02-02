@@ -173,6 +173,7 @@ local function emit_header(writer, flags, files)
 end
 
 local HEADER_SIZE <const> = 16
+local ENTRY_HEADER_SIZE <const> = 16 + 4
 
 --[[
 
@@ -185,24 +186,21 @@ calculated during the indexing process.
 +--------+--------+----------+-----------------------------------------------------------+
 + OFFSET |  SIZE  | NAME     | DESCRIPTION                                               |
 +--------+--------+----------+-----------------------------------------------------------+
-+    0   |    4   | size (S) | length (in bytes) of the entry                            |
-+    4   |    2   | chars(C) | # of characters of the entry's name                       |
-+    6   |    C   | name     | sequence of characters, not null-terminated               |
-+  6 + C |    S   |          | sequence of bytes                                         |
++    0   |   16   | id       | entry (MD5 of the filename)                               |
++   16   |    4   | size (S) | length (in bytes) of the entry                            |
++   20   |    S   |          | sequence of bytes                                         |
 +--------+--------+----------+-----------------------------------------------------------+
-         |  6+C+S |
+         | 16+4+S |
          +--------+
 
 ]]
 local function emit_entry(writer, flags, file)
   local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
-  local size = file.size
-  local header = 4 + 2 + #name
-
-  writer:write(string.pack("<I4", size))
-  writer:write(string.pack("<s2", name))
-
   local id = luazen.md5(name)
+  local size = file.size
+
+  writer:write(string.pack("c16", id))
+  writer:write(string.pack("<I4", size))
 
   local cipher = flags.encrypted and xor_cipher(id) or nil
 
@@ -227,19 +225,26 @@ local function emit_entry(writer, flags, file)
   return string.to_hex(id), {
       name = name,
       size = size,
-    }, header
+    }
 end
 
 local function emit_entries(writer, flags, files)
   local offset = HEADER_SIZE
+  local hash = {}
 
   for index, file in ipairs(files) do
-    local id, entry, header = emit_entry(writer, flags, file)
+    local id, entry = emit_entry(writer, flags, file)
     if not id then
       return false
     end
 
-    offset = offset + header
+    if hash[id] then -- Check whether the (normalized) entry name appears twice.
+      print(string.format("*** entry w/ name `%s` is duplicated (id `%s` already used for `%s`)", entry.name, id, hash[id]))
+      return false
+    end
+    hash[id] = entry.name
+
+    offset = offset + ENTRY_HEADER_SIZE
 
     if not flags.quiet then
       if flags.detailed then

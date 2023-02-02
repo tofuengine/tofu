@@ -85,10 +85,9 @@ typedef struct Pak_Header_s {
 
 typedef struct Pak_Entry_Header_s {
 //    uint32_t checksum;
+    uint8_t id[PAK_ID_LENGTH];
     uint32_t size;
-    uint16_t chars;
     // The struct is followed by:
-    //   - sizeof(uint8_t) * chars
     //   - sizeof(uint8_t) * size
 } Pak_Entry_Header_t;
 #pragma pack(pop)
@@ -170,6 +169,13 @@ bool FS_pak_is_valid(const char *path)
     return is_valid;
 }
 
+static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], uint8_t id[PAK_ID_LENGTH])
+{
+    for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
+        sprintf(sz + i * 2, "%02x", id[i]);
+    }
+}
+
 static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
 {
     md5_context_t context;
@@ -179,12 +185,7 @@ static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char 
         md5_update(&context, &c, 1);
     }
     md5_final(&context, id);
-    if (!sz) {
-        return;
-    }
-    for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
-        sprintf(sz + i * 2, "%02x", id[i]);
-    }
+    _to_hex(sz, id);
 }
 
 static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
@@ -197,30 +198,23 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
     }
 
     size_t size = bytes_ui32le(header.size);
-    size_t chars = bytes_ui16le(header.chars);
 
     *entry = (Pak_Entry_t){ 0 };
 
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    entries_read = fread(name, sizeof(char), chars, stream);
-    if (entries_read != chars) {
-        LOG_E(LOG_CONTEXT, "can't read entry's name at offset %ld", ftell(stream));
-        return false;
-    }
-
-    char id_hex[PAK_ID_LENGTH_SZ] = { 0 };
-    _hash_file(name, entry->id, id_hex);
-
+    memcpy(entry->id, header.id, PAK_ID_LENGTH);
     entry->offset = ftell(stream);
     entry->size = size;
 
+    char id_hex[PAK_ID_LENGTH_SZ];
+    _to_hex(id_hex, entry->id);
+
     bool sought = fseek(stream, size, SEEK_CUR) != -1; // Skip the entry content.
     if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't skip entry `%s`", name);
+        LOG_E(LOG_CONTEXT, "can't skip entry `%s`", id_hex);
         return false;
     }
 
-    LOG_T(LOG_CONTEXT, "entry `%s` id is `%s` at %d w/ size %d", name, id_hex, entry->offset, entry->size);
+    LOG_T(LOG_CONTEXT, "entry `%s` at %d w/ size %d", id_hex, entry->offset, entry->size);
 
     return true;
 }
@@ -322,24 +316,19 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
     _free_directory(pak_mount->directory);
 }
 
-static inline const Pak_Entry_t *_pak_find_entry(const FS_Mount_t *mount, const char *name)
-{
-    const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
-
-    Pak_Entry_t needle = { 0 };
-    _hash_file(name, needle.id, NULL);
-
-    return bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
-}
-
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    const Pak_Entry_t *entry = _pak_find_entry(mount, name);
+    Pak_Entry_t needle = { 0 };
+    char id_hex[PAK_ID_LENGTH_SZ];
+    _hash_file(name, needle.id, id_hex);
+    LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
+
+    Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    LOG_IF_T(!entry, LOG_CONTEXT, "entry `%s` not found in mount %p", name, pak_mount);
 
     bool exists = entry; // FIXME: should be `!!`?
-    LOG_IF_T(exists, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
     return exists;
 }
 
@@ -347,7 +336,12 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    const Pak_Entry_t *entry = _pak_find_entry(mount, name);
+    Pak_Entry_t needle = { 0 };
+    char id_hex[PAK_ID_LENGTH_SZ];
+    _hash_file(name, needle.id, id_hex);
+    LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
+
+    Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
         LOG_E(LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
