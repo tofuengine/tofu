@@ -87,11 +87,6 @@ static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *
                 strncpy(options->data_path, optarg, PLATFORM_PATH_MAX);
                 break;
             }
-            case 'h': {
-                _print_usage(argc, argv);
-                return false;
-                break;
-            }
             default: {
                 fprintf(stderr, "Try '%s --help' for more information.\n", argv[0]);
                 return false;

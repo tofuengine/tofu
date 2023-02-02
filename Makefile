@@ -267,185 +267,185 @@ stats:
 primitives: engine
 	@echo "Launching *primitives* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/primitives
-	@$(builddir)/$(TARGET) --path=./demos/primitives
+	@$(builddir)/$(TARGET) --data=./demos/primitives
 
 bunnymark: engine
 	@echo "Launching *bunnymark* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/bunnymark
-	@$(builddir)/$(TARGET) --path=./demos/bunnymark
+	@$(builddir)/$(TARGET) --data=./demos/bunnymark
 
 fire: engine
 	@echo "Launching *fire* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/fire
-	@$(builddir)/$(TARGET) --path=./demos/fire
+	@$(builddir)/$(TARGET) --data=./demos/fire
 
 tiled-map: engine
 	@echo "Launching *tiled-map* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/tiled-map
-	@$(builddir)/$(TARGET) --path=./demos/tiled-map
+	@$(builddir)/$(TARGET) --data=./demos/tiled-map
 
 timers: engine
 	@echo "Launching *timers* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/timers
-	@$(builddir)/$(TARGET) --path=./demos/timers
+	@$(builddir)/$(TARGET) --data=./demos/timers
 
 postfx: engine
 	@echo "Launching *postfx* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/postfx
-	@$(builddir)/$(TARGET) --path=./demos/postfx
+	@$(builddir)/$(TARGET) --data=./demos/postfx
 
 spritestack: engine
 	@echo "Launching *spritestack* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/spritestack
-	@$(builddir)/$(TARGET) --path=./demos/spritestack
+	@$(builddir)/$(TARGET) --data=./demos/spritestack
 
 palette: engine
 	@echo "Launching *palette* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/palette
-	@$(builddir)/$(TARGET) --path=./demos/palette
+	@$(builddir)/$(TARGET) --data=./demos/palette
 
 mode7: engine
 	@echo "Launching *mode7* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/mode7
-	@$(builddir)/$(TARGET) --path=./demos/mode7
+	@$(builddir)/$(TARGET) --data=./demos/mode7
 
 snake: engine
 	@echo "Launching *snake* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/snake
-	@$(builddir)/$(TARGET) --path=./demos/snake
+	@$(builddir)/$(TARGET) --data=./demos/snake
 
 shades: engine
 	@echo "Launching *shades* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/shades
-	@$(builddir)/$(TARGET) --path=./demos/shades
+	@$(builddir)/$(TARGET) --data=./demos/shades
 
 gamepad: engine
 	@echo "Launching *gamepad* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/gamepad
-	@$(builddir)/$(TARGET) --path=./demos/gamepad
+	@$(builddir)/$(TARGET) --data=./demos/gamepad
 
 gamepad-pak: engine
 	@echo "Launching *gamepad (PAK)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/gamepad
 	@$(PACKER) $(PACKERFLAGS) ./demos/gamepad --output=./demos/gamepad.pak
-	@$(builddir)/$(TARGET) --path=./demos/gamepad.pak
+	@$(builddir)/$(TARGET) --data=./demos/gamepad.pak
 
 hello-tofu: engine
 	@echo "Launching *hello-tofu* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/hello-tofu
-	@$(builddir)/$(TARGET) --path=./demos/hello-tofu
+	@$(builddir)/$(TARGET) --data=./demos/hello-tofu
 
 swirl: engine
 	@echo "Launching *swirl* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/swirl
-	@$(builddir)/$(TARGET) --path=./demos/swirl
+	@$(builddir)/$(TARGET) --data=./demos/swirl
 
 twist: engine
 	@echo "Launching *twist* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/twist
-	@$(builddir)/$(TARGET) --path=./demos/twist
+	@$(builddir)/$(TARGET) --data=./demos/twist
 
 tween: engine
 	@echo "Launching *tween* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/tween
-	@$(builddir)/$(TARGET) --path=./demos/tween
+	@$(builddir)/$(TARGET) --data=./demos/tween
 
 helix: engine
 	@echo "Launching *helix* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/helix
-	@$(builddir)/$(TARGET) --path=./demos/helix
+	@$(builddir)/$(TARGET) --data=./demos/helix
 
 mixer: engine
 	@echo "Launching *mixer* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/mixer
-	@$(builddir)/$(TARGET) --path=./demos/mixer
+	@$(builddir)/$(TARGET) --data=./demos/mixer
 
 scaling: engine
 	@echo "Launching *scaling* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/scaling
-	@$(builddir)/$(TARGET) --path=./demos/scaling
+	@$(builddir)/$(TARGET) --data=./demos/scaling
 
 rotations: engine
 	@echo "Launching *rotations* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/rotations
-	@$(builddir)/$(TARGET) --path=./demos/rotations
+	@$(builddir)/$(TARGET) --data=./demos/rotations
 
 platform: engine
 	@echo "Launching *platform* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/platform
-	@$(builddir)/$(TARGET) --path=./demos/platform
+	@$(builddir)/$(TARGET) --data=./demos/platform
 
 splash: engine
 	@echo "Launching *splash* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/splash
-	@$(builddir)/$(TARGET) --path=./demos/splash
+	@$(builddir)/$(TARGET) --data=./demos/splash
 
 rasterbars: engine
 	@echo "Launching *rasterbars* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/rasterbars
-	@$(builddir)/$(TARGET) --path=./demos/rasterbars
+	@$(builddir)/$(TARGET) --data=./demos/rasterbars
 
 stencil: engine
 	@echo "Launching *stencil* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/stencil
-	@$(builddir)/$(TARGET) --path=./demos/stencil
+	@$(builddir)/$(TARGET) --data=./demos/stencil
 
 lasers: engine
 	@echo "Launching *lasers* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/lasers
-	@$(builddir)/$(TARGET) --path=./demos/lasers
+	@$(builddir)/$(TARGET) --data=./demos/lasers
 
 physics: engine
 	@echo "Launching *physics* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/physics
-	@$(builddir)/$(TARGET) --path=./demos/physics
+	@$(builddir)/$(TARGET) --data=./demos/physics
 
 bump: engine
 	@echo "Launching *bump* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/bump
-	@$(builddir)/$(TARGET) --path=./demos/bump
+	@$(builddir)/$(TARGET) --data=./demos/bump
 
 threedee: engine
 	@echo "Launching *threedee* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/threedee
-	@$(builddir)/$(TARGET) --path=./demos/threedee
+	@$(builddir)/$(TARGET) --data=./demos/threedee
 
 threedee-pak: engine
 	@echo "Launching *threedee (PAK)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/threedee
 	@$(PACKER) $(PACKERFLAGS) ./demos/threedee --output=./demos/threedee.pak
-	@$(builddir)/$(TARGET) --path=./demos/threedee.pak
+	@$(builddir)/$(TARGET) --data=./demos/threedee.pak
 
 noise: engine
 	@echo "Launching *noise* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/noise
-	@$(builddir)/$(TARGET) --path=./demos/noise
+	@$(builddir)/$(TARGET) --data=./demos/noise
 
 copperbars: engine
 	@echo "Launching *copperbars* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/copperbars
-	@$(builddir)/$(TARGET) --path=./demos/copperbars
+	@$(builddir)/$(TARGET) --data=./demos/copperbars
 
 scroller: engine
 	@echo "Launching *scroller* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/scroller
-	@$(builddir)/$(TARGET) --path=./demos/scroller
+	@$(builddir)/$(TARGET) --data=./demos/scroller
 
 cellular: engine
 	@echo "Launching *cellular* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/cellular
-	@$(builddir)/$(TARGET) --path=./demos/cellular
+	@$(builddir)/$(TARGET) --data=./demos/cellular
 
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
-	@$(builddir)/$(TARGET) --path=./demos/$(DEMO)
+	@$(builddir)/$(TARGET) --data=./demos/$(DEMO)
 
 # Use software renderer to use VALGRIND
 valgrind: engine
 	@echo "Valgrind *$(DEMO)* application!"
 	@export LIBGL_ALWAYS_SOFTWARE=1
-	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --path=./demos/$(DEMO)
+	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --data=./demos/$(DEMO)
 	@export LIBGL_ALWAYS_SOFTWARE=0
 
 .PHONY: clean
