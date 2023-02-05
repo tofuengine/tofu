@@ -119,7 +119,6 @@ static void _release(Storage_Resource_t *resource)
         LOG_D(LOG_CONTEXT, "resource-data `%s` at %p freed (%dx%d image)",
             resource->name, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
-    free(resource->name);
     free(resource);
     LOG_D(LOG_CONTEXT, "resource %p freed", resource);
 }
@@ -381,7 +380,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         LOG_E(LOG_CONTEXT, "can't load resource `%s`", name);
         goto error_free_resource;
     }
-    resource->name = stb_memdup(name, strlen(name) + 1);
+    strncpy(resource->name, name, PLATFORM_PATH_MAX);
 
     arrpush(storage->resources, resource);
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__

@@ -42,9 +42,8 @@ typedef enum Storage_Resource_Types_e {
     Storage_Resource_Types_t_CountOf
 } Storage_Resource_Types_t;
 
-// TODO: store a digest instead of the full name? Less fragmentation?
 typedef struct Storage_Resource_s {
-    char *name; // Resources are references by a name, which can is (base-path) relative.
+    char name[PLATFORM_PATH_MAX]; // TODO: store a digest of the name?
     Storage_Resource_Types_t type;
     union {
         struct {
@@ -97,6 +96,7 @@ typedef struct Storage_s {
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
+// Resources are referenced by a name, which can is (base-path) relative.
 extern bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
