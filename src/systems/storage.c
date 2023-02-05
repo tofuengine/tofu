@@ -314,30 +314,6 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
-static int _resource_compare_by_name(const void *lhs, const void *rhs)
-{
-    const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
-    const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
-    return strcasecmp((*l)->name, (*r)->name);
-}
-
-#ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
-static int _resource_compare_by_age(const void *lhs, const void *rhs)
-{
-    const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
-    const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
-    const double age_delta = (*l)->age - (*r)->age;
-    if (age_delta > 0.0) { // Sort by highest age.
-        return -1;
-    } else
-    if (age_delta < 0.0) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-#endif
-
 static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type, const FS_Context_t *context)
 {
     FS_Handle_t *handle = FS_open(context, name);
@@ -350,6 +326,24 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return loaded;
 }
 
+// We are using a linear search instead for `bsearch()` since the resource cache is limited in size (won't
+// exceed hundred of entries, typically). Also, since we were (occasionally) keeping the array sorted by "age",
+// binary-searching by name would be impossible! (unless we are re-sorting the array twice just for sake of it)
+//
+// We single-handedly got rid of both them. The array is never sorted which means a faster and more cache-friendly
+// code. Also, we are removing the entries with the SWAP-AND-POP idiom, which is as fast as possible.
+static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const char *name)
+{
+    size_t length = arrlenu(resources);
+    for (size_t i = 0; i < length; ++i) {
+        Storage_Resource_t *resource = resources[i];
+        if (strcasecmp(resource->name, name) == 0) {
+            return resource;
+        }
+    }
+    return NULL;
+}
+
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
 #ifdef __STORAGE_CHECK_ABSOLUTE_PATHS__
@@ -359,13 +353,11 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     }
 #endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
 
-    const Storage_Resource_t *needle = &(Storage_Resource_t){ .name = (char *)name };
-    Storage_Resource_t **entry = bsearch((const void *)&needle, storage->resources, arrlenu(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
+    Storage_Resource_t *entry = _lookup(storage->resources, name);
     if (entry) {
         LOG_D(LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
-        Storage_Resource_t *resource = *entry;
-        resource->age = 0.0f; // Reset age on cache-hit.
-        return resource;
+        entry->age = 0.0f; // Reset age on cache-hit.
+        return entry;
     }
 
     Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
@@ -383,16 +375,15 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     strncpy(resource->name, name, PLATFORM_PATH_MAX);
 
     arrpush(storage->resources, resource);
+
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
     if (arrlenu(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
-        qsort(storage->resources, arrlenu(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
         storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
         LOG_D(LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->name);
     }
 #endif
 
-    qsort(storage->resources, arrlenu(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name); // Keep sorted to use binary-search.
-    LOG_D(LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", name, resource);
+    LOG_D(LOG_CONTEXT, "resource `%s` stored as %p", name, resource);
 
     return resource;
 
@@ -464,15 +455,18 @@ FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
 
 bool Storage_update(Storage_t *storage, float delta_time)
 {
-    // Backward scan, to remove to-be-released resources.
+    // Backward scan, to properly implement the SWAP-AND-POP(tm) idiom along the whole array
+    // when removing the to-be-released resources.
     for (int index = arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
         resource->age += delta_time;
         if (resource->age < STORAGE_RESOURCE_AGE_LIMIT) {
             continue;
         }
-        _release(resource);
-        arrdel(storage->resources, index); // No need to resort, removing preserve ordering.
+
+        _release(resource); // Release the way-too-old resource...
+
+        arrdelswap(storage->resources, index); // ... shrink the array!
     }
     return true;
 }
