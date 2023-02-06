@@ -62,7 +62,7 @@ NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
 */
 
 #define PAK_ID_LENGTH       MD5_SIZE
-#define PAK_ID_LENGTH_SZ    (MD5_SIZE * 2 + 1)
+#define PAK_ID_LENGTH_SZ    (PAK_ID_LENGTH * 2 + 1)
 
 #pragma pack(push, 1)
 typedef struct Pak_Header_s {
@@ -399,8 +399,8 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
         };
 
     if (encrypted) {
-        // Encryption is implemented throught a XOR stream cipher.
-        // The key is the entry's MD5 digest of the name.
+        // Encryption is implemented w/ a XOR stream cipher.
+        // The shared-key is the entry's id.
         xor_schedule(&pak_handle->cipher_context, id, PAK_ID_LENGTH);
 #ifdef __DEBUG_FS_CALLS__
         LOG_T(LOG_CONTEXT, "cipher context initialized");
