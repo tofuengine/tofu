@@ -133,7 +133,8 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
     size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
-            arrdel(context->sources, i);
+            arrdelswap(context->sources, i);
+
             LOG_D(LOG_CONTEXT, "source %p untracked from context %p", source, context);
             return;
         }
@@ -177,12 +178,15 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
 
 void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested)
 {
-    // Backward scan, to remove to-be-untracked sources.
+    // Backward scan, to properly implement the SWAP-AND-POP(tm) idiom along the whole array
+    // when removing the to-be-released sources.
     for (int index = arrlen(context->sources) - 1; index >= 0; --index) {
         SL_Source_t *source = context->sources[index];
         bool still_running = source->vtable.generate(source, output, frames_requested);
-        if (!still_running) {
-            arrdel(context->sources, index);
+        if (still_running) {
+            continue;
         }
+
+        arrdelswap(context->sources, index); // Obliterate the source!
     }
 }
