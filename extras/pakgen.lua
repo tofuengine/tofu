@@ -27,7 +27,6 @@ SOFTWARE.
 -- Depends upon the following Lua "rocks".
 --  1 argparse
 --  2 luafilesystem
---  3 luazen
 
 --[[
 +---------+
@@ -51,7 +50,7 @@ NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
 
 local argparse = require("argparse")
 local lfs = require("lfs")
-local luazen = require("luazen")
+local sha = require("extras/sha2")
 
 local VERSION = 0x00
 local RESERVED_16b = 0xFFFF
@@ -196,10 +195,10 @@ calculated during the indexing process.
 ]]
 local function emit_entry(writer, flags, file)
   local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
-  local id = luazen.md5(name)
+  local id = sha.hex_to_bin(sha.sha256(name))
   local size = file.size
 
-  writer:write(string.pack("c16", id))
+  writer:write(string.pack("c32", id))
   writer:write(string.pack("<I4", size))
 
   local cipher = flags.encrypted and xor_cipher(id) or nil

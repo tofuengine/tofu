@@ -29,8 +29,8 @@
 #include <core/platform.h>
 #include <libs/bytes.h>
 #include <libs/log.h>
-#include <libs/md5.h>
 #include <libs/path.h>
+#include <libs/sha256.h>
 #include <libs/stb.h>
 #include <libs/xor.h>
 
@@ -61,7 +61,7 @@
 NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
 */
 
-#define PAK_ID_LENGTH       MD5_SIZE
+#define PAK_ID_LENGTH       SHA256_BLOCK_SIZE
 #define PAK_ID_LENGTH_SZ    (PAK_ID_LENGTH * 2 + 1)
 
 #pragma pack(push, 1)
@@ -178,13 +178,13 @@ static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], uint8_t id[PAK_ID_LENGTH])
 
 static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
 {
-    md5_context_t context;
-    md5_init(&context);
-    for (size_t i = 0; i < strlen(name); ++i) {
-        uint8_t c = tolower(name[i]); // Treat file names as lowercase/case-insensitive.
-        md5_update(&context, &c, 1);
+    sha256_context_t context;
+    sha256_init(&context);
+    for (const char *ptr = name; *ptr != '\0'; ++ptr) {
+        uint8_t c = tolower(*ptr); // Treat file names as lowercase/case-insensitive.
+        sha256_update(&context, &c, 1);
     }
-    md5_final(&context, id);
+    sha256_final(&context, id);
     _to_hex(sz, id);
 }
 
