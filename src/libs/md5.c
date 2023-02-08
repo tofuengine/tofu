@@ -53,6 +53,7 @@
 
 #include "md5.h"
 
+#include <ctype.h>
 #include <string.h>
 
 #define S11 7
@@ -151,7 +152,7 @@ void md5_update(md5_context_t *context, const uint8_t *msg, size_t len)
     memcpy(&context->buffer[x], &msg[i], len - i); // Buffer remaining input.
 }
 
-void md5_final(md5_context_t *context, uint8_t *digest)
+void md5_final(md5_context_t *context, uint8_t digest[MD5_SIZE])
 {
     uint8_t bits[8];
     uint32_t x, padLen;
@@ -170,6 +171,25 @@ void md5_final(md5_context_t *context, uint8_t *digest)
 
     /* Store state in digest */
     _encode(digest, context->state, MD5_SIZE);
+}
+
+void md5_hash(uint8_t digest[MD5_SIZE], const void *data, size_t length)
+{
+    md5_context_t context;
+    md5_init(&context);
+    md5_update(&context, data, length);
+    md5_final(&context, digest);
+}
+
+void md5_hash_sz(uint8_t digest[MD5_SIZE], const char *string, bool case_sensitive)
+{
+    md5_context_t context;
+    md5_init(&context);
+    for (size_t i = 0; i < strlen(string); ++i) {
+        uint8_t c = case_sensitive ? string[i] : tolower(string[i]);
+        md5_update(&context, &c, 1);
+    }
+    md5_final(&context, digest);
 }
 
 static void _transform(uint32_t state[4], const uint8_t block[64])

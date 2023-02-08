@@ -178,13 +178,7 @@ static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], uint8_t id[PAK_ID_LENGTH])
 
 static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
 {
-    md5_context_t context;
-    md5_init(&context);
-    for (size_t i = 0; i < strlen(name); ++i) {
-        uint8_t c = tolower(name[i]); // Treat file names as lowercase/case-insensitive.
-        md5_update(&context, &c, 1);
-    }
-    md5_final(&context, id);
+    md5_hash_sz(id, name, false);
     _to_hex(sz, id);
 }
 
