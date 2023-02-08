@@ -106,18 +106,18 @@ static void _release(Storage_Resource_t *resource)
     } else
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
-        LOG_D(LOG_CONTEXT, "resource-data `%s` at %p freed (%d characters string)",
-            resource->name, resource->var.string.chars, resource->var.string.length);
+        LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%d characters string)",
+            resource, resource->var.string.chars, resource->var.string.length);
     } else
     if (resource->type == STORAGE_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
-        LOG_D(LOG_CONTEXT, "resource-data `%s` at %p freed (%d bytes blob)",
-            resource->name, resource->var.blob.ptr, resource->var.blob.size);
+        LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%d bytes blob)",
+            resource, resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
-        LOG_D(LOG_CONTEXT, "resource-data `%s` at %p freed (%dx%d image)",
-            resource->name, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
+        LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%dx%d image)",
+            resource, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
     free(resource);
     LOG_D(LOG_CONTEXT, "resource %p freed", resource);
@@ -332,12 +332,12 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
 //
 // We single-handedly got rid of both them. The array is never sorted which means a faster and more cache-friendly
 // code. Also, we are removing the entries with the SWAP-AND-POP idiom, which is as fast as possible.
-static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const char *name)
+static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const uint8_t id[STORAGE_RESOURCE_ID_LENGTH])
 {
     size_t length = arrlenu(resources);
     for (size_t i = 0; i < length; ++i) {
         Storage_Resource_t *resource = resources[i];
-        if (strcasecmp(resource->name, name) == 0) {
+        if (memcmp(resource->id, id, STORAGE_RESOURCE_ID_LENGTH) == 0) {
             return resource;
         }
     }
@@ -353,7 +353,10 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     }
 #endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
 
-    Storage_Resource_t *entry = _lookup(storage->resources, name);
+    uint8_t id[STORAGE_RESOURCE_ID_LENGTH];
+    md5_hash_sz(id, name, false);
+
+    Storage_Resource_t *entry = _lookup(storage->resources, id);
     if (entry) {
         LOG_D(LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
         entry->age = 0.0f; // Reset age on cache-hit.
@@ -372,14 +375,14 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         LOG_E(LOG_CONTEXT, "can't load resource `%s`", name);
         goto error_free_resource;
     }
-    strncpy(resource->name, name, PLATFORM_PATH_MAX);
+    md5_hash_sz(resource->id, name, false);
 
     arrpush(storage->resources, resource);
 
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
     if (arrlenu(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
         storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
-        LOG_D(LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->name);
+        LOG_D(LOG_CONTEXT, "resource %p marked for release", storage->resources[0]);
     }
 #endif
 

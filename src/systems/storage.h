@@ -29,10 +29,13 @@
 
 #include <core/platform.h>
 #include <libs/fs/fs.h>
+#include <libs/md5.h>
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#define STORAGE_RESOURCE_ID_LENGTH  MD5_SIZE
 
 typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
@@ -43,7 +46,7 @@ typedef enum Storage_Resource_Types_e {
 } Storage_Resource_Types_t;
 
 typedef struct Storage_Resource_s {
-    char name[PLATFORM_PATH_MAX]; // TODO: store a digest of the name?
+    uint8_t id[STORAGE_RESOURCE_ID_LENGTH];
     Storage_Resource_Types_t type;
     union {
         struct {
