@@ -37,12 +37,12 @@
 #define LOG_CONTEXT "fs-std"
 
 typedef struct Std_Mount_s {
-    Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
+    Mount_VTable_t vtable; // Matches `FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct Std_Handle_s {
-    Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
+    Handle_VTable_t vtable; // Matches `FS_Handle_t` structure.
     FILE *stream;
     size_t size;
 } Std_Handle_t;
@@ -76,8 +76,6 @@ FS_Mount_t *FS_std_mount(const char *path)
 
     _std_mount_ctor(mount, path);
 
-    LOG_D(LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
-
     return mount;
 }
 
@@ -95,6 +93,8 @@ static void _std_mount_ctor(FS_Mount_t *mount, const char *path)
         };
 
     strncpy(std_mount->path, path, PLATFORM_PATH_MAX - 1);
+
+    LOG_T(LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
 }
 
 static void _std_mount_dtor(FS_Mount_t *mount)
@@ -102,6 +102,8 @@ static void _std_mount_dtor(FS_Mount_t *mount)
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
     *std_mount = (Std_Mount_t){ 0 };
+
+    LOG_T(LOG_CONTEXT, "mount %p uninitialized", mount);
 }
 
 static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
@@ -174,6 +176,8 @@ static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream, size_t size)
             .stream = stream,
             .size = size
         };
+
+    LOG_T(LOG_CONTEXT, "handle %p initialized (size is %u bytes)", handle, size);
 }
 
 static void _std_handle_dtor(FS_Handle_t *handle)
@@ -181,6 +185,8 @@ static void _std_handle_dtor(FS_Handle_t *handle)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     fclose(std_handle->stream);
+
+    LOG_T(LOG_CONTEXT, "handle %p uninitialized", handle);
 }
 
 static size_t _std_handle_size(FS_Handle_t *handle)

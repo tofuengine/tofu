@@ -99,7 +99,7 @@ typedef struct Pak_Entry_s {
 } Pak_Entry_t;
 
 typedef struct Pak_Mount_s {
-    Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
+    Mount_VTable_t vtable; // Matches `FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
@@ -109,7 +109,7 @@ typedef struct Pak_Mount_s {
 } Pak_Mount_t;
 
 typedef struct Pak_Handle_s {
-    Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
+    Handle_VTable_t vtable; // Matches `FS_Handle_t` structure.
     FILE *stream;
     size_t stream_size;
     long begin_of_stream; // Both begin and end markers are *inclusive*.
@@ -271,8 +271,6 @@ FS_Mount_t *FS_pak_mount(const char *path)
 
     _pak_mount_ctor(mount, path, entries, directory, header.flags.encrypted);
 
-    LOG_D(LOG_CONTEXT, "mount initialized w/ %d entries (encrypted is %d) for archive `%s`", entries, header.flags.encrypted, path);
-
     return mount;
 
 error_free_directory:
@@ -301,6 +299,8 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
         };
 
     strncpy(pak_mount->path, path, PLATFORM_PATH_MAX - 1);
+
+    LOG_T(LOG_CONTEXT, "mount %p initialized w/ %d entries (encrypted is %d) for archive `%s`", mount, entries, encrypted, path);
 }
 
 static void _pak_mount_dtor(FS_Mount_t *mount)
@@ -308,6 +308,10 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
     _free_directory(pak_mount->directory);
+
+    *pak_mount = (Pak_Mount_t){ 0 };
+
+    LOG_T(LOG_CONTEXT, "mount %p uninitialized", mount);
 }
 
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
@@ -400,6 +404,8 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
         LOG_T(LOG_CONTEXT, "cipher context initialized");
 #endif
     }
+
+    LOG_T(LOG_CONTEXT, "handle %p initialized at %ld (%d bytes)", handle, begin_of_stream, size);
 }
 
 static void _pak_handle_dtor(FS_Handle_t *handle)
@@ -407,6 +413,8 @@ static void _pak_handle_dtor(FS_Handle_t *handle)
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
     fclose(pak_handle->stream);
+
+    LOG_T(LOG_CONTEXT, "handle %p uninitialized", handle);
 }
 
 static size_t _pak_handle_size(FS_Handle_t *handle)

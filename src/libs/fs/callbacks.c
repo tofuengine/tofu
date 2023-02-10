@@ -32,14 +32,14 @@
 
 #define LOG_CONTEXT "fs-callbacks"
 
-typedef struct Std_Mount_s {
-    Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
+typedef struct Cache_Mount_s {
+    Mount_VTable_t vtable; // Matches `FS_Mount_t` structure.
     FS_Callbacks_t callbacks;
     void *user_data;
 } Cache_Mount_t;
 
-typedef struct Std_Handle_s {
-    Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
+typedef struct Cache_Handle_s {
+    Handle_VTable_t vtable; // Matches `FS_Handle_t` structure.
     FS_Callbacks_t callbacks;
     void *stream;
 } Cache_Handle_t;
@@ -67,8 +67,6 @@ FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data)
 
     _callbacks_mount_ctor(mount, callbacks, user_data);
 
-    LOG_D(LOG_CONTEXT, "mount %p initialized as cache w/ user-data %p", mount, user_data);
-
     return mount;
 }
 
@@ -85,6 +83,8 @@ static void _callbacks_mount_ctor(FS_Mount_t *mount, FS_Callbacks_t callbacks, v
             .callbacks = callbacks,
             .user_data = user_data
         };
+
+    LOG_T(LOG_CONTEXT, "mount %p initialized as cache w/ user-data %p", mount, user_data);
 }
 
 static void _callbacks_mount_dtor(FS_Mount_t *mount)
@@ -92,6 +92,8 @@ static void _callbacks_mount_dtor(FS_Mount_t *mount)
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
     *cache_mount = (Cache_Mount_t){ 0 };
+
+    LOG_T(LOG_CONTEXT, "mount %p uninitialized", mount);
 }
 
 static bool _callbacks_mount_contains(const FS_Mount_t *mount, const char *name)
@@ -134,6 +136,8 @@ static void _callbacks_handle_ctor(FS_Handle_t *handle, FS_Callbacks_t callbacks
             .callbacks = callbacks,
             .stream = stream
         };
+
+    LOG_T(LOG_CONTEXT, "handle %p initialized", handle);
 }
 
 static void _callbacks_handle_dtor(FS_Handle_t *handle)
@@ -143,6 +147,8 @@ static void _callbacks_handle_dtor(FS_Handle_t *handle)
     cache_handle->callbacks.close(cache_handle->stream);
 
     *cache_handle = (Cache_Handle_t){ 0 };
+
+    LOG_T(LOG_CONTEXT, "handle %p uninitialized", handle);
 }
 
 static size_t _callbacks_handle_size(FS_Handle_t *handle)

@@ -260,13 +260,13 @@ static void _music_dtor(SL_Source_t *source)
     Music_t *music = (Music_t *)source;
 
     SL_props_destroy(music->props);
-    LOG_D(LOG_CONTEXT, "music properties deinitialized");
+    LOG_D(LOG_CONTEXT, "music properties destroyed");
 
     ma_pcm_rb_uninit(&music->buffer);
-    LOG_D(LOG_CONTEXT, "music ring-buffer deinitialized");
+    LOG_D(LOG_CONTEXT, "music ring-buffer uninitialized");
 
     drflac_close(music->decoder);
-    LOG_D(LOG_CONTEXT, "music decoder deinitialized");
+    LOG_D(LOG_CONTEXT, "music decoder closed");
 }
 
 static bool _music_reset(SL_Source_t *source)

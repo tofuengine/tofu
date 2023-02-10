@@ -257,13 +257,13 @@ static void _sample_dtor(SL_Source_t *source)
     Sample_t *sample = (Sample_t *)source;
 
     SL_props_destroy(sample->props);
-    LOG_D(LOG_CONTEXT, "sample properties deinitialized");
+    LOG_D(LOG_CONTEXT, "sample properties destroyed");
 
     ma_audio_buffer_uninit(&sample->buffer);
-    LOG_D(LOG_CONTEXT, "sample buffer deinitialized");
+    LOG_D(LOG_CONTEXT, "sample buffer uninitialized");
 
     drflac_close(sample->decoder);
-    LOG_D(LOG_CONTEXT, "sample decoder deinitialized");
+    LOG_D(LOG_CONTEXT, "sample decoder closed");
 }
 
 static bool _sample_reset(SL_Source_t *source)

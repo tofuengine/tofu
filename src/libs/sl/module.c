@@ -255,14 +255,14 @@ static void _module_dtor(SL_Source_t *source)
     LOG_D(LOG_CONTEXT, "module player stopped");
 
     SL_props_destroy(module->props);
-    LOG_D(LOG_CONTEXT, "module properties deinitialized");
+    LOG_D(LOG_CONTEXT, "module properties destroyed");
 
     ma_pcm_rb_uninit(&module->buffer);
-    LOG_D(LOG_CONTEXT, "module ring-buffer deinitialized");
+    LOG_D(LOG_CONTEXT, "module ring-buffer uninitialized");
 
     xmp_release_module(module->context);
     xmp_free_context(module->context);
-    LOG_D(LOG_CONTEXT, "module context deinitialized");
+    LOG_D(LOG_CONTEXT, "module context released");
 }
 
 static bool _module_reset(SL_Source_t *source)
