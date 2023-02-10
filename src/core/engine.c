@@ -361,7 +361,17 @@ void Engine_run(Engine_t *engine)
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
+#ifdef DEBUG
+        // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
+        // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
+        // time to `delta_time`.
+        float elapsed = (float)(current - previous);
+        if (elapsed >= __ENGINE_BREAKPOINT_ELAPSED_THRESHOLD__) {
+            elapsed = delta_time;
+        }
+#else
         const float elapsed = (float)(current - previous);
+#endif
         previous = current;
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
