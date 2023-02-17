@@ -95,6 +95,12 @@ local function xor_cipher(key)
   end
 end
 
+local function null_cipher(_)
+  return function(data)
+    return data
+  end
+end
+
 local function attrdir(path, name, files)
   local mode = lfs.attributes(path, "mode")
   if mode == "file" then
@@ -202,7 +208,8 @@ local function emit_entry(writer, flags, file)
   writer:write(string.pack("c16", id))
   writer:write(string.pack("<I4", size))
 
-  local cipher = flags.encrypted and xor_cipher(id) or nil
+  local key = luazen.md5(id)
+  local cipher = flags.encrypted and xor_cipher(key) or null_cipher(key)
 
   local reader = io.open(file.pathfile, "rb")
   if not reader then
@@ -215,10 +222,7 @@ local function emit_entry(writer, flags, file)
     if not block then
       break
     end
-    if cipher then
-      block = cipher(block)
-    end
-    writer:write(block)
+    writer:write(cipher(block))
   end
   reader:close()
 

@@ -64,6 +64,8 @@ NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
 #define PAK_ID_LENGTH       MD5_SIZE
 #define PAK_ID_LENGTH_SZ    (PAK_ID_LENGTH * 2 + 1)
 
+#define PAK_KEY_LENGTH      PAK_ID_LENGTH
+
 #pragma pack(push, 1)
 typedef struct Pak_Header_s {
     char signature[PAK_SIGNATURE_LENGTH];
@@ -191,12 +193,15 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
         return false;
     }
 
+    // Once read we need to marshal the serialized entry to conform the data size
+    // of the architecture we are running into. Endian-ness need to be fixed, and
+    // data need to expanded (32- to 64-bit).
     size_t size = bytes_ui32le(header.size);
 
     *entry = (Pak_Entry_t){ 0 };
 
     memcpy(entry->id, header.id, PAK_ID_LENGTH);
-    entry->offset = ftell(stream);
+    entry->offset = ftell(stream); // The file offset is determined on-the-fly.
     entry->size = size;
 
     char id_hex[PAK_ID_LENGTH_SZ];
@@ -375,6 +380,13 @@ error_close:
     return NULL;
 }
 
+static inline void _derive_key(uint8_t key[PAK_KEY_LENGTH], const void *data, size_t length)
+{
+    // The shared-key is the digest of the entry's id (so that we won't be using the exact
+    // data as stored it the file)
+    md5_hash(key, data, length);
+}
+
 static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_stream, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH])
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
@@ -398,8 +410,10 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
 
     if (encrypted) {
         // Encryption is implemented w/ a XOR stream cipher.
-        // The shared-key is the entry's id.
-        xor_schedule(&pak_handle->cipher_context, id, PAK_ID_LENGTH);
+        uint8_t key[PAK_KEY_LENGTH];
+        _derive_key(key, id, PAK_ID_LENGTH);
+
+        xor_schedule(&pak_handle->cipher_context, key, PAK_ID_LENGTH);
 #ifdef __DEBUG_FS_CALLS__
         LOG_T(LOG_CONTEXT, "cipher context initialized");
 #endif
