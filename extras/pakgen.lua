@@ -139,9 +139,6 @@ local function optimize_files(flags, files)
     print(string.format("Optimizing..."))
   end
 
-  -- We could sort only when outputting the directory-index.
-  table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
-
   local offset = HEADER_SIZE + #files * ENTRY_HEADER_SIZE
 
   for _, file in ipairs(files) do
@@ -185,12 +182,14 @@ The `flags` field is a bitmask with the following significance:
 + BIT # | DESCRIPTION                      |
 +-------+----------------------------------+
 +    0  | the archive content is encrypted |
-+  1-7  | unused                           |
++    1  | the archive content is sorted    |
++  2-7  | unused                           |
 +-------+----------------------------------+
 
 ]]
 local function compile_flags(flags)
-  return flags.encrypted and 1 or 0 << 0
+  return (flags.encrypted and 1 or 0) << 0
+    or (flags.sorted and 1 or 0) << 1
 end
 
 --[[
@@ -237,7 +236,17 @@ calculated during the indexing process.
          +--------+
 
 ]]
-local function emit_directory(writer, _, directory)
+local function emit_directory(writer, flags, files)
+  -- Create a copy, we don't want to sort the files table so that we don't mess
+  -- with the output order.
+  local directory = {}
+  for i, v in ipairs(files) do directory[i] = v end
+
+  if not flags.sorted then
+    print(string.format("Sorting..."))
+    table.sort(directory, function(lhs, rhs) return lhs.id < rhs.id end)
+  end
+
   for _, entry in ipairs(directory) do
     writer:write(string.pack("c16", entry.id))
     writer:write(string.pack("<I4", entry.offset))
@@ -349,10 +358,12 @@ local function main(arg)
     :description("Enables detailed output during package creation.")
   parser:flag("-e --encrypted")
     :description("Tells whether the package should be encrypted.")
+  parser:flag("-s --sorted")
+    :description("Tells whether the package should be sorted.")
   local args = parser:parse(arg)
 
   local flags = {}
-  for _, flag in ipairs({ "quiet", "detailed", "encrypted" }) do
+  for _, flag in ipairs({ "quiet", "detailed", "encrypted", "sorted" }) do
     flags[flag] = args[flag] and true or false
   end
 
