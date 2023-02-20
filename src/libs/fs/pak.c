@@ -73,9 +73,11 @@ typedef struct Pak_Header_s {
     struct { // Bit ordering is implementation dependent, il LE machines lower bits come first.
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         uint8_t encrypted : 1;
-        uint8_t : 7;
+        uint8_t sorted : 1;
+        uint8_t : 6;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-        uint8_t : 7;
+        uint8_t : 6;
+        uint8_t sorted : 1;
         uint8_t encrypted : 1;
 #else
 #    error unsupported endianness
@@ -86,27 +88,20 @@ typedef struct Pak_Header_s {
 } Pak_Header_t;
 
 typedef struct Pak_Entry_Header_s {
-//    uint32_t checksum;
     uint8_t id[PAK_ID_LENGTH];
+    uint32_t offset;
     uint32_t size;
-    // The struct is followed by:
-    //   - sizeof(uint8_t) * size
+//    uint32_t checksum;
 } Pak_Entry_Header_t;
 #pragma pack(pop)
-
-typedef struct Pak_Entry_s {
-    uint8_t id[PAK_ID_LENGTH];
-    long offset;
-    size_t size;
-} Pak_Entry_t;
 
 typedef struct Pak_Mount_s {
     Mount_VTable_t vtable; // Matches `FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
     size_t entries;
-    Pak_Entry_t *directory;
     struct {
         bool encrypted;
+        bool sorted;
     } flags;
 } Pak_Mount_t;
 
@@ -120,7 +115,7 @@ typedef struct Pak_Handle_s {
     xor_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, bool encrypted);
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, bool encrypted, bool sorted);
 static void _pak_mount_dtor(FS_Mount_t *mount);
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
@@ -184,54 +179,37 @@ static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char 
     _to_hex(sz, id);
 }
 
-static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
+// Linear-search. Easy to implement, but not that performant.
+// FIXME: should return a `FILE *` for reuse.
+static bool _find_entry(const Pak_Mount_t *pak_mount, const char *name, FILE *stream, Pak_Entry_Header_t *header)
 {
-    Pak_Entry_Header_t header;
-    size_t entries_read = fread(&header, sizeof(Pak_Entry_Header_t), 1, stream);
-    if (entries_read != 1) {
-        LOG_E(LOG_CONTEXT, "can't read entry at offset %ld", ftell(stream));
-        return false;
-    }
-
-    // Once read we need to marshal the serialized entry to conform the data size
-    // of the architecture we are running into. Endian-ness need to be fixed, and
-    // data need to expanded (32- to 64-bit).
-    size_t size = bytes_ui32le(header.size);
-
-    *entry = (Pak_Entry_t){ 0 };
-
-    memcpy(entry->id, header.id, PAK_ID_LENGTH);
-    entry->offset = ftell(stream); // The file offset is determined on-the-fly.
-    entry->size = size;
-
+    uint8_t id[PAK_ID_LENGTH];
     char id_hex[PAK_ID_LENGTH_SZ];
-    _to_hex(id_hex, entry->id);
+    _hash_file(name, id, id_hex);
+    LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
 
-    bool sought = fseek(stream, size, SEEK_CUR) != -1; // Skip the entry content.
+    bool sought = fseek(stream, sizeof(Pak_Header_t), SEEK_SET) != -1; // Move behind the header.
     if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't skip entry `%s`", id_hex);
+        LOG_E(LOG_CONTEXT, "can't seek directory-index for archive `%s`", pak_mount->path);
         return false;
     }
 
-    LOG_T(LOG_CONTEXT, "entry `%s` at %d w/ size %d", id_hex, entry->offset, entry->size);
+    for (size_t i = 0; i < pak_mount->entries; ++i) {
+        size_t entries_read = fread(header, sizeof(Pak_Entry_Header_t), 1, stream);
+        if (entries_read != 1) {
+            LOG_E(LOG_CONTEXT, "can't read header #%d from file `%s`", i, pak_mount->path);
+            return false;
+        }
 
-    return true;
-}
-
-static void _free_directory(Pak_Entry_t *directory)
-{
-    if (!directory) { // Corner case, array empty.
-        return;
+        if (memcmp(id, header->id, PAK_ID_LENGTH) == 0) {
+            return true;
+        }
     }
-    arrfree(directory);
+
+    return false;
 }
 
-static int _pak_entry_compare(const void *lhs, const void *rhs)
-{
-    const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
-    const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
-    return memcmp(l->id, r->id, PAK_ID_LENGTH);
-}
+// TODO: implement binary-search for sorted archives.
 
 // Precondition: the path need to be pre-validated as being an archive.
 FS_Mount_t *FS_pak_mount(const char *path)
@@ -252,40 +230,24 @@ FS_Mount_t *FS_pak_mount(const char *path)
     size_t entries = bytes_ui32le(header.entries);
     LOG_T(LOG_CONTEXT, "archive `%s` contains %d entries", path, entries);
 
-    Pak_Entry_t *directory = NULL;
-    for (size_t i = 0; i < entries; ++i) {
-        Pak_Entry_t entry = { 0 };
-        bool read = _read_entry(&entry, stream);
-        if (!read) {
-            LOG_E(LOG_CONTEXT, "can't read entry #%d (%d total) from archive `%s`", i, entries, entries_read, path);
-            goto error_free_directory;
-        }
-        arrpush(directory, entry);
-    }
-
-    qsort(directory, entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
-    LOG_T(LOG_CONTEXT, "directory w/ %d entries sorted", entries);
-
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         LOG_E(LOG_CONTEXT, "can't allocate mount for archive `%s`", path);
-        goto error_free_directory;
+        goto error_close;
     }
 
     fclose(stream);
 
-    _pak_mount_ctor(mount, path, entries, directory, header.flags.encrypted);
+    _pak_mount_ctor(mount, path, entries, header.flags.encrypted, header.flags.sorted);
 
     return mount;
 
-error_free_directory:
-    _free_directory(directory);
 error_close:
     fclose(stream);
     return NULL;
 }
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, bool encrypted)
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, bool encrypted, bool sorted)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -297,9 +259,9 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
             },
             .path = { 0 },
             .entries = entries,
-            .directory = directory,
             .flags = {
-                .encrypted = encrypted
+                .encrypted = encrypted,
+                sorted
             }
         };
 
@@ -312,8 +274,6 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
-    _free_directory(pak_mount->directory);
-
     *pak_mount = (Pak_Mount_t){ 0 };
 
     LOG_T(LOG_CONTEXT, "mount %p uninitialized", mount);
@@ -323,32 +283,24 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t needle = { 0 };
-    char id_hex[PAK_ID_LENGTH_SZ];
-    _hash_file(name, needle.id, id_hex);
-    LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
+    FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
+    if (!stream) {
+        LOG_E(LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
+        return false;
+    }
 
-    Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
-    LOG_IF_T(!entry, LOG_CONTEXT, "entry `%s` not found in mount %p", name, pak_mount);
+    Pak_Entry_Header_t header;
+    bool found = _find_entry(pak_mount, name, stream, &header);
 
-    bool exists = entry; // FIXME: should be `!!`?
-    return exists;
+    fclose(stream);
+
+    LOG_IF_T(!found, LOG_CONTEXT, "entry `%s` not found in mount %p", name, pak_mount);
+    return found;
 }
 
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
-
-    Pak_Entry_t needle = { 0 };
-    char id_hex[PAK_ID_LENGTH_SZ];
-    _hash_file(name, needle.id, id_hex);
-    LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
-
-    Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
-    if (!entry) {
-        LOG_E(LOG_CONTEXT, "can't find entry `%s`", name);
-        return NULL;
-    }
 
     FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
@@ -356,12 +308,25 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         return NULL;
     }
 
-    bool sought = fseek(stream, entry->offset, SEEK_SET) != -1; // Move to the found entry position into the file.
+    Pak_Entry_Header_t header;
+    bool found = _find_entry(pak_mount, name, stream, &header);
+    if (!found) {
+        LOG_E(LOG_CONTEXT, "can't find entry `%s`", name);
+        return NULL;
+    }
+
+    // Once read we need to marshal the serialized entry to conform the data size
+    // of the architecture we are running into. Endian-ness need to be fixed, and
+    // data need to expanded (32- to 64-bit).
+    long offset = bytes_ui32le(header.offset);
+    size_t size = bytes_ui32le(header.size);
+
+    bool sought = fseek(stream, offset, SEEK_SET) != -1; // Move to the found entry position into the file.
     if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
+        LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, offset, pak_mount->path);
         goto error_close;
     }
-    LOG_T(LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
+    LOG_T(LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, offset, pak_mount->path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
@@ -369,9 +334,9 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         goto error_close;
     }
 
-    _pak_handle_ctor(handle, stream, entry->offset, entry->size, pak_mount->flags.encrypted, entry->id);
+    _pak_handle_ctor(handle, stream, offset, size, pak_mount->flags.encrypted, header.id);
 
-    LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
+    LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, size);
 
     return handle;
 
@@ -408,8 +373,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
             .cipher_context = { { 0 } } // Uh! The first member of the structure is an array, need additional braces!
         };
 
-    if (encrypted) {
-        // Encryption is implemented w/ a XOR stream cipher.
+    if (encrypted) { // Encryption is implemented w/ a XOR stream cipher.
         uint8_t key[PAK_KEY_LENGTH];
         _derive_key(key, id, PAK_ID_LENGTH);
 
