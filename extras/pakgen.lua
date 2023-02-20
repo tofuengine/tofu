@@ -33,18 +33,28 @@ SOFTWARE.
 +---------+
 | HEADER  | sizeof(Pak_Header_t)
 +---------+
-| ENTRY 0 | sizeof(Pak_Entry_t) + sizeof(Entry) * sizeof(uint8_t)
+| ENTRY 0 | sizeof(Pak_Entry_t)
 +---------+
-| ENTRY 1 |    "                                             "
+| ENTRY 1 |     "         "
 +---------+
     ...
     ...
     ...
 +---------+
-| ENTRY n |    "                                            "
+| ENTRY n |     "         "
++---------+
+| DATA 0  | sizeof(Entry) * sizeof(uint8_t)
++---------+
+| DATA 1  |     "                     "
++---------+
+    ...
+    ...
+    ...
++---------+
+| DATA n  |     "                     "
 +---------+
 
-NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
+NOTE: `uint16_t` and `uint32_t` data are explicitly stored in little-endian.
       See the `<` modifier below.
 
 ]]
@@ -53,8 +63,11 @@ local argparse = require("argparse")
 local lfs = require("lfs")
 local luazen = require("luazen")
 
-local VERSION = 0x00
-local RESERVED_16b = 0xFFFF
+local HEADER_SIZE <const> = 8 + 1 + 1 + 2 + 4
+local ENTRY_HEADER_SIZE <const> = 16 + 4 + 4
+
+local VERSION <const> = 0x00
+local RESERVED_16b <const> = 0xFFFF
 
 function string:at(index)
   return self:sub(index, index)
@@ -119,6 +132,37 @@ local function attrdir(path, name, files)
   return files
 end
 
+local function optimize_files(flags, files)
+  local hash = {}
+
+  if not flags.quiet then
+    print(string.format("Optimizing..."))
+  end
+
+  -- We could sort only when outputting the directory-index.
+  table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
+
+  local offset = HEADER_SIZE + #files * ENTRY_HEADER_SIZE
+
+  for _, file in ipairs(files) do
+    local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
+    local id = luazen.md5(name)
+
+    if hash[id] then -- Check whether the (normalized) entry name appears twice.
+      print(string.format("*** entry w/ name `%s` is duplicated (id `%s` already used for `%s`)", file.name, string.to_hex(id), hash[id]))
+      return false
+    end
+    hash[id] = file.name
+
+    file.id = luazen.md5(file.name)
+    file.offset = offset
+
+    offset = offset + file.size
+  end
+
+  return true
+end
+
 local function fetch_files(paths, flags)
   local files = {}
   for _, path in ipairs(paths) do
@@ -130,10 +174,6 @@ local function fetch_files(paths, flags)
       table.insert(files, file)
     end
   end
-  if not flags.quiet then
-    print(string.format("Optimizing..."))
-  end
-  table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
   return files
 end
 
@@ -178,9 +218,6 @@ local function emit_header(writer, flags, files)
   return true
 end
 
-local HEADER_SIZE <const> = 16
-local ENTRY_HEADER_SIZE <const> = 16 + 4
-
 --[[
 
 Each archive entry is formed by an header telling the size and the name of the entry,
@@ -192,30 +229,33 @@ calculated during the indexing process.
 +--------+--------+----------+-----------------------------------------------------------+
 + OFFSET |  SIZE  | NAME     | DESCRIPTION                                               |
 +--------+--------+----------+-----------------------------------------------------------+
-+    0   |   16   | id       | entry (MD5 of the filename)                               |
-+   16   |    4   | size (S) | length (in bytes) of the entry                            |
-+   20   |    S   |          | sequence of bytes                                         |
++    0   |   16   | id       | entry ID (MD5 of the filename)                            |
++   16   |    4   | offset   | absolute position of the entry within the archive         |
++   20   |    4   | size     | length (in bytes) of the entry                            |
 +--------+--------+----------+-----------------------------------------------------------+
-         | 16+4+S |
+         |   24   |
          +--------+
 
 ]]
+local function emit_directory(writer, _, directory)
+  for _, entry in ipairs(directory) do
+    writer:write(string.pack("c16", entry.id))
+    writer:write(string.pack("<I4", entry.offset))
+    writer:write(string.pack("<I4", entry.size))
+  end
+
+  return true
+end
+
 local function emit_entry(writer, flags, file)
-  local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
-  local id = luazen.md5(name)
-  local size = file.size
-
-  writer:write(string.pack("c16", id))
-  writer:write(string.pack("<I4", size))
-
-  local key = luazen.md5(id)
-  local cipher = flags.encrypted and xor_cipher(key) or null_cipher(key)
-
   local reader = io.open(file.pathfile, "rb")
   if not reader then
     print(string.format("*** can't access file `%s`", file.pathfile))
-    return nil, {}, 0
+    return false
   end
+
+  local key <const> = luazen.md5(file.id)
+  local cipher = flags.encrypted and xor_cipher(key) or null_cipher(key)
 
   while true do
     local block = reader:read(8196)
@@ -226,47 +266,38 @@ local function emit_entry(writer, flags, file)
   end
   reader:close()
 
-  return string.to_hex(id), {
-      name = name,
-      size = size,
-    }
+  return true
 end
 
 local function emit_entries(writer, flags, files)
-  local offset = HEADER_SIZE
-  local hash = {}
-
   for index, file in ipairs(files) do
-    local id, entry = emit_entry(writer, flags, file)
-    if not id then
+    local offset <const> = writer:seek() --"cur", 0)
+
+    local done = emit_entry(writer, flags, file)
+    if not done then
       return false
     end
-
-    if hash[id] then -- Check whether the (normalized) entry name appears twice.
-      print(string.format("*** entry w/ name `%s` is duplicated (id `%s` already used for `%s`)", entry.name, id, hash[id]))
-      return false
-    end
-    hash[id] = entry.name
-
-    offset = offset + ENTRY_HEADER_SIZE
 
     if not flags.quiet then
       if flags.detailed then
         print(string.format("> file `%s`\n  name: `%s`\n  id: `%s`\n  offset: %d\n  size: %d",
-          file.name, entry.name, id, offset, entry.size))
+          file.pathfile, file.name, string.to_hex(file.id), offset, file.size))
       else
         print(string.format("[%04x] `%s` -> `%s`",
-          index, id, entry.name))
+          index, string.to_hex(file.id), file.name))
       end
     end
-
-    offset = offset + entry.size
   end
 
   return true
 end
 
 local function emit(output, flags, files)
+  local optimized = optimize_files(flags, files)
+  if not optimized then
+    return false
+  end
+
   local writer = io.open(output, "wb")
   if not writer then
     print(string.format("*** can't create file `%s`", output))
@@ -275,6 +306,13 @@ local function emit(output, flags, files)
 
   local header_done = emit_header(writer, flags, files)
   if not header_done then
+    writer:close()
+    os.remove(output)
+    return false
+  end
+
+  local directory_done = emit_directory(writer, flags, files)
+  if not directory_done then
     writer:close()
     os.remove(output)
     return false
@@ -319,7 +357,7 @@ local function main(arg)
   end
 
   if not flags.quiet then
-    print("PakGen v0.6.0")
+    print("PakGen v0.7.0")
     print("=============")
   end
 
