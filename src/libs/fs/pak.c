@@ -95,6 +95,12 @@ typedef struct Pak_Entry_Header_s {
 } Pak_Entry_Header_t;
 #pragma pack(pop)
 
+typedef struct Pak_Entry_s {
+    uint8_t id[PAK_ID_LENGTH];
+    long offset;
+    size_t size;
+} Pak_Entry_t;
+
 typedef struct Pak_Mount_s {
     Mount_VTable_t vtable; // Matches `FS_Mount_t` structure.
     char path[PLATFORM_PATH_MAX];
@@ -180,12 +186,16 @@ static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char 
 }
 
 // Linear-search. Easy to implement, but not that performant.
-// FIXME: should return a `FILE *` for reuse.
-static bool _find_entry(const Pak_Mount_t *pak_mount, const char *name, FILE *stream, Pak_Entry_Header_t *header)
+static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Entry_t *entry)
 {
-    uint8_t id[PAK_ID_LENGTH];
+    FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
+    if (!stream) {
+        LOG_E(LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
+        return NULL;
+    }
+
     char id_hex[PAK_ID_LENGTH_SZ];
-    _hash_file(name, id, id_hex);
+    _hash_file(name, entry->id, id_hex);
     LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
 
     bool sought = fseek(stream, sizeof(Pak_Header_t), SEEK_SET) != -1; // Move behind the header.
@@ -194,19 +204,35 @@ static bool _find_entry(const Pak_Mount_t *pak_mount, const char *name, FILE *st
         return false;
     }
 
+    Pak_Entry_Header_t header = { 0 };
     for (size_t i = 0; i < pak_mount->entries; ++i) {
-        size_t entries_read = fread(header, sizeof(Pak_Entry_Header_t), 1, stream);
+        size_t entries_read = fread(&header, sizeof(Pak_Entry_Header_t), 1, stream);
         if (entries_read != 1) {
             LOG_E(LOG_CONTEXT, "can't read header #%d from file `%s`", i, pak_mount->path);
-            return false;
+            goto error_close;
         }
 
-        if (memcmp(id, header->id, PAK_ID_LENGTH) == 0) {
-            return true;
+        if (memcmp(entry->id, header.id, PAK_ID_LENGTH) == 0) {
+            // Once read we need to marshal the serialized entry to conform the data size
+            // of the architecture we are running into. Endian-ness need to be fixed, and
+            // data need to expanded (32- to 64-bit).
+            entry->offset = bytes_ui32le(header.offset);
+            entry->size = bytes_ui32le(header.size);
+
+            sought = fseek(stream, entry->offset, SEEK_SET) != -1; // Move to the found entry position into the file.
+            if (!sought) {
+                LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
+                goto error_close;
+            }
+            LOG_T(LOG_CONTEXT, "entry `%s` w/ size %u located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
+
+            return stream;
         }
     }
 
-    return false;
+error_close:
+    fclose(stream);
+    return NULL;
 }
 
 // TODO: implement binary-search for sorted archives.
@@ -283,18 +309,16 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
-    if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
-        return false;
+    Pak_Entry_t entry;
+    FILE *stream = _find_entry(pak_mount, name, &entry);
+
+    bool found = !!stream;
+    LOG_IF_T(!found, LOG_CONTEXT, "entry `%s` not found in mount %p", name, pak_mount);
+
+    if (stream) {
+        fclose(stream);
     }
 
-    Pak_Entry_Header_t header;
-    bool found = _find_entry(pak_mount, name, stream, &header);
-
-    fclose(stream);
-
-    LOG_IF_T(!found, LOG_CONTEXT, "entry `%s` not found in mount %p", name, pak_mount);
     return found;
 }
 
@@ -302,31 +326,12 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
+    Pak_Entry_t entry;
+    FILE *stream = _find_entry(pak_mount, name, &entry);
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
-        return NULL;
-    }
-
-    Pak_Entry_Header_t header;
-    bool found = _find_entry(pak_mount, name, stream, &header);
-    if (!found) {
         LOG_E(LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
     }
-
-    // Once read we need to marshal the serialized entry to conform the data size
-    // of the architecture we are running into. Endian-ness need to be fixed, and
-    // data need to expanded (32- to 64-bit).
-    long offset = bytes_ui32le(header.offset);
-    size_t size = bytes_ui32le(header.size);
-
-    bool sought = fseek(stream, offset, SEEK_SET) != -1; // Move to the found entry position into the file.
-    if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d in archive `%s`", name, offset, pak_mount->path);
-        goto error_close;
-    }
-    LOG_T(LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, offset, pak_mount->path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
@@ -334,9 +339,9 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         goto error_close;
     }
 
-    _pak_handle_ctor(handle, stream, offset, size, pak_mount->flags.encrypted, header.id);
+    _pak_handle_ctor(handle, stream, entry.offset, entry.size, pak_mount->flags.encrypted, entry.id);
 
-    LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, size);
+    LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p", name, handle);
 
     return handle;
 
