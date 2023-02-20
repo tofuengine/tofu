@@ -189,7 +189,7 @@ The `flags` field is a bitmask with the following significance:
 ]]
 local function compile_flags(flags)
   return (flags.encrypted and 1 or 0) << 0
-    or (flags.sorted and 1 or 0) << 1
+    | (flags.sorted and 1 or 0) << 1
 end
 
 --[[
@@ -242,12 +242,19 @@ local function emit_directory(writer, flags, files)
   local directory = {}
   for i, v in ipairs(files) do directory[i] = v end
 
-  if not flags.sorted then
-    print(string.format("Sorting..."))
+  if flags.sorted then
+    if not flags.quiet then
+      print(string.format("Sorting..."))
+    end
     table.sort(directory, function(lhs, rhs) return lhs.id < rhs.id end)
   end
 
-  for _, entry in ipairs(directory) do
+  for index, entry in ipairs(directory) do
+    if not flags.quiet then
+      print(string.format("[%04x] `%s` -> `%s`",
+        index, string.to_hex(entry.id), entry.name))
+    end
+
     writer:write(string.pack("c16", entry.id))
     writer:write(string.pack("<I4", entry.offset))
     writer:write(string.pack("<I4", entry.size))
@@ -279,6 +286,10 @@ local function emit_entry(writer, flags, file)
 end
 
 local function emit_entries(writer, flags, files)
+  if not flags.quiet then
+    print(string.format("Writing..."))
+  end
+
   for index, file in ipairs(files) do
     local offset <const> = writer:seek() --"cur", 0)
 
@@ -375,8 +386,9 @@ local function main(arg)
   local files = fetch_files(args.input, flags)
 
   if not flags.quiet then
+    local optimization = flags.sorted and "sorted" or "sorted"
     local annotation = flags.encrypted and "encrypted" or "plain"
-    print(string.format("Creating %s archive `%s` w/ %d entries", annotation, args.output, #files))
+    print(string.format("Creating %s %s archive `%s` w/ %d entries", optimization, annotation, args.output, #files))
   end
 
   local success = emit(args.output, flags, files)
