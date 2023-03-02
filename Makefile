@@ -56,7 +56,7 @@ endif
 KERNAL=kernal.pak
 
 PACKER=$(extrasdir)/pakgen.lua
-PACKERFLAGS=--encrypted --quiet
+PACKERFLAGS=--encrypted --sorted --quiet
 
 LUACHECK=luacheck
 LUACHECKFLAGS=--no-self --std lua54 -q
