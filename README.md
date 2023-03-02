@@ -74,7 +74,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Inspirations
 
-**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other softwares in one way or another. Here's a brief list.
+**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other software in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
@@ -84,13 +84,13 @@ Guess what? Yup, that's yet another game engine/framework.
 
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, altought I've using Ubuntu for the development. One can issue the following commands to install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, although I've been using Ubuntu during the development. One can issue the following commands to install all the required dependencies:
 
 ```bash
 sudo apt install build-essential
 sudo apt install mingw-w64
 
-sudo apt install libx11-dev mesa-common-dev libgles2-mesa-dev
+sudo apt install xorg-dev libx11-dev mesa-common-dev libgles2-mesa-dev
 
 sudo apt install lua5.4 liblua5.4-dev luarocks
 
@@ -128,6 +128,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ## Desiderata
 
+* [ ] Audio channels, to associate them to a source.
 * [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
@@ -140,6 +141,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Use a custom memory-management allocator.
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
+* [ ] input handling in event-driver fashion (now is polled).
 * [ ] game time management, in system class (speed, up down pause)
 * [ ] both shoulder and trigger axes are analogue?
 * [ ] rumble?
