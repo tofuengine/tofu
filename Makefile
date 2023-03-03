@@ -55,6 +55,9 @@ else
 $(error PLATFORM value '$(PLATFORM)' is not recognized)
 endif
 
+DOCKER=docker
+DOCKER_IMAGE=tofu-build-env
+
 KERNAL=kernal.pak
 
 PACKER=$(toolsdir)/pakgen.lua
@@ -224,6 +227,9 @@ OBJECTS:=$(SOURCES:%.c=%.o)
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
 RESOURCES:=$(shell find $(srcdir)/kernal -type f -name '*.*')
 
+# Setting the docker-image dependencies.
+DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
+
 # ------------------------------------------------------------------------------
 # --- Build Rules --------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -264,7 +270,16 @@ $(OBJECTS): %.o : %.c $(DUMPS) $(INCLUDES) Makefile
 	@echo "Compiled '"$<"' successfully!"
 
 stats:
-	@cloc $(srcdir) > stats.txt
+	@cloc $(srcdir) > $(builddir)/stats.txt
+
+docker-create: $(DOCKER_FILES)
+	@$(DOCKER) build --force-rm -t $(DOCKER_IMAGE) -f $(DOCKER_FILES)
+
+docker-launch: $(DOCKER_FILES)
+	@$(DOCKER) run --rm -t -i -e USER_ID=$(id -u) -e GROUP_ID=$(id -u) -v $(pwd):/tofu tofu-build-env
+
+docker-clean: $(DOCKER_FILES)
+	@$(DOCKER) image rm -f `$(DOCKER) image ls | grep $(DOCKER_IMAGE) | awk '{print $$3}'`
 
 primitives: engine
 	@echo "Launching *primitives* application!"
@@ -457,3 +472,9 @@ clean:
 	@rm -f $(builddir)/$(KERNAL)
 	@rm -f $(builddir)/$(TARGET)
 	@echo "Cleanup complete!"
+
+.PHONY: clean-all
+clean-all:
+	@make docker-clean
+	@make clean
+	@echo "Deep cleanup complete!"
