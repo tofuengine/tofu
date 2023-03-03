@@ -27,15 +27,17 @@
 #
 #   https://www.gnu.org/prep/standards/html_node/Makefile-Basics.html
 
-#
+# Directories are declared as lowercase.
 builddir=./build
 srcdir=./src
 externaldir=./external
 extrasdir=./extras
+toolsdir=$(extrasdir)/tools
+dockerdir=$(extrasdir)/docker
 
 # The default target platform is Linux.
 ifeq ($(PLATFORM),)
-	PLATFORM:=linux
+	PLATFORM=linux
 endif
 
 # Define the target executable name, according to the current platform.
@@ -55,7 +57,7 @@ endif
 
 KERNAL=kernal.pak
 
-PACKER=$(extrasdir)/pakgen.lua
+PACKER=$(toolsdir)/pakgen.lua
 PACKERFLAGS=--encrypted --sorted --quiet
 
 LUACHECK=luacheck

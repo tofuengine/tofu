@@ -1,4 +1,4 @@
-#!/usr/bin/lua5.4
+#!/usr/bin/env lua5.4
 
 --[[
 MIT License
