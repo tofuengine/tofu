@@ -55,6 +55,9 @@ else
 $(error PLATFORM value '$(PLATFORM)' is not recognized)
 endif
 
+DOCKER=docker
+DOCKER_IMAGE=tofu-build-env
+
 KERNAL=kernal.pak
 
 PACKER=$(toolsdir)/pakgen.lua
@@ -224,17 +227,42 @@ OBJECTS:=$(SOURCES:%.c=%.o)
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
 RESOURCES:=$(shell find $(srcdir)/kernal -type f -name '*.*')
 
+# Setting the docker-image dependencies.
+DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
+
 # ------------------------------------------------------------------------------
 # --- Build Rules --------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
 all: engine
 
+# Docker develoment container. This enables to build the engine w/o tampering
+# with the host (only docker is required). This could also be used to perform
+# a CI build.
+.PHONY: docker-create
+docker-create: $(DOCKER_FILES)
+	@$(DOCKER) build --force-rm -t $(DOCKER_IMAGE) -f $(DOCKER_FILES)
+
+.PHONY: docker-launch
+docker-launch: $(DOCKER_FILES)
+	@$(DOCKER) run --rm -t -i -e USER_ID=$(shell id -u) -e GROUP_ID=$(shell id -g) -v $(shell pwd):/tofu tofu-build-env
+
+.PHONY: docker-clean
+docker-clean: $(DOCKER_FILES)
+	@$(DOCKER) image rm -f `$(DOCKER) image ls | grep $(DOCKER_IMAGE) | awk '{print $$3}'`
+
 .PHONY: check
 check:
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
 	@cppcheck --force --enable=all $(srcdir) > /dev/null
 	@echo "Checking complete!"
+
+# Geneartes the code statistics for the project. Ideally this should be
+# performed right before a new release, and the output included in the release
+# data.
+.PHONY: stats
+stats:
+	@cloc $(srcdir) > $(builddir)/stats.txt
 
 engine: $(builddir) $(builddir)/$(TARGET) $(builddir)/$(KERNAL)
 
@@ -263,9 +291,21 @@ $(OBJECTS): %.o : %.c $(DUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(COPTS) $(CWARNINGS) $(CFLAGS) -c $< -o $@
 	@echo "Compiled '"$<"' successfully!"
 
-stats:
-	@cloc $(srcdir) > stats.txt
+.PHONY: clean
+clean:
+	@rm -f $(OBJECTS)
+	@rm -f $(DUMPS)
+	@rm -f $(builddir)/$(KERNAL)
+	@rm -f $(builddir)/$(TARGET)
+	@echo "Cleanup complete!"
 
+.PHONY: clean-all
+clean-all:
+	@make docker-clean
+	@make clean
+	@echo "Deep cleanup complete!"
+
+# Demos
 primitives: engine
 	@echo "Launching *primitives* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/primitives
@@ -449,11 +489,3 @@ valgrind: engine
 	@export LIBGL_ALWAYS_SOFTWARE=1
 	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --data=./demos/$(DEMO)
 	@export LIBGL_ALWAYS_SOFTWARE=0
-
-.PHONY: clean
-clean:
-	@rm -f $(OBJECTS)
-	@rm -f $(DUMPS)
-	@rm -f $(builddir)/$(KERNAL)
-	@rm -f $(builddir)/$(TARGET)
-	@echo "Cleanup complete!"
