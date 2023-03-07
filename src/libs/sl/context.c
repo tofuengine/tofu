@@ -141,7 +141,7 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
     }
 }
 
-bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source)
+bool SL_context_is_tracked(const SL_Context_t *context, const SL_Source_t *source)
 {
     size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {

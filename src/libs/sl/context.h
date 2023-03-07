@@ -48,7 +48,7 @@ extern const SL_Group_t *SL_context_get_group(const SL_Context_t *context, size_
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
-extern bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source);
+extern bool SL_context_is_tracked(const SL_Context_t *context, const SL_Source_t *source);
 extern size_t SL_context_count_tracked(const SL_Context_t *context);
 extern void SL_context_halt(SL_Context_t *context);
 

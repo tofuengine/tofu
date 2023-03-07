@@ -77,7 +77,6 @@ static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *
             case 'h': {
                 _print_usage(argc, argv);
                 return false;
-                break;
             }
             case 'k': {
                 strncpy(options->kernal_path, optarg, PLATFORM_PATH_MAX);
