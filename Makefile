@@ -276,7 +276,7 @@ docker-create: $(DOCKER_FILES)
 	@$(DOCKER) build --force-rm -t $(DOCKER_IMAGE) -f $(DOCKER_FILES)
 
 docker-launch: $(DOCKER_FILES)
-	@$(DOCKER) run --rm -t -i -e USER_ID=$(id -u) -e GROUP_ID=$(id -u) -v $(pwd):/tofu tofu-build-env
+	@$(DOCKER) run --rm -t -i -e USER_ID=$(shell id -u) -e GROUP_ID=$(shell id -g) -v $(shell pwd):/tofu tofu-build-env
 
 docker-clean: $(DOCKER_FILES)
 	@$(DOCKER) image rm -f `$(DOCKER) image ls | grep $(DOCKER_IMAGE) | awk '{print $$3}'`
