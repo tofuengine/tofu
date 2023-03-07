@@ -31,7 +31,9 @@ RUN apt-get update && \
         xorg-dev \
         libx11-dev \
         mesa-common-dev \
-        libgles2-mesa-dev
+        libgles2-mesa-dev \
+        cppcheck \
+        valgrind
 
 RUN apt-get install -y \
         ccache \
