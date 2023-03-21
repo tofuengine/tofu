@@ -120,6 +120,8 @@ into a suitable work directory. Move into the `tofu` directory you've just creat
 
 The build artifacts will be placed in the `build` directory.
 
+> Alternatively, if you prefer not to tamper with you system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder.
+
 ## Sample projects
 
 Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-directory and can be launched using `make`, passing the name of the project as a target (e.g. `make splash`).
