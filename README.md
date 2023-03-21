@@ -66,7 +66,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.4
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.9
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.12
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
