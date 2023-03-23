@@ -47,6 +47,22 @@ luaX_String luaX_tolstring(lua_State *L, int idx)
     return s;
 }
 
+int luaX_isenum(lua_State *L, int idx)
+{
+    return lua_isstring(L, idx);
+}
+
+int luaX_toenum(lua_State *L, int idx, const char **ids)
+{
+    const char *value = lua_tostring(L, idx);
+    for (int i = 0; ids[i]; ++i) {
+        if (strcasecmp(value, ids[i]) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 #ifdef __LUAX_RTTI__
 typedef struct luaX_Object_s {
     int type;

@@ -65,6 +65,7 @@ typedef struct luaX_String_s {
 //#define LUA_TNONE     (-1)
 #define LUA_TANY        (-2)
 #define LUA_TEOD        (-3)
+#define LUA_TENUM       LUA_TSTRING
 #define LUA_TOBJECT     LUA_TUSERDATA
 
 #ifdef DEBUG
@@ -133,6 +134,8 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_LSTRING(L, idx)                 (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), (luaX_String){ 0 } : luaX_tolstring((L), (idx)))
     #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : lua_tolstring((L), (idx)))
+    #define LUAX_ENUM(L, idx, ids)               (!luaX_isenum((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : luaX_toenum((L), (idx), (ids)))
+    #define LUAX_OPTIONAL_ENUM(L, idx, ids, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toenum((L), (idx), (ids)))
     #define LUAX_TABLE(L, idx)                   (!lua_istable((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_rawlen((L), (idx)))
     #define LUAX_OPTIONAL_TABLE(L, idx, def)     (lua_isnoneornil((L), (idx)) ? (def) : lua_rawlen((L), (idx)))
     #define LUAX_USERDATA(L, idx)                (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
@@ -152,6 +155,8 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_LSTRING(L, idx)                 (luaX_tolstring((L), (idx)))
     #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : luaX_tolstring((L), (idx)))
+    #define LUAX_ENUM(L, idx, ids)               (luaX_toenum((L), (idx), (options)))
+    #define LUAX_OPTIONAL_ENUM(L, idx, ids, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toenum((L), (idx), (ids)))
     #define LUAX_TABLE(L, idx)                   (lua_rawlen((L), (idx)))
     #define LUAX_OPTIONAL_TABLE(L, idx, def)     (lua_isnoneornil((L), (idx)) ? (def) : lua_rawlen((L), (idx)))
     #define LUAX_USERDATA(L, idx)                (lua_touserdata((L), (idx)))
@@ -165,6 +170,9 @@ typedef struct luaX_String_s {
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
 
 extern luaX_String luaX_tolstring(lua_State *L, int idx);
+
+extern int luaX_isenum(lua_State *L, int idx);
+extern int luaX_toenum(lua_State *L, int idx, const char **ids);
 
 extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);
