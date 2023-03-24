@@ -28,12 +28,11 @@
 
 #include <core/config.h>
 #include <libs/log.h>
-#include <libs/map.h>
 
 #define LOG_CONTEXT "noise"
 #define META_TABLE  "Tofu_Generators_Noise_mt"
 
-static int noise_new_1sNN_1o(lua_State *L);
+static int noise_new_1eNN_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
 static int noise_type_v_v(lua_State *L);
 static int noise_seed_v_v(lua_State *L);
@@ -46,7 +45,7 @@ int noise_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", noise_new_1sNN_1o },
+            { "new", noise_new_1eNN_1o },
             { "__gc", noise_gc_1o_0 },
             { "__call", noise_generate_3onNN_1n }, // Call meta-method, mapped to `generate(...)`.
             { "type", noise_type_v_v },
@@ -60,11 +59,17 @@ int noise_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _types[Noise_Types_t_CountOf + 1] = {
-    { "perlin", NOISE_TYPE_PERLIN },
-    { "simplex", NOISE_TYPE_SIMPLEX },
-    { "cellular", NOISE_TYPE_CELLULAR },
-    { NULL, 0 }
+static const char *_type_ids[Noise_Types_t_CountOf + 1] = {
+    "perlin",
+     "simplex",
+    "cellular",
+    NULL
+};
+
+static const Noise_Types_t _type_values[Noise_Types_t_CountOf] = {
+    NOISE_TYPE_PERLIN,
+    NOISE_TYPE_SIMPLEX,
+    NOISE_TYPE_CELLULAR
 };
 
 static const Noise_Function_t _functions[Noise_Types_t_CountOf] = {
@@ -73,25 +78,20 @@ static const Noise_Function_t _functions[Noise_Types_t_CountOf] = {
     noise_cellular
 };
 
-static int noise_new_1sNN_1o(lua_State *L)
+static int noise_new_1eNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *type = LUAX_STRING(L, 1);
+    int type = LUAX_ENUM(L, 1, _type_ids);
     float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
     float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    const Map_Entry_t *entry = map_find_key(type, _types);
-    if (!entry) {
-        return luaL_error(L, "unknown noise type `%s`", type);
-    }
-
     Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
-            .type = (Noise_Types_t)entry->value,
-            .function = _functions[entry->value],
+            .type = _type_values[type],
+            .function = _functions[type],
             .seed = seed,
             .frequency = frequency
         }, OBJECT_TYPE_NOISE, META_TABLE);
@@ -122,32 +122,22 @@ static int noise_type_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
-    const Map_Entry_t *entry = map_find_value(self->type, _types);
-    if (!entry) {
-        return luaL_error(L, "noise uses unknown type %d", self->type);
-    }
-
-    lua_pushstring(L, entry->key);
+    lua_pushstring(L, _type_ids[self->type]);
 
     return 1;
 }
 
-static int noise_type_2os_0(lua_State *L)
+static int noise_type_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
-    const char *type = LUAX_STRING(L, 2);
+    int type = LUAX_ENUM(L, 2, _type_ids);
 
-    const Map_Entry_t *entry = map_find_key(type, _types);
-    if (!entry) {
-        return luaL_error(L, "unknown noise type `%s`", type);
-    }
-
-    self->type = (Noise_Types_t)entry->value;
-    self->function = _functions[entry->value];
+    self->type = _type_values[type];
+    self->function = _functions[type];
 
     return 0;
 }
@@ -156,7 +146,7 @@ static int noise_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, noise_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, noise_type_2os_0)
+        LUAX_OVERLOAD_ARITY(2, noise_type_2oe_0)
     LUAX_OVERLOAD_END
 }
 

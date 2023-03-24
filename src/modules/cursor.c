@@ -28,7 +28,6 @@
 
 #include <core/config.h>
 #include <libs/log.h>
-#include <libs/map.h>
 #include <libs/path.h>
 #include <systems/input.h>
 #include <systems/storage.h>
@@ -40,10 +39,10 @@
 static int cursor_new_0_1o(lua_State *L);
 static int cursor_gc_1o_0(lua_State *L);
 static int cursor_is_available_1o_1b(lua_State *L);
-static int cursor_is_down_2os_1b(lua_State *L);
-static int cursor_is_up_2os_1b(lua_State *L);
-static int cursor_is_pressed_2os_1b(lua_State *L);
-static int cursor_is_released_2os_1b(lua_State *L);
+static int cursor_is_down_2oe_1b(lua_State *L);
+static int cursor_is_up_2oe_1b(lua_State *L);
+static int cursor_is_pressed_2oe_1b(lua_State *L);
+static int cursor_is_released_2oe_1b(lua_State *L);
 static int cursor_position_v_v(lua_State *L);
 
 int cursor_loader(lua_State *L)
@@ -65,10 +64,10 @@ int cursor_loader(lua_State *L)
             { "new", cursor_new_0_1o },
             { "__gc", cursor_gc_1o_0 },
             { "is_available", cursor_is_available_1o_1b },
-            { "is_down", cursor_is_down_2os_1b },
-            { "is_up", cursor_is_up_2os_1b },
-            { "is_pressed", cursor_is_pressed_2os_1b },
-            { "is_released", cursor_is_released_2os_1b },
+            { "is_down", cursor_is_down_2oe_1b },
+            { "is_up", cursor_is_up_2oe_1b },
+            { "is_pressed", cursor_is_pressed_2oe_1b },
+            { "is_released", cursor_is_released_2oe_1b },
             { "position", cursor_position_v_v },
             { NULL, NULL }
         },
@@ -122,85 +121,71 @@ static int cursor_is_available_1o_1b(lua_State *L)
     return 1;
 }
 
-static const Map_Entry_t _buttons[Input_Cursor_Buttons_t_CountOf + 1] = {
-    { "left", INPUT_CURSOR_BUTTON_LEFT },
-    { "right", INPUT_CURSOR_BUTTON_RIGHT },
-    { "middle", INPUT_CURSOR_BUTTON_MIDDLE },
-    { NULL, 0 }
+static const char *_button_ids[Input_Cursor_Buttons_t_CountOf + 1] = {
+    "left",
+    "right",
+    "middle",
+    NULL
 };
 
-static int cursor_is_down_2os_1b(lua_State *L)
+static const Input_Cursor_Buttons_t _button_values[Input_Cursor_Buttons_t_CountOf] = {
+    INPUT_CURSOR_BUTTON_LEFT,
+    INPUT_CURSOR_BUTTON_RIGHT,
+    INPUT_CURSOR_BUTTON_MIDDLE,
+};
+
+static int cursor_is_down_2oe_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    const char *id = LUAX_STRING(L, 2);
+    int id = LUAX_ENUM(L, 2, _button_ids);
 
-    const Map_Entry_t *entry = map_find_key(id, _buttons);
-    if (!entry) {
-        return luaL_error(L, "unknown cursor button `%s`", id);
-    }
-
-    lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).down);
+    lua_pushboolean(L, Input_cursor_get_button(self->cursor, _button_values[id]).down);
 
     return 1;
 }
 
-static int cursor_is_up_2os_1b(lua_State *L)
+static int cursor_is_up_2oe_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    const char *id = LUAX_STRING(L, 2);
+    int id = LUAX_ENUM(L, 2, _button_ids);
 
-    const Map_Entry_t *entry = map_find_key(id, _buttons);
-    if (!entry) {
-        return luaL_error(L, "unknown cursor button `%s`", id);
-    }
-
-    lua_pushboolean(L, !Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).down);
+    lua_pushboolean(L, !Input_cursor_get_button(self->cursor, _button_values[id]).down);
 
     return 1;
 }
 
-static int cursor_is_pressed_2os_1b(lua_State *L)
+static int cursor_is_pressed_2oe_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    const char *id = LUAX_STRING(L, 2);
+    int id = LUAX_ENUM(L, 2, _button_ids);
 
-    const Map_Entry_t *entry = map_find_key(id, _buttons);
-    if (!entry) {
-        return luaL_error(L, "unknown cursor button `%s`", id);
-    }
-
-    lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).pressed);
+    lua_pushboolean(L, Input_cursor_get_button(self->cursor, _button_values[id]).pressed);
 
     return 1;
 }
 
-static int cursor_is_released_2os_1b(lua_State *L)
+static int cursor_is_released_2oe_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    const char *id = LUAX_STRING(L, 2);
+    int id = LUAX_ENUM(L, 2, _button_ids);
 
-    const Map_Entry_t *entry = map_find_key(id, _buttons);
-    if (!entry) {
-        return luaL_error(L, "unknown cursor button `%s`", id);
-    }
-
-    lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)entry->value).released);
+    lua_pushboolean(L, Input_cursor_get_button(self->cursor, _button_values[id]).released);
 
     return 1;
 }

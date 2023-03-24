@@ -28,14 +28,13 @@
 
 #include <core/config.h>
 #include <libs/log.h>
-#include <libs/map.h>
 
 #include <chipmunk/chipmunk.h>
 
 #define LOG_CONTEXT "body"
 #define META_TABLE  "Tofu_Physics_Body_mt"
 
-static int body_new_4snnn_1o(lua_State *L);
+static int body_new_4ennn_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
 static int body_shape_1o_4snnn(lua_State *L);
 static int body_center_of_gravity_v_v(lua_State *L);
@@ -55,7 +54,7 @@ int body_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", body_new_4snnn_1o },
+            { "new", body_new_4ennn_1o },
             { "__gc", body_gc_1o_0 },
             { "shape", body_shape_1o_4snnn },
             { "center_of_gravity", body_center_of_gravity_v_v },
@@ -75,33 +74,39 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _kinds[Body_Kinds_t_CountOf + 1] = {
-    { "box", BODY_KIND_BOX },
-    { "circle", BODY_KIND_CIRCLE },
-    { NULL, 0 }
+static const char *_kind_ids[Body_Kinds_t_CountOf + 1] = {
+    "box",
+    "circle",
+    NULL
 };
 
-static const Map_Entry_t _types[] = {
-    { "dynamic", CP_BODY_TYPE_DYNAMIC },
-    { "kinematic", CP_BODY_TYPE_KINEMATIC },
-    { "static", CP_BODY_TYPE_STATIC },
-    { NULL, 0 }
+// static const Body_Kinds_t _kind_values[Body_Kinds_t_CountOf] = {
+//     BODY_KIND_BOX,
+//     BODY_KIND_CIRCLE
+// };
+
+static const char *_type_ids[] = {
+    "dynamic",
+    "kinematic",
+    "static",
+    NULL
 };
 
-static int body_new_4snnn_1o(lua_State *L)
+static const cpBodyType _type_values[] = {
+    CP_BODY_TYPE_DYNAMIC,
+    CP_BODY_TYPE_KINEMATIC,
+    CP_BODY_TYPE_STATIC
+};
+
+static int body_new_4ennn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *kind = LUAX_STRING(L, 1);
-
-    const Map_Entry_t *entry = map_find_key(kind, _kinds);
-    if (!entry) {
-        return luaL_error(L, "unknown body kind `%s`", kind);
-    }
+    int kind = LUAX_ENUM(L, 1, _kind_ids);
 
     cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
@@ -112,7 +117,7 @@ static int body_new_4snnn_1o(lua_State *L)
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
             .shape = NULL,
-            .kind = (Body_Kinds_t)entry->value,
+            .kind = kind,
             .size = { { 0 } }
         }, OBJECT_TYPE_BODY, META_TABLE);
 
@@ -225,32 +230,23 @@ static int body_type_1o_1s(lua_State *L)
 
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
-    const Map_Entry_t *entry = map_find_value((Map_Entry_Value_t)type, _types);
-    if (!entry) {
-        return luaL_error(L, "body uses unknown type %d", type);
-    }
 
-    lua_pushstring(L, entry->key);
+    lua_pushstring(L, _type_ids[type]); // FIXME: this is an abuse!
 
     return 1;
 }
 
-static int body_type_2os_0(lua_State *L)
+static int body_type_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    const char *type = LUAX_STRING(L, 2);
+    int type = LUAX_ENUM(L, 2, _type_ids);
 
     cpBody *body = self->body;
-    const Map_Entry_t *entry = map_find_key(type, _types);
-    if (!entry) {
-        return luaL_error(L, "unknown body type `%s`", type);
-    }
-
-    cpBodySetType(body, (cpBodyType)entry->value);
+    cpBodySetType(body, _type_values[type]);
 
     return 0;
 }
@@ -259,7 +255,7 @@ static int body_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, body_type_2os_0)
+        LUAX_OVERLOAD_ARITY(2, body_type_2oe_0)
     LUAX_OVERLOAD_END
 }
 

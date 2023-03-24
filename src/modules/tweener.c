@@ -29,12 +29,11 @@
 #include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/map.h>
 
 #define LOG_CONTEXT "tweener"
 #define META_TABLE  "Tofu_Generators_Tweener_mt"
 
-static int tweener_new_4sNNN_1o(lua_State *L);
+static int tweener_new_4eNNN_1o(lua_State *L);
 static int tweener_gc_1o_0(lua_State *L);
 static int tweener_easing_v_v(lua_State *L);
 static int tweener_duration_v_v(lua_State *L);
@@ -47,7 +46,7 @@ int tweener_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", tweener_new_4sNNN_1o },
+            { "new", tweener_new_4eNNN_1o },
             { "__gc", tweener_gc_1o_0 },
             { "__call", tweener_evaluate_2on_1n }, // Call meta-method, mapped to `at(...)`.
             { "easing", tweener_easing_v_v },
@@ -61,42 +60,76 @@ int tweener_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _easings[Easing_Types_t_CountOf + 1] = {
-    { "linear", EASING_TYPE_LINEAR },
-    { "quadratic-in", EASING_TYPE_QUADRATIC_IN },
-    { "quadratic-out", EASING_TYPE_QUADRATIC_OUT },
-    { "quadratic-in-out", EASING_TYPE_QUADRATIC_IN_OUT },
-    { "cubic-in", EASING_TYPE_CUBIC_IN },
-    { "cubic-out", EASING_TYPE_CUBIC_OUT },
-    { "cubic-in-out", EASING_TYPE_CUBIC_IN_OUT },
-    { "quartic-in", EASING_TYPE_QUARTIC_IN },
-    { "quartic-out", EASING_TYPE_QUARTIC_OUT },
-    { "quartic-in-out", EASING_TYPE_QUARTIC_IN_OUT },
-    { "quintic-in", EASING_TYPE_QUINTIC_IN },
-    { "quintic-out", EASING_TYPE_QUINTIC_OUT },
-    { "quintic-in-out", EASING_TYPE_QUINTIC_IN_OUT },
-    { "sine-in", EASING_TYPE_SINE_IN },
-    { "sine-out", EASING_TYPE_SINE_OUT },
-    { "sine-in-out", EASING_TYPE_SINE_IN_OUT },
-    { "circular-in", EASING_TYPE_CIRCULAR_IN },
-    { "circular-out", EASING_TYPE_CIRCULAR_OUT },
-    { "circular-in-out", EASING_TYPE_CIRCULAR_IN_OUT },
-    { "exponential-in", EASING_TYPE_EXPONENTIAL_IN },
-    { "exponential-out", EASING_TYPE_EXPONENTIAL_OUT },
-    { "exponential-in-out", EASING_TYPE_EXPONENTIAL_IN_OUT },
-    { "elastic-in", EASING_TYPE_ELASTIC_IN },
-    { "elastic-out", EASING_TYPE_ELASTIC_OUT },
-    { "elastic-in-out", EASING_TYPE_ELASTIC_IN_OUT },
-    { "back-in", EASING_TYPE_BACK_IN },
-    { "back-out", EASING_TYPE_BACK_OUT },
-    { "back-in-out", EASING_TYPE_BACK_IN_OUT },
-    { "bounce-in", EASING_TYPE_BOUNCE_IN },
-    { "bounce-out", EASING_TYPE_BOUNCE_OUT },
-    { "bounce-in-out", EASING_TYPE_BOUNCE_IN_OUT },
-    { NULL, 0 }
+static const char *_easing_ids[Easing_Types_t_CountOf + 1] = {
+    "linear",
+    "quadratic-in",
+    "quadratic-out",
+    "quadratic-in-out",
+    "cubic-in",
+    "cubic-out",
+    "cubic-in-out",
+    "quartic-in",
+    "quartic-out",
+    "quartic-in-out",
+    "quintic-in",
+    "quintic-out",
+    "quintic-in-out",
+    "sine-in",
+    "sine-out",
+    "sine-in-out",
+    "circular-in",
+    "circular-out",
+    "circular-in-out",
+    "exponential-in",
+    "exponential-out",
+    "exponential-in-out",
+    "elastic-in",
+    "elastic-out",
+    "elastic-in-out",
+    "back-in",
+    "back-out",
+    "back-in-out",
+    "bounce-in",
+    "bounce-out",
+    "bounce-in-out",
+    NULL
 };
 
-static Easing_Function_t _functions[Easing_Types_t_CountOf] = {
+static const Easing_Types_t _easing_types[Easing_Types_t_CountOf] = {
+    EASING_TYPE_LINEAR,
+    EASING_TYPE_QUADRATIC_IN,
+    EASING_TYPE_QUADRATIC_OUT,
+    EASING_TYPE_QUADRATIC_IN_OUT,
+    EASING_TYPE_CUBIC_IN,
+    EASING_TYPE_CUBIC_OUT,
+    EASING_TYPE_CUBIC_IN_OUT,
+    EASING_TYPE_QUARTIC_IN,
+    EASING_TYPE_QUARTIC_OUT,
+    EASING_TYPE_QUARTIC_IN_OUT,
+    EASING_TYPE_QUINTIC_IN,
+    EASING_TYPE_QUINTIC_OUT,
+    EASING_TYPE_QUINTIC_IN_OUT,
+    EASING_TYPE_SINE_IN,
+    EASING_TYPE_SINE_OUT,
+    EASING_TYPE_SINE_IN_OUT,
+    EASING_TYPE_CIRCULAR_IN,
+    EASING_TYPE_CIRCULAR_OUT,
+    EASING_TYPE_CIRCULAR_IN_OUT,
+    EASING_TYPE_EXPONENTIAL_IN,
+    EASING_TYPE_EXPONENTIAL_OUT,
+    EASING_TYPE_EXPONENTIAL_IN_OUT,
+    EASING_TYPE_ELASTIC_IN,
+    EASING_TYPE_ELASTIC_OUT,
+    EASING_TYPE_ELASTIC_IN_OUT,
+    EASING_TYPE_BACK_IN,
+    EASING_TYPE_BACK_OUT,
+    EASING_TYPE_BACK_IN_OUT,
+    EASING_TYPE_BOUNCE_IN,
+    EASING_TYPE_BOUNCE_OUT,
+    EASING_TYPE_BOUNCE_IN_OUT,
+};
+
+static Easing_Function_t _easing_functions[Easing_Types_t_CountOf] = {
     easing_linear,
     easing_quadratic_in,
     easing_quadratic_out,
@@ -130,27 +163,22 @@ static Easing_Function_t _functions[Easing_Types_t_CountOf] = {
     easing_bounce_in_out
 };
 
-static int tweener_new_4sNNN_1o(lua_State *L)
+static int tweener_new_4eNNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *easing = LUAX_STRING(L, 1);
+    int easing = LUAX_ENUM(L, 1, _easing_ids);
     float duration = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
 
-    const Map_Entry_t *entry = map_find_key(easing, _easings);
-    if (!entry) {
-        return luaL_error(L, "unknown tweener easing type `%s`", easing);
-    }
-
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
-            .easing = (Easing_Types_t)entry->value,
-            .function = _functions[entry->value],
+            .easing = _easing_types[easing],
+            .function = _easing_functions[easing],
             .duration = duration,
             .from = from,
             .to = to
@@ -183,12 +211,7 @@ static int tweener_easing_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
-    const Map_Entry_t *entry = map_find_value(self->easing, _easings);
-    if (!entry) {
-        return luaL_error(L, "tweener uses unknown easing %d", self->easing);
-    }
-
-    lua_pushstring(L, entry->key);
+    lua_pushstring(L, _easing_ids[self->easing]);
 
     return 1;
 }
@@ -200,15 +223,10 @@ static int tweener_easing_2os_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    const char *easing = LUAX_STRING(L, 2);
+    int easing = LUAX_ENUM(L, 2, _easing_ids);
 
-    const Map_Entry_t *entry = map_find_key(easing, _easings);
-    if (!entry) {
-        return luaL_error(L, "unknown tweener easing type `%s`", easing);
-    }
-
-    self->easing = (Easing_Types_t)entry->value;
-    self->function = _functions[entry->value];
+    self->easing = _easing_types[easing];
+    self->function = _easing_functions[easing];
 
     return 0;
 }

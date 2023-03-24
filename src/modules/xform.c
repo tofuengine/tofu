@@ -28,7 +28,6 @@
 
 #include <core/config.h>
 #include <libs/log.h>
-#include <libs/map.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 
@@ -269,16 +268,27 @@ static int xform_table_1o_0(lua_State *L)
     return 0;
 }
 
-static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf + 1] = {
-    { "h", GL_XFORM_REGISTER_H },
-    { "v", GL_XFORM_REGISTER_V },
-    { "a", GL_XFORM_REGISTER_A },
-    { "b", GL_XFORM_REGISTER_B },
-    { "c", GL_XFORM_REGISTER_C },
-    { "d", GL_XFORM_REGISTER_D },
-    { "x", GL_XFORM_REGISTER_X },
-    { "y", GL_XFORM_REGISTER_Y },
-    { NULL, 0 }
+static const char *_register_ids[GL_XForm_Registers_t_CountOf + 1] = {
+    "h",
+    "v",
+    "a",
+    "b",
+    "c",
+    "d",
+    "x",
+    "y",
+    NULL
+};
+
+static const GL_XForm_Registers_t _register_values[GL_XForm_Registers_t_CountOf] = {
+    GL_XFORM_REGISTER_H,
+    GL_XFORM_REGISTER_V,
+    GL_XFORM_REGISTER_A,
+    GL_XFORM_REGISTER_B,
+    GL_XFORM_REGISTER_C,
+    GL_XFORM_REGISTER_D,
+    GL_XFORM_REGISTER_X,
+    GL_XFORM_REGISTER_Y
 };
 
 static int xform_table_2ot_0(lua_State *L)
@@ -305,16 +315,11 @@ static int xform_table_2ot_0(lua_State *L)
                 break;
             }
 
-            const char *id = LUAX_STRING(L, -2);
+            int id = LUAX_ENUM(L, -2, _register_ids);
             float value = LUAX_NUMBER(L, -1);
 
-            const Map_Entry_t *entry = map_find_key(id, _registers);
-            if (!entry) {
-                return luaL_error(L, "unknown register `%s`", id);
-            }
-
             table_entry.count = i + 1;
-            table_entry.operations[i].id = (GL_XForm_Registers_t)entry->value;
+            table_entry.operations[i].id = _register_values[id];
             table_entry.operations[i].value = value;
 
             lua_pop(L, 1);

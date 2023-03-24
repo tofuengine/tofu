@@ -28,7 +28,6 @@
 
 #include <core/config.h>
 #include <libs/log.h>
-#include <libs/map.h>
 #include <systems/audio.h>
 #include <systems/storage.h>
 
@@ -44,7 +43,7 @@ typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
 
-static int source_new_2sn_1o(lua_State *L);
+static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
 static int source_looped_v_v(lua_State *L);
 static int source_group_v_v(lua_State *L);
@@ -64,7 +63,7 @@ int source_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", source_new_2sn_1o },
+            { "new", source_new_2sE_1o },
             { "__gc", source_gc_1o_0 },
             { "looped", source_looped_v_v },
             { "group", source_group_v_v },
@@ -108,12 +107,18 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const Map_Entry_t _types[Source_Type_t_CountOf + 1] = {
-    { "music", SOURCE_TYPE_MUSIC },
-    { "sample", SOURCE_TYPE_SAMPLE },
-    { "module", SOURCE_TYPE_MODULE },
-    { NULL, 0 }
+static const char *_type_ids[Source_Type_t_CountOf + 1] = {
+    "music",
+    "sample",
+    "module",
+    NULL
 };
+
+// static const Source_Type_t _type_values[Source_Type_t_CountOf] = {
+//     SOURCE_TYPE_MUSIC,
+//     SOURCE_TYPE_SAMPLE,
+//     SOURCE_TYPE_MODULE
+// };
 
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
     SL_music_create,
@@ -121,14 +126,14 @@ static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] =
     SL_module_create
 };
 
-static int source_new_2sn_1o(lua_State *L)
+static int source_new_2sE_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    const char *type = LUAX_OPTIONAL_STRING(L, 2, "music");
+    int type = LUAX_OPTIONAL_ENUM(L, 2, _type_ids, SOURCE_TYPE_MUSIC);
 
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -139,12 +144,7 @@ static int source_new_2sn_1o(lua_State *L)
     }
     LOG_D(LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
-    const Map_Entry_t *entry = map_find_key(type, _types);
-    if (!entry) {
-        return luaL_error(L, "unknown source type `%s`", type);
-    }
-
-    SL_Source_t *source = _create_functions[entry->value](audio->context, (SL_Callbacks_t){
+    SL_Source_t *source = _create_functions[type](audio->context, (SL_Callbacks_t){
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,

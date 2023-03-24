@@ -30,7 +30,7 @@
 //
 // where `function name` is a generic identifier, `input arguments` and `return values` have this format
 //
-//   \d+[bBnNsStTuUfFoO]*
+//   \d+[bBnNsStTuUfFeEoO]*
 //
 // The integer number indicates the amount of arguments/return-values and the sequence of characters encodes the
 // types. Uppercase characters are used for *optional* when optional. The encoded types are the following:
@@ -41,6 +41,7 @@
 //   t -> table
 //   u -> userdata
 //   f -> function
+//   e -> enum (i.e. a string from a list of possibile ones)
 //   o -> object (i.e. userdata with optionally encoded type)
 //
 // Example:
