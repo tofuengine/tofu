@@ -155,7 +155,7 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_LSTRING(L, idx)                 (luaX_tolstring((L), (idx)))
     #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : luaX_tolstring((L), (idx)))
-    #define LUAX_ENUM(L, idx, ids)               (luaX_toenum((L), (idx), (options)))
+    #define LUAX_ENUM(L, idx, ids)               (luaX_toenum((L), (idx), (ids)))
     #define LUAX_OPTIONAL_ENUM(L, idx, ids, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toenum((L), (idx), (ids)))
     #define LUAX_TABLE(L, idx)                   (lua_rawlen((L), (idx)))
     #define LUAX_OPTIONAL_TABLE(L, idx, def)     (lua_isnoneornil((L), (idx)) ? (def) : lua_rawlen((L), (idx)))
