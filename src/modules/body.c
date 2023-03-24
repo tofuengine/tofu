@@ -74,28 +74,10 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const char *_kind_ids[Body_Kinds_t_CountOf + 1] = {
+static const char *_kinds[Body_Kinds_t_CountOf + 1] = {
     "box",
     "circle",
     NULL
-};
-
-// static const Body_Kinds_t _kind_values[Body_Kinds_t_CountOf] = {
-//     BODY_KIND_BOX,
-//     BODY_KIND_CIRCLE
-// };
-
-static const char *_type_ids[] = {
-    "dynamic",
-    "kinematic",
-    "static",
-    NULL
-};
-
-static const cpBodyType _type_values[] = {
-    CP_BODY_TYPE_DYNAMIC,
-    CP_BODY_TYPE_KINEMATIC,
-    CP_BODY_TYPE_STATIC
 };
 
 static int body_new_4ennn_1o(lua_State *L)
@@ -106,7 +88,7 @@ static int body_new_4ennn_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int kind = LUAX_ENUM(L, 1, _kind_ids);
+    int kind = LUAX_ENUM(L, 1, _kinds);
 
     cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
@@ -221,6 +203,13 @@ static int body_center_of_gravity_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static const char *_types[] = {
+    "dynamic",
+    "kinematic",
+    "static",
+    NULL
+};
+
 static int body_type_1o_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -231,7 +220,7 @@ static int body_type_1o_1s(lua_State *L)
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
 
-    lua_pushstring(L, _type_ids[type]); // FIXME: this is an abuse!
+    lua_pushstring(L, _types[type]); // FIXME: this is an abuse!
 
     return 1;
 }
@@ -243,10 +232,10 @@ static int body_type_2oe_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    int type = LUAX_ENUM(L, 2, _type_ids);
+    int type = LUAX_ENUM(L, 2, _types);
 
     cpBody *body = self->body;
-    cpBodySetType(body, _type_values[type]);
+    cpBodySetType(body, (cpBodyType)type);
 
     return 0;
 }

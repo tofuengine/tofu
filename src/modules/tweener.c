@@ -60,7 +60,7 @@ int tweener_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const char *_easing_ids[Easing_Types_t_CountOf + 1] = {
+static const char *_easings[Easing_Types_t_CountOf + 1] = {
     "linear",
     "quadratic-in",
     "quadratic-out",
@@ -95,41 +95,7 @@ static const char *_easing_ids[Easing_Types_t_CountOf + 1] = {
     NULL
 };
 
-static const Easing_Types_t _easing_types[Easing_Types_t_CountOf] = {
-    EASING_TYPE_LINEAR,
-    EASING_TYPE_QUADRATIC_IN,
-    EASING_TYPE_QUADRATIC_OUT,
-    EASING_TYPE_QUADRATIC_IN_OUT,
-    EASING_TYPE_CUBIC_IN,
-    EASING_TYPE_CUBIC_OUT,
-    EASING_TYPE_CUBIC_IN_OUT,
-    EASING_TYPE_QUARTIC_IN,
-    EASING_TYPE_QUARTIC_OUT,
-    EASING_TYPE_QUARTIC_IN_OUT,
-    EASING_TYPE_QUINTIC_IN,
-    EASING_TYPE_QUINTIC_OUT,
-    EASING_TYPE_QUINTIC_IN_OUT,
-    EASING_TYPE_SINE_IN,
-    EASING_TYPE_SINE_OUT,
-    EASING_TYPE_SINE_IN_OUT,
-    EASING_TYPE_CIRCULAR_IN,
-    EASING_TYPE_CIRCULAR_OUT,
-    EASING_TYPE_CIRCULAR_IN_OUT,
-    EASING_TYPE_EXPONENTIAL_IN,
-    EASING_TYPE_EXPONENTIAL_OUT,
-    EASING_TYPE_EXPONENTIAL_IN_OUT,
-    EASING_TYPE_ELASTIC_IN,
-    EASING_TYPE_ELASTIC_OUT,
-    EASING_TYPE_ELASTIC_IN_OUT,
-    EASING_TYPE_BACK_IN,
-    EASING_TYPE_BACK_OUT,
-    EASING_TYPE_BACK_IN_OUT,
-    EASING_TYPE_BOUNCE_IN,
-    EASING_TYPE_BOUNCE_OUT,
-    EASING_TYPE_BOUNCE_IN_OUT,
-};
-
-static Easing_Function_t _easing_functions[Easing_Types_t_CountOf] = {
+static const Easing_Function_t _functions[Easing_Types_t_CountOf] = {
     easing_linear,
     easing_quadratic_in,
     easing_quadratic_out,
@@ -171,14 +137,14 @@ static int tweener_new_4eNNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int easing = LUAX_ENUM(L, 1, _easing_ids);
+    int easing = LUAX_ENUM(L, 1, _easings);
     float duration = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
 
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
-            .easing = _easing_types[easing],
-            .function = _easing_functions[easing],
+            .easing = (Easing_Types_t)easing,
+            .function = _functions[easing],
             .duration = duration,
             .from = from,
             .to = to
@@ -211,7 +177,7 @@ static int tweener_easing_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
-    lua_pushstring(L, _easing_ids[self->easing]);
+    lua_pushstring(L, _easings[self->easing]);
 
     return 1;
 }
@@ -223,10 +189,10 @@ static int tweener_easing_2os_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    int easing = LUAX_ENUM(L, 2, _easing_ids);
+    int easing = LUAX_ENUM(L, 2, _easings);
 
-    self->easing = _easing_types[easing];
-    self->function = _easing_functions[easing];
+    self->easing = (Easing_Types_t)easing;
+    self->function = _functions[easing];
 
     return 0;
 }

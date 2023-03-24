@@ -268,7 +268,7 @@ static int xform_table_1o_0(lua_State *L)
     return 0;
 }
 
-static const char *_register_ids[GL_XForm_Registers_t_CountOf + 1] = {
+static const char *_registers[GL_XForm_Registers_t_CountOf + 1] = {
     "h",
     "v",
     "a",
@@ -278,17 +278,6 @@ static const char *_register_ids[GL_XForm_Registers_t_CountOf + 1] = {
     "x",
     "y",
     NULL
-};
-
-static const GL_XForm_Registers_t _register_values[GL_XForm_Registers_t_CountOf] = {
-    GL_XFORM_REGISTER_H,
-    GL_XFORM_REGISTER_V,
-    GL_XFORM_REGISTER_A,
-    GL_XFORM_REGISTER_B,
-    GL_XFORM_REGISTER_C,
-    GL_XFORM_REGISTER_D,
-    GL_XFORM_REGISTER_X,
-    GL_XFORM_REGISTER_Y
 };
 
 static int xform_table_2ot_0(lua_State *L)
@@ -315,11 +304,11 @@ static int xform_table_2ot_0(lua_State *L)
                 break;
             }
 
-            int id = LUAX_ENUM(L, -2, _register_ids);
+            int id = LUAX_ENUM(L, -2, _registers);
             float value = LUAX_NUMBER(L, -1);
 
             table_entry.count = i + 1;
-            table_entry.operations[i].id = _register_values[id];
+            table_entry.operations[i].id = (GL_XForm_Registers_t)id;
             table_entry.operations[i].value = value;
 
             lua_pop(L, 1);

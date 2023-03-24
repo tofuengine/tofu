@@ -107,18 +107,12 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const char *_type_ids[Source_Type_t_CountOf + 1] = {
+static const char *_types[Source_Type_t_CountOf + 1] = {
     "music",
     "sample",
     "module",
     NULL
 };
-
-// static const Source_Type_t _type_values[Source_Type_t_CountOf] = {
-//     SOURCE_TYPE_MUSIC,
-//     SOURCE_TYPE_SAMPLE,
-//     SOURCE_TYPE_MODULE
-// };
 
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
     SL_music_create,
@@ -133,7 +127,7 @@ static int source_new_2sE_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    int type = LUAX_OPTIONAL_ENUM(L, 2, _type_ids, SOURCE_TYPE_MUSIC);
+    int type = LUAX_OPTIONAL_ENUM(L, 2, _types, SOURCE_TYPE_MUSIC);
 
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));

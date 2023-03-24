@@ -59,19 +59,12 @@ int wave_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const char *_form_ids[Wave_Types_t_CountOf + 1] = {
+static const char *_forms[Wave_Types_t_CountOf + 1] = {
     "sine",
     "square",
     "triangle",
     "sawtooth",
     NULL
-};
-
-static const Wave_Types_t _form_values[Wave_Types_t_CountOf] = {
-    WAVE_TYPE_SINE,
-    WAVE_TYPE_SQUARE,
-    WAVE_TYPE_TRIANGLE,
-    WAVE_TYPE_SAWTOOTH
 };
 
 static const Wave_Function_t _functions[Wave_Types_t_CountOf] = {
@@ -88,12 +81,12 @@ static int wave_new_3eNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int form = LUAX_ENUM(L, 1, _form_ids);
+    int form = LUAX_ENUM(L, 1, _forms);
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
     Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
-            .form = _form_values[form],
+            .form = (Wave_Types_t)form,
             .function = _functions[form],
             .period = period,
             .amplitude = amplitude
@@ -126,7 +119,7 @@ static int wave_form_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
 
-    lua_pushstring(L, _form_ids[self->form]);
+    lua_pushstring(L, _forms[self->form]);
 
     return 1;
 }
@@ -138,9 +131,9 @@ static int wave_form_2oe_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
-    int form = LUAX_ENUM(L, 2, _form_ids);
+    int form = LUAX_ENUM(L, 2, _forms);
 
-    self->form = _form_values[form];
+    self->form = (Wave_Types_t)form;
     self->function = _functions[form];
 
     return 0;

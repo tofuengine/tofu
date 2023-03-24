@@ -125,7 +125,7 @@ static int controller_is_available_1o_1b(lua_State *L)
     return 1;
 }
 
-static const char *_button_ids[Input_Controller_Buttons_t_CountOf + 1] = {
+static const char *_buttons[Input_Controller_Buttons_t_CountOf + 1] = {
     "up",
     "down",
     "left",
@@ -143,23 +143,6 @@ static const char *_button_ids[Input_Controller_Buttons_t_CountOf + 1] = {
     NULL
 };
 
-static const Input_Controller_Buttons_t _button_values[Input_Controller_Buttons_t_CountOf] = {
-    INPUT_CONTROLLER_BUTTON_UP,
-    INPUT_CONTROLLER_BUTTON_DOWN,
-    INPUT_CONTROLLER_BUTTON_LEFT,
-    INPUT_CONTROLLER_BUTTON_RIGHT,
-    INPUT_CONTROLLER_BUTTON_LB,
-    INPUT_CONTROLLER_BUTTON_RB,
-    INPUT_CONTROLLER_BUTTON_LT,
-    INPUT_CONTROLLER_BUTTON_RT,
-    INPUT_CONTROLLER_BUTTON_Y,
-    INPUT_CONTROLLER_BUTTON_X,
-    INPUT_CONTROLLER_BUTTON_B,
-    INPUT_CONTROLLER_BUTTON_A,
-    INPUT_CONTROLLER_BUTTON_SELECT,
-    INPUT_CONTROLLER_BUTTON_START
-};
-
 static int controller_is_down_2oe_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -167,9 +150,9 @@ static int controller_is_down_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _button_ids);
+    int id = LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_controller_get_button(self->controller, _button_values[id]).down);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).down);
 
     return 1;
 }
@@ -181,9 +164,9 @@ static int controller_is_up_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _button_ids);
+    int id = LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, !Input_controller_get_button(self->controller, _button_values[id]).down);
+    lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).down);
 
     return 1;
 }
@@ -195,9 +178,9 @@ static int controller_is_pressed_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _button_ids);
+    int id = LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_controller_get_button(self->controller, _button_values[id]).pressed);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).pressed);
 
     return 1;
 }
@@ -209,22 +192,17 @@ static int controller_is_released_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _button_ids);
+    int id = LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_controller_get_button(self->controller, _button_values[id]).released);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).released);
 
     return 1;
 }
 
-static const char *_stick_ids[Input_Controller_Sticks_t_CountOf + 1] = {
+static const char *_sticks[Input_Controller_Sticks_t_CountOf + 1] = {
     "left",
     "right",
     NULL
-};
-
-static const Input_Controller_Sticks_t _stick_values[Input_Controller_Sticks_t_CountOf] = {
-    INPUT_CONTROLLER_STICK_LEFT,
-    INPUT_CONTROLLER_STICK_RIGHT
 };
 
 static int controller_stick_2oe_4nnnn(lua_State *L)
@@ -234,9 +212,9 @@ static int controller_stick_2oe_4nnnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _stick_ids);
+    int id = LUAX_ENUM(L, 2, _sticks);
 
-    const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, _stick_values[id]);
+    const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, (Input_Controller_Sticks_t)id);
     lua_pushnumber(L, (lua_Number)stick.x);
     lua_pushnumber(L, (lua_Number)stick.y);
     lua_pushnumber(L, (lua_Number)stick.angle);
