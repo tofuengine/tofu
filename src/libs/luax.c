@@ -61,7 +61,7 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
             return i;
         }
     }
-    return -1;
+    return luaL_error(L, "`%s` is not a valid enumeration value", value);
 }
 
 #ifdef __LUAX_RTTI__
