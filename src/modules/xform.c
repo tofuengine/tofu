@@ -43,11 +43,11 @@
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
 
-static int xform_new_1S_1o(lua_State *L);
+static int xform_new_1E_1o(lua_State *L);
 static int xform_gc_1o_0(lua_State *L);
 static int xform_offset_3onn_0(lua_State *L);
 static int xform_matrix_v_0(lua_State *L);
-static int xform_wrap_2os_0(lua_State *L);
+static int xform_wrap_2oe_0(lua_State *L);
 static int xform_table_v_0(lua_State *L);
 // TODO: add helper functions to generate common transformations?
 static int xform_project_4onnn_0(lua_State *L);
@@ -59,11 +59,11 @@ int xform_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", xform_new_1S_1o },
+            { "new", xform_new_1E_1o },
             { "__gc", xform_gc_1o_0 },
             { "offset", xform_offset_3onn_0 },
             { "matrix", xform_matrix_v_0 },
-            { "wrap", xform_wrap_2os_0 },
+            { "wrap", xform_wrap_2oe_0 },
             { "table", xform_table_v_0 },
             { "project", xform_project_4onnn_0 },
             { "warp", xform_warp_3onn_0 },
@@ -74,38 +74,24 @@ int xform_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static inline GL_XForm_Wraps_t _parse_wrap_mode(const char *mode)
-{
-    if (strcasecmp(mode, "repeat") == 0) {
-        return GL_XFORM_WRAP_REPEAT;
-    } else
-    if (strcasecmp(mode, "edge") == 0) {
-        return GL_XFORM_WRAP_CLAMP_TO_EDGE;
-    } else
-    if (strcasecmp(mode, "border") == 0) {
-        return GL_XFORM_WRAP_CLAMP_TO_BORDER;
-    } else
-    if (strcasecmp(mode, "mirror-repeat") == 0) {
-        return GL_XFORM_WRAP_MIRRORED_REPEAT;
-    } else
-    if (strcasecmp(mode, "mirror-edge") == 0) {
-        return GL_XFORM_WRAP_MIRROR_CLAMP_TO_EDGE;
-    } else
-    if (strcasecmp(mode, "mirror-border") == 0) {
-        return GL_XFORM_WRAP_MIRROR_CLAMP_TO_BORDER;
-    } else {
-        return GL_XFORM_WRAP_REPEAT;
-    }
-}
+static const char *_modes[GL_XForm_Wraps_t_CountOf + 1] = {
+    "repeat",
+    "edge",
+    "border",
+    "mirror-repeat",
+    "mirror-edge",
+    "mirror-border",
+    NULL,
+};
 
-static int xform_new_1S_1o(lua_State *L)
+static int xform_new_1E_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
-    const char *mode = LUAX_OPTIONAL_STRING(L, 1, "repeat");
+    GL_XForm_Wraps_t mode = (GL_XForm_Wraps_t)LUAX_OPTIONAL_ENUM(L, 1, _modes, GL_XFORM_WRAP_REPEAT);
 
-    GL_XForm_t *xform = GL_xform_create(_parse_wrap_mode(mode));
+    GL_XForm_t *xform = GL_xform_create(mode);
     if (!xform) {
         return luaL_error(L, "can't create xform");
     }
@@ -240,17 +226,17 @@ static int xform_matrix_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int xform_wrap_2os_0(lua_State *L)
+static int xform_wrap_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    const char *mode = LUAX_STRING(L, 2);
+    GL_XForm_Wraps_t mode = (GL_XForm_Wraps_t)LUAX_ENUM(L, 2, _modes);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_wrap(xform, _parse_wrap_mode(mode));
+    GL_xform_wrap(xform, mode);
 
     return 0;
 }
