@@ -184,9 +184,9 @@ static int keyboard_is_down_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
-    const int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Keyboard_Buttons_t id = (Input_Keyboard_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)id).down);
+    lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, id).down);
 
     return 1;
 }
@@ -198,9 +198,9 @@ static int keyboard_is_up_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
-    const int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Keyboard_Buttons_t id = (Input_Keyboard_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, !Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)id).down);
+    lua_pushboolean(L, !Input_keyboard_get_button(self->keyboard, id).down);
 
     return 1;
 }
@@ -212,9 +212,9 @@ static int keyboard_is_pressed_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
-    const int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Keyboard_Buttons_t id = (Input_Keyboard_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)id).pressed);
+    lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, id).pressed);
 
     return 1;
 }
@@ -226,9 +226,9 @@ static int keyboard_is_released_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Keyboard_Object_t *self = (const Keyboard_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_KEYBOARD);
-    const int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Keyboard_Buttons_t id = (Input_Keyboard_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, (Input_Keyboard_Buttons_t)id).released);
+    lua_pushboolean(L, Input_keyboard_get_button(self->keyboard, id).released);
 
     return 1;
 }

@@ -61,7 +61,7 @@ int noise_loader(lua_State *L)
 
 static const char *_types[Noise_Types_t_CountOf + 1] = {
     "perlin",
-     "simplex",
+    "simplex",
     "cellular",
     NULL
 };
@@ -79,12 +79,12 @@ static int noise_new_1eNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int type = LUAX_ENUM(L, 1, _types);
+    Noise_Types_t type = (Noise_Types_t)LUAX_ENUM(L, 1, _types);
     float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
     float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
     Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
-            .type = (Noise_Types_t)type,
+            .type = type,
             .function = _functions[type],
             .seed = seed,
             .frequency = frequency
@@ -128,9 +128,9 @@ static int noise_type_2oe_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Noise_Object_t *self = (Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
-    int type = LUAX_ENUM(L, 2, _types);
+    Noise_Types_t type = (Noise_Types_t)LUAX_ENUM(L, 2, _types);
 
-    self->type = (Noise_Types_t)type;
+    self->type = type;
     self->function = _functions[type];
 
     return 0;

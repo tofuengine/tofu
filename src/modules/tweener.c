@@ -137,13 +137,13 @@ static int tweener_new_4eNNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int easing = LUAX_ENUM(L, 1, _easings);
+    Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 1, _easings);
     float duration = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
 
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
-            .easing = (Easing_Types_t)easing,
+            .easing = easing,
             .function = _functions[easing],
             .duration = duration,
             .from = from,
@@ -189,9 +189,9 @@ static int tweener_easing_2os_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    int easing = LUAX_ENUM(L, 2, _easings);
+    Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 2, _easings);
 
-    self->easing = (Easing_Types_t)easing;
+    self->easing = easing;
     self->function = _functions[easing];
 
     return 0;

@@ -150,9 +150,9 @@ static int controller_is_down_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Controller_Buttons_t id = (Input_Controller_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).down);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, id).down);
 
     return 1;
 }
@@ -164,9 +164,9 @@ static int controller_is_up_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Controller_Buttons_t id = (Input_Controller_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, !Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).down);
+    lua_pushboolean(L, !Input_controller_get_button(self->controller, id).down);
 
     return 1;
 }
@@ -178,9 +178,9 @@ static int controller_is_pressed_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Controller_Buttons_t id = (Input_Controller_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).pressed);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, id).pressed);
 
     return 1;
 }
@@ -192,9 +192,9 @@ static int controller_is_released_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Controller_Buttons_t id = (Input_Controller_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_controller_get_button(self->controller, (Input_Controller_Buttons_t)id).released);
+    lua_pushboolean(L, Input_controller_get_button(self->controller, id).released);
 
     return 1;
 }
@@ -212,9 +212,9 @@ static int controller_stick_2oe_4nnnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
-    int id = LUAX_ENUM(L, 2, _sticks);
+    Input_Controller_Sticks_t id = (Input_Controller_Sticks_t)LUAX_ENUM(L, 2, _sticks);
 
-    const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, (Input_Controller_Sticks_t)id);
+    const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, id);
     lua_pushnumber(L, (lua_Number)stick.x);
     lua_pushnumber(L, (lua_Number)stick.y);
     lua_pushnumber(L, (lua_Number)stick.angle);

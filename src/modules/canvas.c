@@ -995,12 +995,12 @@ static int canvas_stencil_5oooen_0(lua_State *L)
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_IMAGE);
     const Image_Object_t *mask = (const Image_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_IMAGE);
-    int comparator = LUAX_ENUM(L, 4, _comparators);
+    GL_Comparators_t comparator = (GL_Comparators_t)LUAX_ENUM(L, 4, _comparators);
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
 
     GL_context_stencil(self->context, (GL_Point_t){ .x = 0, .y = 0 },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height  },
-        mask->surface, (GL_Comparators_t)comparator, threshold);
+        mask->surface, comparator, threshold);
 
     return 0;
 }
@@ -1021,12 +1021,12 @@ static int canvas_stencil_7onnooen_0(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_IMAGE);
     const Image_Object_t *mask = (const Image_Object_t *)LUAX_OBJECT(L, 5, OBJECT_TYPE_IMAGE);
-    int comparator = LUAX_ENUM(L, 6, _comparators);
+    GL_Comparators_t comparator = (GL_Comparators_t)LUAX_ENUM(L, 6, _comparators);
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 7);
 
     GL_context_stencil(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height  },
-        mask->surface, (GL_Comparators_t)comparator, threshold);
+        mask->surface, comparator, threshold);
 
     return 0;
 }
@@ -1055,12 +1055,12 @@ static int canvas_stencil_11onnonnnnoen_0(lua_State *L)
     size_t width = LUAX_UNSIGNED(L, 7);
     size_t height = LUAX_UNSIGNED(L, 8);
     const Image_Object_t *mask = (const Image_Object_t *)LUAX_OBJECT(L, 9, OBJECT_TYPE_IMAGE);
-    int comparator = LUAX_ENUM(L, 10, _comparators);
+    GL_Comparators_t comparator = (GL_Comparators_t)LUAX_ENUM(L, 10, _comparators);
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_UNSIGNED(L, 11);
 
     GL_context_stencil(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
-        mask->surface, (GL_Comparators_t)comparator, threshold);
+        mask->surface, comparator, threshold);
 
     return 0;
 }
@@ -1098,11 +1098,11 @@ static int canvas_blend_3ooe_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_IMAGE);
-    int function = LUAX_ENUM(L, 3, _functions);
+    GL_Functions_t function = (GL_Functions_t)LUAX_ENUM(L, 3, _functions);
 
     GL_context_blend(self->context, (GL_Point_t){ .x = 0, .y = 0 },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height },
-        (GL_Functions_t)function);
+        function);
 
     return 0;
 }
@@ -1120,11 +1120,11 @@ static int canvas_blend_5onnoe_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_IMAGE);
-    int function = LUAX_ENUM(L, 5, _functions);
+    GL_Functions_t function = (GL_Functions_t)LUAX_ENUM(L, 5, _functions);
 
     GL_context_blend(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height },
-        (GL_Functions_t)function);
+        function);
 
     return 0;
 }
@@ -1150,11 +1150,11 @@ static int canvas_blend_9onnonnnne_0(lua_State *L)
     int oy = LUAX_INTEGER(L, 6);
     size_t width = LUAX_UNSIGNED(L, 7);
     size_t height = LUAX_UNSIGNED(L, 8);
-    int function = LUAX_ENUM(L, 9, _functions);
+    GL_Functions_t function = (GL_Functions_t)LUAX_ENUM(L, 9, _functions);
 
     GL_context_blend(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        (GL_Functions_t)function);
+        function);
 
     return 0;
 }

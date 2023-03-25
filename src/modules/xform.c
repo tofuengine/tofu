@@ -304,11 +304,11 @@ static int xform_table_2ot_0(lua_State *L)
                 break;
             }
 
-            int id = LUAX_ENUM(L, -2, _registers);
+            GL_XForm_Registers_t id = (GL_XForm_Registers_t)LUAX_ENUM(L, -2, _registers);
             float value = LUAX_NUMBER(L, -1);
 
             table_entry.count = i + 1;
-            table_entry.operations[i].id = (GL_XForm_Registers_t)id;
+            table_entry.operations[i].id = id;
             table_entry.operations[i].value = value;
 
             lua_pop(L, 1);

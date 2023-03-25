@@ -88,7 +88,7 @@ static int body_new_4ennn_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int kind = LUAX_ENUM(L, 1, _kinds);
+    Body_Kinds_t kind = (Body_Kinds_t)LUAX_ENUM(L, 1, _kinds);
 
     cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
@@ -232,7 +232,7 @@ static int body_type_2oe_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    int type = LUAX_ENUM(L, 2, _types);
+    cpBodyType type = (cpBodyType)LUAX_ENUM(L, 2, _types);
 
     cpBody *body = self->body;
     cpBodySetType(body, (cpBodyType)type);

@@ -135,9 +135,9 @@ static int cursor_is_down_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Cursor_Buttons_t id = (Input_Cursor_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)id).down);
+    lua_pushboolean(L, Input_cursor_get_button(self->cursor, id).down);
 
     return 1;
 }
@@ -149,9 +149,9 @@ static int cursor_is_up_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Cursor_Buttons_t id = (Input_Cursor_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, !Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)id).down);
+    lua_pushboolean(L, !Input_cursor_get_button(self->cursor, id).down);
 
     return 1;
 }
@@ -163,9 +163,9 @@ static int cursor_is_pressed_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Cursor_Buttons_t id = (Input_Cursor_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)id).pressed);
+    lua_pushboolean(L, Input_cursor_get_button(self->cursor, id).pressed);
 
     return 1;
 }
@@ -177,9 +177,9 @@ static int cursor_is_released_2oe_1b(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    int id = LUAX_ENUM(L, 2, _buttons);
+    Input_Cursor_Buttons_t id = (Input_Cursor_Buttons_t)LUAX_ENUM(L, 2, _buttons);
 
-    lua_pushboolean(L, Input_cursor_get_button(self->cursor, (Input_Cursor_Buttons_t)id).released);
+    lua_pushboolean(L, Input_cursor_get_button(self->cursor, id).released);
 
     return 1;
 }

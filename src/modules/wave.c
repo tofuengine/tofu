@@ -81,12 +81,12 @@ static int wave_new_3eNN_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int form = LUAX_ENUM(L, 1, _forms);
+    Wave_Types_t form = (Wave_Types_t)LUAX_ENUM(L, 1, _forms);
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
     Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
-            .form = (Wave_Types_t)form,
+            .form = form,
             .function = _functions[form],
             .period = period,
             .amplitude = amplitude
@@ -131,9 +131,9 @@ static int wave_form_2oe_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
-    int form = LUAX_ENUM(L, 2, _forms);
+    Wave_Types_t form = (Wave_Types_t)LUAX_ENUM(L, 2, _forms);
 
-    self->form = (Wave_Types_t)form;
+    self->form = form;
     self->function = _functions[form];
 
     return 0;

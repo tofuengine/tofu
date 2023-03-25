@@ -127,7 +127,7 @@ static int source_new_2sE_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    int type = LUAX_OPTIONAL_ENUM(L, 2, _types, SOURCE_TYPE_MUSIC);
+    Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_ENUM(L, 2, _types, SOURCE_TYPE_MUSIC);
 
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
