@@ -44,7 +44,7 @@ luaX_String luaX_tolstring(lua_State *L, int idx)
 {
     luaX_String s;
     s.data = lua_tolstring(L, idx, &s.size);
-    return s;
+    return s; // Too bad, we can't use compound-literals and designated initializers! :>
 }
 
 int luaX_isenum(lua_State *L, int idx)
@@ -55,64 +55,95 @@ int luaX_isenum(lua_State *L, int idx)
 int luaX_toenum(lua_State *L, int idx, const char **ids)
 {
     const char *value = lua_tostring(L, idx);
+    if (!value) {
+#ifdef DEBUG
+        return luaL_error(L, "value at argument #%d is null", idx), 0;
+#else   /* DEBUG */
+        return -1;
+#endif  /* DEBUG */
+    }
     size_t length = strlen(value) + 1; // The length of the string doesn't, we can use it!
     for (int i = 0; ids[i]; ++i) {
         if (memcmp(value, ids[i], length) == 0) { // Use `memcmp()` to optimized for speed.
             return i;
         }
     }
-    return luaL_error(L, "`%s` is not a valid enumeration value", value);
+#ifdef DEBUG
+    return luaL_error(L, "argument #%d w/ value `%s` is not a valid enumeration", idx, value), -1;
+#else   /* DEBUG */
+    return -1;
+#endif  /* DEBUG */
 }
 
 #ifdef __LUAX_RTTI__
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
+#else
+typedef void * luaX_Object;
 #endif  /* __LUAX_RTTI__ */
+
+#ifdef __LUAX_RTTI__
+  #define LUAX_OBJECT_SIZE(s)    (sizeof(luaX_Object) + (s))
+  #define LUAX_OBJECT_SELF(o)    ((void *)((luaX_Object *)(o) + 1))
+#else
+  #define LUAX_OBJECT_SIZE(s)    (s)
+  #define LUAX_OBJECT_SELF(o)    ((void *)(o))
+#endif
 
 void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
+    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
 #ifdef __LUAX_RTTI__
-    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
-    luaL_setmetatable(L, metatable);
     *object = (luaX_Object){
             .type = type
         };
-    void *self = object + 1;
-    memcpy(self, state, size);
-    return self;
-#else   /* __LUAX_RTTI__ */
-    void *self = lua_newuserdatauv(L, size, 1);
-    luaL_setmetatable(L, metatable);
-    memcpy(self, state, size);
-    return self;
 #endif  /* __LUAX_RTTI__ */
+    luaL_setmetatable(L, metatable);
+    void *self = LUAX_OBJECT_SELF(object);
+    memcpy(self, state, size);
+    return self;
 }
 
 int luaX_isobject(lua_State *L, int idx, int type)
 {
-#ifdef __LUAX_RTTI__
-    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx); // `lua_touserdata` returns NULL if not userdata!
     if (!object) {
+#ifdef DEBUG
+        return luaL_error(L, "object at argument #%d is null", idx), 0;
+#else   /* DEBUG */
         return 0;
+#endif  /* DEBUG */
     }
+#ifdef __LUAX_RTTI__
     return object->type == type;
 #else   /* __LUAX_RTTI__ */
-    return lua_isuserdata(L, idx);
+    return 1;
 #endif  /* __LUAX_RTTI__ */
 }
 
 void *luaX_toobject(lua_State *L, int idx, int type)
 {
-#ifdef __LUAX_RTTI__
     luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
     if (!object) {
+#ifdef DEBUG
+        return luaL_error(L, "object at argument #%d is null", idx), NULL;
+#else   /* DEBUG */
         return NULL;
+#endif  /* DEBUG */
     }
-    return object->type == type ? object + 1: NULL;
-#else   /* __LUAX_RTTI__ */
-    return lua_touserdata(L, idx);
+
+#ifdef __LUAX_RTTI__
+    if (object->type != type) {
+#ifdef DEBUG
+        return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
+#else   /* DEBUG */
+        return NULL;
+#endif  /* DEBUG */
+    }
 #endif  /* __LUAX_RTTI__ */
+
+    return LUAX_OBJECT_SELF(object);
 }
 
 void luaX_stackdump(lua_State *L, const char* func, int line)
