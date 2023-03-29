@@ -79,11 +79,11 @@ static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *
                 return false;
             }
             case 'k': {
-                strncpy(options->kernal_path, optarg, PLATFORM_PATH_MAX);
+                strncpy(options->kernal_path, optarg, PLATFORM_PATH_MAX - 1);
                 break;
             }
             case 'd': {
-                strncpy(options->data_path, optarg, PLATFORM_PATH_MAX);
+                strncpy(options->data_path, optarg, PLATFORM_PATH_MAX - 1);
                 break;
             }
             default: {
