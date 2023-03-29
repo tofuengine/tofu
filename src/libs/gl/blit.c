@@ -29,8 +29,6 @@
 #include <libs/imath.h>
 #include <libs/sincos.h>
 
-#include <math.h>
-
 #ifdef __DEBUG_GRAPHICS__
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {

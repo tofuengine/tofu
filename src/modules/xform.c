@@ -27,18 +27,10 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#include <libs/fmath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-
-#include <math.h>
-
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846264f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923132f
-#endif
 
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
@@ -382,7 +374,7 @@ static int xform_warp_3onn_0(lua_State *L)
     GL_XForm_Table_Entry_t *table = NULL;
 
     for (size_t scan_line = 0; scan_line < height; ++scan_line) {
-        const float angle = ((float)scan_line / (float)height) * (float)M_PI; // Could be partially pre-computed, but who cares...
+        const float angle = ((float)scan_line / (float)height) * F_PI; // Could be partially pre-computed, but who cares...
         const float scale_x = (1.0f - sinf(angle)) * factor + 1.0f;
 
         GL_XForm_Table_Entry_t entry = {

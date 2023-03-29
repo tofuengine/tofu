@@ -24,18 +24,11 @@
 
 #include "wave.h"
 
-#include <math.h>
-
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846264f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923132f
-#endif
+#include <libs/fmath.h>
 
 float wave_sine(float t)
 {
-    float value = sinf(t * 2.0f * (float)M_PI);
+    float value = sinf(t * 2.0f * F_PI);
     return value;
 }
 

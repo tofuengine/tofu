@@ -28,8 +28,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <math.h>
-
 #define LOG_CONTEXT "input"
 
 typedef void (*Input_Handler_t)(Input_t *input);

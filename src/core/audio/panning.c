@@ -66,28 +66,28 @@ Gain_t _power_15db_linear_pan(float value)
 // http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiJjb3MoKCh4KzEpLzIpKnBpLzIpXjIiLCJjb2xvciI6IiNGRjAwMDAifSx7InR5cGUiOjAsImVxIjoic2luKCgoeCsxKS8yKSpwaS8yKV4yIiwiY29sb3IiOiIjMDAwMEZGIn0seyJ0eXBlIjoxMDAwLCJ3aW5kb3ciOlsiLTEiLCIxIiwiMCIsIjEiXX1d
 Gain_t _power_6db_sincos_pan(float value)
 {
-    const float theta = (value + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float theta = (value + 1.0f) * 0.5f * F_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (Gain_t){ .left = powf(cosf(theta), 2.0f), .right = powf(sinf(theta), 2.0f) };
 }
 
 // http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiJjb3MoKCh4KzEpLzIpKnBpLzIpXjEuNSIsImNvbG9yIjoiI0ZGMDAwMCJ9LHsidHlwZSI6MCwiZXEiOiJzaW4oKCh4KzEpLzIpKnBpLzIpXjEuNSIsImNvbG9yIjoiIzAwMDBGRiJ9LHsidHlwZSI6MTAwMCwid2luZG93IjpbIi0xIiwiMSIsIjAiLCIxIl19XQ--
 Gain_t _power_45db_sincos_pan(float value)
 {
-    const float theta = (value + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float theta = (value + 1.0f) * 0.5f * F_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (Gain_t){ .left = powf(cosf(theta), 1.5f), .right = powf(sinf(theta), 1.5f) };
 }
 
 // http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiJjb3MoKCh4KzEpLzIpKnBpLzIpIiwiY29sb3IiOiIjRkYwMDAwIn0seyJ0eXBlIjowLCJlcSI6InNpbigoKHgrMSkvMikqcGkvMikiLCJjb2xvciI6IiMwMDAwRkYifSx7InR5cGUiOjEwMDAsIndpbmRvdyI6WyItMSIsIjEiLCIwIiwiMSJdfV0-
 Gain_t _constant_power_3db_sincos_pan(float value)
 {
-    const float theta = (value + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float theta = (value + 1.0f) * 0.5f * F_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (Gain_t){ .left = cosf(theta), .right = sinf(theta) };
 }
 
 // http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiJjb3MoKCh4KzEpLzIpKnBpLzIpXjAuNSIsImNvbG9yIjoiI0ZGMDAwMCJ9LHsidHlwZSI6MCwiZXEiOiJzaW4oKCh4KzEpLzIpKnBpLzIpXjAuNSIsImNvbG9yIjoiIzAwMDBGRiJ9LHsidHlwZSI6MTAwMCwid2luZG93IjpbIi0xIiwiMSIsIjAiLCIxIl19XQ--
 Gain_t _power_15db_sincos_pan(float value)
 {
-    const float theta = (value + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float theta = (value + 1.0f) * 0.5f * F_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (Gain_t){ .left = powf(cosf(theta), 0.5f), .right = powf(sinf(theta), 0.5f) };
 }
 
@@ -118,10 +118,10 @@ Gain_t _0db_sqrt_balance(float value)
 Gain_t _0db_sincos_balance(float value)
 {
     if (value < 0.0f) {
-        return (Gain_t){ .left = 1.0, .right = sinf((1.0f + value) * M_PI_2) };
+        return (Gain_t){ .left = 1.0, .right = sinf((1.0f + value) * F_PI_2) };
     } else
     if (value > 0.0f) {
-        return (Gain_t){ .left = sinf((1.0f - value) * M_PI_2), .right = 1.0f }; // equal to negative
+        return (Gain_t){ .left = sinf((1.0f - value) * F_PI_2), .right = 1.0f }; // equal to negative
     } else {
         return (Gain_t){ .left = 1.0, .right = 1.0f };
     }

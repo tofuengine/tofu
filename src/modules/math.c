@@ -34,7 +34,6 @@
 #include <systems/storage.h>
 
 #include <stdint.h>
-#include <math.h>
 
 #define MODULE_NAME "tofu.core.math"
 
