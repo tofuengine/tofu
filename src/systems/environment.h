@@ -33,16 +33,16 @@
 
 typedef struct Environment_Stats_s {
     size_t fps;
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
     float times[4];
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-#ifdef __SYSTEM_HEAP_STATISTICS__
+#if defined(__SYSTEM_HEAP_STATISTICS__)
     size_t memory_usage;
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
 } Environment_Stats_t;
 
 typedef struct Environment_State_s {
-#ifdef __DISPLAY_FOCUS_SUPPORT__
+#if defined(__DISPLAY_FOCUS_SUPPORT__)
     struct {
         bool is;
         bool was;
@@ -67,7 +67,7 @@ extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
 #else
 extern void Environment_process(Environment_t *environment, float frame_time);

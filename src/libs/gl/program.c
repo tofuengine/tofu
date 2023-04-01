@@ -52,7 +52,7 @@ GL_Program_t *GL_program_create(void)
         LOG_E(LOG_CONTEXT, "can't allocate program");
         return NULL;
     }
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "program created at %p", program);
 #endif  /* VERBOSE_DEBUG */
 
@@ -73,7 +73,7 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
         LOG_E(LOG_CONTEXT, "can't allocate program");
         return NULL;
     }
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "program created at %p", clone);
 #endif  /* VERBOSE_DEBUG */
 
@@ -91,12 +91,12 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 void GL_program_destroy(GL_Program_t *program)
 {
     arrfree(program->entries);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     free(program);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "program %p freed", program);
 #endif  /* VERBOSE_DEBUG */
 }
@@ -111,7 +111,7 @@ void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
 void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
@@ -123,7 +123,7 @@ void GL_program_clear(GL_Program_t *program)
 void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
 {
     arrdeln(program->entries, position, length);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 }

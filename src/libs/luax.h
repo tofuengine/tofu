@@ -68,7 +68,7 @@ typedef struct luaX_String_s {
 #define LUA_TENUM       LUA_TSTRING
 #define LUA_TOBJECT     LUA_TUSERDATA
 
-#ifdef DEBUG
+#if defined(DEBUG)
     #define LUAX_SIGNATURE_BEGIN(L) \
         do { \
             lua_State *_L = (L); \
@@ -95,7 +95,7 @@ typedef struct luaX_String_s {
     #define LUAX_SIGNATURE_END
 #endif
 
-#ifdef __LUAX_ARITY_OVERLOAD_ONLY__
+#if defined(__LUAX_ARITY_OVERLOAD_ONLY__)
     #define LUAX_OVERLOAD_BEGIN(L) \
         do { \
             lua_State *_L = (L); \
@@ -121,7 +121,7 @@ typedef struct luaX_String_s {
         } while (0);
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
     #define LUAX_BOOLEAN(L, idx)                 (!lua_isboolean((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
     #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))

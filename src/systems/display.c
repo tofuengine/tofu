@@ -92,7 +92,7 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_time",
 };
 
-#ifdef DEBUG
+#if defined(DEBUG)
 static bool _has_errors(void)
 {
     bool result = false;
@@ -143,7 +143,7 @@ static void _size_callback(GLFWwindow *window, int width, int height)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // TODO: configurable?
     LOG_D(LOG_CONTEXT, "setting OpenGL clear-color");
 
-#ifdef __DEBUG_TRIANGLES_WINDING__
+#if defined(__DEBUG_TRIANGLES_WINDING__)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
@@ -229,7 +229,7 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 #endif
-#ifdef __APPLE__
+#if defined(__APPLE__)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -410,7 +410,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
     LOG_D(LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
 
-#ifdef __OPENGL_STATE_CLEANUP__
+#if defined(__OPENGL_STATE_CLEANUP__)
     glBindTexture(GL_TEXTURE_2D, 0);
 #else
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -423,7 +423,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         goto error_delete_buffers;
     }
 
-#ifdef DEBUG
+#if defined(DEBUG)
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
@@ -496,7 +496,7 @@ bool Display_update(Display_t *display, float delta_time)
     GLfloat time = (GLfloat)display->time;
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
-#ifdef DEBUG
+#if defined(DEBUG)
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
@@ -515,7 +515,7 @@ void Display_present(const Display_t *display)
 
     GL_processor_surface_to_rgba(display->canvas.processor, surface, pixels);
 
-#ifdef __OPENGL_STATE_CLEANUP__
+#if defined(__OPENGL_STATE_CLEANUP__)
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 #endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
@@ -542,7 +542,7 @@ void Display_present(const Display_t *display)
         (float)x1, (float)y1
     };
 
-#ifdef __OPENGL_STATE_CLEANUP__
+#if defined(__OPENGL_STATE_CLEANUP__)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -550,7 +550,7 @@ void Display_present(const Display_t *display)
     glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-#ifdef __OPENGL_STATE_CLEANUP__
+#if defined(__OPENGL_STATE_CLEANUP__)
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glBindTexture(GL_TEXTURE_2D, 0);

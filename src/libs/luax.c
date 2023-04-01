@@ -56,7 +56,7 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
 {
     const char *value = lua_tostring(L, idx);
     if (!value) {
-#ifdef DEBUG
+#if defined(DEBUG)
         return luaL_error(L, "value at argument #%d is null", idx), 0;
 #else   /* DEBUG */
         return -1;
@@ -68,22 +68,22 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
             return i;
         }
     }
-#ifdef DEBUG
+#if defined(DEBUG)
     return luaL_error(L, "argument #%d w/ value `%s` is not a valid enumeration", idx, value), -1;
 #else   /* DEBUG */
     return -1;
 #endif  /* DEBUG */
 }
 
-#ifdef __LUAX_RTTI__
+#if defined(__LUAX_RTTI__)
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
 #else
-typedef void * luaX_Object;
+typedef void *luaX_Object;
 #endif  /* __LUAX_RTTI__ */
 
-#ifdef __LUAX_RTTI__
+#if defined(__LUAX_RTTI__)
   #define LUAX_OBJECT_SIZE(s)    (sizeof(luaX_Object) + (s))
   #define LUAX_OBJECT_SELF(o)    ((void *)((luaX_Object *)(o) + 1))
 #else
@@ -94,7 +94,7 @@ typedef void * luaX_Object;
 void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
     luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
-#ifdef __LUAX_RTTI__
+#if defined(__LUAX_RTTI__)
     *object = (luaX_Object){
             .type = type
         };
@@ -109,13 +109,13 @@ int luaX_isobject(lua_State *L, int idx, int type)
 {
     luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx); // `lua_touserdata` returns NULL if not userdata!
     if (!object) {
-#ifdef DEBUG
+#if defined(DEBUG)
         return luaL_error(L, "object at argument #%d is null", idx), 0;
 #else   /* DEBUG */
         return 0;
 #endif  /* DEBUG */
     }
-#ifdef __LUAX_RTTI__
+#if defined(__LUAX_RTTI__)
     return object->type == type;
 #else   /* __LUAX_RTTI__ */
     return 1;
@@ -126,16 +126,16 @@ void *luaX_toobject(lua_State *L, int idx, int type)
 {
     luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
     if (!object) {
-#ifdef DEBUG
+#if defined(DEBUG)
         return luaL_error(L, "object at argument #%d is null", idx), NULL;
 #else   /* DEBUG */
         return NULL;
 #endif  /* DEBUG */
     }
 
-#ifdef __LUAX_RTTI__
+#if defined(__LUAX_RTTI__)
     if (object->type != type) {
-#ifdef DEBUG
+#if defined(DEBUG)
         return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
 #else   /* DEBUG */
         return NULL;
@@ -302,14 +302,14 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#ifdef __LUAX_INCLUDE_SYSTEM_LIBRARIES__
+#if defined(__LUAX_INCLUDE_SYSTEM_LIBRARIES__)
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
 #endif  /* __LUAX_INCLUDE_SYSTEM_LIBRARIES__ */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
-#ifdef DEBUG
+#if defined(DEBUG)
         { LUA_DBLIBNAME, luaopen_debug },
 #endif  /* DEBUG */
         { NULL, NULL }

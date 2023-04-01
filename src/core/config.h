@@ -53,7 +53,7 @@
 #define __GSLS_VERSION__                    0x0114
 
 // Includes checks inside some crucial functions. Could be useful in DEBUG mode.
-#ifdef DEBUG
+#if defined(DEBUG)
   #define __DEFENSIVE_CHECKS__
 #else
   #undef  __DEFENSIVE_CHECKS__
@@ -105,7 +105,7 @@
 #define __SYSTEM_HEAP_PERIOD__  5.0f
 
 // In release build, disable VM calls debug and periodic collection for better performance.
-#ifdef NDEBUG
+#if defined(NDEBUG)
   #undef __LUAX_RTTI__
   #undef __DEBUG_ENGINE_PERFORMANCES__
   #undef __SYSTEM_HEAP_STATISTICS__

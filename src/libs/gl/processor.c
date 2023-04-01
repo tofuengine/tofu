@@ -39,11 +39,11 @@ GL_Processor_t *GL_processor_create(void)
     }
 
     *processor = (GL_Processor_t){ 0 };
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "processor created at %p", processor);
 #endif  /* VERBOSE_DEBUG */
 
-#ifdef __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
+#if defined(__PROGRAM_DEFAULT_QUANTIZED_PALETTE__)
     LOG_W(LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
   #if GL_MAX_PALETTE_COLORS == 256
     GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
@@ -74,13 +74,13 @@ void GL_processor_destroy(GL_Processor_t *processor)
 {
     if (processor->state.program) {
         GL_program_destroy(processor->state.program);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
         LOG_D(LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
 #endif  /* VERBOSE_DEBUG */
     }
 
     free(processor);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "processor %p freed", processor);
 #endif  /* VERBOSE_DEBUG */
 }
@@ -100,7 +100,7 @@ const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor)
 void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette)
 {
     GL_palette_copy(processor->state.palette, palette);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "palette copied");
 #endif  /* VERBOSE_DEBUG */
 }
@@ -124,7 +124,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
     const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
 
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
     const int count = processor->palette->size;
 #endif
 
@@ -135,7 +135,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
 
     for (size_t i = data_size; i; --i) {
         const GL_Pixel_t index = shifting[*(src++)];
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
         GL_Color_t color;
         if (index >= count) {
             const int y = (index - 240) * 8;
@@ -160,7 +160,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
     memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
     size_t wait = 0;
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
     const int count = processor->palette->size;
 #endif
     int modulo = 0;
@@ -184,7 +184,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
             // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
             // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
             // is used to mark the end of the processor.
-#ifdef __PROCESSOR_ONE_COMMAND_PER_PIXEL__
+#if defined(__PROCESSOR_ONE_COMMAND_PER_PIXEL__)
             if (i >= wait) {
 #else
             while (i >= wait) {
@@ -235,7 +235,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
             }
 
             const GL_Pixel_t index = shifting[*(src++)];
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
             GL_Color_t color;
             if (index >= count) {
                 const int v = (index - 240) * 8;
@@ -264,7 +264,7 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
 {
     if (processor->state.program) { // Deallocate current program, is present.
        GL_program_destroy(processor->state.program);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
         LOG_D(LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
         processor->state.program = NULL;
@@ -272,7 +272,7 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
 
     if (program) {
         processor->state.program = GL_program_clone(program);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
         LOG_D(LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
 #endif  /* VERBOSE_DEBUG */
     }

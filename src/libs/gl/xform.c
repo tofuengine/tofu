@@ -31,7 +31,7 @@
 
 #define LOG_CONTEXT "gl-xform"
 
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
@@ -45,7 +45,7 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
         LOG_E(LOG_CONTEXT, "can't allocate xform");
         return NULL;
     }
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "xform created at %p", xform);
 #endif  /* VERBOSE_DEBUG */
 
@@ -66,13 +66,13 @@ void GL_xform_destroy(GL_XForm_t *xform)
 {
     if (xform->table) {
         arrfree(xform->table);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
         LOG_D(LOG_CONTEXT, "xform table at %p freed", xform->table);
 #endif  /* VERBOSE_DEBUG */
     }
 
     free(xform);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "xform %p freed", xform);
 #endif  /* VERBOSE_DEBUG */
 }
@@ -95,7 +95,7 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
 {
     if (xform->table) {
         arrfree(xform->table);
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
         LOG_D(LOG_CONTEXT, "xform table at %p freed", xform->table);
 #endif  /* VERBOSE_DEBUG */
     }
@@ -117,7 +117,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
-#ifdef __GL_XFORM_TRANSPARENCY__
+#if defined(__GL_XFORM_TRANSPARENCY__)
     const GL_Bool_t *transparent = state->transparent;
 #endif  /* __GL_XFORM_TRANSPARENCY__ */
 
@@ -216,7 +216,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 }
             }
             ++table;
-#ifdef __DETACH_XFORM_TABLE__
+#if defined(__DETACH_XFORM_TABLE__)
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
             }
@@ -226,7 +226,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
         const float xi = 0.0f - x0;
         const float yi = (float)i - y0;
 
-#ifndef __CLIP_OFFSET__
+#if !defined(__CLIP_OFFSET__)
         float xp = (a * xi + b * yi) + x0 + h;
         float yp = (c * xi + d * yi) + y0 + v;
 #else
@@ -235,7 +235,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
 #endif
 
         for (int j = 0; j < width; ++j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
             _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
             int sx = IROUNDF(xp); // Preserve direction, for negative values!
@@ -290,7 +290,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
-#ifdef __GL_XFORM_TRANSPARENCY__
+#if defined(__GL_XFORM_TRANSPARENCY__)
                 if (!transparent[index]) {
                     *dptr = index;
                 }

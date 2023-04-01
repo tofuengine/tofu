@@ -122,7 +122,7 @@ static size_t _size(FILE *stream)
 {
     fseek(stream, 0L, SEEK_END);
     size_t size = (size_t)ftell(stream);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_D(LOG_CONTEXT, "handle %p is %d bytes long", handle, size);
 #endif
     fseek(stream, 0L, SEEK_SET);
@@ -201,7 +201,7 @@ static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
@@ -212,7 +212,7 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     bool sought = fseek(std_handle->stream, offset, whence) == 0;
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_D(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
     return sought;
@@ -230,7 +230,7 @@ static bool _std_handle_eof(FS_Handle_t *handle)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     bool end_of_file = feof(std_handle->stream) != 0;
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;

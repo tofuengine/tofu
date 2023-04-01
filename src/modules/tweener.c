@@ -292,7 +292,7 @@ static int tweener_evaluate_2on_1n(lua_State *L)
     float time = LUAX_NUMBER(L, 2);
 
     float ratio = time / self->duration;
-#ifdef __TWEENER_CLAMP__
+#if defined(__TWEENER_CLAMP__)
     float eased_ratio = self->function(FCLAMP(ratio, 0.0f, 1.0f));
 #else   /* __TWEENER_CLAMP__ */
     float eased_ratio = self->function(ratio);

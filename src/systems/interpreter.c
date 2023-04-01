@@ -39,13 +39,13 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <modules/modules.h>
 
 #include <stdint.h>
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
+#if defined(__DEBUG_GARBAGE_COLLECTOR__)
   #include <time.h>
 #endif
 
 #define LOG_CONTEXT "interpreter"
 
-#ifdef __DEBUG_VM_CALLS__
+#if defined(__DEBUG_VM_CALLS__)
   #define TRACEBACK_STACK_INDEX   1
   #define OBJECT_STACK_INDEX      (TRACEBACK_STACK_INDEX + 1)
   #define METHOD_STACK_INDEX(m)   (OBJECT_STACK_INDEX + 1 + (m))
@@ -54,13 +54,13 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
-#ifdef __VM_READER_BUFFER_SIZE__
+#if defined(__VM_READER_BUFFER_SIZE__)
   #define READER_CONTEXT_BUFFER_SIZE  1024
 #else
   #define READER_CONTEXT_BUFFER_SIZE  __VM_READER_BUFFER_SIZE__
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
   #define BOOT_SCRIPT "boot-debug"
 #else
   #define BOOT_SCRIPT "boot-release"
@@ -129,8 +129,8 @@ static void _warning(void *ud, const char *message, int tocont)
     }
 }
 
-#ifdef __DEBUG_VM_CALLS__
-#ifdef __VM_USE_CUSTOM_TRACEBACK__
+#if defined(__DEBUG_VM_CALLS__)
+#if defined(__VM_USE_CUSTOM_TRACEBACK__)
 static int _error_handler(lua_State *L)
 {
     const char *msg = lua_tostring(L, 1);
@@ -229,7 +229,7 @@ static bool _detect(lua_State *L, int index, const char *methods[])
 
 static inline int _raw_call(lua_State *L, int nargs, int nresults)
 {
-#ifdef __DEBUG_VM_CALLS__
+#if defined(__DEBUG_VM_CALLS__)
     int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
         LOG_E(LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
@@ -297,8 +297,8 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
 
-#ifdef __DEBUG_VM_CALLS__
-#ifndef __VM_USE_CUSTOM_TRACEBACK__
+#if defined(__DEBUG_VM_CALLS__)
+#if !defined(__VM_USE_CUSTOM_TRACEBACK__)
     lua_getglobal(interpreter->state, "debug");
     lua_getfield(interpreter->state, -1, "traceback");
     lua_remove(interpreter->state, -2);
@@ -378,7 +378,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 
         lua_gc(interpreter->state, LUA_GCSTEP, 0); // Basic step.
     }
-#endif
+#endif  /* __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS */
 
 
 #if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
@@ -386,24 +386,24 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
     while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GC_COLLECTION_PERIOD;
 
-#ifdef __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
+#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__)
+#if defined(__DEBUG_GARBAGE_COLLECTOR__)
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
         LOG_D(LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
-#endif
+#endif  /* __DEBUG_GARBAGE_COLLECTOR__ */
         lua_gc(interpreter->state, LUA_GCCOLLECT);
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
+#if defined(__DEBUG_GARBAGE_COLLECTOR__)
         int post = lua_gc(interpreter->state, LUA_GCCOUNT);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         LOG_D(LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
-#endif
-#else
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
+#endif  /* __DEBUG_GARBAGE_COLLECTOR__ */
+#else   /* __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__ */
+#if defined(__DEBUG_GARBAGE_COLLECTOR__)
         int count = lua_gc(interpreter->state, LUA_GCCOUNT);
         LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
-#endif
-#endif
+#endif  /* __DEBUG_GARBAGE_COLLECTOR__ */
+#endif  /* __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__ */
     }
 #endif
 

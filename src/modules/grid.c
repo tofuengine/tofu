@@ -212,7 +212,7 @@ static int grid_peek_2on_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t offset = LUAX_UNSIGNED(L, 2);
-#ifdef DEBUG
+#if defined(DEBUG)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
     }
@@ -235,7 +235,7 @@ static int grid_peek_3onn_1n(lua_State *L)
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t column = LUAX_UNSIGNED(L, 2);
     size_t row = LUAX_UNSIGNED(L, 3);
-#ifdef DEBUG
+#if defined(DEBUG)
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
     } else
@@ -269,7 +269,7 @@ static int grid_poke_3onn_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t offset = LUAX_UNSIGNED(L, 2);
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 3);
-#ifdef DEBUG
+#if defined(DEBUG)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range [0, %d)", offset, self->data_size);
     }
@@ -292,7 +292,7 @@ static int grid_poke_4onnn_0(lua_State *L)
     size_t column = LUAX_UNSIGNED(L, 2);
     size_t row = LUAX_UNSIGNED(L, 3);
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 4);
-#ifdef DEBUG
+#if defined(DEBUG)
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range [0, %d)", column, self->width);
     } else

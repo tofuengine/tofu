@@ -63,7 +63,7 @@ float fsmootherstep(float edge0, float edge1, float x)
     return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 }
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 float ffloor(float x)
 {
     const int i = (int)x;

@@ -44,10 +44,10 @@ static int system_clock_0_1n(lua_State *L);
 static int system_time_0_1n(lua_State *L);
 static int system_date_2SS_1s(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
 static int system_stats_0_4nnnn(lua_State *L);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-#ifdef __SYSTEM_HEAP_STATISTICS__
+#if defined(__SYSTEM_HEAP_STATISTICS__)
 static int system_heap_1S_1n(lua_State *L);
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
 static int system_quit_0_0(lua_State *L);
@@ -64,10 +64,10 @@ int system_loader(lua_State *L)
             { "time", system_time_0_1n },
             { "date", system_date_2SS_1s },
             { "fps", system_fps_0_1n },
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
             { "stats", system_stats_0_4nnnn },
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-#ifdef __SYSTEM_HEAP_STATISTICS__
+#if defined(__SYSTEM_HEAP_STATISTICS__)
             { "heap", system_heap_1S_1n },
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
             { "quit", system_quit_0_0 },
@@ -171,7 +171,7 @@ static int system_fps_0_1n(lua_State *L)
     return 1;
 }
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
 static int system_stats_0_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -190,7 +190,7 @@ static int system_stats_0_4nnnn(lua_State *L)
 }
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
-#ifdef __SYSTEM_HEAP_STATISTICS__
+#if defined(__SYSTEM_HEAP_STATISTICS__)
 static int system_heap_1S_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)

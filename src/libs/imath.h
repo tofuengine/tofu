@@ -42,7 +42,7 @@
 #define ITRUNC(x)       ((int)(x))
 #define INEAREST(x)     ((int)((x) + 0.5f))
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 #define IFLOORF(x)      (ifloor((x)))
 #define ICEILF(x)       (iceil((x)))
 #define IROUNDF(x)      (ifloor((x) + 0.5f))
@@ -57,7 +57,7 @@ extern int imod(int a, int b);
 extern int imin(int a, int b);
 extern int imax(int a, int b);
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 extern int ifloor(float x);
 extern int iceil(float x);
 #endif

@@ -46,7 +46,7 @@ typedef struct rgba_s {
 void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
-#ifdef __PALETTE_COLOR_MEMOIZATION__
+#if defined(__PALETTE_COLOR_MEMOIZATION__)
     struct {
         GL_Color_t key;
         GL_Pixel_t value;
@@ -63,7 +63,7 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
         } else {
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
+#if defined(__PALETTE_COLOR_MEMOIZATION__)
             const int position = hmgeti(cache, color);
             if (position != -1) {
                 const GL_Pixel_t index = cache[position].value;
@@ -74,13 +74,13 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
 
             const GL_Pixel_t index = GL_palette_find_nearest_color(closure->palette, color);
             *(dst++) = index;
-#ifdef __PALETTE_COLOR_MEMOIZATION__
+#if defined(__PALETTE_COLOR_MEMOIZATION__)
             hmput(cache, color, index);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
         }
     }
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
+#if defined(__PALETTE_COLOR_MEMOIZATION__)
     hmfree(cache);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 }

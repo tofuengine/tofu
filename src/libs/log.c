@@ -34,7 +34,7 @@
 #endif
 
 // http://jafrog.com/2013/11/23/colors-in-terminal.html
-#ifdef USE_COLORS
+#if defined(USE_COLORS)
   #define COLOR_BLACK       "\x1b[30m"
   #define COLOR_RED         "\x1b[31m"
   #define COLOR_GREEN       "\x1b[32m"
@@ -56,7 +56,7 @@
   #define COLOR_OFF         "\x1b[0m"
 #endif
 
-#ifdef USE_COLORS
+#if defined(USE_COLORS)
 static const char *_colors[Log_Levels_t_CountOf] = {
     COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
 };
@@ -79,13 +79,13 @@ static void _write(Log_Levels_t level, const char *context, const char *text, va
         return;
     }
 
-#ifdef USE_COLORS
+#if defined(USE_COLORS)
     fprintf(_stream, "%s[%c/%s]%s %s", COLOR_WHITE, _prefixes[level], context, COLOR_OFF, _colors[level]);
 #else
     fprintf(_stream, "[%c/%s] ", _prefixes[level], context);
 #endif
     vfprintf(_stream, text, args);
-#ifdef USE_COLORS
+#if defined(USE_COLORS)
     fputs(COLOR_OFF, _stream);
 #endif
     if (text[strlen(text) - 1] != '\n') {
@@ -95,7 +95,7 @@ static void _write(Log_Levels_t level, const char *context, const char *text, va
 
 extern void Log_initialize(void)
 {
-#ifdef DEBUG
+#if defined(DEBUG)
     _level = LOG_LEVELS_ALL;
 #else
     _level = LOG_LEVELS_ERROR;

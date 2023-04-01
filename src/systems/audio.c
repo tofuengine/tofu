@@ -204,7 +204,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_device_set_master_volume(&audio->driver.device, configuration->master_volume); // Set the initial volume.
     LOG_D(LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
-#ifndef __AUDIO_START_AND_STOP__
+#if !defined(__AUDIO_START_AND_STOP__)
     result = ma_device_start(&audio->driver.device);
     if (result != MA_SUCCESS) {
         LOG_E(LOG_CONTEXT, "can't start the audio device");
@@ -361,7 +361,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->driver.lock);
     bool updated = SL_context_update(audio->context, delta_time);
-#ifdef __AUDIO_START_AND_STOP__
+#if defined(__AUDIO_START_AND_STOP__)
     size_t count = SL_context_count_tracked(audio->context);
 #endif
     ma_mutex_unlock(&audio->driver.lock);
@@ -371,7 +371,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
         return false;
     }
 
-#ifdef __AUDIO_START_AND_STOP__
+#if defined(__AUDIO_START_AND_STOP__)
     const bool is_started = ma_device_is_started(&audio->driver.device);
     if (count == 0 && is_started) {
         audio->grace -= delta_time;

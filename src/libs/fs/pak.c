@@ -436,7 +436,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
         _derive_key(key, id, PAK_ID_LENGTH);
 
         xor_schedule(&pak_handle->cipher_context, key, PAK_ID_LENGTH);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
         LOG_T(LOG_CONTEXT, "cipher context initialized");
 #endif
     }
@@ -457,7 +457,7 @@ static size_t _pak_handle_size(FS_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "handle %p is", std_handle);
 #endif  /* VERBOSE_DEBUG */
 
@@ -482,18 +482,18 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
     }
 
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_T(LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 #endif
 
     if (pak_handle->encrypted) {
         xor_process(&pak_handle->cipher_context, buffer, buffer, bytes_read);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
         LOG_T(LOG_CONTEXT, "%d bytes decrypted", bytes_read);
 #endif
     }
 
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
@@ -524,14 +524,14 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     }
 
     bool sought = fseek(pak_handle->stream, position, SEEK_SET) == 0;
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_T(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the sought position.
         size_t index = position - pak_handle->begin_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
         LOG_T(LOG_CONTEXT, "cipher context adjusted to %d", index);
 #endif
     }
@@ -557,7 +557,7 @@ static bool _pak_handle_eof(FS_Handle_t *handle)
     }
 
     bool end_of_file = position > pak_handle->end_of_stream;
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;

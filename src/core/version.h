@@ -31,7 +31,7 @@
 
 #define TOFU_VERSION_NUMBER         ((TOFU_VERSION_MAJOR << 16) | (TOFU_VERSION_MINOR << 8) | (TOFU_VERSION_REVISION))
 
-#ifdef DEBUG
+#if defined(DEBUG)
   #define _TOFU_CONCAT_VERSION(m, n, r)   #m "." #n "." #r "-dev-debug"
 #else
   #define _TOFU_CONCAT_VERSION(m, n, r)   #m "." #n "." #r "-dev"

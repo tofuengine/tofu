@@ -377,7 +377,7 @@ static inline void _keyboard_update(Input_t *input, float delta_time)
 
 static inline void _cursor_update(Input_t *input, float delta_time)
 {
-#ifdef __INPUT_CURSOR_EMULATION__
+#if defined(__INPUT_CURSOR_EMULATION__)
     Input_Cursor_t *cursor = &input->state.cursor;
     if (cursor->enabled) {
         return;
@@ -439,7 +439,7 @@ typedef struct Int_To_Int_s {
 } Int_To_Int_t;
 #endif
 
-#ifdef __INPUT_CONTROLLER_EMULATION__
+#if defined(__INPUT_CONTROLLER_EMULATION__)
 static Int_To_Int_t _keyboard_to_controller_0[] = {
      { INPUT_KEYBOARD_BUTTON_W, INPUT_CONTROLLER_BUTTON_UP },
      { INPUT_KEYBOARD_BUTTON_S, INPUT_CONTROLLER_BUTTON_DOWN },
@@ -469,7 +469,7 @@ static Int_To_Int_t _keyboard_to_controller_1[] = {
 };
 #endif
 
-#ifdef __INPUT_CURSOR_EMULATION__
+#if defined(__INPUT_CURSOR_EMULATION__)
 #define CURSOR_CONTROLLER_ID    0
 
 static Int_To_Int_t _controller_to_cursor[] = {
@@ -505,12 +505,12 @@ static inline void _buttons_process(Input_t *input)
         _buttons_sync(controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
     }
 
-#ifdef __INPUT_CONTROLLER_EMULATION__
+#if defined(__INPUT_CONTROLLER_EMULATION__)
     _buttons_copy(controllers[0].buttons, keyboard->buttons, _keyboard_to_controller_0);
     _buttons_copy(controllers[1].buttons, keyboard->buttons, _keyboard_to_controller_1);
 #endif
 
-#ifdef __INPUT_CURSOR_EMULATION__
+#if defined(__INPUT_CURSOR_EMULATION__)
     const Input_Controller_t *controller = &controllers[CURSOR_CONTROLLER_ID];
     if (!cursor->enabled) {
         _buttons_copy(cursor->buttons, controller->buttons, _controller_to_cursor);
@@ -576,7 +576,7 @@ Input_Button_t Input_keyboard_get_button(const Input_Keyboard_t *keyboard, Input
 
 bool Input_cursor_is_available(const Input_Cursor_t *cursor)
 {
-#ifdef __INPUT_CURSOR_EMULATION__
+#if defined(__INPUT_CURSOR_EMULATION__)
     return true;
 #else
     return cursor->enabled;
@@ -604,7 +604,7 @@ void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position
 
 bool Input_controller_is_available(const Input_Controller_t *controller)
 {
-#ifdef __INPUT_CONTROLLER_EMULATION__
+#if defined(__INPUT_CONTROLLER_EMULATION__)
     return controller->jid != -1 || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
 #else
     return controller->jid != -1;

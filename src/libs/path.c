@@ -33,7 +33,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #ifdef __USE_OS_NATIVE_API__
+  #if defined(__USE_OS_NATIVE_API__)
     #include <shlobj.h>
   #endif
 #endif
@@ -70,7 +70,7 @@ void path_expand(const char *path, char *expanded)
         strcat(resolved, path + 1);
 #elif PLATFORM_ID == PLATFORM_WINDOWS
     if (strncasecmp(path, "%AppData%", 9) == 0) {
-  #ifdef __USE_OS_NATIVE_API__
+  #if defined(__USE_OS_NATIVE_API__)
         char appdata[PLATFORM_PATH_MAX] = { 0 };
         SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
   #else

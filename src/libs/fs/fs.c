@@ -134,7 +134,7 @@ bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, v
 FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 {
     const FS_Mount_t *mount = NULL;
-#ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
+#if defined(__FS_SUPPORT_MOUNT_OVERRIDE__)
     // Backward scan, later mounts gain priority over existing ones.
     for (int index = arrlen(context->mounts) - 1; index >= 0; --index) {
 #else

@@ -52,7 +52,7 @@ Environment_t *Environment_create(const Display_t *display, const Input_t *input
         .display = display,
         .input = input,
         .state = (Environment_State_t){
-#ifdef __DISPLAY_FOCUS_SUPPORT__
+#if defined(__DISPLAY_FOCUS_SUPPORT__)
             .active = { .is = false, .was = false },
 #endif
             .controllers = { .previous = -1, .current = 0 },
@@ -89,7 +89,7 @@ static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a
     return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
 }
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
 static inline void _calculate_times(float times[4], const float deltas[4])
 {
     static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
@@ -107,14 +107,14 @@ static inline void _calculate_times(float times[4], const float deltas[4])
 }
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
 void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
 #else
 void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 {
     Environment_State_t *state = &environment->state;
-#ifdef __DISPLAY_FOCUS_SUPPORT__
+#if defined(__DISPLAY_FOCUS_SUPPORT__)
     state->active.was = state->active.is;
     state->active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
@@ -124,9 +124,9 @@ void Environment_process(Environment_t *environment, float frame_time)
     Environment_Stats_t *stats = &state->stats;
     stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
     _calculate_times(stats->times, deltas);
-#ifdef __DEBUG_ENGINE_PERFORMANCES__
+#if defined(__DEBUG_ENGINE_PERFORMANCES__)
     static float stats_time = __ENGINE_PERFORMANCES_PERIOD__;
     stats_time += frame_time;
     while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
@@ -137,7 +137,7 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
-#ifdef __SYSTEM_HEAP_STATISTICS__
+#if defined(__SYSTEM_HEAP_STATISTICS__)
     static float heap_time = __SYSTEM_HEAP_PERIOD__;
     heap_time += frame_time;
     while (heap_time > __SYSTEM_HEAP_PERIOD__) {

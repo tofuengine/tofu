@@ -44,7 +44,7 @@ int imax(int a, int b)
     return IMAX(a, b);
 }
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 #else
 int ifloor(float x)
 {

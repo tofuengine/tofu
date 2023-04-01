@@ -90,7 +90,7 @@ void GL_surface_destroy(GL_Surface_t *surface)
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)
 {
-#ifdef __NO_MEMSET_MEMCPY__
+#if defined(__NO_MEMSET_MEMCPY__)
     GL_Pixel_t *dst = surface->data;
     for (size_t i = surface->data_size; i; --i) {
         *(dst++) = index;

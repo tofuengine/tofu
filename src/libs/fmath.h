@@ -64,7 +64,7 @@
 #define FINVLERP(v0, v1, v) (((v) - (v0)) / ((v1) - (v0)))
 #define FSTEP(e, x)         ((x) < (e) ? 0.0f : 1.0f)
 
-#ifdef __FAST_FLOAT_MATH__
+#if defined(__FAST_FLOAT_MATH__)
 #define FFLOOR(x)           (ffloor((x)))
 #define FCEIL(x )           (fceil((x)))
 #define FROUND(x)           (ffloor((x) + 0.5f))
@@ -82,7 +82,7 @@ extern float fstep(float edge, float x);
 extern float fsmoothstep(float edge0, float edge1, float x);
 extern float fsmootherstep(float edge0, float edge1, float x);
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 extern float ffloor(float x);
 extern float fceil(float x);
 #endif

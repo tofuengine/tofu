@@ -116,7 +116,7 @@ static inline bool _produce(Module_t *module)
     if (frames_to_produce == 0) {
         LOG_W(LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", module);
         return true;
-#ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
+#if defined(STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
     if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;

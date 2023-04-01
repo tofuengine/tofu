@@ -346,7 +346,7 @@ static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const 
 
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
-#ifdef __STORAGE_CHECK_ABSOLUTE_PATHS__
+#if defined(__STORAGE_CHECK_ABSOLUTE_PATHS__)
     if (path_is_absolute(name) || !path_is_normalized(name)) {
         LOG_E(LOG_CONTEXT, "path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
         return NULL;
@@ -379,7 +379,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     arrpush(storage->resources, resource);
 
-#ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
+#if defined(__STORAGE_CACHE_ENTRIES_LIMIT__)
     if (arrlenu(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
         storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
         LOG_D(LOG_CONTEXT, "resource %p marked for release", storage->resources[0]);

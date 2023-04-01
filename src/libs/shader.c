@@ -36,7 +36,7 @@ Shader_t *shader_create(void)
         LOG_E(LOG_CONTEXT, "can't allocate shader");
         goto error_exit;
     }
-#ifdef VERBOSE_DEBUG
+#if defined(VERBOSE_DEBUG)
     LOG_D(LOG_CONTEXT, "shader created at %p", shader);
 #endif  /* VERBOSE_DEBUG */
 
@@ -82,7 +82,7 @@ void shader_destroy(Shader_t *shader)
 
 bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
 {
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
     if (shader->id == 0) {
         LOG_W(LOG_CONTEXT, "shader program can't be zero");
         return false;
@@ -159,7 +159,7 @@ void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
 // `shader_use` need to be called prior sending data to the program.
 void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value)
 {
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
     if (!shader->locations) {
         LOG_W(LOG_CONTEXT, "program uniforms are not prepared");
         return;
@@ -167,7 +167,7 @@ void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, s
 #endif
     GLint location = shader->locations[index];
     if (location == -1) {
-#ifdef __DEBUG_SHADER_CALLS__
+#if defined(__DEBUG_SHADER_CALLS__)
         LOG_W(LOG_CONTEXT, "can't find uniform `%s` for program #%d", id, shader->id);
 #endif
         return;

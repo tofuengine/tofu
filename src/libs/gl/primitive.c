@@ -130,7 +130,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         }
     }
 
-#ifndef __NON_DDA_LINES__
+#if !defined(__NON_DDA_LINES__)
     GL_Pixel_t *ddata = surface->data;
 
     const int dwidth = (int)surface->width;
@@ -486,8 +486,8 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
         return;
     }
 
-#ifdef __GL_FIX_WINDING__
-#ifdef __GL_CLOCKWISE_WINDING__
+#if defined(__GL_FIX_WINDING__)
+#if defined(__GL_CLOCKWISE_WINDING__)
     if ((v1.x - v0.x) * (v2.y - v0.y) < (v2.x - v0.x) * (v1.y - v0.y)) { // Ensure CW winding.
 #else
     if ((v1.x - v0.x) * (v2.y - v0.y) > (v2.x - v0.x) * (v1.y - v0.y)) { // Ensure CCW winding.
@@ -500,7 +500,7 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
 
     // Fast edge-function calculation, using a DDA method.
     // Note: swap `v1` and `v2` in the formulas to change winding.
-#ifdef __GL_CLOCKWISE_WINDING__
+#if defined(__GL_CLOCKWISE_WINDING__)
     const int DW0X = v1.y - v2.y, DW0Y = v2.x - v1.x;
     const int DW1X = v2.y - v0.y, DW1Y = v0.x - v2.x;
     const int DW2X = v0.y - v1.y, DW2Y = v1.x - v0.x;

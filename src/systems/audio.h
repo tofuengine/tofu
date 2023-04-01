@@ -50,7 +50,7 @@ typedef struct Audio_s {
 
     SL_Context_t *context;
 
-#ifdef __AUDIO_START_AND_STOP__
+#if defined(__AUDIO_START_AND_STOP__)
     double grace;
 #endif  /* __AUDIO_START_AND_STOP__ */
 } Audio_t;

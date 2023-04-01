@@ -27,7 +27,7 @@
 #include <core/config.h>
 #include <libs/imath.h>
 
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
@@ -93,7 +93,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
 
         int u = ou;
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[srow[u]];
@@ -193,7 +193,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
         int u = ou;
         int ru = ru0;
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(__DEBUG_GRAPHICS__)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             GL_Pixel_t index = shifting[srow[u]];

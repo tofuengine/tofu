@@ -13,6 +13,30 @@ Behavioural macros are also present in the file `config.h`.
 
 For the identifiers is adopted the [snake-case]() style.
 
+## Preprocessor Conditionals
+
+The preferred form for preprocessor conditional is the "expanded one", that is
+
+```c
+#if defined(DEBUG)
+   // ...
+#endif  /* defined(DEBUG) */
+```
+
+over
+
+```c
+#ifdef DEBUG
+   // ...
+#endif  /* DEBUG */
+```
+
+This is due to better consistency when more than one condition is to be checked.
+
+The only exception to this is for the include-guards (see below), which uses the compact version.
+
+> Coincidentally this is the same approach used in Lua's codebase.
+
 ## Type Definitions
 
 Types are defined with [Pascal-case]() style. The following suffixes are used:

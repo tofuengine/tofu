@@ -119,7 +119,7 @@ static inline bool _produce(Music_t *music)
     if (frames_to_produce == 0) {
         LOG_W(LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", music);
         return true;
-#ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
+#if defined(STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
     if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
@@ -230,7 +230,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
         goto error_close_decoder;
     }
 
-#ifdef __SL_MUSIC_PRELOAD__
+#if defined(__SL_MUSIC_PRELOAD__)
     bool produced = _produce(music);
     if (!produced) {
         LOG_E(LOG_CONTEXT, "can't pre-load music data");
@@ -279,7 +279,7 @@ static bool _music_reset(SL_Source_t *source)
         return false;
     }
 
-#ifdef __SL_MUSIC_PRELOAD__
+#if defined(__SL_MUSIC_PRELOAD__)
     bool produced = _produce(music);
     if (!produced) {
         LOG_E(LOG_CONTEXT, "can't pre-load music data");

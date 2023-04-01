@@ -138,7 +138,7 @@ static int palette_new_1t_1o(lua_State *L)
     GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     lua_pushnil(L); // T -> T N
     for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
         size_t components = lua_rawlen(L, 3);
         if (components != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, components);

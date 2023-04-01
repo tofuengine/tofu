@@ -208,7 +208,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
                 }
             },
             .keyboard = {
-#ifdef DEBUG
+#if defined(DEBUG)
                 .exit_key = true
 #else
                 .exit_key = engine->configuration->keyboard.exit_key
@@ -288,7 +288,7 @@ void Engine_destroy(Engine_t *engine)
     free(engine);
     LOG_D(LOG_CONTEXT, "engine freed");
 
-#ifdef STB_LEAKCHECK_INCLUDED
+#if defined(STB_LEAKCHECK_INCLUDED)
     stb_leakcheck_dumpmem();
 #endif
 }
@@ -299,7 +299,7 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
 
-#ifdef __DISPLAY_FOCUS_SUPPORT__
+#if defined(__DISPLAY_FOCUS_SUPPORT__)
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
@@ -349,7 +349,7 @@ void Engine_run(Engine_t *engine)
     // Track time using `double` to keep the min resolution consistent over time!
     // For intervals (i.e. deltas), `float` is sufficient.
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
     float deltas[4] = { 0 };
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     double previous = glfwGetTime();
@@ -361,7 +361,7 @@ void Engine_run(Engine_t *engine)
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
-#ifdef DEBUG
+#if defined(DEBUG)
         // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
         // time to `delta_time`.
@@ -374,7 +374,7 @@ void Engine_run(Engine_t *engine)
 #endif
         previous = current;
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
         Environment_process(engine->environment, elapsed, deltas);
 #else
         Environment_process(engine->environment, elapsed);
@@ -388,7 +388,7 @@ void Engine_run(Engine_t *engine)
 
         running = running && Interpreter_process(engine->interpreter, events); // Lazy evaluate `running`, will avoid calls when error.
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
         const double process_marker = glfwGetTime();
         deltas[0] = (float)(process_marker - current);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
@@ -410,7 +410,7 @@ void Engine_run(Engine_t *engine)
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
 //        running = running && Storage_update_variable(engine->storage, elapsed);
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
         const double update_marker = glfwGetTime();
         deltas[1] = (float)(update_marker - process_marker);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
@@ -419,7 +419,7 @@ void Engine_run(Engine_t *engine)
 
         Display_present(engine->display);
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
         const double render_marker = glfwGetTime();
         deltas[2] = (float)(render_marker - update_marker);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
@@ -432,7 +432,7 @@ void Engine_run(Engine_t *engine)
             }
         }
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
         deltas[3] = (float)(glfwGetTime() - current);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     }

@@ -163,7 +163,7 @@ static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t b
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
     size_t bytes_read = cache_handle->callbacks.read(cache_handle->stream, buffer, bytes_requested);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
@@ -174,7 +174,7 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
     bool sought = cache_handle->callbacks.seek(cache_handle->stream, offset, whence);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_D(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
     return sought;
@@ -192,7 +192,7 @@ static bool _callbacks_handle_eof(FS_Handle_t *handle)
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
     bool end_of_file =  cache_handle->callbacks.eof(cache_handle->stream);
-#ifdef __DEBUG_FS_CALLS__
+#if defined(__DEBUG_FS_CALLS__)
     LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
