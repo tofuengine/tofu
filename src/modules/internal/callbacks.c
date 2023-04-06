@@ -37,7 +37,7 @@ typedef struct rgba_s {
 // nearest-matching color in the palette. This is a computationally demanding operation, since it computes the Euclidian
 // distance for each palette-entry. Even for small images the load-and-convert times are non negligible.
 //
-// We can get a huge performance boost by adopting a "minification" technique. Each nearest-matches is stored into an
+// We can get a huge performance boost by adopting a "memoization" technique. Each nearest-matches is stored into an
 // hash-map dynamically populated during the conversion: a color is first first checked if has been already encountered
 // and converted; if not it is converted and stored for later usage.
 //
@@ -46,12 +46,12 @@ typedef struct rgba_s {
 void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
-#if defined(__PALETTE_COLOR_MEMOIZATION__)
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
     struct {
         GL_Color_t key;
         GL_Pixel_t value;
     } *cache = NULL; // Stores past executed colors matches.
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 
     const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data;
@@ -63,26 +63,26 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
         } else {
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
 
-#if defined(__PALETTE_COLOR_MEMOIZATION__)
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
             const int position = hmgeti(cache, color);
             if (position != -1) {
                 const GL_Pixel_t index = cache[position].value;
                 *(dst++) = index;
                 continue;
             }
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 
             const GL_Pixel_t index = GL_palette_find_nearest_color(closure->palette, color);
             *(dst++) = index;
-#if defined(__PALETTE_COLOR_MEMOIZATION__)
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
             hmput(cache, color, index);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
         }
     }
 
-#if defined(__PALETTE_COLOR_MEMOIZATION__)
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
     hmfree(cache);
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 }
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)

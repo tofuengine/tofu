@@ -75,15 +75,15 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
 #endif  /* DEBUG */
 }
 
-#if defined(__LUAX_RTTI__)
+#if defined(LUAX_ENABLE_RTTI)
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
 #else
 typedef void *luaX_Object;
-#endif  /* __LUAX_RTTI__ */
+#endif  /* LUAX_ENABLE_RTTI */
 
-#if defined(__LUAX_RTTI__)
+#if defined(LUAX_ENABLE_RTTI)
   #define LUAX_OBJECT_SIZE(s)    (sizeof(luaX_Object) + (s))
   #define LUAX_OBJECT_SELF(o)    ((void *)((luaX_Object *)(o) + 1))
 #else
@@ -94,11 +94,11 @@ typedef void *luaX_Object;
 void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
     luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
-#if defined(__LUAX_RTTI__)
+#if defined(LUAX_ENABLE_RTTI)
     *object = (luaX_Object){
             .type = type
         };
-#endif  /* __LUAX_RTTI__ */
+#endif  /* LUAX_ENABLE_RTTI */
     luaL_setmetatable(L, metatable);
     void *self = LUAX_OBJECT_SELF(object);
     memcpy(self, state, size);
@@ -115,11 +115,11 @@ int luaX_isobject(lua_State *L, int idx, int type)
         return 0;
 #endif  /* DEBUG */
     }
-#if defined(__LUAX_RTTI__)
+#if defined(LUAX_ENABLE_RTTI)
     return object->type == type;
-#else   /* __LUAX_RTTI__ */
+#else   /* LUAX_ENABLE_RTTI */
     return 1;
-#endif  /* __LUAX_RTTI__ */
+#endif  /* LUAX_ENABLE_RTTI */
 }
 
 void *luaX_toobject(lua_State *L, int idx, int type)
@@ -133,7 +133,7 @@ void *luaX_toobject(lua_State *L, int idx, int type)
 #endif  /* DEBUG */
     }
 
-#if defined(__LUAX_RTTI__)
+#if defined(LUAX_ENABLE_RTTI)
     if (object->type != type) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
@@ -141,7 +141,7 @@ void *luaX_toobject(lua_State *L, int idx, int type)
         return NULL;
 #endif  /* DEBUG */
     }
-#endif  /* __LUAX_RTTI__ */
+#endif  /* LUAX_ENABLE_RTTI */
 
     return LUAX_OBJECT_SELF(object);
 }
@@ -302,10 +302,10 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#if defined(__LUAX_INCLUDE_SYSTEM_LIBRARIES__)
+#if defined(LUAX_INCLUDE_SYSTEM_LIBRARIES)
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
-#endif  /* __LUAX_INCLUDE_SYSTEM_LIBRARIES__ */
+#endif  /* LUAX_INCLUDE_SYSTEM_LIBRARIES */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },

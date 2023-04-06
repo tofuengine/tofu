@@ -33,16 +33,16 @@
 
 typedef struct Environment_Stats_s {
     size_t fps;
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float times[4];
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-#if defined(__SYSTEM_HEAP_STATISTICS__)
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
     size_t memory_usage;
-#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 } Environment_Stats_t;
 
 typedef struct Environment_State_s {
-#if defined(__DISPLAY_FOCUS_SUPPORT__)
+#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
     struct {
         bool is;
         bool was;
@@ -67,11 +67,11 @@ extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
 #else
 extern void Environment_process(Environment_t *environment, float frame_time);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 extern bool Environment_update(Environment_t *environment, float delta_time);
 

@@ -130,21 +130,21 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
 // Treat the stereo source as two separate mono channels and pan them individually.
 SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
 {
-#if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
+#if TOFU_SOUND_PANNING_LAW == PANNING_LAW_CONSTANT_GAIN
     const float left_theta = (left_pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
     const float right_theta = (right_pan + 1.0f) * 0.5f;
     return (SL_Mix_t){ // powf(theta, 1)
             .left_to_left = 1.0f - left_theta, .left_to_right = left_theta
             .right_to_left = 1.0f - right_theta, .right_to_right = right_theta
         };
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
+#elif TOFU_SOUND_PANNING_LAW == PANNING_LAW_CONSTANT_POWER_SINCOS
     const float left_theta = (left_pan + 1.0f) * 0.5f * F_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     const float right_theta = (right_pan + 1.0f) * 0.5f * F_PI_2;
     return (SL_Mix_t){
             .left_to_left = cosf(left_theta), .left_to_right = sinf(left_theta),
             .right_to_left = cosf(right_theta), .right_to_right = sinf(right_theta),
         };
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
+#elif TOFU_SOUND_PANNING_LAW == PANNING_LAW_CONSTANT_POWER_SQRT
     const float left_theta = (left_pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
     const float right_theta = (right_pan + 1.0f) * 0.5f;
     return (SL_Mix_t){ // powf(theta, 0.5)
@@ -156,13 +156,13 @@ SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
 
 SL_Mix_t mix_pan(float pan)
 {
-#if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
+#if TOFU_SOUND_PANNING_LAW == PANNING_LAW_CONSTANT_GAIN
     const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
     return (SL_Mix_t){ .left_to_left = 1.0f - theta, .right_to_right = theta }; // powf(theta, 1)
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
+#elif TOFU_SOUND_PANNING_LAW == PANNING_LAW_CONSTANT_POWER_SINCOS
     const float theta = (pan + 1.0f) * 0.5f * F_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (SL_Mix_t){ .left_to_left = cosf(theta), .right_to_right = sinf(theta) };
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
+#elif TOFU_SOUND_PANNING_LAW == PANNING_LAW_CONSTANT_POWER_SQRT
     const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
     return (SL_Mix_t){ .left_to_left = sqrtf(1.0f - theta), .right_to_right = sqrtf(theta) }; // powf(theta, 0.5)
 #endif
@@ -171,7 +171,7 @@ SL_Mix_t mix_pan(float pan)
 // The balance law differs from the panning law in the fact that when on center the channels are 0dB.
 SL_Mix_t mix_balance(float balance)
 {
-#if __SL_BALANCE_LAW__ == BALANCE_LAW_LINEAR
+#if TOFU_SOUND_BALANCE_LAW == BALANCE_LAW_LINEAR
     if (balance < 0.0f) {
         return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = 1.0f + balance };
     } else
@@ -180,7 +180,7 @@ SL_Mix_t mix_balance(float balance)
     } else {
         return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = 1.0f };
     }
-#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SINCOS
+#elif TOFU_SOUND_BALANCE_LAW == BALANCE_LAW_SINCOS
     if (balance < 0.0f) {
         return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = sinf((1.0f + balance) * F_PI_2) };
     } else
@@ -189,7 +189,7 @@ SL_Mix_t mix_balance(float balance)
     } else {
         return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = 1.0f };
     }
-#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SQRT
+#elif TOFU_SOUND_BALANCE_LAW == BALANCE_LAW_SQRT
     if (balance < 0.0f) {
         return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = sqrtf(1.0f + balance) };
     } else

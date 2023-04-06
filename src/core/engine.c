@@ -299,11 +299,11 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
 
-#if defined(__DISPLAY_FOCUS_SUPPORT__)
+#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
+#endif  /* TOFU_DISPLAY_FOCUS_SUPPORT */
 
     if (environment_state->controllers.previous != environment_state->controllers.current) {
         if (environment_state->controllers.current > environment_state->controllers.previous) {
@@ -349,9 +349,9 @@ void Engine_run(Engine_t *engine)
     // Track time using `double` to keep the min resolution consistent over time!
     // For intervals (i.e. deltas), `float` is sufficient.
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float deltas[4] = { 0 };
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     double previous = glfwGetTime();
     float lag = 0.0f;
 
@@ -366,7 +366,7 @@ void Engine_run(Engine_t *engine)
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
         // time to `delta_time`.
         float elapsed = (float)(current - previous);
-        if (elapsed >= __ENGINE_BREAKPOINT_ELAPSED_THRESHOLD__) {
+        if (elapsed >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
             elapsed = delta_time;
         }
 #else
@@ -374,11 +374,11 @@ void Engine_run(Engine_t *engine)
 #endif
         previous = current;
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         Environment_process(engine->environment, elapsed, deltas);
 #else
         Environment_process(engine->environment, elapsed);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         glfwPollEvents();
 
@@ -388,10 +388,10 @@ void Engine_run(Engine_t *engine)
 
         running = running && Interpreter_process(engine->interpreter, events); // Lazy evaluate `running`, will avoid calls when error.
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         const double process_marker = glfwGetTime();
         deltas[0] = (float)(process_marker - current);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
@@ -410,19 +410,19 @@ void Engine_run(Engine_t *engine)
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
 //        running = running && Storage_update_variable(engine->storage, elapsed);
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         const double update_marker = glfwGetTime();
         deltas[1] = (float)(update_marker - process_marker);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         running = running && Interpreter_render(engine->interpreter, lag / delta_time);
 
         Display_present(engine->display);
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         const double render_marker = glfwGetTime();
         deltas[2] = (float)(render_marker - update_marker);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);
@@ -432,9 +432,9 @@ void Engine_run(Engine_t *engine)
             }
         }
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[3] = (float)(glfwGetTime() - current);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
 
     arrfree(events);

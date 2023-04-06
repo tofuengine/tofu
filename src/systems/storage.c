@@ -31,9 +31,6 @@
 
 #include <stdint.h>
 
-// This defines how many seconds a resource persists in the cache after the initial load (or a reuse).
-#define STORAGE_RESOURCE_AGE_LIMIT  30.0
-
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
@@ -346,12 +343,12 @@ static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const 
 
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
-#if defined(__STORAGE_CHECK_ABSOLUTE_PATHS__)
+#if defined(TOFU_STORAGE_VALIDATE_PATHS)
     if (path_is_absolute(name) || !path_is_normalized(name)) {
         LOG_E(LOG_CONTEXT, "path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
         return NULL;
     }
-#endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
+#endif  /* TOFU_STORAGE_VALIDATE_PATHS*/
 
     uint8_t id[STORAGE_RESOURCE_ID_LENGTH];
     md5_hash_sz(id, name, false);
@@ -463,7 +460,7 @@ bool Storage_update(Storage_t *storage, float delta_time)
     for (int index = arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
         resource->age += delta_time;
-        if (resource->age < STORAGE_RESOURCE_AGE_LIMIT) {
+        if (resource->age < TOFU_STORAGE_RESOURCE_MAX_AGE) {
             continue;
         }
 

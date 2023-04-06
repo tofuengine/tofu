@@ -24,6 +24,7 @@
 
 #include "shader.h"
 
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -87,7 +88,7 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
         LOG_W(LOG_CONTEXT, "shader program can't be zero");
         return false;
     }
-    if (!shader_code) {
+    if (!code) {
         LOG_W(LOG_CONTEXT, "shader code can't be null");
         return false;
     }
@@ -167,8 +168,8 @@ void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, s
 #endif
     GLint location = shader->locations[index];
     if (location == -1) {
-#if defined(__DEBUG_SHADER_CALLS__)
-        LOG_W(LOG_CONTEXT, "can't find uniform `%s` for program #%d", id, shader->id);
+#if defined(TOFU_GRAPHICS_REPORT_SHADERS_ERRORS)
+        LOG_W(LOG_CONTEXT, "can't find uniform #%d for program #%d", index, shader->id);
 #endif
         return;
     }

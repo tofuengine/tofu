@@ -26,6 +26,7 @@
 
 #include "internal.h"
 
+#include <core/config.h>
 #include <core/platform.h>
 #include <libs/bytes.h>
 #include <libs/log.h>
@@ -436,7 +437,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
         _derive_key(key, id, PAK_ID_LENGTH);
 
         xor_schedule(&pak_handle->cipher_context, key, PAK_ID_LENGTH);
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
         LOG_T(LOG_CONTEXT, "cipher context initialized");
 #endif
     }
@@ -482,18 +483,18 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
     }
 
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T(LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 #endif
 
     if (pak_handle->encrypted) {
         xor_process(&pak_handle->cipher_context, buffer, buffer, bytes_read);
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
         LOG_T(LOG_CONTEXT, "%d bytes decrypted", bytes_read);
 #endif
     }
 
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
@@ -524,14 +525,14 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     }
 
     bool sought = fseek(pak_handle->stream, position, SEEK_SET) == 0;
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the sought position.
         size_t index = position - pak_handle->begin_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
         LOG_T(LOG_CONTEXT, "cipher context adjusted to %d", index);
 #endif
     }
@@ -557,7 +558,7 @@ static bool _pak_handle_eof(FS_Handle_t *handle)
     }
 
     bool end_of_file = position > pak_handle->end_of_stream;
-#if defined(__DEBUG_FS_CALLS__)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;

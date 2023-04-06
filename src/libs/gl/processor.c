@@ -43,7 +43,7 @@ GL_Processor_t *GL_processor_create(void)
     LOG_D(LOG_CONTEXT, "processor created at %p", processor);
 #endif  /* VERBOSE_DEBUG */
 
-#if defined(__PROGRAM_DEFAULT_QUANTIZED_PALETTE__)
+#if defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED)
     LOG_W(LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
   #if GL_MAX_PALETTE_COLORS == 256
     GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
@@ -124,7 +124,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
     const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
 
-#if defined(__DEBUG_GRAPHICS__)
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     const int count = processor->palette->size;
 #endif
 
@@ -135,7 +135,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
 
     for (size_t i = data_size; i; --i) {
         const GL_Pixel_t index = shifting[*(src++)];
-#if defined(__DEBUG_GRAPHICS__)
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
         GL_Color_t color;
         if (index >= count) {
             const int y = (index - 240) * 8;
@@ -160,7 +160,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
     memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
     size_t wait = 0;
-#if defined(__DEBUG_GRAPHICS__)
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     const int count = processor->palette->size;
 #endif
     int modulo = 0;
@@ -235,7 +235,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
             }
 
             const GL_Pixel_t index = shifting[*(src++)];
-#if defined(__DEBUG_GRAPHICS__)
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             GL_Color_t color;
             if (index >= count) {
                 const int v = (index - 240) * 8;

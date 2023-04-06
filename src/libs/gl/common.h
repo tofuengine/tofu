@@ -104,4 +104,6 @@ typedef enum GL_Functions_e {
 // FIXME: does this makes sense?
 #define GL_CELL_NIL     ((GL_Cell_t)-1)
 
+#define GL_MAX_PALETTE_COLORS   256
+
 #endif  /* TOFU_LIBS_GL_COMMON_H */

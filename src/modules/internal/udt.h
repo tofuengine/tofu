@@ -245,7 +245,7 @@ typedef struct Source_Object_s {
     SL_Source_t *source;
 } Source_Object_t;
 
-#if defined(__GRID_INTEGER_CELL__)
+#if defined(TOFU_API_CELL_INTEGER_VALUE)
 typedef int Cell_t;
 #else
 typedef float Cell_t;

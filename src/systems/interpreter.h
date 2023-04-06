@@ -41,10 +41,10 @@ typedef enum lua_Warning_States_e {
 typedef struct Interpreter_s {
     lua_State *state;
     lua_Warning_States_t warning_state;
-#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
+#if TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS
     float gc_step_age;
 #endif
-#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
+#if defined(TOFU_INTERPRETER_GC_PERIODIC) || defined(TOFU_INTERPRETER_GC_REPORTING)
     float gc_age;
 #endif
 } Interpreter_t;

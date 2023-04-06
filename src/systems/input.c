@@ -377,7 +377,7 @@ static inline void _keyboard_update(Input_t *input, float delta_time)
 
 static inline void _cursor_update(Input_t *input, float delta_time)
 {
-#if defined(__INPUT_CURSOR_EMULATION__)
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     Input_Cursor_t *cursor = &input->state.cursor;
     if (cursor->enabled) {
         return;
@@ -395,7 +395,7 @@ static inline void _cursor_update(Input_t *input, float delta_time)
             break;
         }
     }
-#endif  /* __INPUT_CURSOR_EMULATION__*/
+#endif  /* TOFU_INPUT_CURSOR_IS_EMULATED*/
 }
 
 static inline void _controllers_update(Input_t *input, float delta_time)
@@ -404,8 +404,8 @@ static inline void _controllers_update(Input_t *input, float delta_time)
 
     // We don't need to update the controller detection in real-time, as the controllers' update function already
     // handles the "not initialized or disconnected" case.
-    while (input->age >= __INPUT_CONTROLLER_DETECTION_PERIOD__) {
-        input->age -= __INPUT_CONTROLLER_DETECTION_PERIOD__;
+    while (input->age >= TOFU_INPUT_CONTROLLER_DETECTION_PERIOD) {
+        input->age -= TOFU_INPUT_CONTROLLER_DETECTION_PERIOD;
         input->state.controllers_count = _controllers_detect(input->state.controllers, input->state.used_gamepads);
     }
 }
@@ -433,13 +433,13 @@ static inline void _buttons_sync(Input_Button_t *buttons, size_t first, size_t c
     }
 }
 
-#if defined(__INPUT_CURSOR_EMULATION__) || defined(__INPUT_CURSOR_EMULATION__)
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
 typedef struct Int_To_Int_s {
     int from, to;
 } Int_To_Int_t;
 #endif
 
-#if defined(__INPUT_CONTROLLER_EMULATION__)
+#if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
 static Int_To_Int_t _keyboard_to_controller_0[] = {
      { INPUT_KEYBOARD_BUTTON_W, INPUT_CONTROLLER_BUTTON_UP },
      { INPUT_KEYBOARD_BUTTON_S, INPUT_CONTROLLER_BUTTON_DOWN },
@@ -469,7 +469,7 @@ static Int_To_Int_t _keyboard_to_controller_1[] = {
 };
 #endif
 
-#if defined(__INPUT_CURSOR_EMULATION__)
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
 #define CURSOR_CONTROLLER_ID    0
 
 static Int_To_Int_t _controller_to_cursor[] = {
@@ -480,7 +480,7 @@ static Int_To_Int_t _controller_to_cursor[] = {
 };
 #endif
 
-#if defined(__INPUT_CURSOR_EMULATION__) || defined(__INPUT_CURSOR_EMULATION__)
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
 static inline void _buttons_copy(Input_Button_t *target, const Input_Button_t *source, const Int_To_Int_t *mapping)
 {
     for (size_t i = 0; mapping[i].from != -1; ++i) {
@@ -505,12 +505,12 @@ static inline void _buttons_process(Input_t *input)
         _buttons_sync(controller->buttons, Input_Controller_Buttons_t_First, Input_Controller_Buttons_t_CountOf);
     }
 
-#if defined(__INPUT_CONTROLLER_EMULATION__)
+#if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
     _buttons_copy(controllers[0].buttons, keyboard->buttons, _keyboard_to_controller_0);
     _buttons_copy(controllers[1].buttons, keyboard->buttons, _keyboard_to_controller_1);
 #endif
 
-#if defined(__INPUT_CURSOR_EMULATION__)
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     const Input_Controller_t *controller = &controllers[CURSOR_CONTROLLER_ID];
     if (!cursor->enabled) {
         _buttons_copy(cursor->buttons, controller->buttons, _controller_to_cursor);
@@ -576,7 +576,7 @@ Input_Button_t Input_keyboard_get_button(const Input_Keyboard_t *keyboard, Input
 
 bool Input_cursor_is_available(const Input_Cursor_t *cursor)
 {
-#if defined(__INPUT_CURSOR_EMULATION__)
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     return true;
 #else
     return cursor->enabled;
@@ -604,7 +604,7 @@ void Input_cursor_set_position(Input_Cursor_t *cursor, Input_Position_t position
 
 bool Input_controller_is_available(const Input_Controller_t *controller)
 {
-#if defined(__INPUT_CONTROLLER_EMULATION__)
+#if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
     return controller->jid != -1 || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
 #else
     return controller->jid != -1;

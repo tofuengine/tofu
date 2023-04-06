@@ -28,7 +28,7 @@
 
 float wave_sine(float t)
 {
-    float value = sinf(t * 2.0f * F_PI);
+    float value = sinf(t * F_2PI);
     return value;
 }
 

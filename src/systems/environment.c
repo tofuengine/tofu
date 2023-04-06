@@ -52,7 +52,7 @@ Environment_t *Environment_create(const Display_t *display, const Input_t *input
         .display = display,
         .input = input,
         .state = (Environment_State_t){
-#if defined(__DISPLAY_FOCUS_SUPPORT__)
+#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
             .active = { .is = false, .was = false },
 #endif
             .controllers = { .previous = -1, .current = 0 },
@@ -89,7 +89,7 @@ static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a
     return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
 }
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 static inline void _calculate_times(float times[4], const float deltas[4])
 {
     static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
@@ -105,16 +105,16 @@ static inline void _calculate_times(float times[4], const float deltas[4])
     }
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 }
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
 #else
 void Environment_process(Environment_t *environment, float frame_time)
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 {
     Environment_State_t *state = &environment->state;
-#if defined(__DISPLAY_FOCUS_SUPPORT__)
+#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
     state->active.was = state->active.is;
     state->active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
@@ -124,24 +124,24 @@ void Environment_process(Environment_t *environment, float frame_time)
     Environment_Stats_t *stats = &state->stats;
     stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
 
-#if defined(__ENGINE_PERFORMANCE_STATISTICS__)
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     _calculate_times(stats->times, deltas);
-#if defined(__DEBUG_ENGINE_PERFORMANCES__)
-    static float stats_time = __ENGINE_PERFORMANCES_PERIOD__;
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG)
+    static float stats_time = TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
     stats_time += frame_time;
-    while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
-        stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
+    while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
+        stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
         LOG_I(LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
             stats->fps, stats->times[0], stats->times[1], stats->times[2], stats->times[3]);
     }
-#endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-#if defined(__SYSTEM_HEAP_STATISTICS__)
-    static float heap_time = __SYSTEM_HEAP_PERIOD__;
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+    static float heap_time = TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
     heap_time += frame_time;
-    while (heap_time > __SYSTEM_HEAP_PERIOD__) {
-        heap_time -= __SYSTEM_HEAP_PERIOD__;
+    while (heap_time > TOFU_ENGINE_HEAP_STATISTICS_PERIOD) {
+        heap_time -= TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
         PROCESS_MEMORY_COUNTERS pmc = { 0 };
@@ -155,8 +155,11 @@ void Environment_process(Environment_t *environment, float frame_time)
         struct mallinfo mi = mallinfo();
         stats->memory_usage = mi.uordblks;
 #endif
+#if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
+        LOG_I(LOG_CONTEXT, "currently using %u byte(s)", stats->memory_usage);
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
     }
-#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 }
 
 bool Environment_update(Environment_t *environment, float frame_time)

@@ -143,7 +143,7 @@ static void _size_callback(GLFWwindow *window, int width, int height)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // TODO: configurable?
     LOG_D(LOG_CONTEXT, "setting OpenGL clear-color");
 
-#if defined(__DEBUG_TRIANGLES_WINDING__)
+#if defined(TOFU_GRAPHICS_DEBUG_TRIANGLES_WINDING)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
@@ -410,7 +410,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
     LOG_D(LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
 
-#if defined(__OPENGL_STATE_CLEANUP__)
+#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glBindTexture(GL_TEXTURE_2D, 0);
 #else
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -515,7 +515,7 @@ void Display_present(const Display_t *display)
 
     GL_processor_surface_to_rgba(display->canvas.processor, surface, pixels);
 
-#if defined(__OPENGL_STATE_CLEANUP__)
+#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 #endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
@@ -542,7 +542,7 @@ void Display_present(const Display_t *display)
         (float)x1, (float)y1
     };
 
-#if defined(__OPENGL_STATE_CLEANUP__)
+#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -550,7 +550,7 @@ void Display_present(const Display_t *display)
     glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-#if defined(__OPENGL_STATE_CLEANUP__)
+#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glBindTexture(GL_TEXTURE_2D, 0);

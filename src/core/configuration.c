@@ -284,11 +284,7 @@ Configuration_t *Configuration_create(const char *data)
             .engine = {
                 .frames_per_seconds = 60,
                 .skippable_frames = 3, // About 5% of the FPS amount.
-#if defined(__CAP_TO_60__)
-                .frames_limit = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
-#else
-                .frames_limit = 0,
-#endif
+                .frames_limit = 60
             }
         };
 

@@ -31,7 +31,7 @@
 
 #define LOG_CONTEXT "gl-xform"
 
-#if defined(__DEBUG_GRAPHICS__)
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
@@ -117,9 +117,9 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
-#if defined(__GL_XFORM_TRANSPARENCY__)
+#if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
     const GL_Bool_t *transparent = state->transparent;
-#endif  /* __GL_XFORM_TRANSPARENCY__ */
+#endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
 
     const GL_XForm_Table_Entry_t *table = xform->table;
     const GL_XForm_Wraps_t wrap = xform->wrap;
@@ -235,7 +235,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
 #endif
 
         for (int j = 0; j < width; ++j) {
-#if defined(__DEBUG_GRAPHICS__)
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
             int sx = IROUNDF(xp); // Preserve direction, for negative values!
@@ -290,14 +290,14 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
-#if defined(__GL_XFORM_TRANSPARENCY__)
+#if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
                 if (!transparent[index]) {
                     *dptr = index;
                 }
 #else
                 // NOTE: no transparency in Mode-7!
                 *dptr = index;
-#endif  /* __GL_XFORM_TRANSPARENCY__ */
+#endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
             }
 
             ++dptr;

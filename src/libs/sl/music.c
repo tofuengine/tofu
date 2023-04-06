@@ -230,13 +230,11 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
         goto error_close_decoder;
     }
 
-#if defined(__SL_MUSIC_PRELOAD__)
+#if defined(TOFU_SOUND_MUSIC_PRELOAD)
     bool produced = _produce(music);
     if (!produced) {
         LOG_E(LOG_CONTEXT, "can't pre-load music data");
-        ma_pcm_rb_uninit(&music->buffer);
-        drflac_close(music->decoder);
-        return false;
+        goto error_deinitialize_ringbuffer;
     }
 #endif
 
@@ -279,7 +277,7 @@ static bool _music_reset(SL_Source_t *source)
         return false;
     }
 
-#if defined(__SL_MUSIC_PRELOAD__)
+#if defined(TOFU_SOUND_MUSIC_PRELOAD)
     bool produced = _produce(music);
     if (!produced) {
         LOG_E(LOG_CONTEXT, "can't pre-load music data");

@@ -50,9 +50,9 @@ typedef struct Audio_s {
 
     SL_Context_t *context;
 
-#if defined(__AUDIO_START_AND_STOP__)
+#if defined(TOFU_AUDIO_AUTOSTART)
     double grace;
-#endif  /* __AUDIO_START_AND_STOP__ */
+#endif  /* TOFU_AUDIO_AUTOSTART */
 } Audio_t;
 
 // TODO: rename as lowercase!!!

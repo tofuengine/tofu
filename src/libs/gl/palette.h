@@ -32,9 +32,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// FIXME: move to `common.h`
-#define GL_MAX_PALETTE_COLORS       256
-
 extern void GL_palette_set_greyscale(GL_Color_t *palette, size_t size);
 extern void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits);
 

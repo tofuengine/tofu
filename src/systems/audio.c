@@ -204,7 +204,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_device_set_master_volume(&audio->driver.device, configuration->master_volume); // Set the initial volume.
     LOG_D(LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
-#if !defined(__AUDIO_START_AND_STOP__)
+#if !defined(TOFU_AUDIO_AUTOSTART)
     result = ma_device_start(&audio->driver.device);
     if (result != MA_SUCCESS) {
         LOG_E(LOG_CONTEXT, "can't start the audio device");
@@ -361,7 +361,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->driver.lock);
     bool updated = SL_context_update(audio->context, delta_time);
-#if defined(__AUDIO_START_AND_STOP__)
+#if defined(TOFU_AUDIO_AUTOSTART)
     size_t count = SL_context_count_tracked(audio->context);
 #endif
     ma_mutex_unlock(&audio->driver.lock);
@@ -371,7 +371,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
         return false;
     }
 
-#if defined(__AUDIO_START_AND_STOP__)
+#if defined(TOFU_AUDIO_AUTOSTART)
     const bool is_started = ma_device_is_started(&audio->driver.device);
     if (count == 0 && is_started) {
         audio->grace -= delta_time;
@@ -385,7 +385,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
         }
     } else
     if (count > 0) {
-        audio->grace = __AUDIO_START_AND_STOP_GRACE_PERIOD__;
+        audio->grace = TOFU_AUDIO_AUTOSTART_GRACE_PERIOD;
         if (!is_started) {
             LOG_D(LOG_CONTEXT, "%d incoming source(s), starting device", count);
             ma_result result = ma_device_start(&audio->driver.device);

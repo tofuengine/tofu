@@ -58,8 +58,8 @@ static void _options_init(Engine_Options_t *options, const char *argv0)
     char executable_path[PLATFORM_PATH_MAX] = { 0 };
     path_split(executable, executable_path, NULL);
 
-    path_join(options->kernal_path, executable_path, __ENGINE_KERNAL_NAME__);
-    path_join(options->data_path, executable_path, __ENGINE_DATA_NAME__);
+    path_join(options->kernal_path, executable_path, TOFU_ENGINE_KERNAL_NAME);
+    path_join(options->data_path, executable_path, TOFU_ENGINE_DATA_NAME);
 }
 
 static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *options)

@@ -39,13 +39,13 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <modules/modules.h>
 
 #include <stdint.h>
-#if defined(__DEBUG_GARBAGE_COLLECTOR__)
+#if defined(TOFU_INTERPRETER_GC_REPORTING)
   #include <time.h>
 #endif
 
 #define LOG_CONTEXT "interpreter"
 
-#if defined(__DEBUG_VM_CALLS__)
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
   #define TRACEBACK_STACK_INDEX   1
   #define OBJECT_STACK_INDEX      (TRACEBACK_STACK_INDEX + 1)
   #define METHOD_STACK_INDEX(m)   (OBJECT_STACK_INDEX + 1 + (m))
@@ -54,10 +54,10 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
-#if defined(__VM_READER_BUFFER_SIZE__)
+#if defined(TOFU_INTERPRETER_READER_BUFFER_SIZE)
   #define READER_CONTEXT_BUFFER_SIZE  1024
 #else
-  #define READER_CONTEXT_BUFFER_SIZE  __VM_READER_BUFFER_SIZE__
+  #define READER_CONTEXT_BUFFER_SIZE  TOFU_INTERPRETER_READER_BUFFER_SIZE
 #endif
 
 #if defined(DEBUG)
@@ -129,8 +129,8 @@ static void _warning(void *ud, const char *message, int tocont)
     }
 }
 
-#if defined(__DEBUG_VM_CALLS__)
-#if defined(__VM_USE_CUSTOM_TRACEBACK__)
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
+#if defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
 static int _error_handler(lua_State *L)
 {
     const char *msg = lua_tostring(L, 1);
@@ -229,7 +229,7 @@ static bool _detect(lua_State *L, int index, const char *methods[])
 
 static inline int _raw_call(lua_State *L, int nargs, int nresults)
 {
-#if defined(__DEBUG_VM_CALLS__)
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
     int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
         LOG_E(LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
@@ -282,13 +282,13 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
     lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
 
-#if __VM_GARBAGE_COLLECTOR_TYPE__ == GC_INCREMENTAL
+#if TOFU_INTERPRETER_GC_TYPE == GC_INCREMENTAL
     lua_gc(interpreter->state, LUA_GCINC, 0, 0, 0);
-#elif __VM_GARBAGE_COLLECTOR_TYPE__ == GC_GENERATIONAL
+#elif TOFU_INTERPRETER_GC_TYPE == GC_GENERATIONAL
     lua_gc(interpreter->state, LUA_GCGEN, 0, 0);
 #endif
 
-#if __VM_GARBAGE_COLLECTOR_MODE__ != GC_AUTOMATIC
+#if TOFU_INTERPRETER_GC_MODE != GC_AUTOMATIC
     lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default.
 #endif
 
@@ -297,8 +297,8 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
 
-#if defined(__DEBUG_VM_CALLS__)
-#if !defined(__VM_USE_CUSTOM_TRACEBACK__)
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
+#if !defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
     lua_getglobal(interpreter->state, "debug");
     lua_getfield(interpreter->state, -1, "traceback");
     lua_remove(interpreter->state, -2);
@@ -371,39 +371,37 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
-#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
+#if TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS
     interpreter->gc_step_age += delta_time;
     while (interpreter->gc_step_age >= GC_CONTINUOUS_STEP_PERIOD) {
         interpreter->gc_step_age -= GC_CONTINUOUS_STEP_PERIOD;
 
         lua_gc(interpreter->state, LUA_GCSTEP, 0); // Basic step.
     }
-#endif  /* __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS */
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS */
 
 
-#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
+#if defined(TOFU_INTERPRETER_GC_PERIODIC) || defined(TOFU_INTERPRETER_GC_REPORTING)
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GC_COLLECTION_PERIOD;
 
-#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__)
-#if defined(__DEBUG_GARBAGE_COLLECTOR__)
+#if defined(TOFU_INTERPRETER_GC_PERIODIC)
+#if defined(TOFU_INTERPRETER_GC_REPORTING)
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
         LOG_D(LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
-#endif  /* __DEBUG_GARBAGE_COLLECTOR__ */
+#endif  /* TOFU_INTERPRETER_GC_REPORTING */
         lua_gc(interpreter->state, LUA_GCCOLLECT);
-#if defined(__DEBUG_GARBAGE_COLLECTOR__)
+#if defined(TOFU_INTERPRETER_GC_REPORTING)
         int post = lua_gc(interpreter->state, LUA_GCCOUNT);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         LOG_D(LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
-#endif  /* __DEBUG_GARBAGE_COLLECTOR__ */
-#else   /* __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__ */
-#if defined(__DEBUG_GARBAGE_COLLECTOR__)
+#endif  /* TOFU_INTERPRETER_GC_REPORTING */
+#elif defined(TOFU_INTERPRETER_GC_REPORTING)
         int count = lua_gc(interpreter->state, LUA_GCCOUNT);
         LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
-#endif  /* __DEBUG_GARBAGE_COLLECTOR__ */
-#endif  /* __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__ */
+#endif  /* TOFU_INTERPRETER_GC_PERIODIC */
     }
 #endif
 
