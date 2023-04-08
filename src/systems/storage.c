@@ -341,6 +341,25 @@ static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const 
     return NULL;
 }
 
+#if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
+// Finds the oldest entry among the resources, excluding the the ones already "aged".
+static inline Storage_Resource_t *_lookup_oldest(Storage_Resource_t **resources)
+{
+    Storage_Resource_t *oldest = NULL;
+    size_t length = arrlenu(resources);
+    for (size_t i = 0; i < length; ++i) {
+        Storage_Resource_t *resource = resources[i];
+        if (resource->age >= TOFU_STORAGE_RESOURCE_MAX_AGE) { // Skip already aged ones...
+            continue;
+        }
+        if (!oldest || oldest->age < resource->age) {
+            oldest = resource;
+        }
+    }
+    return oldest;
+}
+#endif
+
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
 #if defined(TOFU_STORAGE_VALIDATE_PATHS)
@@ -376,10 +395,18 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     arrpush(storage->resources, resource);
 
-#if defined(__STORAGE_CACHE_ENTRIES_LIMIT__)
-    if (arrlenu(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
-        storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
-        LOG_D(LOG_CONTEXT, "resource %p marked for release", storage->resources[0]);
+#if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
+    if (arrlenu(storage->resources) > TOFU_STORAGE_CACHE_ENTRIES_LIMIT) {
+        LOG_D(LOG_CONTEXT, "cache is full, picking a resource to release");
+        Storage_Resource_t *oldest = _lookup_oldest(storage->resources); // Mark the oldest for release in the next cycle.
+        if (oldest) {
+            // This defines how many seconds a resource persists in the cache
+            // after the initial load (or a reuse).
+            oldest->age = TOFU_STORAGE_RESOURCE_MAX_AGE;
+            LOG_D(LOG_CONTEXT, "resource %p marked for release", oldest);
+        } else {
+            LOG_D(LOG_CONTEXT, "no resources marked for release");
+        }
     }
 #endif
 
