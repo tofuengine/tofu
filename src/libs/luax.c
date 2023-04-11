@@ -24,9 +24,13 @@
 
 #include "luax.h"
 
-#include <core/config.h>
-
 #include <string.h>
+
+// Unless RTTI has been explicitly disabled, automaticaly enables it in the
+// DEBUG build. Please note that it can be force-enabled anyway.
+#if !defined(LUAX_NO_RTTI) && defined(DEBUG)
+  #define LUAX_RTTI
+#endif  /* LUAX_NO_RTTI */
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
@@ -75,30 +79,30 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
 #endif  /* DEBUG */
 }
 
-#if defined(LUAX_ENABLE_RTTI)
+#if defined(LUAX_RTTI)
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
 #else
 typedef void *luaX_Object;
-#endif  /* LUAX_ENABLE_RTTI */
+#endif  /* LUAX_RTTI */
 
-#if defined(LUAX_ENABLE_RTTI)
+#if defined(LUAX_RTTI)
   #define LUAX_OBJECT_SIZE(s)    (sizeof(luaX_Object) + (s))
   #define LUAX_OBJECT_SELF(o)    ((void *)((luaX_Object *)(o) + 1))
 #else
   #define LUAX_OBJECT_SIZE(s)    (s)
   #define LUAX_OBJECT_SELF(o)    ((void *)(o))
-#endif
+#endif  /* LUAX_RTTI */
 
 void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
     luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
-#if defined(LUAX_ENABLE_RTTI)
+#if defined(LUAX_RTTI)
     *object = (luaX_Object){
             .type = type
         };
-#endif  /* LUAX_ENABLE_RTTI */
+#endif  /* LUAX_RTTI */
     luaL_setmetatable(L, metatable);
     void *self = LUAX_OBJECT_SELF(object);
     memcpy(self, state, size);
@@ -115,11 +119,11 @@ int luaX_isobject(lua_State *L, int idx, int type)
         return 0;
 #endif  /* DEBUG */
     }
-#if defined(LUAX_ENABLE_RTTI)
+#if defined(LUAX_RTTI)
     return object->type == type;
-#else   /* LUAX_ENABLE_RTTI */
+#else   /* LUAX_RTTI */
     return 1;
-#endif  /* LUAX_ENABLE_RTTI */
+#endif  /* LUAX_RTTI */
 }
 
 void *luaX_toobject(lua_State *L, int idx, int type)
@@ -133,7 +137,7 @@ void *luaX_toobject(lua_State *L, int idx, int type)
 #endif  /* DEBUG */
     }
 
-#if defined(LUAX_ENABLE_RTTI)
+#if defined(LUAX_RTTI)
     if (object->type != type) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
@@ -141,7 +145,7 @@ void *luaX_toobject(lua_State *L, int idx, int type)
         return NULL;
 #endif  /* DEBUG */
     }
-#endif  /* LUAX_ENABLE_RTTI */
+#endif  /* LUAX_RTTI */
 
     return LUAX_OBJECT_SELF(object);
 }
@@ -302,10 +306,10 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#if defined(LUAX_INCLUDE_SYSTEM_LIBRARIES)
+#if !defined(LUAX_NO_SYSTEM_LIBRARIES)
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
-#endif  /* LUAX_INCLUDE_SYSTEM_LIBRARIES */
+#endif  /* LUAX_NO_SYSTEM_LIBRARIES */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
