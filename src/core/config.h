@@ -69,10 +69,7 @@
 //   - SCRIPT
 //   - STORAGE
 //   - SYSTEM
-#define LUAX_ENABLE_RTTI
-#undef  LUAX_INCLUDE_SYSTEM_LIBRARIES
 
-#undef  TOFU_API_CELL_INTEGER_VALUE
 #define TOFU_AUDIO_AUTOSTART
 #define TOFU_AUDIO_AUTOSTART_GRACE_PERIOD 30.0
 #define TOFU_DISPLAY_FOCUS_SUPPORT
@@ -108,10 +105,60 @@
 #define TOFU_INPUT_CONTROLLER_DETECTION_PERIOD 10.0
 #define TOFU_INPUT_CONTROLLER_IS_EMULATED
 #define TOFU_INPUT_CURSOR_IS_EMULATED
+
+// Sound
+// #####
+
+// Configure the stereo *balance law* used by the sound sub-system, that is
+// the curve that controls the *relative levels* of the left and right channels
+// of a sound. The relationship to each other changes, level-wise, but not their
+// position in the stereo panorama.
+//
+// This is used for stereo sound sources.
+//
+// Can be one of the following values:
+//
+//   - BALANCE_LAW_LINEAR
+//   - BALANCE_LAW_SINCOS
+//   - BALANCE_LAW_SQRT
+//
 #define TOFU_SOUND_BALANCE_LAW BALANCE_LAW_SINCOS
+
+// Configure the stereo *panning law* used by the sound sub-system, that is
+// the curve that controls the *position* of a sound in the stereo panorama
+// (the levels of the channels aren't changed).
+//
+// This is used for *mono* sound sources.
+//
+// Can be one of the following values:
+//
+//   - PANNING_LAW_CONSTANT_GAIN
+//   - PANNING_LAW_CONSTANT_POWER_SINCOS
+//   - PANNING_LAW_CONSTANT_POWER_SQRT
+//
+// Usually a *constant power* law seems to be perceived as more "natural".
+//
 #define TOFU_SOUND_PANNING_LAW PANNING_LAW_CONSTANT_POWER_SINCOS
+
+// The sound sub-system can support music preloading, that is the playing buffer
+// is filled during the opening phase so that it will be available from the
+// start and ready to be played. Unless explicitly required the advice is to
+// leave this disabled.
 #undef  TOFU_SOUND_MUSIC_PRELOAD
+
+// Script
+// ######
+
+// This controls whether, in the engine Lua script API, the `Grid` UDT stores
+// `integer` or `float`valued "cells". The suggested value is `integer` as it
+// is more consistent.
+#undef  TOFU_SCRIPT_GRID_INTEGER_VALUES
+
+// Storage
+// #######
+
 #define TOFU_STORAGE_CACHE_ENTRIES_LIMIT 32U
+
 #define TOFU_STORAGE_RESOURCE_MAX_AGE 30.0
 
 // In release build, disable VM calls debug and periodic collection for better performance.

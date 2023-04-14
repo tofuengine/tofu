@@ -245,15 +245,15 @@ typedef struct Source_Object_s {
     SL_Source_t *source;
 } Source_Object_t;
 
-#if defined(TOFU_API_CELL_INTEGER_VALUE)
-typedef int Cell_t;
+#if defined(TOFU_SCRIPT_GRID_INTEGER_VALUES)
+typedef int Grid_Object_Value_t;
 #else
-typedef float Cell_t;
+typedef float Grid_Object_Value_t;
 #endif
 
 typedef struct Grid_Object_s {
     size_t width, height;
-    Cell_t *data;
+    Grid_Object_Value_t *data;
     size_t data_size;
 } Grid_Object_t;
 
