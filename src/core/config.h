@@ -157,11 +157,31 @@
 // Storage
 // #######
 
+// When the storage sub-system loads a resource into memory, it is put into a
+// cache in order to speed-up further accesses. This value controls the total
+// number of entries that can coexist in the cache; when a new resource is
+// loaded *but* the threshold is exceeded the older entry is discarded.
+//
+// There's generally no need for a large cache as the resources are typically
+// accessed only once and processed according to their respective format.
 #define TOFU_STORAGE_CACHE_ENTRIES_LIMIT 32U
 
+// When a resource is loaded and stored in the cache, unless the cache reaches
+// its limit and the resource freed to make room for another one, it will
+// be parked for a "while". The length of this period is specified (in seconds)
+// by this macro.
+//
+// This enable a sort of automatic garbage-collection of the resources, that
+// are released after some time.
+//
+// Similarly to the cache limit, there's generally no need for a resource to
+// persist in the cache for long periods.
+//
+// Note: when an already cached resource is re-loaded it's age is reset.
 #define TOFU_STORAGE_RESOURCE_MAX_AGE 30.0
 
-// In release build, disable VM calls debug and periodic collection for better performance.
+// In release build, disable VM calls debug and periodic collection for better
+// performance.
 #if defined(NDEBUG)
   #undef TOFU_ENGINE_PERFORMANCE_STATISTICS
   #undef TOFU_ENGINE_HEAP_STATISTICS
