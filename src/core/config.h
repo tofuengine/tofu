@@ -70,7 +70,23 @@
 //   - STORAGE
 //   - SYSTEM
 
+// #############
+// ### Audio ###
+// #############
+
+// The audio sub-system runs on a separate thread that processes any currently
+// active source, mixing them up, and generates the sound data for the audio
+// device. However, having the audio device always active can be undesirable,
+// and one could prefer that the audio device is open only while there are some
+// sound data to process. This macro controls this features.
 #define TOFU_AUDIO_AUTOSTART
+
+// This is the amount of time, in seconds, that the game engine will wait when
+// no sound data is being processed prior switching the audio device to its
+// `stopped` state.
+//
+// Note: the audio device will be put back into the `started` state as soon as
+//       some sound data is to be played.
 #define TOFU_AUDIO_AUTOSTART_GRACE_PERIOD 30.0
 #define TOFU_DISPLAY_FOCUS_SUPPORT
 #define TOFU_DISPLAY_OPENGL_STATE_CLEANUP
