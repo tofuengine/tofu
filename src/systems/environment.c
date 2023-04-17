@@ -52,10 +52,12 @@ Environment_t *Environment_create(const Display_t *display, const Input_t *input
         .display = display,
         .input = input,
         .state = (Environment_State_t){
-#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
+#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
             .active = { .is = false, .was = false },
-#endif
+#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
+#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
             .controllers = { .previous = -1, .current = 0 },
+#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
             .stats = { 0 },
             .time = 0.0
         },
@@ -114,12 +116,14 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 {
     Environment_State_t *state = &environment->state;
-#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
+#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
     state->active.was = state->active.is;
     state->active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
-#endif
+#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
+#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
     state->controllers.previous = state->controllers.current;
     state->controllers.current = Input_get_controllers_count(environment->input);
+#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
 
     Environment_Stats_t *stats = &state->stats;
     stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!

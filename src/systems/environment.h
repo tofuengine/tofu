@@ -42,16 +42,18 @@ typedef struct Environment_Stats_s {
 } Environment_Stats_t;
 
 typedef struct Environment_State_s {
-#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
+#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
     struct {
         bool is;
         bool was;
     } active;
-#endif
+#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
+#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
     struct {
         int previous;
         int current;
     } controllers;
+#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
     Environment_Stats_t stats;
     double time;
 } Environment_State_t;

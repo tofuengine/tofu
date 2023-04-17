@@ -88,7 +88,22 @@
 // Note: the audio device will be put back into the `started` state as soon as
 //       some sound data is to be played.
 #define TOFU_AUDIO_AUTOSTART_GRACE_PERIOD 30.0
-#define TOFU_DISPLAY_FOCUS_SUPPORT
+
+// ##############
+// ### Events ###
+// ##############
+
+// Controls whether the game-engine should process and fire "focus changed"
+// events during the execution. This could be used to automatically pause the
+// game when the focus is lost.
+#define TOFU_EVENTS_FOCUS_SUPPORT
+
+// Controls the events related to the game-controller state changes. When
+// enabled, events will be fired whenever a controller is attached/detached.
+// Also, when the last controller is disconnected (or reconnected), suitable
+// events will be issued.
+#define TOFU_EVENTS_CONTROLLER_SUPPORT
+
 #define TOFU_DISPLAY_OPENGL_STATE_CLEANUP
 #define TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD 1.0f
 #define TOFU_ENGINE_DATA_NAME "data.pak"
