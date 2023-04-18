@@ -93,7 +93,16 @@
 // ### Engine ###
 // ##############
 
+// When a breakpoint is "hit" in the game-loop the current frame time most
+// certainly becomes way greater than the usual ones. When the execution resumes
+// the `update()` sub-loop will *fast-forward* to recover the missed time.
+//
+// This threshold is used to discriminate "stuttering but acceptable" frame
+// steps from the ones that would compromise the execution.
+//
+// Note: the feature is enabled only in the `DEBUG` build.
 #define TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD 1.0f
+
 #define TOFU_ENGINE_DATA_NAME "data.pak"
 #define TOFU_ENGINE_KERNAL_NAME "kernal.pak"
 #define TOFU_ENGINE_HEAP_STATISTICS
