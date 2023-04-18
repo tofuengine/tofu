@@ -59,17 +59,6 @@
   #undef  __DEFENSIVE_CHECKS__
 #endif
 
-// Current namespaces:
-//   - AUDIO
-//   - API
-//   - DISPLAY
-//   - ENGINE
-//   - GRAPHICS
-//   - INTERPRETER
-//   - SCRIPT
-//   - STORAGE
-//   - SYSTEM
-
 // #############
 // ### Audio ###
 // #############
@@ -89,6 +78,31 @@
 //       some sound data is to be played.
 #define TOFU_AUDIO_AUTOSTART_GRACE_PERIOD 30.0
 
+// ###############
+// ### Display ###
+// ###############
+
+// When defined the display sub-system will try and keep OpenGL in a controlled
+// "clean" state over successive iterations. That is, for example, the
+// framebuffer texture will be bound/unbound. Ideally this is "gentler" with
+// OpenGL but with some cost. You can try and `#undef` it and try for
+// yourself. :)
+#define TOFU_DISPLAY_OPENGL_STATE_CLEANUP
+
+// ##############
+// ### Engine ###
+// ##############
+
+#define TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD 1.0f
+#define TOFU_ENGINE_DATA_NAME "data.pak"
+#define TOFU_ENGINE_KERNAL_NAME "kernal.pak"
+#define TOFU_ENGINE_HEAP_STATISTICS
+#define TOFU_ENGINE_HEAP_STATISTICS_PERIOD  5.0f
+#undef  TOFU_ENGINE_HEAP_STATISTICS_DEBUG
+#define TOFU_ENGINE_PERFORMANCE_STATISTICS
+#define TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG
+#define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
+
 // ##############
 // ### Events ###
 // ##############
@@ -104,16 +118,6 @@
 // events will be issued.
 #define TOFU_EVENTS_CONTROLLER_SUPPORT
 
-#define TOFU_DISPLAY_OPENGL_STATE_CLEANUP
-#define TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD 1.0f
-#define TOFU_ENGINE_DATA_NAME "data.pak"
-#define TOFU_ENGINE_KERNAL_NAME "kernal.pak"
-#define TOFU_ENGINE_HEAP_STATISTICS
-#define TOFU_ENGINE_HEAP_STATISTICS_PERIOD  5.0f
-#undef  TOFU_ENGINE_HEAP_STATISTICS_DEBUG
-#define TOFU_ENGINE_PERFORMANCE_STATISTICS
-#define TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG
-#define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
 #define TOFU_FILE_DEBUG_ENABLED
 #define TOFU_FILE_SUPPORT_MOUNT_OVERRIDE
 #undef  TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING
@@ -152,7 +156,6 @@
 //   - BALANCE_LAW_LINEAR
 //   - BALANCE_LAW_SINCOS
 //   - BALANCE_LAW_SQRT
-//
 #define TOFU_SOUND_BALANCE_LAW BALANCE_LAW_SINCOS
 
 // Configure the stereo *panning law* used by the sound sub-system, that is
@@ -168,7 +171,6 @@
 //   - PANNING_LAW_CONSTANT_POWER_SQRT
 //
 // Usually a *constant power* law seems to be perceived as more "natural".
-//
 #define TOFU_SOUND_PANNING_LAW PANNING_LAW_CONSTANT_POWER_SINCOS
 
 // The sound sub-system can support music preloading, that is the playing buffer
