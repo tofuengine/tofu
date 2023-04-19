@@ -299,12 +299,13 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
 
-#if defined(TOFU_DISPLAY_FOCUS_SUPPORT)
+#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
     if (environment_state->active.was != environment_state->active.is) {
         arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
     }
-#endif  /* TOFU_DISPLAY_FOCUS_SUPPORT */
+#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
 
+#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
     if (environment_state->controllers.previous != environment_state->controllers.current) {
         if (environment_state->controllers.current > environment_state->controllers.previous) {
             arrpush(events, "on_controller_connected");
@@ -318,6 +319,7 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
             }
         }
     }
+#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
 
     arrpush(events, NULL);
 
