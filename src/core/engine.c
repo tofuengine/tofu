@@ -345,8 +345,9 @@ void Engine_run(Engine_t *engine)
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
+    const float skippable_time = delta_time * skippable_frames;
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
-    LOG_I(LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
+    LOG_I(LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames (skippable-time is %.6fs), reference-time is %.6fs", delta_time, skippable_frames, skippable_time, reference_time);
 
     // Track time using `double` to keep the min resolution consistent over time!
     // For intervals (i.e. deltas), `float` is sufficient.
@@ -363,22 +364,26 @@ void Engine_run(Engine_t *engine)
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
+
+        // If the frame delta time exceeds the maximum allowed skippable one (because the system can't
+        //  keep the pace we want) we forcibly cap the elapsed time.
+        float elapsed = (float)(current - previous);
 #if defined(DEBUG)
         // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
-        // time to `delta_time`.
-        float elapsed = (float)(current - previous);
+        // time to a single frame `delta_time`.
         if (elapsed >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
             elapsed = delta_time;
+        } else
+#endif  /* DEBUG */
+        if (elapsed > skippable_time) {
+            elapsed = skippable_time;
         }
-#else
-        const float elapsed = (float)(current - previous);
-#endif
         previous = current;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         Environment_process(engine->environment, elapsed, deltas);
-#else
+#else   /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
         Environment_process(engine->environment, elapsed);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
