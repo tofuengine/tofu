@@ -345,7 +345,7 @@ void Engine_run(Engine_t *engine)
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
-    const float skippable_time = delta_time * skippable_frames;
+    const float skippable_time = delta_time * skippable_frames; // This is the allowed "fast-forwardable" time window.
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
     LOG_I(LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames (skippable-time is %.6fs), reference-time is %.6fs", delta_time, skippable_frames, skippable_time, reference_time);
 
@@ -374,11 +374,8 @@ void Engine_run(Engine_t *engine)
         // time to a single frame `delta_time`.
         if (elapsed >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
             elapsed = delta_time;
-        } else
-#endif  /* DEBUG */
-        if (elapsed > skippable_time) {
-            elapsed = skippable_time;
         }
+#endif  /* DEBUG */
         previous = current;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
@@ -400,8 +397,11 @@ void Engine_run(Engine_t *engine)
         deltas[0] = (float)(process_marker - current);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
-        for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
+        lag += elapsed;
+        if (lag > skippable_time) { // If the `lag` exceeds what we allow to "skip", cap it!
+            lag = skippable_time;
+        }
+        while (lag >= delta_time) { // `lag` is capped, this loop won't accumulate and stall slower machines.
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
