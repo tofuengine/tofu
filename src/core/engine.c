@@ -374,9 +374,13 @@ void Engine_run(Engine_t *engine)
         // time to a single frame `delta_time`.
         if (elapsed >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
             elapsed = delta_time;
-        }
+        } else
 #endif  /* DEBUG */
+        if (elapsed > skippable_time) {
+            elapsed = skippable_time;
+        }
         previous = current;
+        lag += elapsed;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         Environment_process(engine->environment, elapsed, deltas);
@@ -397,11 +401,10 @@ void Engine_run(Engine_t *engine)
         deltas[0] = (float)(process_marker - current);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        lag += elapsed;
-        if (lag > skippable_time) { // If the `lag` exceeds what we allow to "skip", cap it!
-            lag = skippable_time;
-        }
-        while (lag >= delta_time) { // `lag` is capped, this loop won't accumulate and stall slower machines.
+        // We already capped the `elapsed` value (relative to a maximum amount of skippable
+        // frames). Now we process all the accumulated frames, if any, or the `lag` variable
+        // could make `ratio` fall outside the `[0, 1]` range.
+        while (lag >= delta_time) {
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
@@ -422,7 +425,7 @@ void Engine_run(Engine_t *engine)
         deltas[1] = (float)(update_marker - process_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        running = running && Interpreter_render(engine->interpreter, lag / delta_time);
+        running = running && Interpreter_render(engine->interpreter, lag / delta_time); // ratio in the range `[0, 1]`
 
         Display_present(engine->display);
 
