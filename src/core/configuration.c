@@ -135,13 +135,15 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "engine-frames-per-seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
         configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 20; // Keep synched. About 5% of the frequency (FPS).
+        //configuration->engine.frames_limit = imax(configuration->engine.frames_limit, configuration->engine.frames_per_seconds); // FPS limit can´t be smaller than frame time!
     } else
     if (strcmp(fqn, "engine-skippable-frames") == 0) {
-        size_t suggested = configuration->engine.frames_per_seconds / 20;
+        const size_t suggested = configuration->engine.frames_per_seconds / 20;
         configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
     if (strcmp(fqn, "engine-frames-limit") == 0) {
         configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
+        //configuration->engine.frames_per_seconds = imin(configuration->engine.frames_per_seconds, configuration->engine.frames_limit); // Ditto.
     }
 }
 
