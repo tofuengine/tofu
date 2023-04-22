@@ -103,11 +103,15 @@
 // Note: the feature is enabled only in the `DEBUG` build.
 #define TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD 1.0f
 
+// These two macros defines the name of the *data* and *kernal* archives that
+// the game-engine expects to find.
 #define TOFU_ENGINE_DATA_NAME "data.pak"
 #define TOFU_ENGINE_KERNAL_NAME "kernal.pak"
+
 #define TOFU_ENGINE_HEAP_STATISTICS
 #define TOFU_ENGINE_HEAP_STATISTICS_PERIOD  5.0f
 #undef  TOFU_ENGINE_HEAP_STATISTICS_DEBUG
+
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
@@ -127,7 +131,24 @@
 // events will be issued.
 #define TOFU_EVENTS_CONTROLLER_SUPPORT
 
+// ############
+// ### File ###
+// ############
+
+// Enables additional debug information for the `File` sub-system. This should
+// normally be disabled in the `RELEASE` build.
 #define TOFU_FILE_DEBUG_ENABLED
+
+// The `File` sub-system supports multiple mount-points. This macro controls
+// the behaviour when scanning for a file and, if defined, the file instance
+// present in "last to be mounted" (with the `FS_attach_folder_or_archive()`
+// function) archive/folder will be accessed. We call this "mount-override" as
+// it enables a file to be present in more than an archive/folder, with only
+// one instance to be used.
+//
+// In the context of the game-engine, it means that a file in the `data`
+// archive/folder can have the same name of a `kernal` counterpart *and*
+// override/redefine its implementation.
 #define TOFU_FILE_SUPPORT_MOUNT_OVERRIDE
 #undef  TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING
 #define TOFU_GRAPHICS_FIX_RASTERIZER_WINDING
@@ -146,14 +167,33 @@
 #undef  TOFU_INTERPRETER_GC_PERIODIC
 #define TOFU_INTERPRETER_PROTECTED_CALLS
 #define TOFU_INTERPRETER_READER_BUFFER_SIZE 1024U
+
+// #############
+// ### Input ###
+// #############
+
+// The game-engine periodically checks for a new controller attached to the
+// system. This is the period (in seconds) for successive checks.
+//
+// Note: on the contrary, the *disconnection* of a controller is detected and
+//       handled in real-time as the APIs used will fail in case a controller
+//       is suddenly missing.
 #define TOFU_INPUT_CONTROLLER_DETECTION_PERIOD 10.0
+
+// Determines if controllers `#0` and `#1` are to be emulated with the keyboard
+// mappings.
 #define TOFU_INPUT_CONTROLLER_IS_EMULATED
+
+// Similarly to the `TOFU_INPUT_CONTROLLER_IS_EMULATED` macro, this one
+// determines if the cursor (i.e. the mouse controller input on a PC) is to be
+// emulated with the *right stick* of the first available controller.
 #define TOFU_INPUT_CURSOR_IS_EMULATED
 
-// Sound
-// #####
+// #############
+// ### Sound ###
+// #############
 
-// Configure the stereo *balance law* used by the sound sub-system, that is
+// Configures the stereo *balance law* used by the sound sub-system, that is
 // the curve that controls the *relative levels* of the left and right channels
 // of a sound. The relationship to each other changes, level-wise, but not their
 // position in the stereo panorama.
@@ -167,7 +207,7 @@
 //   - BALANCE_LAW_SQRT
 #define TOFU_SOUND_BALANCE_LAW BALANCE_LAW_SINCOS
 
-// Configure the stereo *panning law* used by the sound sub-system, that is
+// Configures the stereo *panning law* used by the sound sub-system, that is
 // the curve that controls the *position* of a sound in the stereo panorama
 // (the levels of the channels aren't changed).
 //
@@ -188,16 +228,18 @@
 // leave this disabled.
 #undef  TOFU_SOUND_MUSIC_PRELOAD
 
-// Script
-// ######
+// ##############
+// ### Script ###
+// ##############
 
 // This controls whether, in the engine Lua script API, the `Grid` UDT stores
 // `integer` or `float`valued "cells". The suggested value is `integer` as it
 // is more consistent.
 #undef  TOFU_SCRIPT_GRID_INTEGER_VALUES
 
-// Storage
-// #######
+// ###############
+// ### Storage ###
+// ###############
 
 // When the storage sub-system loads a resource into memory, it is put into a
 // cache in order to speed-up further accesses. This value controls the total
