@@ -433,13 +433,16 @@ static inline void _buttons_sync(Input_Button_t *buttons, size_t first, size_t c
     }
 }
 
-#if defined(TOFU_INPUT_CURSOR_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
+#if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
 typedef struct Int_To_Int_s {
     int from, to;
 } Int_To_Int_t;
 #endif
 
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
+#define KEYBOARD_A_CONTROLLER_ID    0
+#define KEYBOARD_B_CONTROLLER_ID    1
+
 static Int_To_Int_t _keyboard_to_controller_0[] = {
      { INPUT_KEYBOARD_BUTTON_W, INPUT_CONTROLLER_BUTTON_UP },
      { INPUT_KEYBOARD_BUTTON_S, INPUT_CONTROLLER_BUTTON_DOWN },
@@ -480,8 +483,8 @@ static Int_To_Int_t _controller_to_cursor[] = {
 };
 #endif
 
-#if defined(TOFU_INPUT_CURSOR_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
-static inline void _buttons_copy(Input_Button_t *target, const Input_Button_t *source, const Int_To_Int_t *mapping)
+#if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
+static inline void _buttons_accumulate(Input_Button_t *target, const Input_Button_t *source, const Int_To_Int_t *mapping)
 {
     for (size_t i = 0; mapping[i].from != -1; ++i) {
         if (target[mapping[i].to].is) { // Don't update if already pressed.
@@ -506,14 +509,14 @@ static inline void _buttons_process(Input_t *input)
     }
 
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
-    _buttons_copy(controllers[0].buttons, keyboard->buttons, _keyboard_to_controller_0);
-    _buttons_copy(controllers[1].buttons, keyboard->buttons, _keyboard_to_controller_1);
+    _buttons_accumulate(controllers[KEYBOARD_A_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_0);
+    _buttons_accumulate(controllers[KEYBOARD_B_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_1);
 #endif
 
 #if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     const Input_Controller_t *controller = &controllers[CURSOR_CONTROLLER_ID];
     if (!cursor->enabled) {
-        _buttons_copy(cursor->buttons, controller->buttons, _controller_to_cursor);
+        _buttons_accumulate(cursor->buttons, controller->buttons, _controller_to_cursor);
     }
 #endif
 }
