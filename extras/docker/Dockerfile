@@ -32,6 +32,7 @@ RUN apt-get update && \
         libx11-dev \
         libwayland-dev \
         libxkbcommon-dev \
+        wayland-protocols \
         mesa-common-dev \
         libgles2-mesa-dev \
         cppcheck \
