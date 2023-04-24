@@ -90,7 +90,7 @@ In order to compile `Tofu Engine`, a Linux machine in required (either physical 
 sudo apt install build-essential
 sudo apt install mingw-w64
 
-sudo apt install xorg-dev libx11-dev mesa-common-dev libgles2-mesa-dev
+sudo apt install xorg-dev libx11-dev libwayland-dev libxkbcommon-dev mesa-common-dev libgles2-mesa-dev
 
 sudo apt install lua5.4 liblua5.4-dev luarocks
 

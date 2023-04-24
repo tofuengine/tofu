@@ -36,8 +36,23 @@ toolsdir=$(extrasdir)/tools
 dockerdir=$(extrasdir)/docker
 
 # The default target platform is Linux.
+#
+# Available values are: `linux`, `window`, and `raspberry-pi`.
 ifeq ($(PLATFORM),)
 	PLATFORM=linux
+endif
+
+# The default windowing system is X11.
+#
+# Available values are: `gdi`, `x11`, and `wayland`.
+ifeq ($(WINDOWING),)
+	ifeq ($(PLATFORM),windows)
+		WINDOWING=gdi
+	else ifeq ($(PLATFORM),linux)
+		WINDOWING=x11
+	else ifeq ($(PLATFORM),raspberry-pi)
+		WINDOWING=x11
+	endif
 endif
 
 # Define the target executable name, according to the current platform.
@@ -47,10 +62,10 @@ ifeq ($(PLATFORM),windows)
 	else
 		TARGET=tofu_x32.exe
 	endif
-else ifeq ($(PLATFORM),rpi)
-	TARGET=tofu-rpi_x32
 else ifeq ($(PLATFORM),linux)
 	TARGET=tofu
+else ifeq ($(PLATFORM),raspberry-pi)
+	TARGET=tofu_pi
 else
 $(error PLATFORM value '$(PLATFORM)' is not recognized)
 endif
@@ -107,13 +122,19 @@ CFLAGS=-D_DEFAULT_SOURCE \
 	-DLUAX_NO_SYSTEM_LIBRARIES \
 	-I$(srcdir) \
 	-I$(externaldir)
-ifneq ($(PLATFORM),windows)
+ifeq ($(PLATFORM),linux)
+	CFLAGS+=-DLUA_USE_LINUX
+else ifeq ($(PLATFORM),raspberry-pi)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
-ifeq ($(PLATFORM),windows)
+ifeq ($(WINDOWING),gdi)
 	CFLAGS+=-D_GLFW_WIN32
-else
+else ifeq ($(WINDOWING),x11)
 	CFLAGS+=-D_GLFW_X11
+else ifeq ($(WINDOWING),wayland)
+	CFLAGS+=-D_GLFW_WAYLAND
+else
+$(error WINDOWING value '$(WINDOWING)' is not recognized)
 endif
 
 ifeq ($(BUILD),release)
@@ -138,26 +159,34 @@ endif
 
 LINKER=$(COMPILER)
 
+LFLAGS=-lpthread
 ifeq ($(PLATFORM),windows)
-	LFLAGS=-lpthread -lgdi32 -lpsapi
-else ifeq ($(PLATFORM),rpi)
-	LFLAGS=-lm -lpthread -lX11 -ldl -latomic
-else
-	LFLAGS=-lm -lpthread -lX11 -ldl
+	LFLAGS+=-lpsapi
+else ifeq ($(PLATFORM),linux)
+	LFLAGS+=-lm -ldl
+else ifeq ($(PLATFORM),raspberry-pi)
+	LFLAGS+=-lm -ldl -latomic
+endif
+
+ifeq ($(WINDOWING),gdi)
+	LFLAGS+=-lgdi32
+else ifeq ($(WINDOWING),x11)
+	LFLAGS+=-lX11
+else ifeq ($(WINDOWING),wayland)
+	LFLAGS+=-lwayland-client -lwayland-server -lwayland-egl -lxkbcommon
 endif
 
 LWARNINGS=-Wall -Wextra -Werror
 
+LOPTS=
 ifeq ($(BUILD),release)
-	LOPTS=-fomit-frame-pointer
+	LOPTS+=-fomit-frame-pointer
 else ifeq ($(BUILD),profile)
-	LOPTS=-pg
+	LOPTS+=-pg
 else ifeq ($(BUILD),sanitize-address)
-	LOPTS=-fsanitize=address -fno-omit-frame-pointer
+	LOPTS+=-fsanitize=address -fno-omit-frame-pointer
 else ifeq ($(BUILD),sanitize-leak)
-	LOPTS=-fsanitize=leak -fno-omit-frame-pointer
-else
-	LOPTS=
+	LOPTS+=-fsanitize=leak -fno-omit-frame-pointer
 endif
 
 # ------------------------------------------------------------------------------
@@ -211,12 +240,24 @@ depends_from = $(shell cat $(1) | sed 's|^|$(2)|g' | tr '\n' ' ')
 
 SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/common_c.in,$(externaldir)/GLFW/)
 INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/common_h.in,$(externaldir)/GLFW/)
-ifeq ($(PLATFORM),windows)
+ifeq ($(WINDOWING),gdi)
 	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/win32_c.in,$(externaldir)/GLFW/)
 	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/win32_h.in,$(externaldir)/GLFW/)
-else
+else ifeq ($(WINDOWING),x11)
 	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/x11_c.in,$(externaldir)/GLFW/)
 	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/x11_h.in,$(externaldir)/GLFW/)
+else ifeq ($(WINDOWING),wayland)
+	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/wayland_c.in,$(externaldir)/GLFW/)
+	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/wayland_h.in,$(externaldir)/GLFW/)
+else
+	SOURCES+=$(call depends_from,$(externaldir)/GLFW/dependencies/osmesa_c.in,$(externaldir)/GLFW/)
+	INCLUDES+=$(call depends_from,$(externaldir)/GLFW/dependencies/osmesa_h.in,$(externaldir)/GLFW/)
+endif
+
+# Add specific dependencies for Wayland build.
+ifeq ($(WINDOWING),wayland)
+	SOURCES+=$(wildcard $(externaldir)/wayland/*.c)
+	INCLUDES+=$(wildcard $(externaldir)/wayland/*.h)
 endif
 
 #$(info SOURCES="$(SOURCES)")

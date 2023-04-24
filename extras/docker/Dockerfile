@@ -30,6 +30,8 @@ RUN apt-get update && \
         mingw-w64 \
         xorg-dev \
         libx11-dev \
+        libwayland-dev \
+        libxkbcommon-dev \
         mesa-common-dev \
         libgles2-mesa-dev \
         cppcheck \

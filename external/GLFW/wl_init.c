@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.3 Wayland - www.glfw.org
 //------------------------------------------------------------------------
@@ -593,3 +596,5 @@ const char* _glfwPlatformGetVersionString(void)
 #endif
         ;
 }
+
+#pragma GCC diagnostic pop
