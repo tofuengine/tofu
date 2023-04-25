@@ -248,16 +248,17 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
     LOG_D(LOG_CONTEXT, "window %p created (and made current context)", window);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    int glad_version = gladLoadGL((GLADloadfunc)glfwGetProcAddress);
+    if (!glad_version) {
         LOG_F(LOG_CONTEXT, "can't initialize GLAD");
         goto error_destroy_window;
     }
-    LOG_D(LOG_CONTEXT, "GLAD initialized");
+    LOG_D(LOG_CONTEXT, "GLAD %d.%d initialized", GLAD_VERSION_MAJOR(glad_version), GLAD_VERSION_MINOR(glad_version));
 
     glfwSetWindowUserPointer(window, (void *)configuration);
     // glfwSetWindowFocusCallback(window, window_focus_callback)
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
-    glfwSetWindowCloseCallback(window, _close_callback); // Overide close button, according to configuration.
+    glfwSetWindowCloseCallback(window, _close_callback); // Override close button, according to configuration.
 
     if (configuration->icon.pixels) {
         glfwSetWindowIcon(window, 1, &configuration->icon);

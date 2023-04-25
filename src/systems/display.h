@@ -31,7 +31,7 @@
 #include <libs/gl/gl.h>
 #include <libs/shader.h>
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>

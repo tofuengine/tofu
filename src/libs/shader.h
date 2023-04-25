@@ -25,7 +25,7 @@
 #ifndef TOFU_LIBS_SHADER_H
 #define TOFU_LIBS_SHADER_H
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>
