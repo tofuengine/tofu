@@ -216,6 +216,8 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
         return NULL;
     }
 
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API); // On Wayland it's the same as `GLFW_EGL_CONTEXT_API`.
 #if __GL_VERSION__ >= 0x0303
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -236,6 +238,7 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window) {
