@@ -133,6 +133,8 @@ else ifeq ($(WINDOWING),x11)
 	CFLAGS+=-D_GLFW_X11
 else ifeq ($(WINDOWING),wayland)
 	CFLAGS+=-D_GLFW_WAYLAND
+else ifeq ($(WINDOWING),mesa)
+	CFLAGS+=-D_GLFW_OSMESA
 else
 $(error WINDOWING value '$(WINDOWING)' is not recognized)
 endif
