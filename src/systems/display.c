@@ -248,13 +248,6 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
     LOG_D(LOG_CONTEXT, "window %p created (and made current context)", window);
 
-    int glad_version = gladLoadGL((GLADloadfunc)glfwGetProcAddress);
-    if (!glad_version) {
-        LOG_F(LOG_CONTEXT, "can't initialize GLAD");
-        goto error_destroy_window;
-    }
-    LOG_D(LOG_CONTEXT, "GLAD %d.%d initialized", GLAD_VERSION_MAJOR(glad_version), GLAD_VERSION_MINOR(glad_version));
-
     glfwSetWindowUserPointer(window, (void *)configuration);
     // glfwSetWindowFocusCallback(window, window_focus_callback)
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
@@ -278,10 +271,6 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     LOG_D(LOG_CONTEXT, "window shown");
 
     return window;
-
-error_destroy_window:
-    glfwDestroyWindow(window);
-    return NULL;
 }
 
 static void _window_destroy(GLFWwindow *window)
@@ -369,6 +358,18 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     LOG_D(LOG_CONTEXT, "window %p initialized", display->window);
 
+#if defined(GLAD_OPTION_GL_ON_DEMAND)
+    gladSetGLOnDemandLoader((GLADloadfunc)glfwGetProcAddress);
+    LOG_D(LOG_CONTEXT, "GLAD on-demand loader set (using generator %s)", GLAD_GENERATOR_VERSION);
+#elif defined(GLAD_OPTION_GL_LOADER)
+    int glad_version = gladLoadGL((GLADloadfunc)glfwGetProcAddress);
+    if (!glad_version) {
+        LOG_F(LOG_CONTEXT, "can't initialize GLAD");
+        goto error_destroy_window;
+    }
+    LOG_D(LOG_CONTEXT, "GLAD initialized (using generator %s)", GLAD_GENERATOR_VERSION);
+#endif  /* GLAD_OPTION_GL_ON_DEMAND || GLAD_OPTION_GL_LOADER */
+
     display->vram.position = (GL_Point_t){ .x = vram_rectangle.x, .y = vram_rectangle.y };
     display->vram.size = (GL_Size_t){ .width = vram_rectangle.width, .height = vram_rectangle.height };
 
@@ -432,6 +433,9 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 #endif
 
     LOG_I(LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
+#if !defined(GLAD_OPTION_GL_ON_DEMAND)
+    LOG_I(LOG_CONTEXT, "GLAD: %d.%d", GLAD_VERSION_MAJOR(glad_version), GLAD_VERSION_MINOR(glad_version));
+#endif  /* GLAD_OPTION_GL_ON_DEMAND */
     LOG_I(LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
     LOG_I(LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
     LOG_I(LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
@@ -472,6 +476,11 @@ void Display_destroy(Display_t *display)
 
     GL_surface_destroy(display->canvas.surface);
     LOG_D(LOG_CONTEXT, "graphics surface %p destroyed", display->canvas.surface);
+
+#if defined(GLAD_OPTION_GL_LOADER)
+    gladLoaderUnloadGL();
+    LOG_D(LOG_CONTEXT, "GLAD unloaded");
+#endif  /* GLAD_OPTION_GL_LOADER */
 
     _window_destroy(display->window);
     LOG_D(LOG_CONTEXT, "window %p destroyed", display->window);
