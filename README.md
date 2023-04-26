@@ -82,6 +82,10 @@ Guess what? Yup, that's yet another game engine/framework.
 * [Defold](https://defold.com/)
 * [raylib](https://www.raylib.com/)
 
+## Credits
+
+The lovely game-engine logo has been designed by [Blort](https://social.tchncs.de/@Blort).
+
 # Compiling
 
 In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, although I've been using Ubuntu during the development. One can issue the following commands to install all the required dependencies:
