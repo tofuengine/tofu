@@ -136,8 +136,10 @@
 // ############
 
 // Enables additional debug information for the `File` sub-system. This should
-// normally be disabled in the `RELEASE` build.
-#define TOFU_FILE_DEBUG_ENABLED
+// normally be disabled in the `RELEASE` build and, on `DEBUG` build, only
+// occasionally for explicit (and specific)... ehm, debug. Otherwise the I/O
+// could be hindered.
+#undef  TOFU_FILE_DEBUG_ENABLED
 
 // The `File` sub-system supports multiple mount-points. This macro controls
 // the behaviour when scanning for a file and, if defined, the file instance
