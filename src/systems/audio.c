@@ -192,7 +192,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     device_config.dataCallback              = _data_callback;
     device_config.notificationCallback      = _notification_callback;
     device_config.pUserData                 = (void *)audio;
-    device_config.noPreSilencedOutputBuffer = MA_FALSE;
+    device_config.noPreSilencedOutputBuffer = MA_FALSE; // We require pre-silenced buffers as we mix incrementally.
 
     result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {
