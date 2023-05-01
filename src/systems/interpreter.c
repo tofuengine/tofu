@@ -49,22 +49,22 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define TRACEBACK_STACK_INDEX   1
   #define OBJECT_STACK_INDEX      (TRACEBACK_STACK_INDEX + 1)
   #define METHOD_STACK_INDEX(m)   (OBJECT_STACK_INDEX + 1 + (m))
-#else
+#else   /* TOFU_INTERPRETER_PROTECTED_CALLS */
   #define OBJECT_STACK_INDEX      1
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
-#endif
+#endif  /* TOFU_INTERPRETER_PROTECTED_CALLS */
 
 #if defined(TOFU_INTERPRETER_READER_BUFFER_SIZE)
   #define READER_CONTEXT_BUFFER_SIZE  1024
-#else
+#else   /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
   #define READER_CONTEXT_BUFFER_SIZE  TOFU_INTERPRETER_READER_BUFFER_SIZE
-#endif
+#endif  /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
 
 #if defined(DEBUG)
   #define BOOT_SCRIPT "boot-debug"
-#else
+#else   /* DEBUG */
   #define BOOT_SCRIPT "boot-release"
-#endif
+#endif  /* DEBUG */
 static const char *_kickstart_lua = "return require(\"" BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
@@ -129,8 +129,7 @@ static void _warning(void *ud, const char *message, int tocont)
     }
 }
 
-#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
-#if defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS) && defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
 static int _error_handler(lua_State *L)
 {
     const char *msg = lua_tostring(L, 1);
@@ -146,7 +145,6 @@ static int _error_handler(lua_State *L)
     return 1;  /* return the traceback */
 }
 #endif
-#endif
 
 // [...] Every time lua_load needs another piece of the chunk, it calls the reader, passing along its data parameter.
 // The reader must return a pointer to a block of memory with a new piece of the chunk and set size to the block size.
@@ -157,9 +155,9 @@ typedef struct lua_Reader_Context_s {
     uint8_t buffer[READER_CONTEXT_BUFFER_SIZE];
 } lua_Reader_Context_t;
 
-static const char *_reader(lua_State *L, void *ud, size_t *size)
+static const char *_reader(lua_State *L, void *data, size_t *size)
 {
-    lua_Reader_Context_t *context = (lua_Reader_Context_t *)ud;
+    lua_Reader_Context_t *context = (lua_Reader_Context_t *)data;
 
     const size_t bytes_read = FS_read(context->handle, context->buffer, READER_CONTEXT_BUFFER_SIZE);
     if (bytes_read == 0) {
@@ -289,7 +287,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
 #endif
 
 #if TOFU_INTERPRETER_GC_MODE != GC_AUTOMATIC
-    lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default.
+    lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default. We disable as we will control it.
 #endif
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
@@ -297,14 +295,12 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
 
-#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
-#if !defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS) && defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
+    lua_pushcfunction(interpreter->state, _error_handler);
+#else
     lua_getglobal(interpreter->state, "debug");
     lua_getfield(interpreter->state, -1, "traceback");
     lua_remove(interpreter->state, -2);
-#else
-    lua_pushcfunction(interpreter->state, _error_handler);
-#endif
 #endif
 
     return interpreter;
@@ -380,13 +376,12 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
     }
 #endif  /* TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS */
 
-
-#if defined(TOFU_INTERPRETER_GC_PERIODIC) || defined(TOFU_INTERPRETER_GC_REPORTING)
+#if TOFU_INTERPRETER_GC_MODE == GC_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING)
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GC_COLLECTION_PERIOD;
 
-#if defined(TOFU_INTERPRETER_GC_PERIODIC)
+#if TOFU_INTERPRETER_GC_MODE == GC_PERIODIC
 #if defined(TOFU_INTERPRETER_GC_REPORTING)
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
@@ -401,7 +396,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 #elif defined(TOFU_INTERPRETER_GC_REPORTING)
         int count = lua_gc(interpreter->state, LUA_GCCOUNT);
         LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
-#endif  /* TOFU_INTERPRETER_GC_PERIODIC */
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_PERIODIC */
     }
 #endif
 
