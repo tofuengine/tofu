@@ -1143,6 +1143,10 @@ void luaV_finishOp (lua_State *L) {
 #define vmbreak		break
 
 
+#if LUA_USE_JUMPTABLE
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 void luaV_execute (lua_State *L, CallInfo *ci) {
   LClosure *cl;
   TValue *k;
@@ -1897,5 +1901,8 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
     }
   }
 }
+#if LUA_USE_JUMPTABLE
+#pragma GCC diagnostic pop
+#endif
 
 /* }================================================================== */
