@@ -41,12 +41,12 @@ typedef enum lua_Warning_States_e {
 typedef struct Interpreter_s {
     lua_State *state;
     lua_Warning_States_t warning_state;
-#if TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS
     float gc_step_age;
-#endif  /* TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS */
-#if TOFU_INTERPRETER_GC_MODE == GC_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING)
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS */
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING)
     float gc_age;
-#endif  /* TOFU_INTERPRETER_GC_MODE == GC_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING) */
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING) */
 } Interpreter_t;
 
 extern Interpreter_t *Interpreter_create(const Storage_t *storage);

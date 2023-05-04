@@ -280,13 +280,13 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
     lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
 
-#if TOFU_INTERPRETER_GC_TYPE == GC_INCREMENTAL
+#if TOFU_INTERPRETER_GC_TYPE == GC_TYPE_INCREMENTAL
     lua_gc(interpreter->state, LUA_GCINC, 0, 0, 0);
-#elif TOFU_INTERPRETER_GC_TYPE == GC_GENERATIONAL
+#elif TOFU_INTERPRETER_GC_TYPE == GC_TYPE_GENERATIONAL
     lua_gc(interpreter->state, LUA_GCGEN, 0, 0);
 #endif
 
-#if TOFU_INTERPRETER_GC_MODE != GC_AUTOMATIC
+#if TOFU_INTERPRETER_GC_MODE != GC_MODE_AUTOMATIC
     lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default. We disable as we will control it.
 #endif
 
@@ -367,21 +367,21 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
-#if TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS
     interpreter->gc_step_age += delta_time;
     while (interpreter->gc_step_age >= GC_CONTINUOUS_STEP_PERIOD) {
         interpreter->gc_step_age -= GC_CONTINUOUS_STEP_PERIOD;
 
         lua_gc(interpreter->state, LUA_GCSTEP, 0); // Basic step.
     }
-#endif  /* TOFU_INTERPRETER_GC_MODE == GC_CONTINUOUS */
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS */
 
-#if TOFU_INTERPRETER_GC_MODE == GC_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING)
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING)
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GC_COLLECTION_PERIOD;
 
-#if TOFU_INTERPRETER_GC_MODE == GC_PERIODIC
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC
 #if defined(TOFU_INTERPRETER_GC_REPORTING)
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
@@ -396,7 +396,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 #elif defined(TOFU_INTERPRETER_GC_REPORTING)
         int count = lua_gc(interpreter->state, LUA_GCCOUNT);
         LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
-#endif  /* TOFU_INTERPRETER_GC_MODE == GC_PERIODIC */
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC */
     }
 #endif
 

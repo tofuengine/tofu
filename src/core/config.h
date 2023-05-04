@@ -33,13 +33,13 @@
 #define GC_CONTINUOUS_STEP_PERIOD   0.1f
 #define GC_COLLECTION_PERIOD        15.0f
 
-#define GC_INCREMENTAL  0
-#define GC_GENERATIONAL 1
+#define GC_TYPE_INCREMENTAL  0
+#define GC_TYPE_GENERATIONAL 1
 
-#define GC_AUTOMATIC  0
-#define GC_CONTINUOUS 1
-#define GC_PERIODIC   2
-#define GC_MANUAL     3
+#define GC_MODE_AUTOMATIC  0
+#define GC_MODE_CONTINUOUS 1
+#define GC_MODE_PERIODIC   2
+#define GC_MODE_MANUAL     3
 
 #define BALANCE_LAW_LINEAR    0
 #define BALANCE_LAW_SINCOS    1
@@ -163,11 +163,73 @@
 #define TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION
 #undef  TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
 #undef  TOFU_GRAPHICS_XFORM_TRANSPARENCY
+
+// ###################
+// ### Interpreter ###
+// ###################
+
+// When using protected-call we also want that a custom trace-back callback is
+// used. This will report a simpler output.
 #define TOFU_INTERPRETER_CUSTOM_TRACEBACK
+
 #define TOFU_INTERPRETER_GC_REPORTING
-#define TOFU_INTERPRETER_GC_TYPE GC_INCREMENTAL
-#define TOFU_INTERPRETER_GC_MODE GC_CONTINUOUS
+
+// Selects the garbage-collector type. Could be either `GC_TYPE_INCREMENTAL` or
+// `GC_TYPE_GENERATIONAL`.
+//
+// An *incremental* garbage-collector reduces the length of the pause from
+// the script execution but doesn't reduce the overhead of the GC phase.
+//
+// A *generational* garbage-collector works better when this hypothesis holds:
+// most objects die young. In case of a game-engine this is rarely true, to
+// the point that we use pools of actors/entities that are reused.
+//
+// For this reason the *incremental* type is suggested.
+#define TOFU_INTERPRETER_GC_TYPE GC_TYPE_INCREMENTAL
+
+// Selects the mode under which the garbage-collection is performed during the
+// game-engine lifetime. It ca ben one of the following values:
+//
+// - GC_MODE_AUTOMATIC
+//   Garbage-collection is carried out by the Lua virtual-machine according to
+//   it's internal logic (e.g. executed incrementally and a clean-cycle is
+//   forced when the amount of memory to be freed is significant).
+//
+// - GC_MODE_CONTINUOUS
+//   A single GC step is performed periodically at a fixed time-step (i.e.
+//   every 100 milliseconds, please see the `GC_CONTINUOUS_STEP_PERIOD` macro)
+//   so that the overhead is distributed over time.
+//
+// - GC_MODE_PERIODIC
+//   Every `GC_COLLECTION_PERIOD` seconds a full garbage-collection cycle is
+//   forced. This could have a non trivial overhead.
+//
+// - GC_MODE_MANUAL
+//   no autonomous garbage-collection is performed by the game-engine. It is
+//   duty of the programmer to call the `collectgarbage()` function when desired
+//   (e.g. during the level loading process).
+//
+// For small-sized projects, probably `GC_MODE_AUTOMATIC` is advisable. For
+// mid-sized project either `GC_MODE_PERIODIC` or `GC_MODE_CONTINUOUS` are
+// suggested (with the latter giving the most consistent behaviour). On large
+// projects, or where performance really matters, `GC_MODE_MANUAL` is to be used
+// as it gives the programmer full control on when the GC is to be used.
+#define TOFU_INTERPRETER_GC_MODE GC_MODE_CONTINUOUS
+
+// Enforces 'lua_pcall()' over (faster) 'lua_call()' when calling the scripting
+// sub-system callbacks (e.g. `update()`). This will ensure that any potential
+// error will be handled and reported with a detailed trace-back.
+//
+// Note: in the `RELEASE` build this macro is advised to be disable, as
+//       protected-calls are *slower* than raw-calls.
 #define TOFU_INTERPRETER_PROTECTED_CALLS
+
+// As the game-engine uses a Lua custom reader we have to freedom to set the
+// the I/O buffer with any size we like. If not defined, a default value of
+// 1024 bytes is used.
+//
+// Note: the buffer is used to read Lua code, which typically is not that
+//       large. Using huge buffers is pointless.
 #define TOFU_INTERPRETER_READER_BUFFER_SIZE 1024U
 
 // #############
@@ -275,7 +337,7 @@
   #undef TOFU_GRAPHICS_EUCLIDIAN_NEAREST_COLOR
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS
-  #undef TOFU_INTERPRETER_GC_MODE GC_AUTOMATIC
+  #undef TOFU_INTERPRETER_GC_MODE GC_MODE_AUTOMATIC
   #undef TOFU_INTERPRETER_GC_REPORTING
 #endif
 
