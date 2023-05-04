@@ -2,6 +2,10 @@
 
 Welcome to `Tofu Engine`!
 
+<p align="center">
+  <img alt="Tofu Engine Logo" width="256" height="256" src="./extras/images/tofu-engine-v3-circle.svg">
+</p>
+
 Guess what? Yup, that's yet another game engine/framework.
 
 ## Highlights
@@ -60,15 +64,15 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.38, v0.6.33, v0.13.6
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.39, v0.6.34, v0.13.8
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
-* [Glad](https://glad.dav1d.de/)
+* [Glad](https://github.com/Dav1dde/glad)
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
-* [Lua](https://lua.org/) v5.4.4
+* [Lua](https://lua.org/) v5.4.5
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.12
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
-* [spleen](https://github.com/fcambus/spleen) v1.8.1
+* [spleen](https://github.com/fcambus/spleen) v1.9.3
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -92,6 +96,7 @@ In order to compile `Tofu Engine`, a Linux machine in required (either physical 
 
 ```bash
 sudo apt install build-essential
+sudo apt install pkg-config
 sudo apt install mingw-w64
 
 sudo apt install xorg-dev libx11-dev libwayland-dev libxkbcommon-dev wayland-protocols mesa-common-dev libgles2-mesa-dev
@@ -101,7 +106,7 @@ sudo apt install lua5.4 liblua5.4-dev luarocks
 sudo luarocks --lua-version=5.4 install argparse
 sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck
-sudo luarocks --lua-version=5.4 install luazen
+sudo luarocks --lua-version=5.4 install lua-hashings
 ```
 
 Of course, `git` should also be installed to clone the repository.
