@@ -293,7 +293,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
     lua_pushlightuserdata(interpreter->state, (void *)storage);
-    luaX_overridesearchers(interpreter->state, _searcher, 1);
+    luaX_overridesearchers(interpreter->state, _searcher, 1, true);
 
 #if defined(TOFU_INTERPRETER_PROTECTED_CALLS) && defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
     lua_pushcfunction(interpreter->state, _error_handler);

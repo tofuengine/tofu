@@ -215,24 +215,29 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
 //   - a searcher that looks for a loader as a C library,
 //   - a searcher that looks for an all-in-one, combined, loader.
 //
-// This function modifies the table by clearing table entries #3 and #4. The first one is kept (to enable
-// module reuse), and the second one is overwritten with the given `searcher`. As a result the module loading
-// process is confined to the custom searcher only.
+// In sandbox-mode this function modifies the table by clearing table entries #3 and #4. The first one is kept
+// (to enable module reuse), and the second one is overwritten with the given `searcher`. As a result the
+//  module loading process is confined to the custom searcher only.
 //
 // See: https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers
-void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
+void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup, int sandbox_mode)
 {
-    lua_getglobal(L, "package"); // Access the `package.searchers` table.
-    lua_getfield(L, -1, "searchers");
-    lua_insert(L, -(nup + 2)); // Move the `searchers` table above the upvalues.
-    lua_insert(L, -(nup + 2)); // Move the `package` table above the upvalues.
-    lua_pushcclosure(L, searcher, nup);
-    lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
+    lua_getglobal(L, "package");        // A ... A -> A ... A T
+    lua_getfield(L, -1, "searchers");   // A ... A T -> A ... A T T
 
-    size_t n = lua_rawlen(L, -1);
-    for (size_t i = 3; i <= n; ++i) { // Discard the others (two) searchers.
+    // Move the `searchers` and `package` tables *before* the upvalues so we can "close" them into
+    // a function-closure. Then use the closure to override the 2nd searcher (keeping the "preloaded" helper).
+    lua_insert(L, -(nup + 2));          // A ... A T T -> T A ... A T
+    lua_insert(L, -(nup + 2));          // T A ... A T -> T T A ... A
+    lua_pushcclosure(L, searcher, nup); // T T A ... A -> T T F
+    lua_rawseti(L, -2, 2);              // T T F -> T T
+
+    // Discard the others (two) searchers.
+    if (sandbox_mode) {
         lua_pushnil(L);
-        lua_rawseti(L, -2, (lua_Integer)i);
+        lua_rawseti(L, -2, 3); // package.searchers[3] = nil
+        lua_pushnil(L);
+        lua_rawseti(L, -2, 4); // package.searchers[4] = nil
     }
 
     lua_pop(L, 2); // Pop the `package` and `searchers` table.

@@ -179,7 +179,7 @@ extern int luaX_isobject(lua_State *L, int idx, int type);
 extern void *luaX_toobject(lua_State *L, int idx, int type);
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
-extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);
+extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup, int sandbox_mode);
 extern int luaX_insisttable(lua_State *L, const char *name);
 extern int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
 extern void luaX_openlibs(lua_State *L);
