@@ -1,10 +1,10 @@
+<p align="center">
+  <img alt="Tofu Engine Logo" width="192" height="192" src="./extras/images/tofu-engine-v3-circle.svg">
+</p>
+
 # Introduction
 
 Welcome to `Tofu Engine`!
-
-<p align="center">
-  <img alt="Tofu Engine Logo" width="256" height="256" src="./extras/images/tofu-engine-v3-circle.svg">
-</p>
 
 Guess what? Yup, that's yet another game engine/framework.
 
