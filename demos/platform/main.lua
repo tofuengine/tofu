@@ -23,6 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
+local Math = require("tofu.core.math")
 local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
@@ -37,6 +38,8 @@ local Vector = require("tofu.util.vector")
 local Animation = require("lib/animation")
 
 local WATER_DISPLACEMENT = 1.5
+
+local SNOW = false
 
 local Main = Class.define()
 
@@ -108,15 +111,14 @@ function Main:__ctor()
   self.acceleration = Vector.new(0, -9.81 * 0.75)
   self.jumps = 0
 
---[[
   self.snow = {}
   self.flake_time = 0
-]]
 
   self.atlas:clear(0)
 
   -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
-  Display.palette(Palette.new(extra_half_brite(palette, { 31, 127, 63 }, 0.5)))
+  self.palette = Palette.new(extra_half_brite(palette, { 31, 127, 63 }, 0.5))
+  Display.palette(self.palette)
 --  self.pixies:clear(0)
 end
 
@@ -190,49 +192,50 @@ function Main:update(delta_time)
 
   local canvas = Canvas.default()
   local width, height = canvas:image():size()
---[[
-  self.flake_time = self.flake_time + delta_time
-  while self.flake_time >= 0.025 do
-    self.flake_time = self.flake_time - 0.025
-    if #self.snow < 1024 then
-      local v = 255
-      local color = Display.color_to_index(v, v, v)
-      table.insert(self.snow, {
-          x = math.random(0, width - 1),
-          y = -32,
-          z = math.random(1, 5),
-          angle = 0,
-          vy = 24,
-          vx = 0,
-          va = math.random() * Math.SINCOS_PERIOD,
-          color = color,
-        })
+
+  if SNOW then
+    self.flake_time = self.flake_time + delta_time
+    while self.flake_time >= 0.025 do
+      self.flake_time = self.flake_time - 0.025
+      if #self.snow < 1024 then
+        local v = 255
+        local color = self.palette:match(v, v, v)
+        table.insert(self.snow, {
+            x = math.random(0, width - 1),
+            y = -32,
+            z = math.random(1, 5),
+            angle = 0,
+            vy = 24,
+            vx = 0,
+            va = math.random() * Math.SINCOS_PERIOD,
+            color = color,
+          })
+      end
+    end
+
+    local wind_vx = 0 -- math.random(-128, 128)
+    for index = #self.snow, 1, -1 do
+      local flake = self.snow[index]
+      local factor_x = -1.0 / flake.z
+      local factor_y = 1.0 / flake.z
+      flake.vx = self.velocity.x + wind_vx
+
+      flake.x = flake.x + (flake.vx * delta_time) * factor_x
+      flake.y = flake.y + (flake.vy * delta_time) * factor_y
+
+      flake.angle = flake.angle + (flake.va * delta_time)
+
+      if flake.x < 0 then
+        flake.x = flake.x + width
+      elseif flake.x >= width then
+        flake.x = flake.x - width
+      end
+
+      if flake.y >= 96 then
+        table.remove(self.snow, index)
+      end
     end
   end
-
-  local wind_vx = 0 -- math.random(-128, 128)
-  for index = #self.snow, 1, -1 do
-    local flake = self.snow[index]
-    local factor_x = -1.0 / flake.z
-    local factor_y = 1.0 / flake.z
-    flake.vx = self.velocity.x + wind_vx
-
-    flake.x = flake.x + (flake.vx * delta_time) * factor_x
-    flake.y = flake.y + (flake.vy * delta_time) * factor_y
-
-    flake.angle = flake.angle + (flake.va * delta_time)
-
-    if flake.x < 0 then
-      flake.x = flake.x + width
-    elseif flake.x >= width then
-      flake.x = flake.x - width
-    end
-
-    if flake.y >= 96 then
-      table.remove(self.snow, index)
-    end
-  end
-]]
 
   local delta_y = self.position.y * 0.75
   local y = height * 0.5 + delta_y + 32
@@ -275,15 +278,13 @@ function Main:render(_)
     end
   end
 
---[[
   canvas:push()
   for _, flake in ipairs(self.snow) do
     canvas:shift(0, flake.color)
     local scale = 1--flake.z * 0.5
-    self.pixies:blit(0, flake.x, flake.y + delta_y, scale, scale, flake.angle, 0.5, 0.5)
+    canvas:sprite(flake.x, flake.y + delta_y, self.pixies, 0, scale, scale, flake.angle, 0.5, 0.5)
   end
   canvas:pop()
-]]
 
 --[[
   local t = System.time()
@@ -295,7 +296,7 @@ function Main:render(_)
         local ar, ag, ab = 31, 127, 63
         local br, bg, bb = Display.get(to)
         local r, g, b = (ar + br) * 0.5, (ag + bg) * 0.5, (ab + bb) * 0.5
-        return Display.color_to_index(r, g, b)
+        return self.palette:match(r, g, b)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
