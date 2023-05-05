@@ -111,6 +111,8 @@ extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Re
 
 extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
 
+extern size_t Storage_flush(Storage_t *storage);
+
 extern bool Storage_update(Storage_t *storage, float delta_time);
 
 #endif  /* TOFU_SYSTEMS_STORAGE_H */

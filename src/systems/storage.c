@@ -71,6 +71,8 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     }
     LOG_D(LOG_CONTEXT, "cache %p created", storage->cache);
 
+    // TODO: scan for `xxx.pak.0`, `xxx.pak.1`, ...
+
     bool kernal_attached = FS_attach_folder_or_archive(storage->context, configuration->kernal_path);
     if (!kernal_attached) {
         LOG_E(LOG_CONTEXT, "can't attach kernal folder/archive at `%s`", configuration->kernal_path);
@@ -478,6 +480,20 @@ FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
     return FS_open(storage->context, name);
 }
 
+size_t Storage_flush(Storage_t *storage)
+{
+    size_t count = arrlenu(storage->resources);
+
+    Storage_Resource_t **current = storage->resources;
+    for (size_t i = count; i; --i) {
+        Storage_Resource_t *resource = *(current++);
+        _release(resource);
+    }
+
+    arrfree(storage->resources);
+
+    return count;
+}
 bool Storage_update(Storage_t *storage, float delta_time)
 {
     // Backward scan, to properly implement the SWAP-AND-POP(tm) idiom along the whole array

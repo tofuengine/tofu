@@ -31,6 +31,7 @@
 #include <systems/storage.h>
 
 static int storage_inject_3ssS_0(lua_State *L);
+static int storage_flush_0_0(lua_State *L);
 //static int storage_exists_1s_1b(lua_State *L);
 
 int storage_loader(lua_State *L)
@@ -40,6 +41,7 @@ int storage_loader(lua_State *L)
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "inject", storage_inject_3ssS_0 },
+            { "flush", storage_flush_0_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -83,6 +85,18 @@ static int storage_inject_3ssS_0(lua_State *L)
     if (!injected) {
         return luaL_error(L, "can't inject data `%.32s` as `%s`", data, name);
     }
+
+    return 0;
+}
+
+static int storage_flush_0_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+
+    Storage_flush(storage);
 
     return 0;
 }
