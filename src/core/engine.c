@@ -409,8 +409,10 @@ void Engine_run(Engine_t *engine)
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
-            running = running && Audio_update(engine->audio, delta_time);
-            running = running && Storage_update(engine->storage, delta_time); // Note: we could update audio/storage one every two steps (or more).
+            running = running && Audio_update(engine->audio, delta_time); // Note: we could update audio/storage one every two steps (or more).
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
+            running = running && Storage_update(engine->storage, delta_time);
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
             lag -= delta_time;
         }
 

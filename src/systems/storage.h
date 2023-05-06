@@ -27,6 +27,7 @@
 
 #include "storage/cache.h"
 
+#include <core/config.h>
 #include <core/platform.h>
 #include <libs/fs/fs.h>
 #include <libs/md5.h>
@@ -62,8 +63,10 @@ typedef struct Storage_Resource_s {
             void *pixels;
         } image;
     } var;
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
     double age;
     bool allocated;
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
 } Storage_Resource_t;
 
 typedef struct Storage_Configuration_s {
@@ -111,8 +114,10 @@ extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Re
 
 extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
 
-extern size_t Storage_flush(Storage_t *storage);
-
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
 extern bool Storage_update(Storage_t *storage, float delta_time);
+#else   /* TOFU_STORAGE_AUTO_COLLECT */
+extern size_t Storage_flush(Storage_t *storage);
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
 
 #endif  /* TOFU_SYSTEMS_STORAGE_H */

@@ -319,14 +319,28 @@
 // be parked for a "while". The length of this period is specified (in seconds)
 // by this macro.
 //
+// When an already cached resource is re-loaded it's age is reset.
+//
 // This enable a sort of automatic garbage-collection of the resources, that
 // are released after some time.
 //
 // Similarly to the cache limit, there's generally no need for a resource to
 // persist in the cache for long periods.
 //
-// Note: when an already cached resource is re-loaded it's age is reset.
+// Note: this value is used only if the macro `TOFU_STORAGE_AUTO_COLLECT` is
+//       defined.
 #define TOFU_STORAGE_RESOURCE_MAX_AGE 30.0
+
+// If defined the macro will enable the automatic garbage-collection of the
+// storage resources (that is, they will be automatically freed after a grace
+// period of time).
+//
+// However, this come with the cost of "pumping" the sub-system at each
+// frame-step.
+//
+// For that reason, to save performances, the macro can be disabled and
+// resources are to be freed with the `Storage.flush()` API.
+#undef  TOFU_STORAGE_AUTO_COLLECT
 
 // In release build, disable VM calls debug and periodic collection for better
 // performance.
