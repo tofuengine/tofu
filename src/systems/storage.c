@@ -100,9 +100,6 @@ error_free:
 
 static void _release(Storage_Resource_t *resource)
 {
-    if (!resource->allocated) {
-        LOG_D(LOG_CONTEXT, "resource %p wasn't allocated, won't release", resource);
-    } else
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
         LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%d characters string)",
@@ -226,7 +223,6 @@ static bool _load_as_string(Storage_Resource_t *resource, FS_Handle_t *handle)
                     .length = length
                 }
             },
-            .allocated = true
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             .age = 0.0
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
@@ -252,7 +248,6 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
                     .size = size
                 }
             },
-            .allocated = true
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             .age = 0.0
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
@@ -304,7 +299,6 @@ static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
                     .pixels = pixels
                 }
             },
-            .allocated = true
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             .age = 0.0
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */

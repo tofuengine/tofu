@@ -65,7 +65,6 @@ typedef struct Storage_Resource_s {
     } var;
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
     double age;
-    bool allocated;
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
 } Storage_Resource_t;
 
