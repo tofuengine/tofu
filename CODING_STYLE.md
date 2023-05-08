@@ -37,6 +37,11 @@ The only exception to this is for the include-guards (see below), which uses the
 
 > Coincidentally this is the same approach used in Lua's codebase.
 
+## Module Debugging
+
+Every sub-system should use a macro with identifier `TOFU_<module-name>_DEBUG_ENABLED` to control a fine log/debug
+level to be used. The macro should be defined in the `config.h` file.
+
 ## Type Definitions
 
 Types are defined with [Pascal-case]() style. The following suffixes are used:
