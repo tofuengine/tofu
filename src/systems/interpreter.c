@@ -133,16 +133,16 @@ static void _warning(void *ud, const char *message, int tocont)
 static int _error_handler(lua_State *L)
 {
     const char *msg = lua_tostring(L, 1);
-    if (!msg) {  /* is error object not a string? */
-        if (luaL_callmeta(L, 1, "__tostring")  /* does it have a metamethod */
+    if (!msg) { /* is error object not a string? */
+        if (luaL_callmeta(L, 1, "__tostring") /* does it have a metamethod */
             && lua_type(L, -1) == LUA_TSTRING) { /* that produces a string? */
-            return 1;  /* that is the message */
+            return 1; /* that is the message */
         } else {
             msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
         }
     }
-    luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
-    return 1;  /* return the traceback */
+    luaL_traceback(L, L, msg, 1); /* append a standard traceback */
+    return 1; /* return the traceback */
 }
 #endif
 

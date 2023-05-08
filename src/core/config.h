@@ -340,7 +340,7 @@
 //
 // For that reason, to save performances, the macro can be disabled and
 // resources are to be freed with the `Storage.flush()` API.
-#undef  TOFU_STORAGE_AUTO_COLLECT
+#define TOFU_STORAGE_AUTO_COLLECT
 
 // In release build, disable VM calls debug and periodic collection for better
 // performance.
@@ -351,7 +351,7 @@
   #undef TOFU_GRAPHICS_EUCLIDIAN_NEAREST_COLOR
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS
-  #undef TOFU_INTERPRETER_GC_MODE GC_MODE_AUTOMATIC
+  #undef TOFU_INTERPRETER_GC_MODE GC_MODE_MANUAL
   #undef TOFU_INTERPRETER_GC_REPORTING
 #endif
 
