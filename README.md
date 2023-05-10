@@ -1,6 +1,6 @@
-<p align="center">
-  <img alt="Tofu Engine Logo" width="192" height="192" src="./extras/images/tofu-engine-v3-circle.svg">
-</p>
+<h1 align="center">
+    <a href="https://tofuengine.org"><img alt="Tofu Engine Logo" src="./extras/images/logo_with_payoff-512x160.png"></a>
+</h1>
 
 # Introduction
 
