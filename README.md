@@ -1,6 +1,4 @@
-<h1 align="center" style="{ background-color: cadetblue; }">
-    <a href="https://tofuengine.org"><img alt="Tofu Engine Logo" src="./extras/images/logo_with_payoff-512x160.png" style="{ background-color: cadetblue; margin-top: 0.5em; }"></a>
-</h1>
+![Tofu Engine Logo](./extras/images/logo_with_payoff-512x160.png)
 
 # Introduction
 
