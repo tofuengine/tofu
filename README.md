@@ -1,4 +1,4 @@
-![Tofu Engine Logo](./extras/images/logo_with_payoff-512x160.png)
+![Tofu Engine Logo](./extras/images/logo_with_payoff-1012x192.png)
 
 # Introduction
 
