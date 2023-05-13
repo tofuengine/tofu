@@ -205,21 +205,33 @@ static int _searcher(lua_State *L)
 //
 //     T O F1 ... Fn
 //
-static bool _detect(lua_State *L, int index, const char *methods[])
+static bool _detect(lua_State *L, const char *methods[])
 {
+    // We expect the top of the stack to be the object instance. So we get the
+    // (positive) index for easier access, later on (*).
+    const int index = lua_gettop(L);
+
     if (lua_isnil(L, index)) {
         LOG_F(LOG_CONTEXT, "can't find root instance");
-        lua_pop(L, 1);
+        lua_pop(L, 1); // Pop the instance, which is `nil`.
         return false;
     }
 
     for (int i = 0; methods[i]; ++i) { // Push the methods on stack
-        lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
+        lua_getfield(L, index, methods[i]); // (*) easy access! The `index` don't change!
+#if defined(TOFU_INTERPRETER_PARTIAL_OBJECT)
         if (!lua_isnil(L, -1)) {
             LOG_D(LOG_CONTEXT, "method `%s` found", methods[i]);
         } else {
             LOG_W(LOG_CONTEXT, "method `%s` is missing", methods[i]);
         }
+#else
+        if (lua_isnil(L, -1)) {
+            LOG_F(LOG_CONTEXT, "method `%s` is missing", methods[i]);
+            lua_pop(L, 1 + (i + 1)); // Pop the instance and the methods we pushed so far.
+            return false;
+        }
+#endif
     }
 
     return true;
@@ -242,7 +254,8 @@ static inline int _raw_call(lua_State *L, int nargs, int nresults)
 
 static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
 {
-    int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
+    const int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
+#if defined(TOFU_INTERPRETER_PARTIAL_OBJECT)
     if (lua_isnil(L, index)) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
         for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
@@ -250,6 +263,7 @@ static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int n
         }
         return LUA_OK;
     }
+#endif
     lua_pushvalue(L, index);                // T O F1 ... Fn A1 ... An     -> T O F1 ... Fn A1 ... An F
     lua_pushvalue(L, OBJECT_STACK_INDEX);   // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
@@ -336,7 +350,7 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     }
     LOG_D(LOG_CONTEXT, "boot script loaded");
 
-    if (!_detect(interpreter->state, -1, _methods)) {
+    if (!_detect(interpreter->state, _methods)) {
         LOG_F(LOG_CONTEXT, "can't detect entry-points");
         return false;
     }

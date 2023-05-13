@@ -37,6 +37,8 @@
 
 #include <chipmunk/chipmunk.h>
 
+// TODO: rename them as PODs? (Plain-old-Data)
+
 typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
     USERDATA_DISPLAY,

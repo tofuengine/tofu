@@ -224,6 +224,12 @@
 //       protected-calls are *slower* than raw-calls.
 #define TOFU_INTERPRETER_PROTECTED_CALLS
 
+// When this macro is defined, the main object (see the `boot-XXX.lua` files)
+// can be partially implemented (i.e. some of its method can be missing). This
+// is not the usual case, as the API is always fully implemented. Undefining
+// the macro will simplify the code, which is continously called.
+#undef  TOFU_INTERPRETER_PARTIAL_OBJECT
+
 // As the game-engine uses a Lua custom reader we have to freedom to set the
 // the I/O buffer with any size we like. If not defined, a default value of
 // 1024 bytes is used.
