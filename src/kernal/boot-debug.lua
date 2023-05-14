@@ -30,11 +30,10 @@ local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 local Speakers = require("tofu.sound.speakers")
-local Pool = require("tofu.timers.pool")
 
-local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+local Boot = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
-function Tofu:__ctor()
+function Boot:__ctor()
   self.states = {
     -- TODO: add an "splash" state that emulates Amiga's boot.
     ["normal"] = {
@@ -43,7 +42,6 @@ function Tofu:__ctor()
           me.main = Main.new()
         end,
       leave = function(me)
-          Pool.default():clear()
           Speakers.halt() -- Stop all sounds sources.
           Display.reset()
           local canvas = Canvas.default()
@@ -52,18 +50,15 @@ function Tofu:__ctor()
           me.main = nil
         end,
       process = function(me, events)
-          if events then
-            for _, event in ipairs(events) do
-              local callback = me.main[event]
-              if callback then
-                callback(me.main)
-              end
+          for _, event in ipairs(events) do
+            local callback = me.main[event]
+            if callback then
+              callback(me.main)
             end
           end
           me.main:process()
         end,
       update = function(me, delta_time)
-          Pool.default():update(delta_time)
           me.main:update(delta_time)
         end,
       render = function(me, ratio)
@@ -131,24 +126,24 @@ function Tofu:__ctor()
   self:switch_to("normal")
 end
 
-function Tofu:process(events)
+function Boot:process(events)
   self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
 
   local me = self.state
   self:call(me.process, me, events)
 end
 
-function Tofu:update(delta_time)
+function Boot:update(delta_time)
   local me = self.state
   self:call(me.update, me, delta_time)
 end
 
-function Tofu:render(ratio)
+function Boot:render(ratio)
   local me = self.state
   self:call(me.render, me, ratio)
 end
 
-function Tofu:switch_if_needed()
+function Boot:switch_if_needed()
   if not next(self.queue) then
     return
   end
@@ -164,11 +159,11 @@ function Tofu:switch_if_needed()
   self.state = entering
 end
 
-function Tofu:switch_to(id, ...)
+function Boot:switch_to(id, ...)
   table.insert(self.queue, { id = id, args = { ... } })
 end
 
-function Tofu:call(func, ...)
+function Boot:call(func, ...)
   if next(self.queue) then
     return
   end
@@ -179,4 +174,4 @@ function Tofu:call(func, ...)
   end
 end
 
-return Tofu.new()
+return Boot.new()

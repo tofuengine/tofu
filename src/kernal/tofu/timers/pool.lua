@@ -23,20 +23,22 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
+local Timer = require("tofu.timers.timer")
 
 local Pool = Class.define()
 
-local _default = nil
-
-function Pool.default()
-  if not _default then
-    _default = Pool.new()
-  end
-  return _default
-end
-
 function Pool:__ctor()
   self.timers = {}
+end
+
+function Pool:spawn(period, repeats, callback)
+  local timer = Timer.new(period, repeats, callback)
+  table.insert(self.timers, timer)
+  return timer
+end
+
+function Pool:add(timer)
+  table.insert(self.timers, timer)
 end
 
 function Pool:clear()

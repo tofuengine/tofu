@@ -27,20 +27,19 @@ local Math = require("tofu.core.math")
 local Oscillator = require("tofu.generators.oscillator")
 local Tweener = require("tofu.generators.tweener")
 local Image = require("tofu.graphics.image")
-local Timer = require("tofu.timers.timer")
 
 local Wave = Class.define()
 
-function Wave:__ctor(_, _, transparent, _)
+function Wave:__ctor(_, _, transparent, _, pool)
   self.stripe = Image.new("assets/images/stripes.png", transparent)
   self.tweener = Tweener.new("linear", 5)
   self.oscillator = Oscillator.new("sine", 0.75)
   self.period_current = 0
   self.period_next = 0
-  self.timer = Timer.new(self.tweener:duration(), 0, function(_)
-    self.period_current = self.period_next
-    self.period_next = math.random() + 0.5
-  end)
+  self.timer = pool:spawn(self.tweener:duration(), 0, function(_)
+      self.period_current = self.period_next
+      self.period_next = math.random() + 0.5
+    end)
 end
 
 function Wave:update(delta_time)

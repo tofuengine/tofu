@@ -28,7 +28,7 @@ local Image = require("tofu.graphics.image")
 
 local Logo = Class.define()
 
-function Logo:__ctor(width, height, transparent, _)
+function Logo:__ctor(width, height, transparent, _, _)
   self.images = {
       Image.new("assets/images/tofu.png", transparent),
       Image.new("assets/images/engine.png", transparent)

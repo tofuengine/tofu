@@ -22,37 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local Pool = require("tofu.timers.pool")
+-- Note
+-- ====
+--
+-- The `RELEASE` boot script is actually empty and could be avoided totally.
+-- However, we are keeping it for sake of balance with the `DEBUG` one. Also,
+-- it might prove useful as a mean to override and/or add the engine behaviour
+-- by kernal overriding. It should be noticed that there's no additional cost
+-- in having it as it called just once.
 
 local Main = require("main")
 
-local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
-
-function Tofu:__ctor()
-  self.main = Main.new()
-end
-
-function Tofu:process(events)
-  if events then
-    for _, event in ipairs(events) do
-      local callback = self.main[event]
-      if callback then
-        callback(self.main)
-      end
-    end
-  end
-  -- TODO: add "pressed" buttons auto-events?
-  self.main:process()
-end
-
-function Tofu:update(delta_time)
-  Pool.default():update(delta_time)
-  self.main:update(delta_time)
-end
-
-function Tofu:render(ratio)
-  self.main:render(ratio)
-end
-
-return Tofu.new()
+return Main.new()

@@ -27,6 +27,7 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Source = require("tofu.sound.source")
+local Pool = require("tofu.timers.pool")
 
 local Background = require("lib/background")
 local Logo = require("lib/logo")
@@ -45,12 +46,14 @@ function Main:__ctor()
 
   self.background_index = background_index -- Use it as background colour and transparent! :)
 
+  self.pool = Pool.new()
+
   local width, height = canvas:image():size()
   self.objects = {
-      Background.new(width, height, background_index, palette),
-      Wave.new(width, height, background_index, palette),
-      Logo.new(width, height, background_index, palette),
-      Stars.new(width, height, background_index, palette)
+      Background.new(width, height, background_index, palette, self.pool),
+      Wave.new(width, height, background_index, palette, self.pool),
+      Logo.new(width, height, background_index, palette, self.pool),
+      Stars.new(width, height, background_index, palette, self.pool)
     }
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")
@@ -62,6 +65,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self.pool:update(delta_time)
+
   for _, object in ipairs(self.objects) do
     object:update(delta_time)
   end

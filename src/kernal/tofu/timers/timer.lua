@@ -23,11 +23,10 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Pool = require("tofu.timers.pool")
 
 local Timer = Class.define()
 
-function Timer:__ctor(period, repeats, callback, pool)
+function Timer:__ctor(period, repeats, callback)
   self.period = period
   self.repeats = repeats
   self.callback = callback
@@ -36,7 +35,6 @@ function Timer:__ctor(period, repeats, callback, pool)
 --  self.loops = repeats
 --  self.cancelled = false
 
-  table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
   self:reset()
 end
 
