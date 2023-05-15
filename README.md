@@ -67,7 +67,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [Glad](https://github.com/Dav1dde/glad)
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
-* [Lua](https://lua.org/) v5.4.5
+* [Lua](https://lua.org/) v5.4.6
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.15
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
