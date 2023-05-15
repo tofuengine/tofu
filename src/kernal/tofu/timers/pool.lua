@@ -31,14 +31,10 @@ function Pool:__ctor()
   self.timers = {}
 end
 
-function Pool:spawn(period, repeats, callback)
-  local timer = Timer.new(period, repeats, callback)
+function Pool:spawn(period, repeats, callback, rate)
+  local timer = Timer.new(period, repeats, callback, rate)
   table.insert(self.timers, timer)
   return timer
-end
-
-function Pool:add(timer)
-  table.insert(self.timers, timer)
 end
 
 function Pool:clear()
@@ -55,11 +51,12 @@ function Pool:update(delta_time)
     else
       timer.age = timer.age + timer.rate * delta_time
       while timer.age >= timer.period do
-        timer.callback("looped")
+        timer.callback("fired")
 
         timer.age = timer.age - timer.period
 
         if timer.loops > 0 then
+          timer.callback("looped")
           timer.loops = timer.loops - 1;
           if timer.loops == 0 then
               timer:cancel() -- Remove on the next iteration.

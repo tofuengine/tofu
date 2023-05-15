@@ -26,11 +26,11 @@ local Class = require("tofu.core.class")
 
 local Timer = Class.define()
 
-function Timer:__ctor(period, repeats, callback)
+function Timer:__ctor(period, repeats, callback, rate)
   self.period = period
   self.repeats = repeats
   self.callback = callback
-  self.rate = 1.0
+  self.rate = rate or 1.0
 --  self.age = 0.0
 --  self.loops = repeats
 --  self.cancelled = false
