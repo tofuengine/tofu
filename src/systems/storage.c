@@ -71,21 +71,35 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     }
     LOG_D(LOG_CONTEXT, "cache %p created", storage->cache);
 
-    // TODO: scan for `xxx.pak.0`, `xxx.pak.1`, ...
+    // Scan for `xxx.pak.0`, `xxx.pak.1`, ...
+    const char *paths[] = {
+            configuration->kernal_path,
+            configuration->data_path,
+            NULL
+        };
 
-    bool kernal_attached = FS_attach_folder_or_archive(storage->context, configuration->kernal_path);
-    if (!kernal_attached) {
-        LOG_E(LOG_CONTEXT, "can't attach kernal folder/archive at `%s`", configuration->kernal_path);
-        goto error_destroy_cache;
-    }
-    LOG_D(LOG_CONTEXT, "kernal folder/archive attached w/ path `%s`", configuration->kernal_path);
+    for (int i = 0; paths[i]; ++i) {
+        const char *path = paths[i];
+        for (int index = -1; ; ++index) { // Start from `-1` as the first entry lacks the extension.
+            char archive_path[PATH_MAX];
+            if (index == -1) {
+                strcpy(archive_path, path);
+            } else {
+                sprintf(archive_path, "%s.%d", path, index); // FIXME: use `.p%02d` instead?
+                if (!path_exists(archive_path)) {
+                    break;
+                }
+            }
+            LOG_D(LOG_CONTEXT, "attaching folder/archive `%s`", archive_path);
 
-    bool attached = FS_attach_folder_or_archive(storage->context, configuration->data_path);
-    if (!attached) {
-        LOG_E(LOG_CONTEXT, "can't attach data folder/archive at `%s`", configuration->data_path);
-        goto error_destroy_cache;
+            bool archive_attached = FS_attach_folder_or_archive(storage->context, archive_path);
+            if (!archive_attached) {
+                LOG_E(LOG_CONTEXT, "can't attach folder/archive at `%s`", archive_path);
+                goto error_destroy_cache;
+            }
+            LOG_D(LOG_CONTEXT, "folder/archive attached w/ path `%s`", archive_path);
+        }
     }
-    LOG_D(LOG_CONTEXT, "data folder/archive attached w/ path `%s`", configuration->data_path);
 
     return storage;
 
