@@ -160,16 +160,15 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
+    stats->memory_usage = _heap_usage();
+#if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
     static float heap_time = TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
     heap_time += frame_time;
     while (heap_time > TOFU_ENGINE_HEAP_STATISTICS_PERIOD) {
         heap_time -= TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
-
-        stats->memory_usage = _heap_usage();
-#if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
         LOG_I(LOG_CONTEXT, "currently using %u byte(s)", stats->memory_usage);
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
     }
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 }
 
