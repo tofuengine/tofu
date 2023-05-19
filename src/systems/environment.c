@@ -109,6 +109,24 @@ static inline void _calculate_times(float times[4], const float deltas[4])
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+static inline size_t _heap_usage(void)
+{
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    PROCESS_MEMORY_COUNTERS pmc = { 0 };
+    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+    return pmc.WorkingSetSize;
+#elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
+    // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
+    struct mallinfo2 mi = mallinfo2();
+    return mi.uordblks;
+#else
+    struct mallinfo mi = mallinfo();
+    return mi.uordblks;
+#endif
+}
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
 #else
@@ -147,18 +165,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     while (heap_time > TOFU_ENGINE_HEAP_STATISTICS_PERIOD) {
         heap_time -= TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
 
-#if PLATFORM_ID == PLATFORM_WINDOWS
-        PROCESS_MEMORY_COUNTERS pmc = { 0 };
-        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-        stats->memory_usage = pmc.WorkingSetSize;
-#elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
-        // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
-        struct mallinfo2 mi = mallinfo2();
-        stats->memory_usage = mi.uordblks;
-#else
-        struct mallinfo mi = mallinfo();
-        stats->memory_usage = mi.uordblks;
-#endif
+        stats->memory_usage = _heap_usage();
 #if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
         LOG_I(LOG_CONTEXT, "currently using %u byte(s)", stats->memory_usage);
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
