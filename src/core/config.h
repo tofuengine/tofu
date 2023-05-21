@@ -106,15 +106,39 @@
 
 // These two macros defines the name of the *data* and *kernal* archives that
 // the game-engine expects to find.
+//
+// Note: the default engine behaviour is to use archives, not folders.
 #define TOFU_ENGINE_DATA_NAME "data.pak"
 #define TOFU_ENGINE_KERNAL_NAME "kernal.pak"
 
+// Enables the *heap* statistics feature of the engine. Currently only the total
+// heap usage is tracked. The data can be accessed with the `System.heap()`
+// method.
 #define TOFU_ENGINE_HEAP_STATISTICS
-#define TOFU_ENGINE_HEAP_STATISTICS_PERIOD  5.0f
+
+// When defined, heat statistics is be periodically outputted as logging
+// information.
 #undef  TOFU_ENGINE_HEAP_STATISTICS_DEBUG
 
+// Controls the period (in seconds) of the aforementioned debug heap statistics.
+#define TOFU_ENGINE_HEAP_STATISTICS_PERIOD 5.0f
+
+// Enables the *performance* statistics feature of the engine. This means that
+// detailed "deltas" times are calculated on every game-loop iteration (process,
+// update, render, and total delta-times). The data can be accessed with the
+// `System.stats()` method.
+//
+// Note: this feature is meant to be used only in the `DEBUG` build of the
+//       game engine due to its overhead.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS
+
+// When defined, performance statistics is periodically be outputted as logging
+// information. This is useful to track detailed informations for a specific
+// game-loop phase.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG
+
+// Controls the period (in seconds) of the aforementioned debug performance
+// statistics.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
 
 // ##############
