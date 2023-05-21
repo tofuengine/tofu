@@ -72,6 +72,9 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     LOG_D(LOG_CONTEXT, "cache %p created", storage->cache);
 
     // Scan for `xxx.pak.0`, `xxx.pak.1`, ...
+    //
+    // Note: appending an incremental number is more consistent as we don't enforce
+    //       the name of the kernal/data archives.
     const char *paths[] = {
             configuration->kernal_path,
             configuration->data_path,
@@ -85,7 +88,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             if (index == -1) {
                 strcpy(archive_path, path);
             } else {
-                sprintf(archive_path, "%s.%d", path, index); // FIXME: use `.p%02d` instead?
+                sprintf(archive_path, "%s.%d", path, index);
                 if (!path_exists(archive_path)) {
                     break;
                 }
