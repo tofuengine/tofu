@@ -30,6 +30,11 @@
 // Constant MACROs have no prefix.
 #define FPS_AVERAGE_SAMPLES         128
 
+#define COLOR_MATCH_EUCLIDIAN  0
+#define COLOR_MATCH_WEIGHTED   1
+#define COLOR_MATCH_PERCEPTUAL 2
+#define COLOR_MATCH_OCTREE     3
+
 #define GC_CONTINUOUS_STEP_PERIOD   0.1f
 #define GC_COLLECTION_PERIOD        15.0f
 
@@ -177,15 +182,86 @@
 // archive/folder can have the same name of a `kernal` counterpart *and*
 // override/redefine its implementation.
 #define TOFU_FILE_SUPPORT_MOUNT_OVERRIDE
-#undef  TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING
-#define TOFU_GRAPHICS_FIX_RASTERIZER_WINDING
+
+// ################
+// ### Graphics ###
+// ################
+
+// Enables additional debug information for the `Graphics` sub-system. This
+// should normally be disabled in *both* the `DEBUG` and the `RELEASE` builds
+// as it is to be used only occasionally for explicit (and specific)... ehm,
+// debug.
 #undef  TOFU_GRAPHICS_DEBUG_ENABLED
-#undef  TOFU_GRAPHICS_DEBUG_TRIANGLES_WINDING
-#undef  TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED
-#undef  TOFU_GRAPHICS_EUCLIDIAN_NEAREST_COLOR
-#define TOFU_GRAPHICS_OPTIMIZED_ROTATIONS
-#define TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION
+
+// Optionally logs any access to an undefined shader uniform variable. It is
+// advisable to define this macro only occasionaly to clean/spot any unused
+// variable.
 #undef  TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
+
+// Controls if the filled-triangle rasterizer algorithm requires the vertices
+// to be passed in clockwise (if defined) or counter-clockwise (if not defined)
+// order.
+#undef  TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING
+
+// Enables an automatic check and on-the-fly fix of the vertices order in case
+// they are not passed in the order the engine requires.
+#define TOFU_GRAPHICS_FIX_RASTERIZER_WINDING
+
+// Enables OpenGL's back-face culling in order to detect (and debug) when a
+// polygon is wrongly represented.
+#undef  TOFU_GRAPHICS_DEBUG_TRIANGLES_WINDING
+
+// When defined the initial (default) palette will be automatically generated
+// as color-quantized. This will result in a gradient of colors that will span
+// the whole spectrum (using the size of the palette as step).
+//
+// If not defined, the default palette will be a greyscale gradient.
+#undef  TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED
+
+// Enables an optimization for the software rotation algorithm, and only the
+// pixels inside the "circle area" of the rotation are backward-mapped. This
+// will preventively save some pixels from rotations, typically giving faster
+// performances.
+#define TOFU_GRAPHICS_OPTIMIZED_ROTATIONS
+
+// During the loading process, a PNG image is "palettized", that is for every
+// pixel is determined the index of the palette color that best matches it. To
+// speed the process up a *memoization* (hash) table can ben used so that for
+// a distinct color the best match is calculated only one time. This results in
+// a *huge* performance improvement and should always be enabled.
+#define TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION
+
+// Controls the algorithm used to match similar colors during the image indexing
+// process (i.e. finding the best matching palette color). The following modes
+// are available:
+//
+// - COLOR_MATCH_EUCLIDIAN (simpler)
+//   Each color is treated as a three-components vector and the (squared)
+//   Euclidian distance is used to find the nearest color.
+//
+// - COLOR_MATCH_WEIGHTED (best compromise)
+//   Similar to the Euclidian distance but it takes into account also the
+//   "red-mean" and it's more consistent across the color spectrum, relatively
+//   to the human eye sensitivity to the RGB components.
+//
+// - COLOR_MATCH_PERCEPTUAL (slower)
+//   Uses the CIELab color-space representation for the color, which adopts a
+//   relatively perceptually uniform space, to find the best match (CIE76).
+//   This algorithm is noticeably slower than the others and occasionally can
+//   result in odds matching.
+//
+// - COLOR_MATCH_OCTREE (to be implemented)
+//   Adopts an octree representations for the colors to detect the most similar
+//   colors.
+//
+#define TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM COLOR_MATCH_WEIGHTED
+
+// Determines whether the Mode7-like transformations will consider the surface
+// as opaque or any (currently) transparent color will be discared.
+//
+// There's no silver-bullet here, as there are occasions in which transparency
+// is required. If not defined, however, a minor boost in performance is
+// granted.
 #undef  TOFU_GRAPHICS_XFORM_TRANSPARENCY
 
 // ###################
@@ -212,7 +288,7 @@
 #define TOFU_INTERPRETER_GC_TYPE GC_TYPE_INCREMENTAL
 
 // Selects the mode under which the garbage-collection is performed during the
-// game-engine lifetime. It ca ben one of the following values:
+// game-engine lifetime. It can be one of the following values:
 //
 // - GC_MODE_AUTOMATIC
 //   Garbage-collection is carried out by the Lua virtual-machine according to
@@ -378,7 +454,6 @@
   #undef TOFU_ENGINE_PERFORMANCE_STATISTICS
   #undef TOFU_ENGINE_HEAP_STATISTICS
   #undef TOFU_FILE_DEBUG_ENABLED
-  #undef TOFU_GRAPHICS_EUCLIDIAN_NEAREST_COLOR
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS
   #undef TOFU_INTERPRETER_GC_MODE GC_MODE_MANUAL
