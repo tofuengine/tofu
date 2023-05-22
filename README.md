@@ -62,7 +62,7 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.39, v0.6.34, v0.13.8
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.40, v0.6.35, v0.13.9
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://github.com/Dav1dde/glad)
 * [GLFW](https://www.glfw.org/) v3.3.8
