@@ -1,4 +1,16 @@
-![Tofu Engine Logo](./extras/images/logo_with_payoff-1012x192.png)
+<p align="center">
+    <a href="https://tofuengine.org"><img src="./extras/images/logo_with_payoff-512x160.png" alt="Tofu Engine"></a>
+</p>
+
+<p align="center">
+    <img src="https://img.shields.io/github/v/tag/tofuengine/tofu?color=orange" alt="version">
+    <img src="https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20raspberry-red" alt="platforms">
+    <img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license">
+</p>
+
+<p align="center">
+    <a href="https://mastodon.gamedev.place/@mode13h"><img src="https://img.shields.io/mastodon/follow/108299766418271519?color=blue&domain=https%3A%2F%2Fmastodon.gamedev.place/&label=mastodon&logo=mastodon&style=flat" alt="mastodon"></a>
+</p>
 
 # Introduction
 
