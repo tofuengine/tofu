@@ -3,9 +3,9 @@
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/github/v/tag/tofuengine/tofu?color=orange" alt="version">
-    <img src="https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20raspberry-red" alt="platforms">
-    <img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license">
+    <a href="#"><img src="https://img.shields.io/github/v/tag/tofuengine/tofu?color=orange" alt="version"></a>
+    <a href="#"><img src="https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20raspberry-red" alt="platforms"></a>
+    <a href="#"><img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license"></a>
 </p>
 
 <p align="center">
