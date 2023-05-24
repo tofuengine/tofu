@@ -3,13 +3,21 @@
 </p>
 
 <p align="center">
-    <a href="#"><img src="https://img.shields.io/github/v/tag/tofuengine/tofu?color=orange" alt="version"></a>
-    <a href="#"><img src="https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20raspberry-red" alt="platforms"></a>
-    <a href="#"><img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license"></a>
+    <a href="LICENSE.md"><img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license"></a>
+    <img src="https://img.shields.io/website?url=https%3A%2F%2Ftofuengine.org%2F" alt="version">
+    <a href="https://mastodon.gamedev.place/@mode13h"><img src="https://img.shields.io/mastodon/follow/108299766418271519?color=blue&domain=https%3A%2F%2Fmastodon.gamedev.place/&label=mastodon&logo=mastodon&style=flat" alt="mastodon"></a>
 </p>
 
 <p align="center">
-    <a href="https://mastodon.gamedev.place/@mode13h"><img src="https://img.shields.io/mastodon/follow/108299766418271519?color=blue&domain=https%3A%2F%2Fmastodon.gamedev.place/&label=mastodon&logo=mastodon&style=flat" alt="mastodon"></a>
+    <a href="https://github.com/tofuengine/tofu/tags"><img src="https://img.shields.io/github/v/tag/tofuengine/tofu?color=orange" alt="version"></a>
+    <a href=""><img src="https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20raspberry-red" alt="platforms"></a>
+</p>
+
+<p align="center">
+    <!-- <img src="https://img.shields.io/github/release-date/tofuengine/tofu" alt="version"> -->
+    <img src="https://img.shields.io/github/issues/tofuengine/tofu" alt="version">
+    <img src="https://img.shields.io/github/last-commit/tofuengine/tofu/dev?label=last%20commit%20%7C%20dev" alt="version">
+    <img src="https://img.shields.io/github/commit-activity/m/tofuengine/tofu/dev" alt="version">
 </p>
 
 # Introduction
@@ -23,6 +31,16 @@ Guess what? Yup, that's yet another game engine/framework.
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
 * Multi-platform support through cross-compilation (Windows, Linux and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not so distant future).
+
+For the courious ones, this is the current statistics of the game-engine codebase:
+
+| Language       | Files  | Blank  | Comment  | Code   |
+| -------------- | ------ | ------ | -------- | ------ |
+| C              |    80  |  3348  |    2496  |  16777 |
+| C/C++ Header   |    88  |   698  |    2408  |   2144 |
+| Lua            |    22  |   296  |     497  |   1708 |
+| GLSL           |    12  |   118  |     282  |    422 |
+|                |   202  |  4460  |    5683  |  21051 |
 
 ## Features
 
