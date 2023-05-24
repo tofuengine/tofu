@@ -183,13 +183,13 @@ double libxmp_note_to_period(struct context_data *ctx, int n, int f, double adj)
 
 	switch (m->period_type) {
 	case PERIOD_LINEAR:
-		per = (240.0 - d) * 16;			/* Linear */
+		per = (240.0 - d) * 16;				/* Linear */
 		break;
 	case PERIOD_CSPD:
-		per = 8363.0 * pow(2, n / 12) / 32 + f;	/* Hz */
+		per = 8363.0 * pow(2, n / 12.0) / 32 + f;	/* Hz */
 		break;
 	default:
-		per = PERIOD_BASE / pow(2, d / 12);	/* Amiga */
+		per = PERIOD_BASE / pow(2, d / 12);		/* Amiga */
 	}
 
 	return per;

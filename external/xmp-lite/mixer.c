@@ -103,7 +103,7 @@ MIX_FN(stereo_a500_filter);
  * bit 2: 0=unfiltered, 1=filtered
  */
 
-typedef void (*MIX_FP)(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int);
+typedef void (*MIX_FP) (struct mixer_voice *, int32_t *, int, int, int, int, int, int, int);
 
 static MIX_FP nearest_mixers[] = {
 	libxmp_mix_mono_8bit_nearest,
@@ -454,6 +454,7 @@ static int loop_reposition(struct context_data *ctx, struct mixer_voice *vi,
 	return loop_changed;
 }
 
+
 /* Prepare the mixer for the next tick */
 void libxmp_mixer_prepare(struct context_data *ctx)
 {
@@ -488,7 +489,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 	struct loop_data loop_data;
 	double step, step_dir;
 	int samples, size;
-	int vol_l, vol_r, voc, usmp;
+	int vol, vol_l, vol_r, voc, usmp;
 	int prev_l, prev_r = 0;
 	int32_t *buf_pos;
 	MIX_FP  mix_fn;
@@ -558,12 +559,19 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 		vi->pos0 = vi->pos;
 
 		buf_pos = s->buf32;
+		vol = vi->vol;
+
+		/* Mix volume (S3M and IT) */
+		if (m->mvolbase > 0 && m->mvol != m->mvolbase) {
+			vol = vol * m->mvol / m->mvolbase;
+		}
+
 		if (vi->pan == PAN_SURROUND) {
-			vol_r = vi->vol * 0x80;
-			vol_l = -vi->vol * 0x80;
+			vol_r = vol * 0x80;
+			vol_l = -vol * 0x80;
 		} else {
-			vol_r = vi->vol * (0x80 - vi->pan);
-			vol_l = vi->vol * (0x80 + vi->pan);
+			vol_r = vol * (0x80 - vi->pan);
+			vol_l = vol * (0x80 + vi->pan);
 		}
 
 		if (vi->smp < mod->smp) {
@@ -578,7 +586,10 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 
 		step = C4_PERIOD * c5spd / s->freq / vi->period;
 
-		if (step < 0.001) {	/* otherwise m5v-nwlf.it crashes */
+		/* Don't allow <=0, otherwise m5v-nwlf.it crashes
+		 * Extremely high values that can cause undefined float/int
+		 * conversion are also possible for c5spd modules. */
+		if (step < 0.001 || step > (double)SHRT_MAX) {
 			continue;
 		}
 
@@ -746,7 +757,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 		downmix_int_8bit(s->buffer, s->buf32, size, s->amplify,
 				(s->format & XMP_FORMAT_UNSIGNED) ? 0x80 : 0);
 	} else {
-		downmix_int_16bit((int16_t *)s->buffer, s->buf32, size,s->amplify,
+		downmix_int_16bit((int16_t *)s->buffer, s->buf32, size, s->amplify,
 				(s->format & XMP_FORMAT_UNSIGNED) ? 0x8000 : 0);
 	}
 

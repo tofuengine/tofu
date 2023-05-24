@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
 //
 // where `function name` is a generic identifier, `input arguments` and `return values` have this format
 //
-//   \d+[bBnNsStTuUfFoO]*
+//   \d+[bBnNsStTuUfFeEoO]*
 //
 // The integer number indicates the amount of arguments/return-values and the sequence of characters encodes the
 // types. Uppercase characters are used for *optional* when optional. The encoded types are the following:
@@ -41,6 +41,7 @@
 //   t -> table
 //   u -> userdata
 //   f -> function
+//   e -> enum (i.e. a string from a list of possibile ones)
 //   o -> object (i.e. userdata with optionally encoded type)
 //
 // Example:
@@ -48,9 +49,6 @@
 //   void blit_8onnnnNNN_0();
 //   void cursor_1o_2nn();
 //
-
-#include <libs/log.h>
-#include <libs/luax.h>
 
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
 #include "bank.h"
@@ -79,13 +77,16 @@
 #include "world.h"
 #include "xform.h"
 
+#include <libs/log.h>
+#include <libs/luax.h>
+
 #define LOG_CONTEXT "modules"
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
 static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
 {
-#ifdef INSIST
+#if defined(INSIST)
     luaX_insisttable(L, "tofu");
     for (const luaL_Reg *module = modules; module->func; ++module) {
         luaX_pushvalues(L, nup);
@@ -95,7 +96,7 @@ static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
     lua_pop(L, nup);
 #else
     for (const luaL_Reg *module = modules; module->func; ++module) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "preloading module `%s`", module->name);
+        LOG_D(LOG_CONTEXT, "preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
         luaX_preload(L, module->name, module->func, nup);
     }
@@ -109,9 +110,6 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },
-            { "tofu.input.controller", controller_loader },
-            { "tofu.input.cursor", cursor_loader },
-            { "tofu.input.keyboard", keyboard_loader },
             { "tofu.generators.noise", noise_loader },
             { "tofu.generators.tweener", tweener_loader },
             { "tofu.generators.wave", wave_loader },
@@ -124,6 +122,9 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.graphics.palette", palette_loader },
             { "tofu.graphics.program", program_loader },
             { "tofu.graphics.xform", xform_loader },
+            { "tofu.input.controller", controller_loader },
+            { "tofu.input.cursor", cursor_loader },
+            { "tofu.input.keyboard", keyboard_loader },
             { "tofu.io.file", file_loader },
             { "tofu.io.storage", storage_loader },
             { "tofu.physics.body", body_loader },

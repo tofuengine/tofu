@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_SHADER_H__
-#define __LIBS_SHADER_H__
+#ifndef TOFU_LIBS_SHADER_H
+#define TOFU_LIBS_SHADER_H
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>
@@ -62,4 +62,4 @@ extern void shader_prepare(Shader_t *shader, const char *ids[], size_t count);
 extern void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value);
 extern void shader_use(const Shader_t *shader);
 
-#endif  /* __LIBS_SHADER_H__ */
+#endif  /* TOFU_LIBS_SHADER_H */

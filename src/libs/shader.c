@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 
 #include "shader.h"
 
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -33,24 +34,28 @@ Shader_t *shader_create(void)
 {
     Shader_t *shader = malloc(sizeof(Shader_t));
     if (!shader) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate shader");
-        return NULL;
+        LOG_E(LOG_CONTEXT, "can't allocate shader");
+        goto error_exit;
     }
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader created at %p", shader);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "shader created at %p", shader);
 #endif  /* VERBOSE_DEBUG */
 
     *shader = (Shader_t){ 0 }; // Initialzed the object structure to clear all the fields.
 
     shader->id = glCreateProgram();
     if (shader->id == 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create shader program");
-        free(shader);
-        return NULL;
+        LOG_E(LOG_CONTEXT, "can't create shader program");
+        goto error_free;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d created", shader->id);
+    LOG_D(LOG_CONTEXT, "shader program #%d created", shader->id);
 
     return shader;
+
+error_free:
+    free(shader);
+error_exit:
+    return NULL;
 }
 
 void shader_destroy(Shader_t *shader)
@@ -62,40 +67,40 @@ void shader_destroy(Shader_t *shader)
         glGetAttachedShaders(shader->id, count, NULL, shaders);
         for (GLint i = 0; i < count; ++i) {
             glDetachShader(shader->id, shaders[i]);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader #%d detached from program #%d", shaders[i], shader->id);
+            LOG_D(LOG_CONTEXT, "shader #%d detached from program #%d", shaders[i], shader->id);
         }
     }
 
     glDeleteProgram(shader->id);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d deleted", shader->id);
+    LOG_D(LOG_CONTEXT, "shader program #%d deleted", shader->id);
 
     free(shader->locations); // Safe when passing NULL.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d freed", shader->id);
+    LOG_D(LOG_CONTEXT, "shader uniforms LUT for program #%d freed", shader->id);
 
     free(shader);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p freed", shader);
+    LOG_D(LOG_CONTEXT, "shader %p freed", shader);
 }
 
 bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
 {
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
     if (shader->id == 0) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "shader program can't be zero");
+        LOG_W(LOG_CONTEXT, "shader program can't be zero");
         return false;
     }
-    if (!shader_code) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "shader code can't be null");
+    if (!code) {
+        LOG_W(LOG_CONTEXT, "shader code can't be null");
         return false;
     }
 #endif
 
     GLuint shader_id = glCreateShader(type == SHADER_TYPE_VERTEX ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
     if (shader_id == 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create shader");
+        LOG_E(LOG_CONTEXT, "can't create shader");
         return false;
     }
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "compiling shader\n<SHADER type=\"%d\">\n%s\n</SHADER>", type, code);
+    LOG_T(LOG_CONTEXT, "compiling shader\n<SHADER type=\"%d\">\n%s\n</SHADER>", type, code);
     glShaderSource(shader_id, 1, &code, NULL);
     glCompileShader(shader_id);
 
@@ -105,9 +110,9 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
         GLint length = 0;
         glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
 
-        GLchar description[length];
+        GLchar description[length]; // FIXME: remove VLAs!!!
         glGetShaderInfoLog(shader_id, length, NULL, description);
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "shader compile error: %s", description);
+        LOG_E(LOG_CONTEXT, "shader compile error: %s", description);
     } else {
         glAttachShader(shader->id, shader_id);
 
@@ -120,11 +125,11 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
 
             GLchar description[length];
             glGetProgramInfoLog(shader->id, length, NULL, description);
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "program link error: %s", description);
+            LOG_E(LOG_CONTEXT, "program link error: %s", description);
 
             glDetachShader(shader->id, shader_id);
         } else {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader #%d compiled into program #%d", shader_id, shader->id);
+            LOG_D(LOG_CONTEXT, "shader #%d compiled into program #%d", shader_id, shader->id);
         }
     }
 
@@ -138,16 +143,16 @@ void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
     if (shader->locations) {
         free(shader->locations);
         shader->locations = NULL;
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d freed", shader->id);
+        LOG_D(LOG_CONTEXT, "shader uniforms LUT for program #%d freed", shader->id);
     }
     if (count == 0) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no uniforms to prepare for program #%d", shader->id);
+        LOG_D(LOG_CONTEXT, "no uniforms to prepare for program #%d", shader->id);
         return;
     }
     shader->locations = malloc(sizeof(GLuint) * count);
     for (size_t i = 0; i < count; ++i) {
         GLint location = glGetUniformLocation(shader->id, ids[i]);
-        Log_assert(location != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "uniform `%s` not found for program #%d", ids[i], shader->id);
+        LOG_IF_W(location == -1, LOG_CONTEXT, "uniform `%s` not found for program #%d", ids[i], shader->id);
         shader->locations[i] = location;
     }
 }
@@ -155,16 +160,16 @@ void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
 // `shader_use` need to be called prior sending data to the program.
 void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value)
 {
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
     if (!shader->locations) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "program uniforms are not prepared");
+        LOG_W(LOG_CONTEXT, "program uniforms are not prepared");
         return;
     }
 #endif
     GLint location = shader->locations[index];
     if (location == -1) {
-#ifdef __DEBUG_SHADER_CALLS__
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't find uniform `%s` for program #%d", id, shader->id);
+#if defined(TOFU_GRAPHICS_REPORT_SHADERS_ERRORS)
+        LOG_W(LOG_CONTEXT, "can't find uniform #%d for program #%d", index, shader->id);
 #endif
         return;
     }

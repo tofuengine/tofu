@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_STB_H__
-#define __LIBS_STB_H__
+#ifndef TOFU_LIBS_STB_H
+#define TOFU_LIBS_STB_H
 
 #if defined(DEBUG) && !defined(SANITIZE)
   #include <stb/stb_leakcheck.h>
@@ -35,4 +35,4 @@
 
 extern void *stb_memdup(const void *ptr, size_t size);
 
-#endif  /* __LIBS_STB_H__ */
+#endif  /* TOFU_LIBS_STB_H */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_XFORM_H__
-#define __GL_XFORM_H__
+#ifndef TOFU_LIBS_GL_XFORM_H
+#define TOFU_LIBS_GL_XFORM_H
 
 #include "common.h"
 #include "context.h"
@@ -78,4 +78,4 @@ extern void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entr
 
 extern void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
 
-#endif  /* __GL_XFORM_H__ */
+#endif  /* TOFU_LIBS_GL_XFORM_H */

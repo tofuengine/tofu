@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_COMMON_H__
-#define __GL_COMMON_H__
+#ifndef TOFU_LIBS_GL_COMMON_H
+#define TOFU_LIBS_GL_COMMON_H
+
+#include <core/platform.h>
 
 #include <stddef.h>
 #include <stdint.h>
-
-#include <platform.h>
 
 typedef uint8_t GL_Pixel_t;
 
@@ -65,10 +65,10 @@ typedef struct GL_Color_s {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct GL_Rectangle_u32_s {
-    uint32_t x, y;
+typedef struct GL_Rectangle32_s {
+    int32_t x, y;
     uint32_t width, height;
-} GL_Rectangle_u32_t;
+} GL_Rectangle32_t;
 #pragma pack(pop)
 
 typedef enum GL_Comparators_e {
@@ -104,4 +104,6 @@ typedef enum GL_Functions_e {
 // FIXME: does this makes sense?
 #define GL_CELL_NIL     ((GL_Cell_t)-1)
 
-#endif  /* __GL_COMMON_H__ */
+#define GL_MAX_PALETTE_COLORS   256
+
+#endif  /* TOFU_LIBS_GL_COMMON_H */

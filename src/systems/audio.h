@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_AUDIO_H__
-#define __SYSTEMS_AUDIO_H__
+#ifndef TOFU_SYSTEMS_AUDIO_H
+#define TOFU_SYSTEMS_AUDIO_H
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/sl/sl.h>
-
-#include <miniaudio/miniaudio.h>
+#include <libs/dr_libs.h>
 
 #include <stdbool.h>
 
@@ -51,9 +50,9 @@ typedef struct Audio_s {
 
     SL_Context_t *context;
 
-#ifdef __AUDIO_START_AND_STOP__
+#if defined(TOFU_AUDIO_AUTOSTART)
     double grace;
-#endif  /* __AUDIO_START_AND_STOP__ */
+#endif  /* TOFU_AUDIO_AUTOSTART */
 } Audio_t;
 
 // TODO: rename as lowercase!!!
@@ -78,4 +77,4 @@ extern bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source);
 
 extern bool Audio_update(Audio_t *audio, float delta_time);
 
-#endif  /* __SYSTEMS_AUDIO_H__ */
+#endif  /* TOFU_SYSTEMS_AUDIO_H */

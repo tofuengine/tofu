@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,17 @@
 
 #include "body.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 
 #include <chipmunk/chipmunk.h>
 
-#include "udt.h"
-#include "utils/map.h"
-
 #define LOG_CONTEXT "body"
 #define META_TABLE  "Tofu_Physics_Body_mt"
 
-static int body_new_4snnn_1o(lua_State *L);
+static int body_new_4ennn_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
 static int body_shape_1o_4snnn(lua_State *L);
 static int body_center_of_gravity_v_v(lua_State *L);
@@ -55,7 +54,7 @@ int body_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", body_new_4snnn_1o },
+            { "new", body_new_4ennn_1o },
             { "__gc", body_gc_1o_0 },
             { "shape", body_shape_1o_4snnn },
             { "center_of_gravity", body_center_of_gravity_v_v },
@@ -75,42 +74,32 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = {
-    { "box", BODY_KIND_BOX },
-    { "circle", BODY_KIND_CIRCLE }
+static const char *_kinds[Body_Kinds_t_CountOf + 1] = {
+    "box",
+    "circle",
+    NULL
 };
 
-static const Map_Entry_t _types[3] = {
-    { "dynamic", CP_BODY_TYPE_DYNAMIC },
-    { "kinematic", CP_BODY_TYPE_KINEMATIC },
-    { "static", CP_BODY_TYPE_STATIC }
-};
-
-static int body_new_4snnn_1o(lua_State *L)
+static int body_new_4ennn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *kind = LUAX_STRING(L, 1);
-
-    const Map_Entry_t *entry = map_find_key(L, kind, _kinds, Body_Kinds_t_CountOf);
-    if (!entry) {
-        return luaL_error(L, "unrecognized kind `%s`", kind);
-    }
+    Body_Kinds_t kind = (Body_Kinds_t)LUAX_ENUM(L, 1, _kinds);
 
     cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
         return luaL_error(L, "can't create body");
     }
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
+//    LOG_D(LOG_CONTEXT, "body %p created for world %p", body, physics->world);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
             .shape = NULL,
-            .kind = (Body_Kinds_t)entry->value,
+            .kind = kind,
             .size = { { 0 } }
         }, OBJECT_TYPE_BODY, META_TABLE);
 
@@ -127,7 +116,7 @@ static int body_new_4snnn_1o(lua_State *L)
         self->shape = cpCircleShapeNew(body, self->size.circle.radius, self->size.circle.offset);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created", self);
+    LOG_D(LOG_CONTEXT, "body %p created", self);
 
     return 1;
 }
@@ -140,12 +129,12 @@ static int body_gc_1o_0(lua_State *L)
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     cpShapeFree(self->shape);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
+    LOG_D(LOG_CONTEXT, "shape %p destroyed", self->shape);
 
     cpBodyFree(self->body);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p destroyed", self->body);
+    LOG_D(LOG_CONTEXT, "body %p destroyed", self->body);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p finalized", self);
+    LOG_D(LOG_CONTEXT, "body %p finalized", self);
 
     return 0;
 }
@@ -214,6 +203,13 @@ static int body_center_of_gravity_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static const char *_types[] = {
+    "dynamic",
+    "kinematic",
+    "static",
+    NULL
+};
+
 static int body_type_1o_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -223,25 +219,23 @@ static int body_type_1o_1s(lua_State *L)
 
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
-    const Map_Entry_t *entry = map_find_value(L, (Map_Entry_Value_t)type, _types, 3);
 
-    lua_pushstring(L, entry->key);
+    lua_pushstring(L, _types[type]); // FIXME: this is an abuse!
 
     return 1;
 }
 
-static int body_type_2os_0(lua_State *L)
+static int body_type_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    const char *type = LUAX_STRING(L, 2);
+    cpBodyType type = (cpBodyType)LUAX_ENUM(L, 2, _types);
 
     cpBody *body = self->body;
-    const Map_Entry_t *entry = map_find_key(L, type, _types, 3);
-    cpBodySetType(body, (cpBodyType)entry->value);
+    cpBodySetType(body, (cpBodyType)type);
 
     return 0;
 }
@@ -250,7 +244,7 @@ static int body_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, body_type_2os_0)
+        LUAX_OVERLOAD_ARITY(2, body_type_2oe_0)
     LUAX_OVERLOAD_END
 }
 

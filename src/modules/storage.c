@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,17 @@
 
 #include "storage.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <systems/interpreter.h>
 #include <systems/storage.h>
 
-#include "udt.h"
-
 static int storage_inject_3ssS_0(lua_State *L);
-static int storage_scan_1f_0(lua_State *L);
+#if !defined(TOFU_STORAGE_AUTO_COLLECT)
+static int storage_flush_0_0(lua_State *L);
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+//static int storage_exists_1s_1b(lua_State *L);
 
 int storage_loader(lua_State *L)
 {
@@ -40,7 +43,9 @@ int storage_loader(lua_State *L)
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             { "inject", storage_inject_3ssS_0 },
-            { "scan", storage_scan_1f_0 },
+#if !defined(TOFU_STORAGE_AUTO_COLLECT)
+            { "flush", storage_flush_0_0 },
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -88,38 +93,16 @@ static int storage_inject_3ssS_0(lua_State *L)
     return 0;
 }
 
-typedef struct Storage_Scan_Closure_s {
-    const Storage_t *storage;
-    const Interpreter_t *interpreter;
-    lua_State *L;
-    int index;
-} Storage_Scan_Closure_t;
-
-static void _scan_callback(void *user_data, const char *name)
-{
-    const Storage_Scan_Closure_t *closure = (const Storage_Scan_Closure_t *)user_data;
-
-    lua_pushvalue(closure->L, closure->index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
-    lua_pushstring(closure->L, name);
-    Interpreter_call(closure->interpreter, 1, 0);
-}
-
-static int storage_scan_1f_0(lua_State *L)
+#if !defined(TOFU_STORAGE_AUTO_COLLECT)
+static int storage_flush_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
-//    luaX_Reference callback = luaX_tofunction(L, 1);
 
-    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    Storage_scan(storage, _scan_callback, &(Storage_Scan_Closure_t){
-            .storage = storage,
-            .interpreter = interpreter,
-            .L = L,
-            .index = 1
-        });
+    Storage_flush(storage);
 
     return 0;
 }
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */

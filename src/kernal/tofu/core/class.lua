@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +25,10 @@ SOFTWARE.
 local Class = {}
 
 function Class.define()
-  local proto = {}
+  local proto <const> = {}
   proto.__index = proto
   proto.new = function(...)
-      local self = setmetatable({}, proto)
+      local self <const> = setmetatable({}, proto)
       if self.__ctor then
         self:__ctor(...)
       end
@@ -40,7 +40,7 @@ end
 function Class.borrow(proto, model, criteria)
   for id, other in pairs(model) do
     if type(other) == "function" and id ~= "new" then -- Skip the `new()` static method.
-      local this = proto[id]
+      local this <const> = proto[id]
       if this and (id == "__ctor" or criteria == "extend") then -- `__ctor()` is always extended.
         proto[id] = function(...)
             this(...)
@@ -56,6 +56,16 @@ function Class.borrow(proto, model, criteria)
       end
     end
   end
+end
+
+function Class.memoize(f)
+  return setmetatable({}, {
+      __index = function(self, k)
+            local v <const> = f(k);
+            self[k] = v
+            return v;
+        end
+    });
 end
 
 return Class

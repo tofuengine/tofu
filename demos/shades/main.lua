@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,11 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Controller = require("tofu.controller:controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
+local Controller = require("tofu.input.controller")
 
 local PALETTE
 local STEPS

@@ -1,3 +1,48 @@
+v0.11.11 - 2022-11-04
+=====================
+* Silence an unused variable warning.
+* Remove references to ccall() from the Empscripten build.
+* Improve Android detection.
+* WASAPI: Some minor improvements to overrun recovery for capture and duplex modes.
+
+
+v0.11.10 - 2022-10-20
+=====================
+* Add support for setting the device notification callback when initializing an engine object.
+* Add support for more than 2 outputs to splitter nodes.
+* Fix a crash when initializing a channel converter.
+* Fix a channel mapping error where weights are calculated incorrectly.
+* Fix an unaligned access error.
+* Fix logging with the C++ build.
+* Fix some undefined behavior errors, including some memset()'s to null pointers of 0 bytes.
+* Fix logging of device info for loopback devices.
+* WASAPI: Fix an error where 32-bit formats are not properly detected.
+* WASAPI: Fix a bug where the device is not drained when stopped.
+* WASAPI: Fix an issue with loopback mode that results in waiting indefinitely and the callback never getting fired.
+* WASAPI: Add support for the Avrt API to specify the audio thread's latency sensitivity requirements. Use the `deviceConfig.wasapi.usage` configuration option.
+* PulseAudio: Pass the requested sample rate, if set, to PulseAudio so that it uses the requested sample rate internally rather than always using miniaudio's resampler.
+* PulseAudio: Fix a rare null pointer dereference.
+* ALSA: Fix a potential crash on older versions of Linux.
+* Core Audio: Fix a very unlikely memory leak.
+* Core Audio: Update a deprecated symbol.
+* AAudio: Fix an error where the wrong tokens are being used for usage, content types and input preset hints.
+* WebAudio: Do some cleanup of the internal global JavaScript object when the last context has been uninitialized.
+* Win32: Fix an error when the channel mask reported by Windows is all zero.
+* Various documentation fixes.
+* Bring dr_wav, dr_flac and dr_mp3 up-to-date with latest versions.
+
+
+v0.11.9 - 2022-04-20
+====================
+* Fix some bugs where looping doesn't work with the resource manager.
+* Fix a crash when seeking a sound.
+* Fix a subtle bug the results in a glitch when looping a decoder when resampling is being applied.
+* Fix an issue where chaining streams would not result in a seamless transition.
+* Add a new flag called MA_RESOURCE_MANAGER_DATA_SOURCE_FLAG_UNKNOWN_LENGTH for use with resource managed data sources. This flag is used as a hint to the resource manager that the length of the data source is unknown and calling ma_data_source_get_length_in_pcm_frames() should be avoided.
+* Add support for resetting a resampler. This is useful for resetting the internal timer and clearing the internal cache for when you want to seek the input sound source back to the start.
+* Add support for clearing the cache from biquads and low-pass filters.
+
+
 v0.11.8 - 2022-02-12
 ====================
 * PulseAudio: Work around bugs in PipeWire:

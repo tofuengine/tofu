@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,58 +22,59 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_ENVIRONMENT_H__
-#define __SYSTEMS_ENVIRONMENT_H__
-
-#include <stdbool.h>
-#include <stddef.h>
+#ifndef TOFU_SYSTEMS_ENVIRONMENT_H
+#define TOFU_SYSTEMS_ENVIRONMENT_H
 
 #include "display.h"
 #include "input.h"
 
+#include <stdbool.h>
+#include <stddef.h>
+
 typedef struct Environment_Stats_s {
     size_t fps;
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float times[4];
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-#ifdef __SYSTEM_HEAP_STATISTICS__
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
     size_t memory_usage;
-#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 } Environment_Stats_t;
 
 typedef struct Environment_State_s {
-#ifdef __DISPLAY_FOCUS_SUPPORT__
+#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
     struct {
         bool is;
         bool was;
     } active;
-#endif
+#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
+#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
     struct {
         int previous;
         int current;
     } controllers;
+#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
     Environment_Stats_t stats;
     double time;
 } Environment_State_t;
 
 typedef struct Environment_s {
-    const char **args;
     const Display_t *display;
     const Input_t *input;
     Environment_State_t state;
 } Environment_t;
 
-extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display, const Input_t *input);
+extern Environment_t *Environment_create(const Display_t *display, const Input_t *input);
 extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
 #else
 extern void Environment_process(Environment_t *environment, float frame_time);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 extern bool Environment_update(Environment_t *environment, float delta_time);
 
-#endif  /* __SYSTEMS_ENVIRONMENT_H__ */
+#endif  /* TOFU_SYSTEMS_ENVIRONMENT_H */

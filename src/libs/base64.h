@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_BASE64_H__
-#define __LIBS_BASE64_H__
+#ifndef TOFU_LIBS_BASE64_H
+#define TOFU_LIBS_BASE64_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -36,4 +36,4 @@ extern bool base64_is_valid(const char *in);
 extern size_t base64_decoded_size(const char *in);
 extern void base64_decode(uint8_t *out, size_t out_size, const char *in);
 
-#endif  /* __LIBS_BASE64_H__ */
+#endif  /* TOFU_LIBS_BASE64_H */

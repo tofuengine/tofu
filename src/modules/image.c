@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,15 +24,15 @@
 
 #include "image.h"
 
-#include <config.h>
+#include "internal/callbacks.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/storage.h>
-
-#include "udt.h"
-#include "utils/callbacks.h"
 
 #define LOG_CONTEXT "image"
 #define MODULE_NAME "tofu.graphics.image"
@@ -78,14 +78,14 @@ static int image_new_0_1o(lua_State *L)
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface = Display_get_surface(display);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default surface %p retrieved", surface);
+    LOG_D(LOG_CONTEXT, "default surface %p retrieved", surface);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = false
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "image %p allocated w/ default surface", self);
+    LOG_D(LOG_CONTEXT, "image %p allocated w/ default surface", self);
 
     return 1;
 }
@@ -103,14 +103,14 @@ static int image_new_2nn_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't create %dx%d surface", width, height);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%dx%d surface allocate at %p", width, height, surface);
+    LOG_D(LOG_CONTEXT, "%dx%d surface allocate at %p", width, height, surface);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
+    LOG_D(LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
 
     return 1;
 }
@@ -143,14 +143,14 @@ static int image_new_3sNO_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
+    LOG_D(LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
+    LOG_D(LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
 
     return 1;
 }
@@ -181,14 +181,14 @@ static int image_new_3snn_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
+    LOG_D(LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
+    LOG_D(LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
 
     return 1;
 }
@@ -214,10 +214,10 @@ static int image_gc_1o_0(lua_State *L)
 
     if (self->allocated) {
         GL_surface_destroy(self->surface);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p destroyed", self->surface);
+        LOG_D(LOG_CONTEXT, "surface %p destroyed", self->surface);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "image %p finalized", self);
+    LOG_D(LOG_CONTEXT, "image %p finalized", self);
 
     return 0;
 }

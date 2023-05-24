@@ -1,5 +1,6 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 
 //========================================================================
 // GLFW 3.3 Win32 - www.glfw.org

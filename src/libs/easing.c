@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,7 @@
 
 #include "easing.h"
 
-#include <math.h>
-
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846264f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923132f
-#endif
+#include <libs/fmath.h>
 
 float easing_linear(float p)
 {
@@ -124,17 +117,17 @@ float easing_quintic_in_out(float p)
 
 float easing_sine_in(float p)
 {
-    return 1.0f - cosf(p * (float)M_PI_2);
+    return 1.0f - cosf(p * F_PI_2);
 }
 
 float easing_sine_out(float p)
 {
-    return sinf(p * (float)M_PI_2);
+    return sinf(p * F_PI_2);
 }
 
 float easing_sine_in_out(float p)
 {
-    return 0.5f - 0.5f * cosf(p * (float)M_PI);
+    return 0.5f - 0.5f * cosf(p * F_PI);
 }
 
 float easing_circular_in(float p)
@@ -193,7 +186,7 @@ float easing_elastic_in(float p)
     } else {
         p -= 1.0f;
         float f = powf(2.0f, 10.0f * p);
-        return 0.0f - f * sinf((p / k - 0.25f) * (2.0f * (float)M_PI));
+        return 0.0f - f * sinf((p / k - 0.25f) * F_2PI);
     }
 }
 
@@ -208,7 +201,7 @@ float easing_elastic_out(float p)
         return 1.0f;
     } else {
         float f = powf(2.0f, -10.0f * p);
-        return 1.0f + f * sinf((p / k - 0.25f) * (2.0f * (float)M_PI));
+        return 1.0f + f * sinf((p / k - 0.25f) * F_2PI);
     }
 }
 
@@ -225,11 +218,11 @@ float easing_elastic_in_out(float p)
     if (p < 0.5f) {
         p -= 0.5f;
         float f = powf(2.0f, 20.0f * p);
-        return 0.0f - 0.5f * f * sinf((p / k - 0.25f) * (2.0f * (float)M_PI));
+        return 0.0f - 0.5f * f * sinf((p / k - 0.25f) * F_2PI);
     } else {
         p -= 0.5f;
         float f = powf(2.0f, -20.0f * p);
-        return 1.0f + 0.5f * f * sinf((p / k - 0.25f) * (2.0f * (float)M_PI));
+        return 1.0f + 0.5f * f * sinf((p / k - 0.25f) * F_2PI);
     }
 }
 

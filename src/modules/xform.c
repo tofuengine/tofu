@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,31 +24,22 @@
 
 #include "xform.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
+#include <libs/fmath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 
-#include "udt.h"
-#include "utils/map.h"
-
-#include <math.h>
-
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846264f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923132f
-#endif
-
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
 
-static int xform_new_1S_1o(lua_State *L);
+static int xform_new_1E_1o(lua_State *L);
 static int xform_gc_1o_0(lua_State *L);
 static int xform_offset_3onn_0(lua_State *L);
 static int xform_matrix_v_0(lua_State *L);
-static int xform_wrap_2os_0(lua_State *L);
+static int xform_wrap_2oe_0(lua_State *L);
 static int xform_table_v_0(lua_State *L);
 // TODO: add helper functions to generate common transformations?
 static int xform_project_4onnn_0(lua_State *L);
@@ -60,11 +51,11 @@ int xform_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", xform_new_1S_1o },
+            { "new", xform_new_1E_1o },
             { "__gc", xform_gc_1o_0 },
             { "offset", xform_offset_3onn_0 },
             { "matrix", xform_matrix_v_0 },
-            { "wrap", xform_wrap_2os_0 },
+            { "wrap", xform_wrap_2oe_0 },
             { "table", xform_table_v_0 },
             { "project", xform_project_4onnn_0 },
             { "warp", xform_warp_3onn_0 },
@@ -75,38 +66,24 @@ int xform_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static inline GL_XForm_Wraps_t _parse_wrap_mode(const char *mode)
-{
-    if (strcasecmp(mode, "repeat") == 0) {
-        return GL_XFORM_WRAP_REPEAT;
-    } else
-    if (strcasecmp(mode, "edge") == 0) {
-        return GL_XFORM_WRAP_CLAMP_TO_EDGE;
-    } else
-    if (strcasecmp(mode, "border") == 0) {
-        return GL_XFORM_WRAP_CLAMP_TO_BORDER;
-    } else
-    if (strcasecmp(mode, "mirror-repeat") == 0) {
-        return GL_XFORM_WRAP_MIRRORED_REPEAT;
-    } else
-    if (strcasecmp(mode, "mirror-edge") == 0) {
-        return GL_XFORM_WRAP_MIRROR_CLAMP_TO_EDGE;
-    } else
-    if (strcasecmp(mode, "mirror-border") == 0) {
-        return GL_XFORM_WRAP_MIRROR_CLAMP_TO_BORDER;
-    } else {
-        return GL_XFORM_WRAP_REPEAT;
-    }
-}
+static const char *_modes[GL_XForm_Wraps_t_CountOf + 1] = {
+    "repeat",
+    "edge",
+    "border",
+    "mirror-repeat",
+    "mirror-edge",
+    "mirror-border",
+    NULL,
+};
 
-static int xform_new_1S_1o(lua_State *L)
+static int xform_new_1E_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
-    const char *mode = LUAX_OPTIONAL_STRING(L, 1, "repeat");
+    GL_XForm_Wraps_t mode = (GL_XForm_Wraps_t)LUAX_OPTIONAL_ENUM(L, 1, _modes, GL_XFORM_WRAP_REPEAT);
 
-    GL_XForm_t *xform = GL_xform_create(_parse_wrap_mode(mode));
+    GL_XForm_t *xform = GL_xform_create(mode);
     if (!xform) {
         return luaL_error(L, "can't create xform");
     }
@@ -115,7 +92,7 @@ static int xform_new_1S_1o(lua_State *L)
             .xform = xform
         }, OBJECT_TYPE_XFORM, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated", self);
+    LOG_D(LOG_CONTEXT, "xform %p allocated", self);
 
     return 1;
 }
@@ -129,7 +106,7 @@ static int xform_gc_1o_0(lua_State *L)
 
     GL_xform_destroy(self->xform);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
+    LOG_D(LOG_CONTEXT, "xform %p finalized", self);
 
     return 0;
 }
@@ -241,17 +218,17 @@ static int xform_matrix_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int xform_wrap_2os_0(lua_State *L)
+static int xform_wrap_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    const char *mode = LUAX_STRING(L, 2);
+    GL_XForm_Wraps_t mode = (GL_XForm_Wraps_t)LUAX_ENUM(L, 2, _modes);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_wrap(xform, _parse_wrap_mode(mode));
+    GL_xform_wrap(xform, mode);
 
     return 0;
 }
@@ -269,15 +246,16 @@ static int xform_table_1o_0(lua_State *L)
     return 0;
 }
 
-static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = {
-    { "h", GL_XFORM_REGISTER_H },
-    { "v", GL_XFORM_REGISTER_V },
-    { "a", GL_XFORM_REGISTER_A },
-    { "b", GL_XFORM_REGISTER_B },
-    { "c", GL_XFORM_REGISTER_C },
-    { "d", GL_XFORM_REGISTER_D },
-    { "x", GL_XFORM_REGISTER_X },
-    { "y", GL_XFORM_REGISTER_Y }
+static const char *_registers[GL_XForm_Registers_t_CountOf + 1] = {
+    "h",
+    "v",
+    "a",
+    "b",
+    "c",
+    "d",
+    "x",
+    "y",
+    NULL
 };
 
 static int xform_table_2ot_0(lua_State *L)
@@ -294,23 +272,27 @@ static int xform_table_2ot_0(lua_State *L)
     lua_pushnil(L);
     while (lua_next(L, 2)) {
         int index = LUAX_INTEGER(L, -2);
-        GL_XForm_Table_Entry_t entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
+        GL_XForm_Table_Entry_t table_entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
 
         lua_pushnil(L);
-        for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
+        for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is a `pairs()` array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
+                LOG_W(LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
-            entry.count = i + 1;
-            entry.operations[i].id = (GL_XForm_Registers_t)map_find_key(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
-            entry.operations[i].value = LUAX_NUMBER(L, -1);
+
+            GL_XForm_Registers_t id = (GL_XForm_Registers_t)LUAX_ENUM(L, -2, _registers);
+            float value = LUAX_NUMBER(L, -1);
+
+            table_entry.count = i + 1;
+            table_entry.operations[i].id = id;
+            table_entry.operations[i].value = value;
 
             lua_pop(L, 1);
         }
 
-        arrpush(table, entry);
+        arrpush(table, table_entry);
 
         lua_pop(L, 1);
     }
@@ -392,7 +374,7 @@ static int xform_warp_3onn_0(lua_State *L)
     GL_XForm_Table_Entry_t *table = NULL;
 
     for (size_t scan_line = 0; scan_line < height; ++scan_line) {
-        const float angle = ((float)scan_line / (float)height) * (float)M_PI; // Could be partially pre-computed, but who cares...
+        const float angle = ((float)scan_line / (float)height) * F_PI; // Could be partially pre-computed, but who cares...
         const float scale_x = (1.0f - sinf(angle)) * factor + 1.0f;
 
         GL_XForm_Table_Entry_t entry = {

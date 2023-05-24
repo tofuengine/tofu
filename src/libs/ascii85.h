@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,8 +45,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **/
 
-#ifndef __LIBS_ASCII85_H__
-#define __LIBS_ASCII85_H__
+#ifndef TOFU_LIBS_ASCII85_H
+#define TOFU_LIBS_ASCII85_H
 
 #include <stdint.h>
 
@@ -62,4 +62,4 @@ extern int32_t ascii85_decode(const char *inp, int32_t in_length, uint8_t *outp,
 extern int32_t ascii85_get_max_encoded_length(int32_t in_length);
 extern int32_t ascii85_get_max_decoded_length(int32_t in_length);
 
-#endif  /* __LIBS_ASCII85_H__ */
+#endif  /* TOFU_LIBS_ASCII85_H */

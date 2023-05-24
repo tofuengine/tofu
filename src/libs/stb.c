@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@
 #include <stb/stb_ds.h>
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define STBI_MALLOC(s)    stb_leakcheck_realloc(NULL, (s), __FILE__, __LINE__)
+  #define STBI_MALLOC(s)    stb_leakcheck_malloc((s), __FILE__, __LINE__)
   #define STBI_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
   #define STBI_FREE(p)      stb_leakcheck_free((p))
 #endif
@@ -43,7 +43,7 @@
 #include <stb/stb_image.h>
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define STBIW_MALLOC(s)    stb_leakcheck_realloc(NULL, (s), __FILE__, __LINE__)
+  #define STBIW_MALLOC(s)    stb_leakcheck_malloc((s), __FILE__, __LINE__)
   #define STBIW_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
   #define STBIW_FREE(p)      stb_leakcheck_free((p))
 #endif

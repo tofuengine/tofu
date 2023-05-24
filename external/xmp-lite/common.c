@@ -32,7 +32,7 @@ int libxmp_init_instrument(struct module_data *m)
 	struct xmp_module *mod = &m->mod;
 
 	if (mod->ins > 0) {
-		mod->xxi = (struct xmp_instrument *)calloc(mod->ins, sizeof(struct xmp_instrument));
+		mod->xxi = (struct xmp_instrument *) calloc(mod->ins, sizeof(struct xmp_instrument));
 		if (mod->xxi == NULL)
 			return -1;
 	}
@@ -46,10 +46,10 @@ int libxmp_init_instrument(struct module_data *m)
 			return -1;
 		}
 
-		mod->xxs = (struct xmp_sample *)calloc(mod->smp, sizeof(struct xmp_sample));
+		mod->xxs = (struct xmp_sample *) calloc(mod->smp, sizeof(struct xmp_sample));
 		if (mod->xxs == NULL)
 			return -1;
-		m->xtra = (struct extra_sample_data *)calloc(mod->smp, sizeof(struct extra_sample_data));
+		m->xtra = (struct extra_sample_data *) calloc(mod->smp, sizeof(struct extra_sample_data));
 		if (m->xtra == NULL)
 			return -1;
 
@@ -84,12 +84,12 @@ int libxmp_realloc_samples(struct module_data *m, int new_size)
 		return 0;
 	}
 
-	xxs = (struct xmp_sample *)realloc(mod->xxs, sizeof(struct xmp_sample) * new_size);
+	xxs = (struct xmp_sample *) realloc(mod->xxs, sizeof(struct xmp_sample) * new_size);
 	if (xxs == NULL)
 		return -1;
 	mod->xxs = xxs;
 
-	xtra = (struct extra_sample_data *)realloc(m->xtra, sizeof(struct extra_sample_data) * new_size);
+	xtra = (struct extra_sample_data *) realloc(m->xtra, sizeof(struct extra_sample_data) * new_size);
 	if (xtra == NULL)
 		return -1;
 	m->xtra = xtra;
@@ -114,7 +114,7 @@ int libxmp_alloc_subinstrument(struct xmp_module *mod, int i, int num)
 	if (num == 0)
 		return 0;
 
-	mod->xxi[i].sub = (struct xmp_subinstrument *)calloc(num, sizeof(struct xmp_subinstrument));
+	mod->xxi[i].sub = (struct xmp_subinstrument *) calloc(num, sizeof(struct xmp_subinstrument));
 	if (mod->xxi[i].sub == NULL)
 		return -1;
 
@@ -123,11 +123,11 @@ int libxmp_alloc_subinstrument(struct xmp_module *mod, int i, int num)
 
 int libxmp_init_pattern(struct xmp_module *mod)
 {
-	mod->xxt = (struct xmp_track **)calloc(mod->trk, sizeof(struct xmp_track *));
+	mod->xxt = (struct xmp_track **) calloc(mod->trk, sizeof(struct xmp_track *));
 	if (mod->xxt == NULL)
 		return -1;
 
-	mod->xxp = (struct xmp_pattern **)calloc(mod->pat, sizeof(struct xmp_pattern *));
+	mod->xxp = (struct xmp_pattern **) calloc(mod->pat, sizeof(struct xmp_pattern *));
 	if (mod->xxp == NULL)
 		return -1;
 
@@ -140,8 +140,8 @@ int libxmp_alloc_pattern(struct xmp_module *mod, int num)
 	if (num < 0 || num >= mod->pat || mod->xxp[num] != NULL)
 		return -1;
 
-	mod->xxp[num] = (struct xmp_pattern *)calloc(1, sizeof(struct xmp_pattern) +
-        				sizeof(int) * (mod->chn - 1));
+	mod->xxp[num] = (struct xmp_pattern *) calloc(1, sizeof(struct xmp_pattern) +
+							 sizeof(int) * (mod->chn - 1));
 	if (mod->xxp[num] == NULL)
 		return -1;
 
@@ -154,8 +154,8 @@ int libxmp_alloc_track(struct xmp_module *mod, int num, int rows)
 	if (num < 0 || num >= mod->trk || mod->xxt[num] != NULL || rows <= 0)
 		return -1;
 
-	mod->xxt[num] = (struct xmp_track *)calloc(1, sizeof(struct xmp_track) +
-			       sizeof(struct xmp_event) * (rows - 1));
+	mod->xxt[num] = (struct xmp_track *) calloc(1,  sizeof(struct xmp_track) +
+							sizeof(struct xmp_event) * (rows - 1));
 	if (mod->xxt[num] == NULL)
 		return -1;
 
@@ -213,7 +213,7 @@ char *libxmp_copy_adjust(char *s, uint8_t *r, int n)
 	memset(s, 0, n + 1);
 	strncpy(s, (char *)r, n);
 
-	for (i = 0; i < n && s[i]; i++) {
+	for (i = 0; s[i] && i < n; i++) {
 		if (!isprint((unsigned char)s[i]) || ((uint8_t)s[i] > 127))
 			s[i] = '.';
 	}
@@ -232,11 +232,11 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 		return;
 
 	if (s >= XMP_NAME_SIZE)
-		s = XMP_NAME_SIZE -1;
+		s = XMP_NAME_SIZE - 1;
 
 	memset(t, 0, s + 1);
 
-	s = hio_read(buf, 1, s, f);
+	s = hio_read(buf, sizeof(uint8_t), s, f);
 	buf[s] = 0;
 	libxmp_copy_adjust(t, buf, s);
 }
@@ -290,46 +290,6 @@ int libxmp_copy_name_for_fopen(char *dest, const char *name, int n)
 	return 0;
 }
 
-/*
- * Honor Noisetracker effects:
- *
- *  0 - arpeggio
- *  1 - portamento up
- *  2 - portamento down
- *  3 - Tone-portamento
- *  4 - Vibrato
- *  A - Slide volume
- *  B - Position jump
- *  C - Set volume
- *  D - Pattern break
- *  E - Set filter (keep the led off, please!)
- *  F - Set speed (now up to $1F)
- *
- * Pex Tufvesson's notes from http://www.livet.se/mahoney/:
- *
- * Note that some of the modules will have bugs in the playback with all
- * known PC module players. This is due to that in many demos where I synced
- * events in the demo with the music, I used commands that these newer PC
- * module players erroneously interpret as "newer-version-trackers commands".
- * Which they aren't.
- */
-void libxmp_decode_noisetracker_event(struct xmp_event *event, const uint8_t *mod_event)
-{
-	int fxt;
-
-	memset(event, 0, sizeof (struct xmp_event));
-	event->note = libxmp_period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
-	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
-	fxt = LSN(mod_event[2]);
-
-	if (fxt <= 0x06 || (fxt >= 0x0a && fxt != 0x0e)) {
-		event->fxt = fxt;
-		event->fxp = mod_event[3];
-	}
-
-	libxmp_disable_continue_fx(event);
-}
-
 void libxmp_decode_protracker_event(struct xmp_event *event, const uint8_t *mod_event)
 {
 	int fxt = LSN(mod_event[2]);
@@ -375,4 +335,14 @@ void libxmp_set_type(struct module_data *m, const char *fmt, ...)
 
 	vsnprintf(m->mod.type, XMP_NAME_SIZE, fmt, ap);
 	va_end(ap);
+}
+
+char *libxmp_strdup(const char *src)
+{
+	size_t len = strlen(src) + 1;
+	char *buf = (char *) malloc(len);
+	if (buf) {
+		memcpy(buf, src, len);
+	}
+	return buf;
 }

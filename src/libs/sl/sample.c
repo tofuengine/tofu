@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,25 +24,35 @@
 
 #include "sample.h"
 
-#include "internals.h"
+#include "internal.h"
 #include "mix.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/dr_libs.h>
 #include <libs/log.h>
 #include <libs/stb.h>
-#include <miniaudio/miniaudio.h>
 
 #include <stdint.h>
 
 #define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
 
+// Samples differs from musics and modules since they are *mono* in nature. We have just *one* channel per frame.
+// This means that we will be using the `mix_1on2_additive()` mixing function to duplicate the mono channel to stereo.
+#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
 #define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
 #define MIXING_BUFFER_CHANNELS_PER_FRAME    1
-#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
 #define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
+
+#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+  #define mix_additive  mix_1on2_additive
+#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+  #define mix_additive  mix_2on2_additive
+#else
+  #error "Mixing buffer has wrong number of channels"
+#endif
 
 #define LOG_CONTEXT "sl-sample"
 
@@ -56,6 +66,8 @@ typedef struct Sample_s {
     drflac *decoder;
     size_t length_in_frames;
 
+    uint8_t mixing_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+
     ma_audio_buffer buffer;
     size_t frames_completed;
 } Sample_t;
@@ -68,7 +80,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
 static inline bool _rewind(Sample_t *sample)
 {
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding sample %p", sample);
+    LOG_T(LOG_CONTEXT, "rewinding sample %p", sample);
 
     ma_audio_buffer *buffer = &sample->buffer;
     ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewinding into memory (frame-seeking is safe).
@@ -80,7 +92,7 @@ static inline bool _rewind(Sample_t *sample)
 
 static inline bool _reset(Sample_t *sample)
 {
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding sample %p", sample);
+    LOG_T(LOG_CONTEXT, "rewinding sample %p", sample);
 
     return _rewind(sample);
 }
@@ -110,18 +122,21 @@ SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callba
 {
     SL_Source_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
+        LOG_E(LOG_CONTEXT, "can't allocate sample structure");
         return NULL;
     }
 
     bool cted = _sample_ctor(sample, context, callbacks);
     if (!cted) {
-        free(sample);
-        return NULL;
+        goto error_free;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample %p created", sample);
+    LOG_D(LOG_CONTEXT, "sample %p created", sample);
     return sample;
+
+error_free:
+    free(sample);
+    return NULL;
 }
 
 static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
@@ -137,14 +152,14 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     Sample_t *sample = (Sample_t *)user_data;
     const SL_Callbacks_t *callbacks = &sample->callbacks;
 
-    bool seeked = false;
+    bool sought = false;
     if (origin == drflac_seek_origin_start) {
-        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
+        sought = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
     } else
     if (origin == drflac_seek_origin_current) {
-        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
+        sought = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
     }
-    return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
+    return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
 static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.
@@ -184,59 +199,57 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
             .onFree    = _free
         });
     if (!sample->decoder) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create sample decoder");
+        LOG_E(LOG_CONTEXT, "can't create sample decoder");
         return false;
     }
 
     sample->length_in_frames = sample->decoder->totalPCMFrameCount;
     if (sample->length_in_frames == 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create sample w/ zero length");
-        drflac_close(sample->decoder);
-        return false;
+        LOG_E(LOG_CONTEXT, "can't create sample w/ zero length");
+        goto error_close_decoder;
     }
 
     size_t channels = sample->decoder->channels;
     size_t sample_rate = sample->decoder->sampleRate;
     size_t bits_per_sample = sample->decoder->bitsPerSample;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", sample->decoder, sample->length_in_frames, channels, sample_rate, bits_per_sample);
+    LOG_D(LOG_CONTEXT, "sample decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", sample->decoder, sample->length_in_frames, channels, sample_rate, bits_per_sample);
 
     if (channels != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "samples need to be 1 channel");
-        drflac_close(sample->decoder);
-        return NULL;
+        LOG_E(LOG_CONTEXT, "samples need to be 1 channel");
+        goto error_close_decoder;
     }
     float duration = (float)sample->length_in_frames / (float)sample_rate;
     if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
-        drflac_close(sample->decoder);
-        return NULL;
+        LOG_E(LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
+        goto error_close_decoder;
     }
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(INTERNAL_FORMAT, channels, sample->length_in_frames, NULL, NULL);
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate buffer for %d frames", sample->length_in_frames);
-        drflac_close(sample->decoder);
-        return false;
+        LOG_E(LOG_CONTEXT, "can't allocate buffer for %d frames", sample->length_in_frames);
+        goto error_close_decoder;
     }
 
     bool produced = _produce(sample);
     if (!produced) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample", sample->length_in_frames);
-        ma_audio_buffer_uninit(&sample->buffer);
-        drflac_close(sample->decoder);
-        return false;
+        LOG_E(LOG_CONTEXT, "can't read %d frames for sample", sample->length_in_frames);
+        goto error_deinitialize_audio_buffer;
     }
 
     sample->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!sample->props) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
-        ma_audio_buffer_uninit(&sample->buffer);
-        drflac_close(sample->decoder);
-        return false;
+        LOG_E(LOG_CONTEXT, "can't initialize sample properties");
+        goto error_deinitialize_audio_buffer;
     }
 
     return true;
+
+error_deinitialize_audio_buffer:
+    ma_audio_buffer_uninit(&sample->buffer);
+error_close_decoder:
+    drflac_close(sample->decoder);
+    return false;
 }
 
 static void _sample_dtor(SL_Source_t *source)
@@ -244,13 +257,13 @@ static void _sample_dtor(SL_Source_t *source)
     Sample_t *sample = (Sample_t *)source;
 
     SL_props_destroy(sample->props);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample properties deinitialized");
+    LOG_D(LOG_CONTEXT, "sample properties destroyed");
 
     ma_audio_buffer_uninit(&sample->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample buffer deinitialized");
+    LOG_D(LOG_CONTEXT, "sample buffer uninitialized");
 
     drflac_close(sample->decoder);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample decoder deinitialized");
+    LOG_D(LOG_CONTEXT, "sample decoder closed");
 }
 
 static bool _sample_reset(SL_Source_t *source)
@@ -259,7 +272,7 @@ static bool _sample_reset(SL_Source_t *source)
 
     bool reset = _reset(sample);
     if (!reset) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset sample %p data", source);
+        LOG_E(LOG_CONTEXT, "can't reset sample %p data", source);
         return false;
     }
 
@@ -279,7 +292,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
     ma_audio_buffer *buffer = &sample->buffer;
     const bool looped = sample->props->looped;
 
-    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    uint8_t *converted_buffer = sample->mixing_buffer;
 
     const SL_Mix_t mix = sample->props->precomputed_mix;
 
@@ -289,13 +302,12 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
     while (frames_remaining > 0) {
         if (sample->frames_completed == sample->length_in_frames) {
             if (!looped || !_rewind(sample)) {
-                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
+                LOG_D(LOG_CONTEXT, "end-of-data reached for source %p", source);
                 return false;
             }
         }
 
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
-
 
         ma_uint64 frames_to_consume;
         ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
@@ -311,9 +323,10 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
         sample->frames_completed += frames_consumed;
 
-        mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
+        mix_additive(cursor, converted_buffer, frames_generated, mix);
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }
+
     return true;
 }

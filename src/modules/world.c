@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,15 +24,15 @@
 
 #include "world.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <libs/path.h>
 #include <systems/storage.h>
 
 #include <chipmunk/chipmunk.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "world"
 #define MODULE_NAME "tofu.physics.world"
@@ -49,7 +49,7 @@ static int world_clear_1o_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
-    char file[PATH_MAX] = { 0 };
+    char file[PLATFORM_PATH_MAX] = { 0 };
     path_lua_to_fs(file, MODULE_NAME);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
@@ -91,16 +91,16 @@ static int world_new_2NN_1o(lua_State *L)
     if (!space) {
         return luaL_error(L, "can't create space");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "space %p created", space);
+    LOG_D(LOG_CONTEXT, "space %p created", space);
 
     cpSpaceSetGravity(space, (cpVect){ .x = x, .y = y });
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "gravity set to <%.3f, %.3f> for space %p", x, y, space);
+    LOG_T(LOG_CONTEXT, "gravity set to <%.3f, %.3f> for space %p", x, y, space);
 
     World_Object_t *self = (World_Object_t *)luaX_newobject(L, sizeof(World_Object_t), &(World_Object_t){
             .space = space
         }, OBJECT_TYPE_WORLD, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p created", self);
+    LOG_D(LOG_CONTEXT, "world %p created", self);
 
     return 1;
 }
@@ -132,12 +132,12 @@ static int world_gc_1o_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     _release(L, self);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p entries cleared", self);
+    LOG_D(LOG_CONTEXT, "world %p entries cleared", self);
 
     cpSpaceFree(self->space);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
+    LOG_D(LOG_CONTEXT, "world space %p destroyed", self->space);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p finalized", self);
+    LOG_D(LOG_CONTEXT, "world %p finalized", self);
 
     return 0;
 }
@@ -257,7 +257,7 @@ static int world_add_2oo_0(lua_State *L)
     luaX_Reference reference = luaX_ref(L, 2);
 
     hmput(self->entries, body, reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p bound to world %p", body, self);
+    LOG_D(LOG_CONTEXT, "body %p bound to world %p", body, self);
 
     return 0;
 }
@@ -285,7 +285,7 @@ static int world_remove_2oo_0(lua_State *L)
     luaX_unref(L, reference);
 
     int deleted = hmdel(self->entries, body);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p found and removed from world %p (%d)", body, self, deleted);
+    LOG_D(LOG_CONTEXT, "body %p found and removed from world %p (%d)", body, self, deleted);
 
     return 0;
 }
@@ -298,10 +298,10 @@ static int world_clear_1o_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
 
     cpSpaceDestroy(self->space);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world space %p destroyed", self->space);
+    LOG_D(LOG_CONTEXT, "world space %p destroyed", self->space);
 
     _release(L, self);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "world %p entries cleared", self);
+    LOG_D(LOG_CONTEXT, "world %p entries cleared", self);
 
     return 0;
 }

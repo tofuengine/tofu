@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_IMATH_H__
-#define __LIBS_IMATH_H__
+#ifndef TOFU_LIBS_IMATH_H
+#define TOFU_LIBS_IMATH_H
+
+#include <core/config.h>
 
 #include <math.h>
 
@@ -40,7 +42,7 @@
 #define ITRUNC(x)       ((int)(x))
 #define INEAREST(x)     ((int)((x) + 0.5f))
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 #define IFLOORF(x)      (ifloor((x)))
 #define ICEILF(x)       (iceil((x)))
 #define IROUNDF(x)      (ifloor((x) + 0.5f))
@@ -55,9 +57,9 @@ extern int imod(int a, int b);
 extern int imin(int a, int b);
 extern int imax(int a, int b);
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 extern int ifloor(float x);
 extern int iceil(float x);
 #endif
 
-#endif  /* __LIBS_IMATH_H__ */
+#endif  /* TOFU_LIBS_IMATH_H */

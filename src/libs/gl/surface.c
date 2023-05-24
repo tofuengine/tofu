@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 
 #include "surface.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -43,7 +43,7 @@ GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels,
     }
 
     callback(user_data, surface, pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
+    LOG_D(LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
 
     return surface;
 }
@@ -52,16 +52,14 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate (%dx%d) pixel-data", width, height);
+        LOG_E(LOG_CONTEXT, "can't allocate (%dx%d) pixel-data", width, height);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
 
     GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
     if (!surface) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate surface");
-        free(data);
-        return NULL;
+        LOG_E(LOG_CONTEXT, "can't allocate surface");
+        goto error_free;
     }
 
     *surface = (GL_Surface_t){
@@ -72,21 +70,27 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .is_power_of_two = _is_power_of_two((int)width) && _is_power_of_two((int)height)
         };
 
+    LOG_D(LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
+
     return surface;
+
+error_free:
+    free(data);
+    return NULL;
 }
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
     free(surface->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface data at %p freed", surface->data);
+    LOG_D(LOG_CONTEXT, "surface data at %p freed", surface->data);
 
     free(surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
+    LOG_D(LOG_CONTEXT, "surface %p freed", surface);
 }
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)
 {
-#ifdef __NO_MEMSET_MEMCPY__
+#if defined(__NO_MEMSET_MEMCPY__)
     GL_Pixel_t *dst = surface->data;
     for (size_t i = surface->data_size; i; --i) {
         *(dst++) = index;

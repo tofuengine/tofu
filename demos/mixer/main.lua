@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,14 +29,18 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
-local Storage = require("tofu.io.storage")
 local Source = require("tofu.sound.source")
 
 local Main = Class.define()
 
 local SOURCES <const> = {
   { name = "assets/flac/1ch-22050-16.flac", type = "sample" },
-  { name = "assets/flac/2ch-48000-16.flac", type = "music" }
+  { name = "assets/flac/2ch-48000-16.flac", type = "music" },
+  { name = "assets/mods/c64_operationwolf.mod", type = "module" },
+  { name = "assets/mods/db_ab.xm", type = "module" },
+  { name = "assets/mods/last_ninja_3.it", type = "module" },
+  { name = "assets/mods/nightbeat-turrican_ii_theme.s3m", type = "module" },
+  { name = "assets/mods/turrican_iii.xm", type = "module" }
 }
 
 function Main:__ctor()
@@ -52,12 +56,6 @@ function Main:__ctor()
     local instance = Source.new(source.name, source.type)
     table.insert(self.sources, { instance = instance, pan = 0.0, balance = 0.0 })
   end
-  Storage.scan(function(name)
-    if name:find("^assets/mods/") then
-      local instance = Source.new(name, "module")
-      table.insert(self.sources, { instance = instance, pan = 0.0, balance = 0.0 })
-    end
-  end)
 
   self.sources[2].instance:looped(true)
   self.sources[3].instance:looped(true)

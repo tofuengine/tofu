@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,16 +44,17 @@
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
  * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, ORff
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LIBS_MD5_H__
-#define __LIBS_MD5_H__
+#ifndef TOFU_LIBS_MD5_H
+#define TOFU_LIBS_MD5_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -67,6 +68,9 @@ typedef struct md5_context_s {
 
 extern void md5_init(md5_context_t *context);
 extern void md5_update(md5_context_t *context, const uint8_t *msg, size_t len);
-extern void md5_final(md5_context_t *context, uint8_t *digest);
+extern void md5_final(md5_context_t *context, uint8_t digest[MD5_SIZE]);
 
-#endif  /* __LIBS_MD5_H__ */
+extern void md5_hash(uint8_t digest[MD5_SIZE], const void *data, size_t length);
+extern void md5_hash_sz(uint8_t digest[MD5_SIZE], const char *string, bool case_sensitive);
+
+#endif  /* TOFU_LIBS_MD5_H */

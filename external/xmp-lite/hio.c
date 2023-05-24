@@ -81,7 +81,7 @@ typedef struct {
 
 static void *mio_open(const void *ptr, size_t size)
 {
-	MFILE *m = (MFILE *)malloc(sizeof(MFILE));
+	MFILE *m = (MFILE *) malloc(sizeof(MFILE));
 	if (!m)
 		return NULL;
 	
@@ -165,7 +165,7 @@ typedef struct {
 
 static void *cbio_open(HIO_FUNCS funcs, void *user_data)
 {
-	CBFILE *cb = (CBFILE *)malloc(sizeof(CBFILE));
+	CBFILE *cb = (CBFILE *) malloc(sizeof(CBFILE));
 	if (!cb)
 		return NULL;
 	
@@ -212,7 +212,7 @@ HIO_HANDLE *hio_open(const void *path, const char *mode)
 		return NULL;
 	}
 
-	HIO_HANDLE *h = (HIO_HANDLE *)malloc(sizeof(HIO_HANDLE));
+	HIO_HANDLE *h = (HIO_HANDLE *) malloc(sizeof(HIO_HANDLE));
 	if (!h) {
 		fclose(fp);
 		return NULL;
@@ -235,7 +235,7 @@ HIO_HANDLE *hio_open(const void *path, const char *mode)
 
 HIO_HANDLE *hio_open_file(FILE *fp)
 {
-	HIO_HANDLE *h = (HIO_HANDLE *)malloc(sizeof(HIO_HANDLE));
+	HIO_HANDLE *h = (HIO_HANDLE *) malloc(sizeof(HIO_HANDLE));
 	if (!h) {
 		fclose(fp);
 		return NULL;
@@ -263,7 +263,7 @@ HIO_HANDLE *hio_open_mem(const void *ptr, long size)
 		return NULL;
 	}
 
-	HIO_HANDLE *h = (HIO_HANDLE *)malloc(sizeof(HIO_HANDLE));
+	HIO_HANDLE *h = (HIO_HANDLE *) malloc(sizeof(HIO_HANDLE));
 	if (!h) {
 		mio_close(mp);
 		return NULL;
@@ -291,7 +291,7 @@ HIO_HANDLE *hio_open_callbacks(HIO_FUNCS funcs, void *user_data)
 		return NULL;
 	}
 
-	HIO_HANDLE *h = (HIO_HANDLE *)malloc(sizeof(HIO_HANDLE));
+	HIO_HANDLE *h = (HIO_HANDLE *) malloc(sizeof(HIO_HANDLE));
 	if (!h) {
 		cbio_close(cbp);
 		return NULL;
@@ -443,4 +443,15 @@ size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 		h->error = EOF;
 	}
 	return result;
+}
+
+bool hio_readn(void *buf, size_t bytes_to_read, HIO_HANDLE *h)
+{
+	size_t bytes_read = h->vtable.read(buf, sizeof(uint8_t), bytes_to_read, h->user_data);
+	if (bytes_read != bytes_to_read) {
+		memset((uint8_t *)buf + bytes_read, 0x00, bytes_to_read - bytes_read);
+		h->error = EOF;
+		return false;
+	}
+	return true;
 }

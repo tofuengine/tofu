@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_INPUT_H__
-#define __SYSTEMS_INPUT_H__
+#ifndef TOFU_SYSTEMS_INPUT_H
+#define TOFU_SYSTEMS_INPUT_H
 
-#include <config.h>
+#include <core/config.h>
 
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>
@@ -77,7 +76,19 @@ typedef enum Input_Keyboard_Buttons_e {
     INPUT_KEYBOARD_BUTTON_RIGHT,
     INPUT_KEYBOARD_BUTTON_ENTER,
     INPUT_KEYBOARD_BUTTON_SPACE,
-    Input_Keyboard_Buttons_t_Last = INPUT_KEYBOARD_BUTTON_SPACE,
+    INPUT_KEYBOARD_BUTTON_F1,
+    INPUT_KEYBOARD_BUTTON_F2,
+    INPUT_KEYBOARD_BUTTON_F3,
+    INPUT_KEYBOARD_BUTTON_F4,
+    INPUT_KEYBOARD_BUTTON_F5,
+    INPUT_KEYBOARD_BUTTON_F6,
+    INPUT_KEYBOARD_BUTTON_F7,
+    INPUT_KEYBOARD_BUTTON_F8,
+    INPUT_KEYBOARD_BUTTON_F9,
+    INPUT_KEYBOARD_BUTTON_F10,
+    INPUT_KEYBOARD_BUTTON_F11,
+    INPUT_KEYBOARD_BUTTON_F12,
+    Input_Keyboard_Buttons_t_Last = INPUT_KEYBOARD_BUTTON_F12,
     Input_Keyboard_Buttons_t_CountOf
 } Input_Keyboard_Buttons_t;
 
@@ -247,4 +258,4 @@ extern Input_Button_t Input_controller_get_button(const Input_Controller_t *cont
 extern Input_Controller_Triggers_t Input_controller_get_triggers(const Input_Controller_t *controller);
 extern Input_Controller_Stick_t Input_controller_get_stick(const Input_Controller_t *controller, Input_Controller_Sticks_t stick);
 
-#endif  /* __SYSTEMS_INPUT_H__ */
+#endif  /* TOFU_SYSTEMS_INPUT_H */

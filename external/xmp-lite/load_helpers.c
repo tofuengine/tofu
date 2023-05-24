@@ -20,8 +20,6 @@
  * THE SOFTWARE.
  */
 
-#include "load_helpers.h"
-
 #include <ctype.h>
 #include "common.h"
 #include "loader.h"
@@ -140,7 +138,7 @@ void libxmp_load_epilogue(struct context_data *ctx)
 	if (mod->spd <= 0 || mod->spd > 255) {
 		mod->spd = 6;
 	}
-	CLAMP(mod->bpm, XMP_MIN_BPM, 255);
+	CLAMP(mod->bpm, XMP_MIN_BPM, 1000);
 
 	/* Set appropriate values for instrument volumes and subinstrument
 	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
@@ -210,7 +208,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		return 0;
 	}
 
-	m->scan_cnt = (uint8_t **)calloc(mod->len, sizeof(uint8_t *));
+	m->scan_cnt = (uint8 **) calloc(mod->len, sizeof(uint8 *));
 	if (m->scan_cnt == NULL)
 		return -XMP_ERROR_SYSTEM;
 
@@ -226,7 +224,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		}
 
 		pat = pat_idx >= mod->pat ? NULL : mod->xxp[pat_idx];
-		m->scan_cnt[i] = (uint8_t *)calloc((pat && pat->rows) ? pat->rows : 1, sizeof(uint8_t));
+		m->scan_cnt[i] = (uint8 *) calloc(1, (pat && pat->rows)? pat->rows : 1);
 		if (m->scan_cnt[i] == NULL)
 			return -XMP_ERROR_SYSTEM;
 	}

@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +23,18 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
+local Timer = require("tofu.timers.timer")
 
 local Pool = Class.define()
 
-local _default = nil
-
-function Pool.default()
-  if not _default then
-    _default = Pool.new()
-  end
-  return _default
-end
-
 function Pool:__ctor()
   self.timers = {}
+end
+
+function Pool:spawn(period, repeats, callback, rate)
+  local timer = Timer.new(period, repeats, callback, rate)
+  table.insert(self.timers, timer)
+  return timer
 end
 
 function Pool:clear()
@@ -53,11 +51,12 @@ function Pool:update(delta_time)
     else
       timer.age = timer.age + timer.rate * delta_time
       while timer.age >= timer.period do
-        timer.callback("looped")
+        timer.callback("fired")
 
         timer.age = timer.age - timer.period
 
         if timer.loops > 0 then
+          timer.callback("looped")
           timer.loops = timer.loops - 1;
           if timer.loops == 0 then
               timer:cancel() -- Remove on the next iteration.

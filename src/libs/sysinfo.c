@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,25 +24,24 @@
 
 #include "sysinfo.h"
 
-#include <platform.h>
+#include <core/platform.h>
 #include <libs/log.h>
 
 #include <string.h>
 
-#define LOG_CONTEXT "sysinfo"
-
 /* This file provides an implementation only for the native Windows API.  */
 #if PLATFORM_ID == PLATFORM_WINDOWS
-#include <windows.h>
-
-#ifndef VER_PLATFORM_WIN32_CE
-  #define VER_PLATFORM_WIN32_CE 3
-#endif
+  #include <windows.h>
+  #if !defined(VER_PLATFORM_WIN32_CE)
+    #define VER_PLATFORM_WIN32_CE 3
+  #endif
 #elif PLATFORM_ID == PLATFORM_LINUX
   #include <sys/utsname.h>
 #endif
 
-bool SI_inspect(System_Information_t *si)
+#define LOG_CONTEXT "sysinfo"
+
+bool SysInfo_inspect(SysInfo_Data_t *si)
 {
 #if PLATFORM_ID == PLATFORM_WINDOWS
   OSVERSIONINFO version;
@@ -63,7 +62,7 @@ bool SI_inspect(System_Information_t *si)
     {
       version.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
       if (!GetVersionEx (&version))
-        abort ();
+        abort();
     }
 
   /* Determine major-major Windows version.  */
@@ -252,7 +251,7 @@ bool SI_inspect(System_Information_t *si)
     struct utsname uts;
     int result = uname(&uts);
     if (result == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
+        LOG_E(LOG_CONTEXT, "can't get system information");
         return false;
     }
     strncpy(si->system, uts.sysname, SYSINFO_NAME_LENGTH);

@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
 #include "common.h"
 #include "virtual.h"
 #include "mixer.h"
@@ -102,8 +101,8 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 
 	p->virt.maxvoc = libxmp_mixer_numvoices(ctx, num);
 
-	p->virt.voice_array = (struct mixer_voice *)calloc(p->virt.maxvoc,
-				sizeof(struct mixer_voice));
+	p->virt.voice_array = (struct mixer_voice *) calloc(p->virt.maxvoc,
+						sizeof(struct mixer_voice));
 	if (p->virt.voice_array == NULL)
 		goto err;
 
@@ -116,7 +115,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 	/* Initialize Paula simulator */
 	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
-			p->virt.voice_array[i].paula = (struct paula_state *)calloc(1, sizeof (struct paula_state));
+			p->virt.voice_array[i].paula = (struct paula_state *) calloc(1, sizeof(struct paula_state));
 			if (p->virt.voice_array[i].paula == NULL) {
 				goto err2;
 			}
@@ -125,8 +124,8 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 	}
 #endif
 
-	p->virt.virt_channel = (struct virt_channel *)malloc(p->virt.virt_channels *
-				sizeof(struct virt_channel));
+	p->virt.virt_channel = (struct virt_channel *) malloc(p->virt.virt_channels *
+							sizeof(struct virt_channel));
 	if (p->virt.virt_channel == NULL)
 		goto err2;
 
@@ -139,7 +138,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 
 	return 0;
 
-err2:
+      err2:
 #ifdef LIBXMP_PAULA_SIMULATOR
 	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
@@ -149,7 +148,7 @@ err2:
 #endif
 	free(p->virt.voice_array);
 	p->virt.voice_array = NULL;
-err:
+      err:
 	return -1;
 }
 

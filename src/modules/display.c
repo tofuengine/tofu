@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,12 @@
 
 #include "display.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "display"
 

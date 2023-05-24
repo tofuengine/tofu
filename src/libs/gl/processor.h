@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_PROCESSOR_H__
-#define __GL_PROCESSOR_H__
+#ifndef TOFU_LIBS_GL_PROCESSOR_H
+#define TOFU_LIBS_GL_PROCESSOR_H
 
 #include "common.h"
 #include "palette.h"
@@ -56,4 +56,4 @@ extern void GL_processor_set_program(GL_Processor_t *processor, const GL_Program
 
 extern void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels);
 
-#endif  /* __GL_PROCESSOR_H__ */
+#endif  /* TOFU_LIBS_GL_PROCESSOR_H */

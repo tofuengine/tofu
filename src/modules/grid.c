@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,13 @@
 
 #include "grid.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/interpreter.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "grid"
 #define MODULE_NAME "tofu.util.grid"
@@ -49,7 +49,7 @@ static int grid_path_5onnnn_1t(lua_State *L);
 
 int grid_loader(lua_State *L)
 {
-    char file[PATH_MAX] = { 0 };
+    char file[PLATFORM_PATH_MAX] = { 0 };
     path_lua_to_fs(file, MODULE_NAME);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
@@ -92,24 +92,24 @@ static int grid_new_3nnT_1o(lua_State *L)
     size_t length = LUAX_OPTIONAL_TABLE(L, 3, 0);
 
     size_t data_size = width * height;
-    Cell_t *data = malloc(sizeof(Cell_t) * data_size);
+    Grid_Object_Value_t *data = malloc(sizeof(Grid_Object_Value_t) * data_size);
     if (!data) {
         return luaL_error(L, "can't allocate %dx%d grid", width, height);
     }
 
     if (length > 0) {
-        Cell_t *ptr = data;
+        Grid_Object_Value_t *ptr = data;
         for (size_t i = 0; i < data_size; ++i) {
             size_t index = ((i % length) + 1);
             lua_rawgeti(L, 3, (lua_Integer)index);
 
-            Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
+            Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
             *(ptr++) = value;
 
             lua_pop(L, 1);
         }
     } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "grid content left uninitialized");
+        LOG_W(LOG_CONTEXT, "grid content left uninitialized");
     }
 
     Grid_Object_t *self = (Grid_Object_t *)luaX_newobject(L, sizeof(Grid_Object_t), &(Grid_Object_t){
@@ -119,7 +119,7 @@ static int grid_new_3nnT_1o(lua_State *L)
             .data_size = data_size
         }, OBJECT_TYPE_GRID, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
+    LOG_D(LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
 
     return 1;
 }
@@ -132,9 +132,9 @@ static int grid_gc_1o_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 
     free(self->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", self->data);
+    LOG_D(LOG_CONTEXT, "data %p freed", self->data);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", self);
+    LOG_D(LOG_CONTEXT, "grid %p finalized", self);
 
     return 0;
 }
@@ -166,13 +166,13 @@ static int grid_fill_2ot_0(lua_State *L)
         return luaL_error(L, "table can't be empty");
     }
 
-    Cell_t *ptr = self->data;
+    Grid_Object_Value_t *ptr = self->data;
 
     for (size_t i = 0; i < self->data_size; ++i) {
         size_t index = ((i % length) + 1);
         lua_rawgeti(L, 2, (lua_Integer)index);
 
-        Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
+        Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
         *(ptr++) = value;
 
         lua_pop(L, 1);
@@ -194,8 +194,8 @@ static int grid_copy_2oo_0(lua_State *L)
         return luaL_error(L, "grid data-size don't match");
     }
 
-    Cell_t *dptr = self->data;
-    const Cell_t *sptr = other->data;
+    Grid_Object_Value_t *dptr = self->data;
+    const Grid_Object_Value_t *sptr = other->data;
 
     for (size_t i = self->data_size; i; --i) {
         *(dptr++) = *(sptr++);
@@ -212,13 +212,13 @@ static int grid_peek_2on_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t offset = LUAX_UNSIGNED(L, 2);
-#ifdef DEBUG
+#if defined(DEBUG)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
     }
 #endif
 
-    Cell_t value = self->data[offset];
+    Grid_Object_Value_t value = self->data[offset];
 
     lua_pushnumber(L, (lua_Number)value);
 
@@ -235,7 +235,7 @@ static int grid_peek_3onn_1n(lua_State *L)
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t column = LUAX_UNSIGNED(L, 2);
     size_t row = LUAX_UNSIGNED(L, 3);
-#ifdef DEBUG
+#if defined(DEBUG)
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
     } else
@@ -244,7 +244,7 @@ static int grid_peek_3onn_1n(lua_State *L)
     }
 #endif
 
-    Cell_t value = self->data[row * self->width + column];
+    Grid_Object_Value_t value = self->data[row * self->width + column];
 
     lua_pushnumber(L, (lua_Number)value);
 
@@ -268,8 +268,8 @@ static int grid_poke_3onn_0(lua_State *L)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t offset = LUAX_UNSIGNED(L, 2);
-    Cell_t value = (Cell_t)LUAX_NUMBER(L, 3);
-#ifdef DEBUG
+    Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, 3);
+#if defined(DEBUG)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range [0, %d)", offset, self->data_size);
     }
@@ -291,8 +291,8 @@ static int grid_poke_4onnn_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t column = LUAX_UNSIGNED(L, 2);
     size_t row = LUAX_UNSIGNED(L, 3);
-    Cell_t value = (Cell_t)LUAX_NUMBER(L, 4);
-#ifdef DEBUG
+    Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, 4);
+#if defined(DEBUG)
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range [0, %d)", column, self->width);
     } else
@@ -325,7 +325,7 @@ static int grid_scan_2of_0(lua_State *L)
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const Cell_t *data = self->data;
+    const Grid_Object_Value_t *data = self->data;
 
     for (size_t row = 0; row < self->height; ++row) {
         for (size_t column = 0; column < self->width; ++column) {
@@ -351,12 +351,12 @@ static int grid_process_2of_0(lua_State *L)
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    Cell_t *data = self->data;
+    Grid_Object_Value_t *data = self->data;
 
     const size_t width = self->width;
     const size_t height = self->height;
 
-    const Cell_t *ptr = data;
+    const Grid_Object_Value_t *ptr = data;
 
     for (size_t row = 0; row < height; ++row) {
         for (size_t column = 0; column < width; ++column) {
@@ -368,7 +368,7 @@ static int grid_process_2of_0(lua_State *L)
 
             size_t dcolumn = LUAX_UNSIGNED(L, -3);
             size_t drow = LUAX_UNSIGNED(L, -2);
-            Cell_t dvalue = (Cell_t)LUAX_NUMBER(L, -1);
+            Grid_Object_Value_t dvalue = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
             data[drow * width + dcolumn] = dvalue;
 
             lua_pop(L, 3);

@@ -1,3 +1,8 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.3 Wayland - www.glfw.org
 //------------------------------------------------------------------------
@@ -2792,3 +2797,4 @@ GLFWAPI struct wl_surface* glfwGetWaylandWindow(GLFWwindow* handle)
     return window->wl.surface;
 }
 
+#pragma GCC diagnostic pop

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_CONTEXT_H__
-#define __SL_CONTEXT_H__
+#ifndef TOFU_LIBS_SL_CONTEXT_H
+#define TOFU_LIBS_SL_CONTEXT_H
 
 #include "common.h"
 #include "source.h"
@@ -48,11 +48,11 @@ extern const SL_Group_t *SL_context_get_group(const SL_Context_t *context, size_
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
-extern bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source);
+extern bool SL_context_is_tracked(const SL_Context_t *context, const SL_Source_t *source);
 extern size_t SL_context_count_tracked(const SL_Context_t *context);
 extern void SL_context_halt(SL_Context_t *context);
 
 extern bool SL_context_update(SL_Context_t *context, float delta_time);
 extern void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested);
 
-#endif  /* __SL_CONTEXT_H__ */
+#endif  /* TOFU_LIBS_SL_CONTEXT_H */

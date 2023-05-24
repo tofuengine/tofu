@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,16 @@
 
 #include "math.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/sincos.h>
 #include <systems/storage.h>
 
-#include "udt.h"
-
 #include <stdint.h>
-#include <math.h>
 
 #define MODULE_NAME "tofu.core.math"
 
@@ -55,7 +54,7 @@ static int math_rotate_3nnn_2nn(lua_State *L);
 
 int math_loader(lua_State *L)
 {
-    char file[PATH_MAX] = { 0 };
+    char file[PLATFORM_PATH_MAX] = { 0 };
     path_lua_to_fs(file, MODULE_NAME);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,10 @@
 
 #include "file.h"
 
-#include <config.h>
-#include <systems/storage.h>
+#include "internal/udt.h"
 
-#include "udt.h"
+#include <core/config.h>
+#include <systems/storage.h>
 
 static int file_load_1s_1s(lua_State *L);
 static int file_store_2ss_0(lua_State *L);

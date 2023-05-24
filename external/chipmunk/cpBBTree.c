@@ -741,7 +741,7 @@ fillNodeArray(Node *node, Node ***cursor){
 }
 
 static Node *
-partitionNodes(cpBBTree *tree, Node **nodes, size_t count)
+partitionNodes(cpBBTree *tree, Node **nodes, int count)
 {
 	if(count == 1){
 		return nodes[0];
@@ -751,7 +751,7 @@ partitionNodes(cpBBTree *tree, Node **nodes, size_t count)
 	
 	// Find the AABB for these nodes
 	cpBB bb = nodes[0]->bb;
-	for(size_t i=1; i<count; i++) bb = cpBBMerge(bb, nodes[i]->bb);
+	for(int i=1; i<count; i++) bb = cpBBMerge(bb, nodes[i]->bb);
 	
 	// Split it on it's longest axis
 	cpBool splitWidth = (bb.r - bb.l > bb.t - bb.b);
@@ -759,12 +759,12 @@ partitionNodes(cpBBTree *tree, Node **nodes, size_t count)
 	// Sort the bounds and use the median as the splitting point
 	cpFloat *bounds = (cpFloat *)cpcalloc(count*2, sizeof(cpFloat));
 	if(splitWidth){
-		for(size_t i=0; i<count; i++){
+		for(int i=0; i<count; i++){
 			bounds[2*i + 0] = nodes[i]->bb.l;
 			bounds[2*i + 1] = nodes[i]->bb.r;
 		}
 	} else {
-		for(size_t i=0; i<count; i++){
+		for(int i=0; i<count; i++){
 			bounds[2*i + 0] = nodes[i]->bb.b;
 			bounds[2*i + 1] = nodes[i]->bb.t;
 		}
@@ -779,8 +779,8 @@ partitionNodes(cpBBTree *tree, Node **nodes, size_t count)
 	if(splitWidth) a.r = b.l = split; else a.t = b.b = split;
 	
 	// Partition the nodes
-	size_t right = count;
-	for(size_t left=0; left < right;){
+	int right = count;
+	for(int left=0; left < right;){
 		Node *node = nodes[left];
 		if(cpBBMergedArea(node->bb, b) < cpBBMergedArea(node->bb, a)){
 //		if(cpBBProximity(node->bb, b) < cpBBProximity(node->bb, a)){
@@ -794,7 +794,7 @@ partitionNodes(cpBBTree *tree, Node **nodes, size_t count)
 	
 	if(right == count){
 		Node *node = NULL;
-		for(size_t i=0; i<count; i++) node = SubtreeInsert(node, nodes[i], tree);
+		for(int i=0; i<count; i++) node = SubtreeInsert(node, nodes[i], tree);
 		return node;
 	}
 	

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,15 +24,15 @@
 
 #include "fs.h"
 
-#include <config.h>
+#include "callbacks.h"
+#include "internal.h"
+#include "pak.h"
+#include "std.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-
-#include "internals.h"
-#include "cache.h"
-#include "pak.h"
-#include "std.h"
 
 struct FS_Context_s {
     FS_Mount_t **mounts;
@@ -44,7 +44,7 @@ FS_Context_t *FS_create(void)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
     if (!context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate context");
+        LOG_E(LOG_CONTEXT, "can't allocate context");
         return NULL;
     }
 
@@ -63,10 +63,10 @@ void FS_destroy(FS_Context_t *context)
     }
 
     arrfree(context->mounts);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context mount(s) freed");
+    LOG_D(LOG_CONTEXT, "context mount(s) freed");
 
     free(context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
+    LOG_D(LOG_CONTEXT, "context freed");
 }
 
 bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
@@ -77,7 +77,7 @@ bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
     if (FS_pak_is_valid(path)) {
         return FS_attach_archive(context, path);
     } else {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
+        LOG_E(LOG_CONTEXT, "path `%s` is neither a folder nor an archive", path);
         return false;
     }
 }
@@ -85,13 +85,13 @@ bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
 bool FS_attach_folder(FS_Context_t *context, const char *path)
 {
     if (!FS_std_is_valid(path)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is not a folder", path);
+        LOG_D(LOG_CONTEXT, "path `%s` is not a folder", path);
         return false;
     }
 
     FS_Mount_t *mount = FS_std_mount(path); // Path need to be already resolved.
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't attach archive `%s`", path);
         return false;
     }
 
@@ -103,13 +103,13 @@ bool FS_attach_folder(FS_Context_t *context, const char *path)
 bool FS_attach_archive(FS_Context_t *context, const char *path)
 {
     if (!FS_pak_is_valid(path)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "path `%s` is not an archive", path);
+        LOG_D(LOG_CONTEXT, "path `%s` is not an archive", path);
         return false;
     }
 
     FS_Mount_t *mount = FS_pak_mount(path); // Path need to be already resolved.
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach archive `%s`", path);
+        LOG_E(LOG_CONTEXT, "can't attach archive `%s`", path);
         return false;
     }
 
@@ -118,31 +118,23 @@ bool FS_attach_archive(FS_Context_t *context, const char *path)
     return true;
 }
 
-bool FS_attach_cache(FS_Context_t *context, FS_Cache_Callbacks_t callbacks, void *user_data)
+bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data)
 {
-    FS_Mount_t *mount = FS_cache_mount(callbacks, user_data);
+    FS_Mount_t *mount = FS_callbacks_mount(callbacks, user_data);
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach cache w/ user-data `%p`", user_data);
+        LOG_E(LOG_CONTEXT, "can't attach cache w/ user-data `%p`", user_data);
         return false;
     }
 
     arrpush(context->mounts, mount);
 
     return true;
-}
-
-void FS_scan(const FS_Context_t *context, FS_Scan_Callback_t callback, void *user_data)
-{
-    for (int index = 0; index < arrlen(context->mounts); ++index) {
-        FS_Mount_t *current = context->mounts[index];
-        current->vtable.scan(current, callback, user_data);
-    }
 }
 
 FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 {
     const FS_Mount_t *mount = NULL;
-#ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
+#if defined(TOFU_FILE_SUPPORT_MOUNT_OVERRIDE)
     // Backward scan, later mounts gain priority over existing ones.
     for (int index = arrlen(context->mounts) - 1; index >= 0; --index) {
 #else

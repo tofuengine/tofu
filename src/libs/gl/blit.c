@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,12 @@
 
 #include "blit.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/imath.h>
 #include <libs/sincos.h>
 
-#include <math.h>
-
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
@@ -93,7 +91,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[*(sptr++)];
@@ -188,7 +186,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
 
         float u = ou;
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
             const int x = ITRUNC(u); // Ditto.
@@ -204,7 +202,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
         v += dv;
         dptr += dskip;
     }
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     _pixel(surface, drawing_region.x0, drawing_region.y0, 7);
     _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
     _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
@@ -323,21 +321,21 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
     for (int i = 0; i < height; ++i) {
         const float ov = skip_y + (float)i; // + 0.5f;
-#ifdef __GL_OPTIMIZED_ROTATIONS__
+#if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
         const float ov_squared = ov * ov;
 #endif
 
         for (int j = 0; j < width; ++j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif
             const float ou = skip_x + (float)j; // + 0.5f;
-#ifdef __GL_OPTIMIZED_ROTATIONS__
+#if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
             const float ou_squared = ou * ou;
             const float distance_squared = ov_squared + ou_squared;
             if (distance_squared <= radius_squared) {
 #endif
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
                 _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 11);
 #endif
 
@@ -348,7 +346,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
                 int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
                 if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
                     _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
                     const GL_Pixel_t *sptr = sdata + y * swidth + x;
@@ -357,7 +355,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
                         *dptr = index;
                     }
                 }
-#ifdef __GL_OPTIMIZED_ROTATIONS__
+#if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
             }
 #endif
 
@@ -366,7 +364,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
         dptr += dskip;
     }
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     _pixel(surface, dx, dy, 7);
     _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);

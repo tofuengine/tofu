@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,14 @@
 
 #include "draw.h"
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-draw"
 
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
@@ -362,9 +362,9 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Bool_t *transparent = state->transparent; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
     if (source->width != mask->width || source->height != mask->height) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source and mask surfaces need to match in size");
+        LOG_W(LOG_CONTEXT, "source and mask surfaces need to match in size");
         return;
     }
 #endif
@@ -418,7 +418,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t value = *(mptr++);
@@ -560,7 +560,7 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[blend(*dptr, *(sptr++))];

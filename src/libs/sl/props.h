@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_PROPS_H__
-#define __SL_PROPS_H__
-
-#include <miniaudio/miniaudio.h>
+#ifndef TOFU_LIBS_SL_PROPS_H
+#define TOFU_LIBS_SL_PROPS_H
 
 #include "common.h"
 #include "context.h"
+
+#include <libs/dr_libs.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -64,4 +64,4 @@ extern void SL_props_set_speed(SL_Props_t *props, float speed);
 
 extern void SL_props_on_group_changed(SL_Props_t *props, size_t group_id);
 
-#endif  /* __SL_PROPS_H__ */
+#endif  /* TOFU_LIBS_SL_PROPS_H */

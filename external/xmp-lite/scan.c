@@ -59,13 +59,15 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int gvl, bpm, speed, base_time, chn;
     int frame_count;
     double time, start_time;
-    int loop_chn, loop_num, inside_loop;
+    int loop_chn, loop_num, inside_loop, line_jump;
     int pdelay = 0;
     int loop_count[XMP_MAX_CHANNELS];
     int loop_row[XMP_MAX_CHANNELS];
     int i, pat;
     int has_marker;
     struct ord_data *info;
+    /* was 255, but Global trash goes to 318. */
+    const int row_limit = 512;
 
     if (mod->len == 0)
 	return 0;
@@ -82,6 +84,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     }
     loop_num = 0;
     loop_chn = -1;
+    line_jump = 0;
 
     gvl = mod->gvl;
     bpm = mod->bpm;
@@ -213,12 +216,12 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	     * (...) it dies at the end of position 2F
 	     */
 
-	    if (row_count_total > 512) { /* was 255, but Global trash goes to 318. */
+	    if (row_count_total > row_limit) {
 		D_(D_CRIT "row_count_total = %d @ ord %d, pat %d, row %d; ending scan", row_count_total, ord, pat, row);
 		goto end_module;
 	    }
 
-	    if (!loop_num && m->scan_cnt[ord][row]) {
+	    if (!loop_num && !line_jump && m->scan_cnt[ord][row]) {
 		row_count--;
 		goto end_module;
 	    }
@@ -234,6 +237,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    }
 
 	    pdelay = 0;
+	    line_jump = 0;
 
 	    for (chn = 0; chn < mod->chn; chn++) {
 		if (row >= tracks[chn]->rows)
@@ -288,20 +292,20 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    }
 		}
 
-		if ((f1 == FX_SPEED && p1) || (f2 == FX_SPEED && p2)) {
-		    parm = (f1 == FX_SPEED) ? p1 : p2;
+		/* Some formats can have two FX_SPEED effects, and both need
+		 * to be checked. Slot 2 is currently handled first. */
+		for (i = 0; i < 2; i++) {
+		    parm = i ? p1 : p2;
+		    if ((i ? f1 : f2) != FX_SPEED || parm == 0)
+			continue;
 		    frame_count += row_count * speed;
 		    row_count = 0;
-		    if (parm) {
-			if (HAS_QUIRK(QUIRK_NOBPM) || p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
-			    if (parm > 0) {
-			        speed = parm;
-			    }
-			} else {
-			    time += m->time_factor * frame_count * base_time / bpm;
-			    frame_count = 0;
-			    bpm = parm;
-			}
+		    if (HAS_QUIRK(QUIRK_NOBPM) || p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
+			speed = parm;
+		    } else {
+			time += m->time_factor * frame_count * base_time / bpm;
+			frame_count = 0;
+			bpm = parm;
 		    }
 		}
 
@@ -316,7 +320,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {
 		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
-		    if (parm >= 0x20) {
+		    if (parm >= XMP_MIN_BPM) {
 			frame_count += row_count * speed;
 			row_count = 0;
 			time += m->time_factor * frame_count * base_time / bpm;
@@ -490,7 +494,7 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	int seq;
 	unsigned char temp_ep[XMP_MAX_MOD_LENGTH];
 
-	s = (struct scan_data *)realloc(p->scan, MAX(1, mod->len) * sizeof(struct scan_data));
+	s = (struct scan_data *) realloc(p->scan, MAX(1, mod->len) * sizeof(struct scan_data));
 	if (!s) {
 		D_(D_CRIT "failed to allocate scan data");
 		return -1;
@@ -536,7 +540,7 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	}
 
 	if (seq < mod->len) {
-		s = (struct scan_data *)realloc(p->scan, seq * sizeof(struct scan_data));
+		s = (struct scan_data *) realloc(p->scan, seq * sizeof(struct scan_data));
 		if (s != NULL) {
 			p->scan = s;
 		}

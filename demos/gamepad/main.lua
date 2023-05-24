@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -134,10 +134,11 @@ function Main:render(_)
 
   local cursor = Cursor.default()
   local mx, my = cursor:position()
-  canvas:line(mx - 3, my, mx - 1, my, 2)
-  canvas:line(mx + 1, my, mx + 3, my, 2)
-  canvas:line(mx, my - 3, mx, my - 1, 2)
-  canvas:line(mx, my + 1, mx, my + 3, 2)
+  local index = cursor:is_down("left") and 3 or 2
+  canvas:line(mx - 3, my, mx - 1, my, index)
+  canvas:line(mx + 1, my, mx + 3, my, index)
+  canvas:line(mx, my - 3, mx, my - 1, index)
+  canvas:line(mx, my + 1, mx, my + 3, index)
 
   canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
   canvas:write(width, height, self.font, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),

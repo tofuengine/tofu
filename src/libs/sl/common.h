@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,15 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_COMMON_H__
-#define __SL_COMMON_H__
+#ifndef TOFU_LIBS_SL_COMMON_H
+#define TOFU_LIBS_SL_COMMON_H
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
-// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
+// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many sound-cards
 // and converting from lower sample rates is simpler.
 #define SL_BYTES_PER_SAMPLE     2
 #define SL_SAMPLES_PER_CHANNEL  1
@@ -38,6 +38,8 @@
 #define SL_FRAMES_PER_SECOND    22050
 
 #define SL_BYTES_PER_FRAME      (SL_CHANNELS_PER_FRAME * SL_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+
+#define SL_MIXING_BUFFER_SIZE_IN_FRAMES 128
 
 #define SL_GROUPS_AMOUNT        256
 #define SL_FIRST_GROUP          0
@@ -63,4 +65,4 @@ typedef struct SL_Group_s {
     float gain;
 } SL_Group_t;
 
-#endif  /* __SL_COMMON_H__ */
+#endif  /* TOFU_LIBS_SL_COMMON_H */

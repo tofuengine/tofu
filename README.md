@@ -1,3 +1,25 @@
+<p align="center">
+    <a href="https://tofuengine.org"><img src="./extras/images/logo_with_payoff-512x160.png" alt="Tofu Engine"></a>
+</p>
+
+<p align="center">
+    <a href="LICENSE.md"><img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license"></a>
+    <img src="https://img.shields.io/website?url=https%3A%2F%2Ftofuengine.org%2F" alt="version">
+    <a href="https://mastodon.gamedev.place/@mode13h"><img src="https://img.shields.io/mastodon/follow/108299766418271519?color=blue&domain=https%3A%2F%2Fmastodon.gamedev.place/&label=mastodon&logo=mastodon&style=flat" alt="mastodon"></a>
+</p>
+
+<p align="center">
+    <a href="https://github.com/tofuengine/tofu/tags"><img src="https://img.shields.io/github/v/tag/tofuengine/tofu?color=orange" alt="version"></a>
+    <a href=""><img src="https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20raspberry-red" alt="platforms"></a>
+</p>
+
+<p align="center">
+    <!-- <img src="https://img.shields.io/github/release-date/tofuengine/tofu" alt="version"> -->
+    <img src="https://img.shields.io/github/issues/tofuengine/tofu" alt="version">
+    <img src="https://img.shields.io/github/last-commit/tofuengine/tofu/dev?label=last%20commit%20%7C%20dev" alt="version">
+    <img src="https://img.shields.io/github/commit-activity/m/tofuengine/tofu/dev" alt="version">
+</p>
+
 # Introduction
 
 Welcome to `Tofu Engine`!
@@ -9,6 +31,16 @@ Guess what? Yup, that's yet another game engine/framework.
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
 * Multi-platform support through cross-compilation (Windows, Linux and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not so distant future).
+
+For the courious ones, this is the current statistics of the game-engine codebase:
+
+| Language       | Files  | Blank  | Comment  | Code   |
+| -------------- | ------ | ------ | -------- | ------ |
+| C              |    80  |  3348  |    2496  |  16777 |
+| C/C++ Header   |    88  |   698  |    2408  |   2144 |
+| Lua            |    22  |   296  |     497  |   1708 |
+| GLSL           |    12  |   118  |     282  |    422 |
+|                |   202  |  4460  |    5683  |  21051 |
 
 ## Features
 
@@ -42,7 +74,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
 * [x] 2D physics-engine.
 * [x] Customizable application icon.
-* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
+* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root directory override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
 * [x] Up to 4 game-controller support. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
 * [x] Screen capture and recording.
@@ -60,21 +92,21 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.39, v0.6.34, v0.13.7
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.40, v0.6.35, v0.13.9
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
-* [Glad](https://glad.dav1d.de/)
+* [Glad](https://github.com/Dav1dde/glad)
 * [GLFW](https://www.glfw.org/) v3.3.8
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
-* [Lua](https://lua.org/) v5.4.4
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.10
+* [Lua](https://lua.org/) v5.4.6
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.16
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
-* [spleen](https://github.com/fcambus/spleen) v1.8.1
+* [spleen](https://github.com/fcambus/spleen) v1.9.3
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) libraries
 
 ## Inspirations
 
-**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other softwares in one way or another. Here's a brief list.
+**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other software in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
@@ -82,20 +114,26 @@ Guess what? Yup, that's yet another game engine/framework.
 * [Defold](https://defold.com/)
 * [raylib](https://www.raylib.com/)
 
+## Credits
+
+The lovely game-engine logo has been designed by [Blort](https://social.tchncs.de/@Blort).
+
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested (I've been using Ubuntu for the development), but with minor adaptations any distribution should be fine. On Debian/Ubuntu the following commands install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, although I've been using Ubuntu during the development. One can issue the following commands to install all the required dependencies:
 
 ```bash
 sudo apt install build-essential
 sudo apt install mingw-w64
-sudo apt install libx11-dev mesa-common-dev libgles2-mesa-dev
+
+sudo apt install xorg-dev libx11-dev libwayland-dev libxkbcommon-dev wayland-protocols mesa-common-dev libgles2-mesa-dev
+
 sudo apt install lua5.4 liblua5.4-dev luarocks
-sudo luarocks install argparse
-sudo luarocks install luafilesystem
-sudo luarocks install luacheck
-sudo luarocks install luazen
-sudo apt install imagemagick
+
+sudo luarocks --lua-version=5.4 install argparse
+sudo luarocks --lua-version=5.4 install luafilesystem
+sudo luarocks --lua-version=5.4 install luacheck
+sudo luarocks --lua-version=5.4 install lua-hashings
 ```
 
 Of course, `git` should also be installed to clone the repository.
@@ -110,7 +148,7 @@ Proceed in creating a local clone of the repository with the command
 git clone https://github.com/tofuengine/tofu.git
 ```
 
-into a suitable work folder. Change directory into the `tofu` folder you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
+into a suitable work directory. Move into the `tofu` directory you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
@@ -118,15 +156,17 @@ into a suitable work folder. Change directory into the `tofu` folder you've just
 
 The build artifacts will be placed in the `build` directory.
 
+> Alternatively, if you prefer not to tamper with you system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder.
+
 ## Sample projects
 
-Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-folder and can be launched using `make`, passing the name of the project as a target (e.g. `make bunnymark`).
+Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-directory and can be launched using `make`, passing the name of the project as a target (e.g. `make splash`).
 
 # Addenda
 
 ## Desiderata
 
-* [ ] Custom highly-efficient memory allocator ([mimalloc](https://github.com/microsoft/mimalloc/)).
+* [ ] Audio channels, to associate them to a source.
 * [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
 * [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
@@ -136,8 +176,10 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Multiple players support.
+* [ ] Use a custom memory-management allocator.
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
+* [ ] input handling in event-driver fashion (now is polled).
 * [ ] game time management, in system class (speed, up down pause)
 * [ ] both shoulder and trigger axes are analogue?
 * [ ] rumble?

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,13 @@
 
 #include "luax.h"
 
-#include <config.h>
-
 #include <string.h>
+
+// Unless RTTI has been explicitly disabled, automaticaly enables it in the
+// DEBUG build. Please note that it can be force-enabled anyway.
+#if !defined(LUAX_NO_RTTI) && defined(DEBUG)
+  #define LUAX_RTTI
+#endif  /* LUAX_NO_RTTI */
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
@@ -44,58 +48,106 @@ luaX_String luaX_tolstring(lua_State *L, int idx)
 {
     luaX_String s;
     s.data = lua_tolstring(L, idx, &s.size);
-    return s;
+    return s; // Too bad, we can't use compound-literals and designated initializers! :>
 }
 
-#ifdef __LUAX_RTTI__
+int luaX_isenum(lua_State *L, int idx)
+{
+    return lua_isstring(L, idx);
+}
+
+int luaX_toenum(lua_State *L, int idx, const char **ids)
+{
+    const char *value = lua_tostring(L, idx);
+    if (!value) {
+#if defined(DEBUG)
+        return luaL_error(L, "value at argument #%d is null", idx), 0;
+#else   /* DEBUG */
+        return -1;
+#endif  /* DEBUG */
+    }
+    size_t length = strlen(value) + 1; // The length of the string doesn't, we can use it!
+    for (int i = 0; ids[i]; ++i) {
+        if (memcmp(value, ids[i], length) == 0) { // Use `memcmp()` to optimized for speed.
+            return i;
+        }
+    }
+#if defined(DEBUG)
+    return luaL_error(L, "argument #%d w/ value `%s` is not a valid enumeration", idx, value), -1;
+#else   /* DEBUG */
+    return -1;
+#endif  /* DEBUG */
+}
+
+#if defined(LUAX_RTTI)
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
-#endif  /* __LUAX_RTTI__ */
+#else
+typedef void *luaX_Object;
+#endif  /* LUAX_RTTI */
+
+#if defined(LUAX_RTTI)
+  #define LUAX_OBJECT_SIZE(s)    (sizeof(luaX_Object) + (s))
+  #define LUAX_OBJECT_SELF(o)    ((void *)((luaX_Object *)(o) + 1))
+#else
+  #define LUAX_OBJECT_SIZE(s)    (s)
+  #define LUAX_OBJECT_SELF(o)    ((void *)(o))
+#endif  /* LUAX_RTTI */
 
 void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
-#ifdef __LUAX_RTTI__
-    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
-    luaL_setmetatable(L, metatable);
+    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
+#if defined(LUAX_RTTI)
     *object = (luaX_Object){
             .type = type
         };
-    void *self = object + 1;
-    memcpy(self, state, size);
-    return self;
-#else   /* __LUAX_RTTI__ */
-    void *self = lua_newuserdatauv(L, size, 1);
+#endif  /* LUAX_RTTI */
     luaL_setmetatable(L, metatable);
+    void *self = LUAX_OBJECT_SELF(object);
     memcpy(self, state, size);
     return self;
-#endif  /* __LUAX_RTTI__ */
 }
 
 int luaX_isobject(lua_State *L, int idx, int type)
 {
-#ifdef __LUAX_RTTI__
-    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx); // `lua_touserdata` returns NULL if not userdata!
     if (!object) {
+#if defined(DEBUG)
+        return luaL_error(L, "object at argument #%d is null", idx), 0;
+#else   /* DEBUG */
         return 0;
+#endif  /* DEBUG */
     }
+#if defined(LUAX_RTTI)
     return object->type == type;
-#else   /* __LUAX_RTTI__ */
-    return lua_isuserdata(L, idx);
-#endif  /* __LUAX_RTTI__ */
+#else   /* LUAX_RTTI */
+    return 1;
+#endif  /* LUAX_RTTI */
 }
 
 void *luaX_toobject(lua_State *L, int idx, int type)
 {
-#ifdef __LUAX_RTTI__
     luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
     if (!object) {
+#if defined(DEBUG)
+        return luaL_error(L, "object at argument #%d is null", idx), NULL;
+#else   /* DEBUG */
         return NULL;
+#endif  /* DEBUG */
     }
-    return object->type == type ? object + 1: NULL;
-#else   /* __LUAX_RTTI__ */
-    return lua_touserdata(L, idx);
-#endif  /* __LUAX_RTTI__ */
+
+#if defined(LUAX_RTTI)
+    if (object->type != type) {
+#if defined(DEBUG)
+        return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
+#else   /* DEBUG */
+        return NULL;
+#endif  /* DEBUG */
+    }
+#endif  /* LUAX_RTTI */
+
+    return LUAX_OBJECT_SELF(object);
 }
 
 void luaX_stackdump(lua_State *L, const char* func, int line)
@@ -163,24 +215,29 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
 //   - a searcher that looks for a loader as a C library,
 //   - a searcher that looks for an all-in-one, combined, loader.
 //
-// This function modifies the table by clearing table entries #3 and #4. The first one is kept (to enable
-// module reuse), and the second one is overwritten with the given `searcher`. As a result the module loading
-// process is confined to the custom searcher only.
+// In sandbox-mode this function modifies the table by clearing table entries #3 and #4. The first one is kept
+// (to enable module reuse), and the second one is overwritten with the given `searcher`. As a result the
+//  module loading process is confined to the custom searcher only.
 //
 // See: https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers
-void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
+void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup, int sandbox_mode)
 {
-    lua_getglobal(L, "package"); // Access the `package.searchers` table.
-    lua_getfield(L, -1, "searchers");
-    lua_insert(L, -(nup + 2)); // Move the `searchers` table above the upvalues.
-    lua_insert(L, -(nup + 2)); // Move the `package` table above the upvalues.
-    lua_pushcclosure(L, searcher, nup);
-    lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
+    lua_getglobal(L, "package");        // A ... A -> A ... A T
+    lua_getfield(L, -1, "searchers");   // A ... A T -> A ... A T T
 
-    size_t n = lua_rawlen(L, -1);
-    for (size_t i = 3; i <= n; ++i) { // Discard the others (two) searchers.
+    // Move the `searchers` and `package` tables *before* the upvalues so we can "close" them into
+    // a function-closure. Then use the closure to override the 2nd searcher (keeping the "preloaded" helper).
+    lua_insert(L, -(nup + 2));          // A ... A T T -> T A ... A T
+    lua_insert(L, -(nup + 2));          // T A ... A T -> T T A ... A
+    lua_pushcclosure(L, searcher, nup); // T T A ... A -> T T F
+    lua_rawseti(L, -2, 2);              // T T F -> T T
+
+    // Discard the others (two) searchers.
+    if (sandbox_mode) {
         lua_pushnil(L);
-        lua_rawseti(L, -2, (lua_Integer)i);
+        lua_rawseti(L, -2, 3); // package.searchers[3] = nil
+        lua_pushnil(L);
+        lua_rawseti(L, -2, 4); // package.searchers[4] = nil
     }
 
     lua_pop(L, 2); // Pop the `package` and `searchers` table.
@@ -254,14 +311,14 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#ifdef __LUAX_INCLUDE_SYSTEM_LIBRARIES__
+#if !defined(LUAX_NO_SYSTEM_LIBRARIES)
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
-#endif  /* __LUAX_INCLUDE_SYSTEM_LIBRARIES__ */
+#endif  /* LUAX_NO_SYSTEM_LIBRARIES */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
-#ifdef DEBUG
+#if defined(DEBUG)
         { LUA_DBLIBNAME, luaopen_debug },
 #endif  /* DEBUG */
         { NULL, NULL }

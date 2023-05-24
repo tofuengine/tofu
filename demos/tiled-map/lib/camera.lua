@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -124,7 +124,7 @@ function Camera:draw(canvas)
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(canvas, cell_x + ox, cell_y + oy, cell_id, scale, scale)
+    canvas:sprite(cell_x + ox, cell_y + oy, self.bank, cell_id, scale, scale)
   end
 end
 

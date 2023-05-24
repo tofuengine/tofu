@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,20 +22,20 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_SYSINFO_H__
-#define __LIBS_SYSINFO_H__
+#ifndef TOFU_LIBS_SYSINFO_H
+#define TOFU_LIBS_SYSINFO_H
 
 #include <stdbool.h>
 
 #define SYSINFO_NAME_LENGTH 128
 
-typedef struct System_Information_s {
+typedef struct SysInfo_Data_s {
     char system[SYSINFO_NAME_LENGTH];
     char release[SYSINFO_NAME_LENGTH];
     char version[SYSINFO_NAME_LENGTH];
     char architecture[SYSINFO_NAME_LENGTH];
-} System_Information_t;
+} SysInfo_Data_t;
 
-extern bool SI_inspect(System_Information_t *buffer);
+extern bool SysInfo_inspect(SysInfo_Data_t *buffer);
 
-#endif  /* __LIBS_SYSINFO_H__ */
+#endif  /* TOFU_LIBS_SYSINFO_H */

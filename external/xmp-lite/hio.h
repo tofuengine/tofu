@@ -1,6 +1,7 @@
 #ifndef XMP_HIO_H
 #define XMP_HIO_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -25,6 +26,7 @@ extern long hio_tell(HIO_HANDLE *);
 extern int hio_eof(HIO_HANDLE *);
 extern int hio_error(HIO_HANDLE *);
 extern size_t hio_read(void *, size_t, size_t, HIO_HANDLE *);	
+extern bool hio_readn(void *, size_t, HIO_HANDLE *);	
 extern int8_t hio_read8s(HIO_HANDLE *);
 extern uint8_t hio_read8(HIO_HANDLE *);
 extern uint16_t hio_read16l(HIO_HANDLE *);

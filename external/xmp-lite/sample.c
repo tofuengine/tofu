@@ -88,6 +88,7 @@ static void convert_stereo_to_mono(uint8_t *p, int l, int r)
 }
 #endif
 
+
 int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_sample *xxs, const void *buffer)
 {
 	int bytelen, extralen, i;
@@ -168,7 +169,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	}
 
 	/* add guard bytes before the buffer for higher order interpolation */
-	xxs->data = (unsigned char *)malloc(bytelen + extralen + 4);
+	xxs->data = (unsigned char *) malloc(bytelen + extralen + 4);
 	if (xxs->data == NULL) {
 		goto err;
 	}
@@ -179,10 +180,8 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
-		int x = hio_read(xxs->data, sizeof(uint8_t), bytelen, f);
-		if (x != bytelen) {
-			D_(D_WARN "short read (%d) in sample load", x - bytelen);
-			memset(xxs->data + x, 0, bytelen - x);
+		if (!hio_readn(xxs->data, bytelen, f)) {
+			D_(D_WARN "short read in sample load");
 		}
 	}
 

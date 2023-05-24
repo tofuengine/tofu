@@ -51,7 +51,7 @@ static int xm_test(HIO_HANDLE *f, char *t, const int start)
 {
 	uint8_t buf[20];
 
-	if (hio_read(buf, sizeof(uint8_t), 17, f) < 17)	/* ID text */
+	if (!hio_readn(buf, 17, f))	/* ID text */
 		return -1;
 
 	if (memcmp(buf, "Extended Module: ", 17))
@@ -71,7 +71,7 @@ static int load_xm_pattern(struct module_data *m, int num, int version,
 	struct xmp_event *event;
 	uint8_t *pat, b;
 	int j, k, r;
-	int size, size_read;
+	int size;
 
 	xph.length = hio_read32l(f);
 	xph.packing = hio_read8(f);
@@ -104,10 +104,7 @@ static int load_xm_pattern(struct module_data *m, int num, int version,
 	size = xph.datasize;
 	pat = patbuf;
 
-	size_read = hio_read(patbuf, 1, size, f);
-	if (size_read < size) {
-		memset(patbuf + size_read, 0, size - size_read);
-	}
+	hio_readn(patbuf, size, f);
 
 	for (j = 0; j < r; j++) {
 		for (k = 0; k < mod->chn; k++) {
@@ -326,7 +323,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 
 	D_(D_INFO "# of patterns: %d", mod->pat - 1);
 
-	if ((patbuf = (uint8_t *) calloc(65536, sizeof(uint8_t))) == NULL) {
+	if ((patbuf = (uint8_t *) calloc(sizeof(uint8_t), 65536)) == NULL) {
 		return -1;
 	}
 
@@ -405,8 +402,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		 * sample header size (if it exists). This is NOT considered to
 		 * be part of the instrument header.
 		 */
-		size_t instr_header_len = XM_INST_HEADER_SIZE + 4;
-		if (hio_read(buf, sizeof(uint8_t), instr_header_len, f) != instr_header_len) {
+		if (!hio_readn(buf, XM_INST_HEADER_SIZE + 4, f)) {
 			D_(D_WARN "short read in instrument header data");
 			break;
 		}
@@ -471,7 +467,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		} else {
 			uint8_t *b = buf;
 
-			if (hio_read(buf, sizeof(uint8_t), 208, f) != 208) {
+			if (!hio_readn(buf, 208, f)) {
 				D_(D_CRIT "short read in instrument data");
 				return -1;
 			}
@@ -557,7 +553,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			}
 			xxs = &mod->xxs[sample_num];
 
-			if (hio_read(buf, sizeof(uint8_t), 40, f) != 40) {
+			if (!hio_readn(buf, 40, f)) {
 				D_(D_CRIT "short read in sample data");
 				return -1;
 			}
@@ -576,7 +572,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			xsh[j].loop_length = readmem32l(b);	/* Sample loop length */
 			b += 4;
 			xsh[j].volume = *b++;			/* Volume */
-			xsh[j].finetune = *b++;		/* Finetune (-128..+127) */
+			xsh[j].finetune = *b++;			/* Finetune (-128..+127) */
 			xsh[j].type = *b++;			/* Flags */
 			xsh[j].pan = *b++;			/* Panning (0-255) */
 			xsh[j].relnote = *(int8_t *) b++;	/* Relative note number */
@@ -602,6 +598,12 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			xxs->flg = 0;
 			if (xsh[j].type & XM_SAMPLE_16BIT) {
 				xxs->flg |= XMP_SAMPLE_16BIT;
+				xxs->len >>= 1;
+				xxs->lps >>= 1;
+				xxs->lpe >>= 1;
+			}
+			if (xsh[j].type & XM_SAMPLE_STEREO) {
+				/* xxs->flg |= XMP_SAMPLE_STEREO; */
 				xxs->len >>= 1;
 				xxs->lps >>= 1;
 				xxs->lpe >>= 1;
@@ -641,6 +643,12 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 				} else {
 					total_sample_size += xsh[j].length;
 				}
+
+				/* TODO: implement stereo samples.
+				 * For now, just skip the right channel. */
+				if (xsh[j].type & XM_SAMPLE_STEREO) {
+					hio_seek(f, xsh[j].length >> 1, SEEK_CUR);
+				}
 			}
 		}
 
@@ -671,13 +679,13 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
+	if (!hio_readn(buf, 80, f)) {
 		D_(D_CRIT "error reading header");
 		return -1;
 	}
 
 	memcpy(xfh.id, buf, 17);		/* ID text */
-	memcpy(xfh.name, buf + 17, 20);	/* Module name */
+	memcpy(xfh.name, buf + 17, 20);		/* Module name */
 	/* */					/* skip 0x1a */
 	memcpy(xfh.tracker, buf + 38, 20);	/* Tracker name */
 	xfh.version = readmem16l(buf + 58);	/* Version number, minor-major */
@@ -686,25 +694,38 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	xfh.restart = readmem16l(buf + 66);	/* Restart position */
 	xfh.channels = readmem16l(buf + 68);	/* Number of channels */
 	xfh.patterns = readmem16l(buf + 70);	/* Number of patterns */
-	xfh.instruments = readmem16l(buf + 72);/* Number of instruments */
+	xfh.instruments = readmem16l(buf + 72);	/* Number of instruments */
 	xfh.flags = readmem16l(buf + 74);	/* 0=Amiga freq table, 1=Linear */
 	xfh.tempo = readmem16l(buf + 76);	/* Default tempo */
-	xfh.bpm = readmem16l(buf + 78);	/* Default BPM */
+	xfh.bpm = readmem16l(buf + 78);		/* Default BPM */
 
 	/* Sanity checks */
-	if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255) {
-		D_(D_CRIT "sanity check: %d %d %d", xfh.songlen, xfh.patterns, xfh.instruments);
+	if (xfh.songlen > 256) {
+		D_(D_CRIT "bad song length: %d", xfh.songlen);
+		return -1;
+	}
+	if (xfh.patterns > 256) {
+		D_(D_CRIT "bad pattern count: %d", xfh.patterns);
+		return -1;
+	}
+	if (xfh.instruments > 255) {
+		D_(D_CRIT "bad instrument count: %d", xfh.instruments);
 		return -1;
 	}
 
-	if (xfh.restart > 255 || xfh.channels > XMP_MAX_CHANNELS) {
-		D_(D_CRIT "sanity check: %d %d", xfh.restart, xfh.channels);
+	if (xfh.restart > 255) {
+		D_(D_CRIT "bad restart position: %d", xfh.restart);
+		return -1;
+	}
+	if (xfh.channels > XMP_MAX_CHANNELS) {
+		D_(D_CRIT "bad channel count: %d", xfh.channels);
 		return -1;
 	}
 
-	if (xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 255) {
+	/* FT2 and MPT allow up to 255 BPM. OpenMPT allows up to 1000 BPM. */
+	if (xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 1000) {
 		if (memcmp("MED2XM", xfh.tracker, 6)) {
-			D_(D_CRIT "sanity check: %d %d", xfh.tempo, xfh.bpm);
+			D_(D_CRIT "bad tempo or BPM: %d %d", xfh.tempo, xfh.bpm);
 			return -1;
 		}
 	}
@@ -712,12 +733,12 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	/* Honor header size -- needed by BoobieSqueezer XMs */
 	len = xfh.headersz - 0x14;
 	if (len < 0 || len > 256) {
-		D_(D_CRIT "sanity check: %d", len);
+		D_(D_CRIT "bad XM header length: %d", len);
 		return -1;
 	}
 
 	memset(xfh.order, 0, sizeof(xfh.order));
-	if (hio_read(xfh.order, sizeof(uint8_t), len, f) != (size_t)len) {	/* Pattern order table */
+	if (!hio_readn(xfh.order, len, f)) {	/* Pattern order table */
 		D_(D_CRIT "error reading orders");
 		return -1;
 	}

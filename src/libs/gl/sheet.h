@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_SHEET_H__
-#define __GL_SHEET_H__
+#ifndef TOFU_LIBS_GL_SHEET_H
+#define TOFU_LIBS_GL_SHEET_H
 
 #include <stdbool.h>
 
@@ -39,7 +39,7 @@ typedef struct GL_Sheet_s {
 } GL_Sheet_t;
 
 extern GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size);
-extern GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *cells, size_t count);
+extern GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle32_t *cells, size_t count);
 extern void GL_sheet_destroy(GL_Sheet_t *sheet);
 
 extern GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y);
@@ -51,4 +51,4 @@ extern void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Context_t *contex
 extern void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset);
 extern void GL_sheet_tile_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset, int scale_x, int scale_y);
 
-#endif  /* __GL_SHEET_H__ */
+#endif  /* TOFU_LIBS_GL_SHEET_H */

@@ -31,15 +31,14 @@ int	libxmp_alloc_pattern		(struct xmp_module *, int);
 int	libxmp_alloc_track		(struct xmp_module *, int, int);
 int	libxmp_alloc_tracks_in_pattern	(struct xmp_module *, int);
 int	libxmp_alloc_pattern_tracks	(struct xmp_module *, int, int);
-char	*libxmp_instrument_name	(struct xmp_module *, int, uint8_t *, int);
+char	*libxmp_instrument_name		(struct xmp_module *, int, uint8_t *, int);
 
 char	*libxmp_copy_adjust		(char *, uint8_t *, int);
 int	libxmp_copy_name_for_fopen	(char *, const char *, int);
 void	libxmp_read_title		(HIO_HANDLE *, char *, int);
 void	libxmp_decode_protracker_event	(struct xmp_event *, const uint8_t *);
-void	libxmp_decode_noisetracker_event(struct xmp_event *, const uint8_t *);
 void	libxmp_disable_continue_fx	(struct xmp_event *);
-void	libxmp_set_type		(struct module_data *, const char *, ...);
+void	libxmp_set_type			(struct module_data *, const char *, ...);
 int	libxmp_load_sample		(struct module_data *, HIO_HANDLE *, int,
 					 struct xmp_sample *, const void *);
 void	libxmp_free_sample		(struct xmp_sample *);

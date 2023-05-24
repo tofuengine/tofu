@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,17 +34,17 @@ GL_Processor_t *GL_processor_create(void)
 {
     GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
     if (!processor) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate processor");
+        LOG_E(LOG_CONTEXT, "can't allocate processor");
         return NULL;
     }
 
     *processor = (GL_Processor_t){ 0 };
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor created at %p", processor);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "processor created at %p", processor);
 #endif  /* VERBOSE_DEBUG */
 
-#ifdef __PROGRAM_DEFAULT_QUANTIZED_PALETTE__
-    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
+#if defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED)
+    LOG_W(LOG_CONTEXT, "setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
   #if GL_MAX_PALETTE_COLORS == 256
     GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
   #elif GL_MAX_PALETTE_COLORS == 128
@@ -58,10 +58,10 @@ GL_Processor_t *GL_processor_create(void)
   #elif GL_MAX_PALETTE_COLORS == 8
     GL_palette_set_quantized(processor->state.palette, 1, 1, 1);
   #else
-    #error "Too few palette entries!"
+    #error "Too few palette entries"
   #endif
 #else
-    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
+    LOG_W(LOG_CONTEXT, "setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
     GL_palette_set_greyscale(processor->state.palette, GL_MAX_PALETTE_COLORS);
 #endif
 
@@ -74,14 +74,14 @@ void GL_processor_destroy(GL_Processor_t *processor)
 {
     if (processor->state.program) {
         GL_program_destroy(processor->state.program);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
+#if defined(VERBOSE_DEBUG)
+        LOG_D(LOG_CONTEXT, "processor program %p destroyed", processor->state.program);
 #endif  /* VERBOSE_DEBUG */
     }
 
     free(processor);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor %p freed", processor);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "processor %p freed", processor);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -100,8 +100,8 @@ const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor)
 void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette)
 {
     GL_palette_copy(processor->state.palette, palette);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette copied");
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "palette copied");
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -124,7 +124,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
     const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
 
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     const int count = processor->palette->size;
 #endif
 
@@ -135,7 +135,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
 
     for (size_t i = data_size; i; --i) {
         const GL_Pixel_t index = shifting[*(src++)];
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
         GL_Color_t color;
         if (index >= count) {
             const int y = (index - 240) * 8;
@@ -160,7 +160,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
     memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
     size_t wait = 0;
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     const int count = processor->palette->size;
 #endif
     int modulo = 0;
@@ -184,7 +184,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
             // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
             // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
             // is used to mark the end of the processor.
-#ifdef __PROCESSOR_ONE_COMMAND_PER_PIXEL__
+#if defined(__PROCESSOR_ONE_COMMAND_PER_PIXEL__)
             if (i >= wait) {
 #else
             while (i >= wait) {
@@ -235,7 +235,7 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
             }
 
             const GL_Pixel_t index = shifting[*(src++)];
-#ifdef __DEBUG_GRAPHICS__
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             GL_Color_t color;
             if (index >= count) {
                 const int v = (index - 240) * 8;
@@ -264,16 +264,16 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
 {
     if (processor->state.program) { // Deallocate current program, is present.
        GL_program_destroy(processor->state.program);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program %p destroyed", processor->program);
+#if defined(VERBOSE_DEBUG)
+        LOG_D(LOG_CONTEXT, "processor program %p destroyed", processor->program);
 #endif  /* VERBOSE_DEBUG */
         processor->state.program = NULL;
     }
 
     if (program) {
         processor->state.program = GL_program_clone(program);
-#ifdef VERBOSE_DEBUG
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
+#if defined(VERBOSE_DEBUG)
+        LOG_D(LOG_CONTEXT, "processor program at %p copied at %p", program, processor->program);
 #endif  /* VERBOSE_DEBUG */
     }
     processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 void xor_schedule(xor_context_t *context, const uint8_t *key, size_t size)
 {
     *context = (xor_context_t){ 
-            .n = size < 256 ? size : 256 // Maximum key length is 256 bytes.
+            .n = size < XOR_MAX_KEY_LENGTH ? size : XOR_MAX_KEY_LENGTH
         };
 
     for (size_t i = 0; i < context->n; ++i) {
@@ -43,7 +43,7 @@ void xor_process(xor_context_t *context, uint8_t *out, const uint8_t *in, size_t
     }
 }
 
-void xor_adjust(xor_context_t *context, size_t index)
+void xor_seek(xor_context_t *context, size_t index)
 {
     context->i = index % context->n;
 }

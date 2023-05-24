@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,7 @@ function Main:__ctor()
     camera.post_draw = function(me, canvas)
         local x, y = me:to_screen(me.x, me.y)
         canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        self.font:write(canvas, me.screen_x + me.screen_width, me.screen_y, tostring(me), "right")
+        canvas:write(me.screen_x + me.screen_width, me.screen_y, self.font, tostring(me), "right")
       end
   end
 end
@@ -113,7 +113,7 @@ function Main:render(_)
   local x, y = camera:to_screen(self.player.x, self.player.y)
   canvas:rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
 end
 
 return Main

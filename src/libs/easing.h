@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,8 @@
 
 // http://robertpenner.com/easing/
 
-#ifndef __LIBS_EASING_H__
-#define __LIBS_EASING_H__
+#ifndef TOFU_LIBS_EASING_H
+#define TOFU_LIBS_EASING_H
 
 typedef float (*Easing_Function_t)(float);
 
@@ -61,4 +61,4 @@ extern float easing_bounce_out(float p);
 extern float easing_bounce_in(float p);
 extern float easing_bounce_in_out(float p);
 
-#endif  /* __LIBS_EASING_H__ */
+#endif  /* TOFU_LIBS_EASING_H */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_NOISE_H__
-#define __LIBS_NOISE_H__
+#ifndef TOFU_LIBS_NOISE_H
+#define TOFU_LIBS_NOISE_H
 
 typedef float (*Noise_Function_t)(float, float, float);
 
@@ -31,4 +31,4 @@ extern float noise_perlin(float x, float y, float z);
 extern float noise_simplex(float x, float y, float z);
 extern float noise_cellular(float x, float y, float z);
 
-#endif  /* __LIBS_NOISE_H__ */
+#endif  /* TOFU_LIBS_NOISE_H */

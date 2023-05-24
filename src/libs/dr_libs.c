@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,9 +27,21 @@
 #endif
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define DRFLAC_MALLOC(sz)                   stb_leakcheck_realloc(NULL, (sz), __FILE__, __LINE__)
-  #define DRFLAC_REALLOC(p, sz)               stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
-  #define DRFLAC_FREE(p)                      stb_leakcheck_free((p))
+  #define DRFLAC_MALLOC(sz)     stb_leakcheck_malloc((sz), __FILE__, __LINE__)
+  #define DRFLAC_REALLOC(p, sz) stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
+  #define DRFLAC_FREE(p)        stb_leakcheck_free((p))
 #endif
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
+
+#if defined(DEBUG)
+  #define MA_DEBUG_OUTPUT
+
+  #if !defined(SANITIZE)
+    #define MA_MALLOC(sz)     stb_leakcheck_malloc((sz), __FILE__, __LINE__)
+    #define MA_REALLOC(p, sz) stb_leakcheck_realloc((p), (sz), __FILE__, __LINE__)
+    #define MA_FREE(p)        stb_leakcheck_free((p))
+  #endif  /* SANITIZE */
+#endif  /* DEBUG */
+#define MINIAUDIO_IMPLEMENTATION
+#include <miniaudio/miniaudio.h>

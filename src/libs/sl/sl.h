@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_H__
-#define __SL_H__
+#ifndef TOFU_LIBS_SL_H
+#define TOFU_LIBS_SL_H
 
 #include "common.h"
 #include "context.h"
@@ -31,4 +31,4 @@
 #include "music.h"
 #include "sample.h"
 
-#endif  /* __SL_H__ */
+#endif  /* TOFU_LIBS_SL_H */

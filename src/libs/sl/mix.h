@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_MIX_H__
-#define __SL_MIX_H__
+#ifndef TOFU_LIBS_SL_MIX_H
+#define TOFU_LIBS_SL_MIX_H
 
 #include "common.h"
 
@@ -36,4 +36,4 @@ extern SL_Mix_t mix_balance(float balance);
 extern void mix_2on2_additive(void *output, const void *input, size_t frames, SL_Mix_t mix);
 extern void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t mix);
 
-#endif  /* __SL_MIX_H__ */
+#endif  /* TOFU_LIBS_SL_MIX_H */

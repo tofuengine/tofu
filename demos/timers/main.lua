@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ local Class = require("tofu.core.class")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
-local Timer = require("tofu.timers.timer")
+local Pool = require("tofu.timers.pool")
 
 local Main = Class.define()
 
@@ -37,14 +37,16 @@ function Main:__ctor()
   local image = canvas:image()
   local width, height = image:size()
 
-  self.timerA = Timer.new(0.5, 50, function()
+  self.pool = Pool.new()
+
+  self.timerA = self.pool:spawn(0.5, 50, function()
       --local o = Object.new()
       self.x = math.random() * width
     end)
-  self.timerB = Timer.new(0.25, -1, function()
+  self.timerB = self.pool:spawn(0.25, -1, function()
       self.y = math.random() * height
     end)
-  self.timerC = Timer.new(15, 0, function()
+  self.timerC = self.pool:spawn(15, 0, function()
       self.timerA:cancel()
       self.timerB = nil
     end)
@@ -56,7 +58,8 @@ end
 function Main:process()
 end
 
-function Main:update(_)
+function Main:update(delta_time)
+  self.pool:update(delta_time)
 end
 
 function Main:render(_)

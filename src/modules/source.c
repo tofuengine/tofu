@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,12 @@
 
 #include "source.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <systems/audio.h>
 #include <systems/storage.h>
-
-#include "udt.h"
-#include "utils/map.h"
 
 typedef enum Source_Types_e {
     SOURCE_TYPE_MUSIC,
@@ -44,7 +43,7 @@ typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
 
-static int source_new_2sn_1o(lua_State *L);
+static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
 static int source_looped_v_v(lua_State *L);
 static int source_group_v_v(lua_State *L);
@@ -64,7 +63,7 @@ int source_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", source_new_2sn_1o },
+            { "new", source_new_2sE_1o },
             { "__gc", source_gc_1o_0 },
             { "looped", source_looped_v_v },
             { "group", source_group_v_v },
@@ -108,10 +107,11 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const Map_Entry_t _types[Source_Type_t_CountOf] = {
-    { "music", SOURCE_TYPE_MUSIC },
-    { "sample", SOURCE_TYPE_SAMPLE },
-    { "module", SOURCE_TYPE_MODULE },
+static const char *_types[Source_Type_t_CountOf + 1] = {
+    "music",
+    "sample",
+    "module",
+    NULL
 };
 
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
@@ -120,14 +120,14 @@ static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] =
     SL_module_create
 };
 
-static int source_new_2sn_1o(lua_State *L)
+static int source_new_2sE_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    const char *type = LUAX_OPTIONAL_STRING(L, 2, "music");
+    Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_ENUM(L, 2, _types, SOURCE_TYPE_MUSIC);
 
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -136,10 +136,9 @@ static int source_new_2sn_1o(lua_State *L)
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
+    LOG_D(LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
-    const Map_Entry_t *entry = map_find_key(L, type, _types, Source_Type_t_CountOf);
-    SL_Source_t *source = _create_functions[entry->value](audio->context, (SL_Callbacks_t){
+    SL_Source_t *source = _create_functions[type](audio->context, (SL_Callbacks_t){
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,
@@ -150,14 +149,14 @@ static int source_new_2sn_1o(lua_State *L)
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p created, type #%d", source, type);
+    LOG_D(LOG_CONTEXT, "source %p created, type #%d", source, type);
 
     Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
         }, OBJECT_TYPE_SOURCE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
+    LOG_D(LOG_CONTEXT, "source %p allocated", self);
 
     return 1;
 }
@@ -174,12 +173,12 @@ static int source_gc_1o_0(lua_State *L)
     Audio_untrack(audio, self->source); // Make sure we aren't leaving dangling pointers...
 
     SL_source_destroy(self->source);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p destroyed", self->source);
+    LOG_D(LOG_CONTEXT, "source %p destroyed", self->source);
 
     FS_close(self->handle);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
+    LOG_D(LOG_CONTEXT, "handle %p closed", self->handle);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p finalized", self);
+    LOG_D(LOG_CONTEXT, "source %p finalized", self);
 
     return 0;
 }

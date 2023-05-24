@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,19 +22,90 @@
  * SOFTWARE.
  */
 
-#include "engine.h"
+#include <core/config.h>
+#include <core/engine.h>
+#include <core/platform.h>
+#include <libs/path.h>
 
-#include <libs/log.h>
-
+#include <getopt.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define LOG_CONTEXT "main"
 
+static struct option _long_options[] = {
+    { "help", no_argument, NULL, 'h' },
+    { "kernal", optional_argument, NULL, 'k' },
+    { "data", optional_argument, NULL, 'd' },
+    { NULL, 0, NULL, 0 }
+};
+
+static void _print_usage(int argc, const char *argv[])
+{
+    fprintf(stderr, "Usage: %s [options]\n", argv[0]);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "\t-h, --help\t\tShow this help.\n");
+    fprintf(stderr, "\t-k, --kernal <path>\tPath of the folder or file to mount (can be repeated).\n");
+    fprintf(stderr, "\t-d, --data <path>\tPath of the folder or file to mount (can be repeated).\n");
+}
+
+static void _options_init(Engine_Options_t *options, const char *argv0)
+{
+    char executable[PLATFORM_PATH_MAX] = { 0 }; // From the executable path obtain the kernal file path.
+    path_expand(argv0, executable);
+
+    char executable_path[PLATFORM_PATH_MAX] = { 0 };
+    path_split(executable, executable_path, NULL);
+
+    path_join(options->kernal_path, executable_path, TOFU_ENGINE_KERNAL_NAME);
+    path_join(options->data_path, executable_path, TOFU_ENGINE_DATA_NAME);
+}
+
+static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *options)
+{
+    *options = (Engine_Options_t){ 0 };
+
+    _options_init(options, argv[0]);
+
+    while (true) {
+        int option = getopt_long(argc, (char * const *)argv, "hk:d:", _long_options, NULL);
+        if (option == -1) {
+            break;
+        }
+        switch (option) {
+            case 'h': {
+                _print_usage(argc, argv);
+                return false;
+            }
+            case 'k': {
+                strncpy(options->kernal_path, optarg, PLATFORM_PATH_MAX - 1);
+                break;
+            }
+            case 'd': {
+                strncpy(options->data_path, optarg, PLATFORM_PATH_MAX - 1);
+                break;
+            }
+            default: {
+                fprintf(stderr, "Try '%s --help' for more information.\n", argv[0]);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 int main(int argc, const char *argv[])
 {
-    Engine_t *engine = Engine_create(argc, argv);
+    Engine_Options_t options = { 0 };
+    bool parsed = _parse_command_line(argc, argv, &options);
+    if (!parsed) {
+        return EXIT_FAILURE;
+    }
+
+    Engine_t *engine = Engine_create(&options);
     if (!engine) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
         return EXIT_FAILURE;
     }
     Engine_run(engine);

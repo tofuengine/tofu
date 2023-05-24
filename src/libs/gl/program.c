@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,11 +49,11 @@ GL_Program_t *GL_program_create(void)
 {
     GL_Program_t *program = malloc(sizeof(GL_Program_t));
     if (!program) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate program");
+        LOG_E(LOG_CONTEXT, "can't allocate program");
         return NULL;
     }
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program created at %p", program);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program created at %p", program);
 #endif  /* VERBOSE_DEBUG */
 
     *program = (GL_Program_t){ 0 };
@@ -70,11 +70,11 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 {
     GL_Program_t *clone = malloc(sizeof(GL_Program_t));
     if (!clone) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate program");
+        LOG_E(LOG_CONTEXT, "can't allocate program");
         return NULL;
     }
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program created at %p", clone);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program created at %p", clone);
 #endif  /* VERBOSE_DEBUG */
 
     *clone = (GL_Program_t){ 0 };
@@ -91,13 +91,13 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 void GL_program_destroy(GL_Program_t *program)
 {
     arrfree(program->entries);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     free(program);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p freed", program);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program %p freed", program);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -111,8 +111,8 @@ void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
 void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
@@ -123,8 +123,8 @@ void GL_program_clear(GL_Program_t *program)
 void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
 {
     arrdeln(program->entries, position, length);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 }
 

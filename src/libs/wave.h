@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_WAVE_H__
-#define __LIBS_WAVE_H__
+#ifndef TOFU_LIBS_WAVE_H
+#define TOFU_LIBS_WAVE_H
 
 typedef float (*Wave_Function_t)(float ratio);
 
@@ -33,4 +33,4 @@ extern float wave_square(float t);
 extern float wave_triangle(float t);
 extern float wave_sawtooth(float t);
 
-#endif  /* __LIBS_WAVE_H__ */
+#endif  /* TOFU_LIBS_WAVE_H */

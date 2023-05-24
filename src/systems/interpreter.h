@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,15 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_INTERPRETER_H__
-#define __SYSTEMS_INTERPRETER_H__
+#ifndef TOFU_SYSTEMS_INTERPRETER_H
+#define TOFU_SYSTEMS_INTERPRETER_H
 
-#include <config.h>
+#include "storage.h"
 
+#include <core/config.h>
 #include <libs/luax.h>
 
 #include <stdbool.h>
-
-#include "storage.h"
 
 typedef enum lua_Warning_States_e {
     WARNING_STATE_DISABLED,
@@ -42,12 +41,12 @@ typedef enum lua_Warning_States_e {
 typedef struct Interpreter_s {
     lua_State *state;
     lua_Warning_States_t warning_state;
-#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS
     float gc_step_age;
-#endif
-#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS */
+#if TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING)
     float gc_age;
-#endif
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_PERIODIC || defined(TOFU_INTERPRETER_GC_REPORTING) */
 } Interpreter_t;
 
 extern Interpreter_t *Interpreter_create(const Storage_t *storage);
@@ -59,4 +58,4 @@ extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);
 
-#endif  /* __SYSTEMS_INTERPRETER_H__ */
+#endif  /* __ TOFU_SYSTEMS_INTERPRETER_H__ */

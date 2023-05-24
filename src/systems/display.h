@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,16 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_DISPLAY_H__
-#define __SYSTEMS_DISPLAY_H__
+#ifndef TOFU_SYSTEMS_DISPLAY_H
+#define TOFU_SYSTEMS_DISPLAY_H
 
 // TODO: rename Display to Video?
 
-#include <config.h>
+#include <core/config.h>
 #include <libs/gl/gl.h>
 #include <libs/shader.h>
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>
@@ -97,4 +97,4 @@ extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Color_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 
-#endif  /* __SYSTEMS_DISPLAY_H__ */
+#endif  /* TOFU_SYSTEMS_DISPLAY_H */

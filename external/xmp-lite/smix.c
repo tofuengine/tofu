@@ -66,7 +66,7 @@ struct xmp_sample *libxmp_get_sample(struct context_data *ctx, int smp)
 	return xxs;
 }
 
-LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
+int xmp_start_smix(xmp_context opaque, int chn, int smp)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
@@ -75,11 +75,11 @@ LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
 		return -XMP_ERROR_STATE;
 	}
 
-	smix->xxi = (struct xmp_instrument *)calloc(sizeof (struct xmp_instrument), smp);
+	smix->xxi = (struct xmp_instrument *) calloc(smp, sizeof(struct xmp_instrument));
 	if (smix->xxi == NULL) {
 		goto err;
 	}
-	smix->xxs = (struct xmp_sample *)calloc(sizeof (struct xmp_sample), smp);
+	smix->xxs = (struct xmp_sample *) calloc(smp, sizeof(struct xmp_sample));
 	if (smix->xxs == NULL) {
 		goto err1;
 	}
@@ -96,7 +96,7 @@ LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
 	return -XMP_ERROR_INTERNAL;
 }
 
-LIBXMP_EXPORT int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
+int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -127,7 +127,7 @@ LIBXMP_EXPORT int xmp_smix_play_instrument(xmp_context opaque, int ins, int note
 	return 0;
 }
 
-LIBXMP_EXPORT int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
+int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -158,7 +158,7 @@ LIBXMP_EXPORT int xmp_smix_play_sample(xmp_context opaque, int ins, int note, in
 	return 0;
 }
 
-LIBXMP_EXPORT int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
+int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -176,7 +176,7 @@ LIBXMP_EXPORT int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 	return 0;
 }
 
-LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
+int xmp_smix_load_sample(xmp_context opaque, int num, const char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
@@ -204,7 +204,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 
 	/* Init instrument */
 
-	xxi->sub = (struct xmp_subinstrument *)calloc(sizeof(struct xmp_subinstrument), 1);
+	xxi->sub = (struct xmp_subinstrument *) calloc(1, sizeof(struct xmp_subinstrument));
 	if (xxi->sub == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err1;
@@ -267,7 +267,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	xxs->lpe = 0;
 	xxs->flg = bits == 16 ? XMP_SAMPLE_16BIT : 0;
 
-	xxs->data = (unsigned char *)malloc(size + 8);
+	xxs->data = (unsigned char *) malloc(size + 8);
 	if (xxs->data == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
@@ -282,7 +282,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
-	if (hio_read(xxs->data, sizeof(unsigned char), size, h) != (size_t)size) {
+	if (!hio_readn(xxs->data, size, h)) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
@@ -299,7 +299,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	return retval;
 }
 
-LIBXMP_EXPORT int xmp_smix_release_sample(xmp_context opaque, int num)
+int xmp_smix_release_sample(xmp_context opaque, int num)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
@@ -317,7 +317,7 @@ LIBXMP_EXPORT int xmp_smix_release_sample(xmp_context opaque, int num)
 	return 0;
 }
 
-LIBXMP_EXPORT void xmp_end_smix(xmp_context opaque)
+void xmp_end_smix(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;

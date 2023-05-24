@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_BATCH_H__
-#define __MODULES_BATCH_H__
+#ifndef TOFU_MODULES_BATCH_H
+#define TOFU_MODULES_BATCH_H
 
 #include <lua/lua.h>
 
 extern int batch_loader(lua_State *L);
 
-#endif  /* __MODULES_BATCH_H__ */
+#endif  /* TOFU_MODULES_BATCH_H */

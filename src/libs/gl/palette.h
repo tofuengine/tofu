@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,15 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_PALETTE_H__
-#define __GL_PALETTE_H__
-
-#include <config.h>
-
-#include <stdbool.h>
-#include <stddef.h>
+#ifndef TOFU_LIBS_GL_PALETTE_H
+#define TOFU_LIBS_GL_PALETTE_H
 
 #include "common.h"
 
-// FIXME: move to `common.h`
-#define GL_MAX_PALETTE_COLORS       256
+#include <core/config.h>
+
+#include <stdbool.h>
+#include <stddef.h>
 
 extern void GL_palette_set_greyscale(GL_Color_t *palette, size_t size);
 extern void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green_bits, size_t blue_bits);
@@ -47,4 +44,4 @@ extern size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t 
 extern void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio);
 // TODO: add other functions, too...
 
-#endif  /* __GL_PALETTE_H__ */
+#endif  /* TOFU_LIBS_GL_PALETTE_H */

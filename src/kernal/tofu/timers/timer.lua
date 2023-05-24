@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2022 Marco Lizza
+Copyright (c) 2019-2023 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +23,18 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Pool = require("tofu.timers.pool")
 
 local Timer = Class.define()
 
-function Timer:__ctor(period, repeats, callback, pool)
+function Timer:__ctor(period, repeats, callback, rate)
   self.period = period
   self.repeats = repeats
   self.callback = callback
-  self.rate = 1.0
+  self.rate = rate or 1.0
 --  self.age = 0.0
 --  self.loops = repeats
 --  self.cancelled = false
 
-  table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
   self:reset()
 end
 

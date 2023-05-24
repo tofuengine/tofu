@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ int imax(int a, int b)
     return IMAX(a, b);
 }
 
-#ifdef __FAST_INTEGER_MATH__
+#if defined(__FAST_INTEGER_MATH__)
 #else
 int ifloor(float x)
 {

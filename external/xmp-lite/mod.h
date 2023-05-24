@@ -44,6 +44,4 @@ struct mod_header {
 	uint8_t magic[4];
 };
 
-extern const struct format_loader libxmp_loader_mod;
-
 #endif  /* LIBXMP_LOADERS_MOD_H */

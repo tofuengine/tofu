@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,15 @@
 
 #include "wave.h"
 
-#include <config.h>
-#include <libs/log.h>
+#include "internal/udt.h"
 
-#include "utils/map.h"
-#include "udt.h"
+#include <core/config.h>
+#include <libs/log.h>
 
 #define LOG_CONTEXT "wave"
 #define META_TABLE  "Tofu_Generators_Wave_mt"
 
-static int wave_new_3sNN_1o(lua_State *L);
+static int wave_new_3eNN_1o(lua_State *L);
 static int wave_gc_1o_0(lua_State *L);
 static int wave_form_v_v(lua_State *L);
 static int wave_period_v_v(lua_State *L);
@@ -46,7 +45,7 @@ int wave_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", wave_new_3sNN_1o },
+            { "new", wave_new_3eNN_1o },
             { "__gc", wave_gc_1o_0 },
             { "__call", wave_at_2on_1n }, // Call meta-method, mapped to `at(...)`.
             { "form", wave_form_v_v },
@@ -60,11 +59,12 @@ int wave_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const Map_Entry_t _forms[Wave_Types_t_CountOf] = {
-    { "sine", WAVE_TYPE_SINE },
-    { "square", WAVE_TYPE_SQUARE },
-    { "triangle", WAVE_TYPE_TRIANGLE },
-    { "sawtooth", WAVE_TYPE_SAWTOOTH }
+static const char *_forms[Wave_Types_t_CountOf + 1] = {
+    "sine",
+    "square",
+    "triangle",
+    "sawtooth",
+    NULL
 };
 
 static const Wave_Function_t _functions[Wave_Types_t_CountOf] = {
@@ -74,25 +74,25 @@ static const Wave_Function_t _functions[Wave_Types_t_CountOf] = {
     wave_sawtooth
 };
 
-static int wave_new_3sNN_1o(lua_State *L)
+static int wave_new_3eNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *form = LUAX_STRING(L, 1);
+    Wave_Types_t form = (Wave_Types_t)LUAX_ENUM(L, 1, _forms);
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    const Map_Entry_t *entry = map_find_key(L, form, _forms, Wave_Types_t_CountOf);
     Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
-            .function = _functions[entry->value],
+            .form = form,
+            .function = _functions[form],
             .period = period,
             .amplitude = amplitude
         }, OBJECT_TYPE_WAVE, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "wave %p allocated", self);
+    LOG_D(LOG_CONTEXT, "wave %p allocated", self);
 
     return 1;
 }
@@ -106,7 +106,7 @@ static int wave_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "wave %p finalized", self);
+    LOG_D(LOG_CONTEXT, "wave %p finalized", self);
 
     return 0;
 }
@@ -119,23 +119,22 @@ static int wave_form_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
 
-    const Map_Entry_t *entry = map_find_value(L, self->form, _forms, Wave_Types_t_CountOf);
-    lua_pushstring(L, entry->key);
+    lua_pushstring(L, _forms[self->form]);
 
     return 1;
 }
 
-static int wave_form_2os_0(lua_State *L)
+static int wave_form_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
-    const char *form = LUAX_STRING(L, 2);
+    Wave_Types_t form = (Wave_Types_t)LUAX_ENUM(L, 2, _forms);
 
-    const Map_Entry_t *entry = map_find_key(L, form, _forms, Wave_Types_t_CountOf);
-    self->function = _functions[entry->value];
+    self->form = form;
+    self->function = _functions[form];
 
     return 0;
 }
@@ -144,7 +143,7 @@ static int wave_form_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, wave_form_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, wave_form_2os_0)
+        LUAX_OVERLOAD_ARITY(2, wave_form_2oe_0)
     LUAX_OVERLOAD_END
 }
 

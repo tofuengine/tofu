@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,12 @@
 
 #include "bank.h"
 
-#include <config.h>
+#include "internal/callbacks.h"
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/log.h>
 #include <systems/storage.h>
-
-#include "udt.h"
-#include "utils/callbacks.h"
 
 #include <math.h>
 
@@ -77,7 +77,7 @@ static int bank_new_1o_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -99,7 +99,7 @@ static int bank_new_2os_1o(lua_State *L)
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
+    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }
@@ -112,7 +112,7 @@ static int bank_new_2os_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -142,7 +142,7 @@ static int bank_new_3onn_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -165,12 +165,12 @@ static int bank_gc_1o_0(lua_State *L)
     Bank_Object_t *self = (Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
 
     GL_sheet_destroy(self->sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
 
     luaX_unref(L, self->atlas.reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
+    LOG_D(LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", self);
+    LOG_D(LOG_CONTEXT, "bank %p finalized", self);
 
     return 0;
 }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,21 @@
  * SOFTWARE.
  */
 
-#ifndef __SYSTEMS_STORAGE_H__
-#define __SYSTEMS_STORAGE_H__
+#ifndef TOFU_SYSTEMS_STORAGE_H
+#define TOFU_SYSTEMS_STORAGE_H
 
+#include "storage/cache.h"
+
+#include <core/config.h>
+#include <core/platform.h>
 #include <libs/fs/fs.h>
+#include <libs/md5.h>
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#define STORAGE_RESOURCE_ID_LENGTH  MD5_SIZE
 
 typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
@@ -40,7 +47,7 @@ typedef enum Storage_Resource_Types_e {
 } Storage_Resource_Types_t;
 
 typedef struct Storage_Resource_s {
-    char *name; // Resources are references by a name, which can is (base-path) relative.
+    uint8_t id[STORAGE_RESOURCE_ID_LENGTH];
     Storage_Resource_Types_t type;
     union {
         struct {
@@ -56,50 +63,32 @@ typedef struct Storage_Resource_s {
             void *pixels;
         } image;
     } var;
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
     double age;
-    bool allocated;
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
 } Storage_Resource_t;
 
 typedef struct Storage_Configuration_s {
-    const char *executable;
-    const char *path;
+    const char *kernal_path;
+    const char *data_path;
 } Storage_Configuration_t;
-
-typedef struct Storage_Cache_Entry_Value_s {
-    void *data;
-    size_t size;
-} Storage_Cache_Entry_Value_t;
-
-typedef struct Storage_Cache_Entry_s {
-    char *key;
-    Storage_Cache_Entry_Value_t value;
-} Storage_Cache_Entry_t;
-
-typedef struct Storage_Cache_Stream_s {
-    const uint8_t *ptr;
-    size_t size;
-    size_t position;
-} Storage_Cache_Stream_t;
 
 typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
     struct {
-        char base[PLATFORM_PATH_MAX]; // The folder whence the engine is running.
         char user[PLATFORM_PATH_MAX]; // User-dependent folder, where the engine can save.
         // TODO: add the possibility to save to a shared folder, e.g. for saving hiscores.
         // char shared[PLATFORM_PATH_MAX];
         char local[PLATFORM_PATH_MAX]; // Identity-derived folder.
     } path;
 
-    Storage_Cache_Entry_t *cache;
-
     FS_Context_t *context;
+
+    Storage_Cache_t *cache;
 
     Storage_Resource_t **resources;
 } Storage_t;
-
-typedef void (*Storage_Scan_Callback_t)(void *user_data, const char *name);
 
 #define S_SCHARS(r)         ((r)->var.string.chars)
 #define S_SLENTGH(r)        ((r)->var.string.length)
@@ -112,8 +101,7 @@ typedef void (*Storage_Scan_Callback_t)(void *user_data, const char *name);
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
-extern void Storage_scan(const Storage_t *storage, Storage_Scan_Callback_t callback, void *user_data);
-
+// Resources are referenced by a name, which can is (base-path) relative.
 extern bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_ascii85(Storage_t *storage, const char *name, const char *encoded_data, size_t length);
 extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void *data, size_t size);
@@ -125,6 +113,10 @@ extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Re
 
 extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
 
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
 extern bool Storage_update(Storage_t *storage, float delta_time);
+#else   /* TOFU_STORAGE_AUTO_COLLECT */
+extern size_t Storage_flush(Storage_t *storage);
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
 
-#endif  /* __SYSTEMS_STORAGE_H__ */
+#endif  /* TOFU_SYSTEMS_STORAGE_H */

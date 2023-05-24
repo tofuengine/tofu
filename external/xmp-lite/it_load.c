@@ -201,7 +201,7 @@ static void xlat_volfx(struct xmp_event *event)
 	event->vol = 0;
 
 	if (b <= 64) {
-		event->vol = b;
+		event->vol = b + 1;
 	} else if (b >= 65 && b <= 74) {	/* A */
 		event->f2t = FX_F_VSLIDE_UP_2;
 		event->f2p = b - 65;
@@ -251,7 +251,8 @@ static void fix_name(uint8_t *s, int l)
 			s[i] = ' ';
 	}
 	for (i--; i >= 0 && s[i] == ' '; i--) {
-		s[i] = 0;
+		if (s[i] == ' ')
+			s[i] = 0;
 	}
 }
 
@@ -270,13 +271,13 @@ static int load_it_midi_config(struct module_data *m, HIO_HANDLE *f)
 
 	/* SFx macros */
 	for (i = 0; i < 16; i++) {
-		if (hio_read(m->midi->param[i].data, 1, 32, f) < 32)
+		if (!hio_readn(m->midi->param[i].data, 32, f))
 			return -1;
 		m->midi->param[i].data[31] = '\0';
 	}
 	/* Zxx macros */
 	for (i = 0; i < 128; i++) {
-		if (hio_read(m->midi->fixed[i].data, 1, 32, f) < 32)
+		if (!hio_readn(m->midi->fixed[i].data, 32, f))
 			return -1;
 		m->midi->fixed[i].data[31] = '\0';
 	}
@@ -290,7 +291,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 	int i;
 	uint8_t buf[82];
 
-	if (hio_read(buf, sizeof(uint8_t), 82, f) != 82) {
+	if (!hio_readn(buf, 82, f)) {
 		return -1;
 	}
 
@@ -351,7 +352,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int c, k, j;
 	uint8_t buf[64];
 
-	if (hio_read(buf, sizeof(uint8_t), 64, f) != 64) {
+	if (!hio_readn(buf, 64, f)) {
 		return -1;
 	}
 
@@ -376,13 +377,13 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	memcpy(i1h.name, buf + 32, 26);
 	fix_name(i1h.name, 26);
 
-	if (hio_read(i1h.keys, sizeof(uint8_t), 240, f) != 240) {
+	if (!hio_readn(i1h.keys, 240, f)) {
 		return -1;
 	}
-	if (hio_read(i1h.epoint, sizeof(uint8_t), 200, f) != 200) {
+	if (!hio_readn(i1h.epoint, 200, f)) {
 		return -1;
 	}
-	if (hio_read(i1h.enode, sizeof(uint8_t), 50, f) != 50) {
+	if (!hio_readn(i1h.enode, 50, f)) {
 		return -1;
 	}
 
@@ -444,7 +445,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	xxi->vol = 0x40;
 
 	if (k) {
-		xxi->sub = (struct xmp_subinstrument *)calloc(k, sizeof(struct xmp_subinstrument));
+		xxi->sub = (struct xmp_subinstrument *) calloc(k, sizeof(struct xmp_subinstrument));
 		if (xxi->sub == NULL) {
 			return -1;
 		}
@@ -483,7 +484,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int c, k, j;
 	uint8_t buf[64];
 
-	if (hio_read(buf, sizeof(uint8_t), 64, f) != 64) {
+	if (!hio_readn(buf, 64, f)) {
 		return -1;
 	}
 
@@ -524,7 +525,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	i2h.mpr = buf[61];
 	i2h.mbnk = readmem16l(buf + 62);
 
-	if (hio_read(i2h.keys, sizeof(uint8_t), 240, f) != 240) {
+	if (!hio_readn(i2h.keys, 240, f)) {
 		D_(D_CRIT "key map read error");
 		return -1;
 	}
@@ -595,7 +596,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	xxi->vol = i2h.gbv >> 1;
 
 	if (k) {
-		xxi->sub = (struct xmp_subinstrument *)calloc(k, sizeof(struct xmp_subinstrument));
+		xxi->sub = (struct xmp_subinstrument *) calloc(k, sizeof(struct xmp_subinstrument));
 		if (xxi->sub == NULL)
 			return -1;
 
@@ -659,13 +660,13 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	uint8_t buf[80];
 
 	if (sample_mode) {
-		mod->xxi[i].sub = (struct xmp_subinstrument *)calloc(1, sizeof(struct xmp_subinstrument));
+		mod->xxi[i].sub = (struct xmp_subinstrument *) calloc(1, sizeof(struct xmp_subinstrument));
 		if (mod->xxi[i].sub == NULL) {
 			return -1;
 		}
 	}
 
-	if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
+	if (!hio_readn(buf, 80, f)) {
 		return -1;
 	}
 
@@ -839,7 +840,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 						  ish.convert & IT_CVT_DIFF);
 			}
 
-			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD | cvt,
+			ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], decbuf);
 			if (ret < 0) {
 				free(decbuf);
@@ -1002,7 +1003,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	}
 
-	hio_read(ifh.name, sizeof(uint8_t), 26, f);
+	hio_readn(ifh.name, 26, f);
 	ifh.hilite_min = hio_read8(f);
 	ifh.hilite_maj = hio_read8(f);
 
@@ -1024,8 +1025,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ifh.pwd = hio_read8(f);
 
 	/* Sanity check */
-	if (ifh.gv > 0x80 || ifh.mv > 0x80) {
-		D_(D_CRIT "invalid gv (%u) or mv (%u)", ifh.gv, ifh.mv);
+	if (ifh.gv > 0x80) {
+		D_(D_CRIT "invalid gv (%u)", ifh.gv);
 		goto err;
 	}
 
@@ -1033,8 +1034,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ifh.msgofs = hio_read32l(f);
 	ifh.rsvd = hio_read32l(f);
 
-	hio_read(ifh.chpan, sizeof(uint8_t), 64, f);
-	hio_read(ifh.chvol, sizeof(uint8_t), 64, f);
+	hio_readn(ifh.chpan, 64, f);
+	hio_readn(ifh.chvol, 64, f);
 
 	if (hio_error(f)) {
 		D_(D_CRIT "error reading IT header");
@@ -1057,18 +1058,18 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	if (mod->ins) {
-		pp_ins = (uint32_t *)calloc(mod->ins, sizeof(uint32_t));
+		pp_ins = (uint32_t *) calloc(sizeof(uint32_t), mod->ins);
 		if (pp_ins == NULL)
 			goto err;
 	} else {
 		pp_ins = NULL;
 	}
 
-	pp_smp = (uint32_t *)calloc(mod->smp, sizeof(uint32_t));
+	pp_smp = (uint32_t *) calloc(sizeof(uint32_t), mod->smp);
 	if (pp_smp == NULL)
 		goto err2;
 
-	pp_pat = (uint32_t *)calloc(mod->pat, sizeof(uint32_t));
+	pp_pat = (uint32_t *) calloc(sizeof(uint32_t), mod->pat);
 	if (pp_pat == NULL)
 		goto err3;
 
@@ -1104,9 +1105,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	if (mod->len <= XMP_MAX_MOD_LENGTH) {
-		hio_read(mod->xxo, sizeof(unsigned char), mod->len, f);
+		hio_readn(mod->xxo, mod->len, f);
 	} else {
-		hio_read(mod->xxo, sizeof(unsigned char), XMP_MAX_MOD_LENGTH, f);
+		hio_readn(mod->xxo, XMP_MAX_MOD_LENGTH, f);
 		hio_seek(f, mod->len - XMP_MAX_MOD_LENGTH, SEEK_CUR);
 		mod->len = XMP_MAX_MOD_LENGTH;
 	}
@@ -1125,10 +1126,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (ifh.special & IT_EDIT_HISTORY) {
 			int skip = hio_read16l(f) * 8;
 			if (hio_error(f) || (skip && hio_seek(f, skip, SEEK_CUR) < 0))
-				goto err3;
+				goto err4;
 		}
 		if (load_it_midi_config(m, f) < 0)
-			goto err3;
+			goto err4;
 	}
 
 	m->c4rate = C4_NTSC_RATE;
@@ -1314,7 +1315,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Song message */
 	if (ifh.special & IT_HAS_MSG) {
-		if ((m->comment = (char *)malloc(ifh.msglen)) != NULL) {
+		if ((m->comment = (char *) malloc(ifh.msglen)) != NULL) {
 			hio_seek(f, start + ifh.msgofs, SEEK_SET);
 
 			D_(D_INFO "message length : %d", ifh.msglen);
@@ -1359,6 +1360,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	m->gvolbase = 0x80;
 	m->gvol = ifh.gv;
+	m->mvolbase = 48;
+	m->mvol = ifh.mv;
 	m->read_event_type = READ_EVENT_IT;
 
 	return 0;

@@ -24,14 +24,13 @@
 
 #include "format.h"
 #include "mixer.h"
-#include "load_helpers.h"
 #include "scan.h"
 
-LIBXMP_EXPORT xmp_context xmp_create_context()
+xmp_context xmp_create_context(void)
 {
 	struct context_data *ctx;
 
-	ctx = (struct context_data *)calloc(1, sizeof(struct context_data));
+	ctx = (struct context_data *) calloc(1, sizeof(struct context_data));
 	if (ctx == NULL) {
 		return NULL;
 	}
@@ -43,7 +42,7 @@ LIBXMP_EXPORT xmp_context xmp_create_context()
 	return (xmp_context)ctx;
 }
 
-LIBXMP_EXPORT void xmp_free_context(xmp_context opaque)
+void xmp_free_context(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -117,18 +116,14 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 			} else {
 				p->pos = pos;
 			}
-			f->jumpline = 0;
-			f->jump = -1;
-			f->pbreak = 0;
-			f->loop_chn = 0;
-			f->delay = 0;
-			f->rowdelay = 0;
-			f->rowdelay_set = 0;
+			/* Clear flow vars to prevent old pattern jumps and
+			 * other junk from executing in the new position. */
+			libxmp_reset_flow(ctx);
 		}
 	}
 }
 
-LIBXMP_EXPORT int xmp_next_position(xmp_context opaque)
+int xmp_next_position(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -143,7 +138,7 @@ LIBXMP_EXPORT int xmp_next_position(xmp_context opaque)
 	return p->pos;
 }
 
-LIBXMP_EXPORT int xmp_prev_position(xmp_context opaque)
+int xmp_prev_position(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -160,7 +155,7 @@ LIBXMP_EXPORT int xmp_prev_position(xmp_context opaque)
 	return p->pos < 0 ? 0 : p->pos;
 }
 
-LIBXMP_EXPORT int xmp_set_position(xmp_context opaque, int pos)
+int xmp_set_position(xmp_context opaque, int pos)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -177,7 +172,7 @@ LIBXMP_EXPORT int xmp_set_position(xmp_context opaque, int pos)
 	return p->pos;
 }
 
-LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
+int xmp_set_row(xmp_context opaque, int row)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -209,7 +204,7 @@ LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
 	return row;
 }
 
-LIBXMP_EXPORT void xmp_stop_module(xmp_context opaque)
+void xmp_stop_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -220,7 +215,7 @@ LIBXMP_EXPORT void xmp_stop_module(xmp_context opaque)
 	p->pos = -2;
 }
 
-LIBXMP_EXPORT void xmp_restart_module(xmp_context opaque)
+void xmp_restart_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -232,7 +227,7 @@ LIBXMP_EXPORT void xmp_restart_module(xmp_context opaque)
 	p->pos = -1;
 }
 
-LIBXMP_EXPORT int xmp_seek_time(xmp_context opaque, int time)
+int xmp_seek_time(xmp_context opaque, int time)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -263,7 +258,7 @@ LIBXMP_EXPORT int xmp_seek_time(xmp_context opaque, int time)
 	return p->pos < 0 ? 0 : p->pos;
 }
 
-LIBXMP_EXPORT int xmp_channel_mute(xmp_context opaque, int chn, int status)
+int xmp_channel_mute(xmp_context opaque, int chn, int status)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -287,7 +282,7 @@ LIBXMP_EXPORT int xmp_channel_mute(xmp_context opaque, int chn, int status)
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_channel_vol(xmp_context opaque, int chn, int vol)
+int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -332,7 +327,7 @@ LIBXMP_END_DECLS
 #define xmp_set_player__ xmp_set_player
 #endif
 
-LIBXMP_EXPORT int xmp_set_player__(xmp_context opaque, int parm, int val)
+int xmp_set_player__(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -457,7 +452,7 @@ LIBXMP_END_DECLS
 #define xmp_get_player__ xmp_get_player
 #endif
 
-LIBXMP_EXPORT int xmp_get_player__(xmp_context opaque, int parm)
+int xmp_get_player__(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -538,7 +533,7 @@ LIBXMP_EXPORT int xmp_get_player__(xmp_context opaque, int parm)
 	return ret;
 }
 
-LIBXMP_EXPORT void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
+void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -550,7 +545,7 @@ LIBXMP_EXPORT void xmp_inject_event(xmp_context opaque, int channel, struct xmp_
 	p->inject_event[channel]._flag = 1;
 }
 
-LIBXMP_EXPORT int xmp_set_instrument_path(xmp_context opaque, char *path)
+int xmp_set_instrument_path(xmp_context opaque, const char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -558,7 +553,7 @@ LIBXMP_EXPORT int xmp_set_instrument_path(xmp_context opaque, char *path)
 	if (m->instrument_path != NULL)
 		free(m->instrument_path);
 
-	m->instrument_path = strdup(path);
+	m->instrument_path = libxmp_strdup(path);
 	if (m->instrument_path == NULL) {
 		return -XMP_ERROR_SYSTEM;
 	}
@@ -566,7 +561,7 @@ LIBXMP_EXPORT int xmp_set_instrument_path(xmp_context opaque, char *path)
 	return 0;
 }
 
-LIBXMP_EXPORT int xmp_set_tempo_factor(xmp_context opaque, double val)
+int xmp_set_tempo_factor(xmp_context opaque, double val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -579,7 +574,7 @@ LIBXMP_EXPORT int xmp_set_tempo_factor(xmp_context opaque, double val)
 	}
 
 	val *= 10;
-	ticksize = s->freq * m->time_factor * m->rrate / p->bpm / 1000 * sizeof(int);
+	ticksize = s->freq * val * m->rrate / p->bpm / 1000 * sizeof(int);
 	if (ticksize > XMP_MAX_FRAMESIZE) {
 		return -1;
 	}

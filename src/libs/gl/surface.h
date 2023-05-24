@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_SURFACE_H__
-#define __GL_SURFACE_H__
+#ifndef TOFU_LIBS_GL_SURFACE_H
+#define TOFU_LIBS_GL_SURFACE_H
 
 #include "common.h"
 
@@ -48,4 +48,4 @@ extern void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index);
 extern GL_Pixel_t GL_surface_peek(const GL_Surface_t *surface, GL_Point_t position);
 extern void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_t index);
 
-#endif  /* __GL_SURFACE_H__ */
+#endif  /* TOFU_LIBS_GL_SURFACE_H */

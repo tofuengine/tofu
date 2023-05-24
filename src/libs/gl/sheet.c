@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,8 @@
 #include "blit.h"
 #include "tile.h"
 
-#include <config.h>
+#include <core/config.h>
+#include <libs/bytes.h>
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -36,7 +37,7 @@
 
 #define LOG_CONTEXT "gl-sheet"
 
-static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t count)
+static GL_Rectangle_t *_parse_cells(const GL_Rectangle32_t *rectangles, size_t count)
 {
     GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * count);
     if (!cells) {
@@ -45,10 +46,10 @@ static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t
 
     for (size_t i = 0; i < count; ++i) {
         cells[i] = (GL_Rectangle_t){
-                .x = (int)rectangles[i].x,
-                .y = (int)rectangles[i].y,
-                .width = rectangles[i].width,
-                .height = rectangles[i].height
+                .x = bytes_i32le(rectangles[i].x),
+                .y = bytes_i32le(rectangles[i].y),
+                .width = bytes_ui32le(rectangles[i].width),
+                .height = bytes_ui32le(rectangles[i].height)
         };
     }
 
@@ -62,7 +63,7 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
     size_t amount = columns * rows;
     GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * amount);
     if (!cells) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d cells", amount);
+        LOG_E(LOG_CONTEXT, "can't allocate %d cells", amount);
         return NULL;
     }
     size_t k = 0;
@@ -82,29 +83,21 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
     return cells;
 }
 
-static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t count)
+static GL_Sheet_t *_allocate(const GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t count)
 {
     GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
     if (!sheet) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sheet");
+        LOG_E(LOG_CONTEXT, "can't allocate sheet");
         return NULL;
     }
+
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
             .cells = cells,
             .count = count
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+
     return sheet;
-}
-
-static void _detach(GL_Sheet_t *sheet)
-{
-    free(sheet->cells);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
-
-    free(sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
 }
 
 GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size)
@@ -114,33 +107,49 @@ GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size
     if (!cells) {
         return NULL;
     }
-    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
+
+    GL_Sheet_t *sheet = _allocate(atlas, cells, count);
     if (!sheet) {
-        free(cells);
-        return NULL;
+        goto error_free;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+
+    LOG_D(LOG_CONTEXT, "sheet %p created (fixed)", sheet);
+
     return sheet;
+
+error_free:
+    free(cells);
+    return NULL;
 }
 
-GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *rectangles, size_t count)
+GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle32_t *rectangles, size_t count)
 {
     GL_Rectangle_t *cells = _parse_cells(rectangles, count);
     if (!cells) {
         return NULL;
     }
-    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
+
+    GL_Sheet_t *sheet = _allocate(atlas, cells, count);
     if (!sheet) {
-        free(cells);
-        return NULL;
+        goto error_free;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+
+    LOG_D(LOG_CONTEXT, "sheet %p created", sheet);
+
     return sheet;
+
+error_free:
+    free(cells);
+    return NULL;
 }
 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
-    _detach(sheet);
+    free(sheet->cells);
+    LOG_D(LOG_CONTEXT, "sheet cells freed");
+
+    free(sheet);
+    LOG_D(LOG_CONTEXT, "sheet %p freed", sheet);
 }
 
 GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y)

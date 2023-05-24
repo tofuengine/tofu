@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_DRAW_H__
-#define __GL_DRAW_H__
+#ifndef TOFU_LIBS_GL_CONTEXT_DRAW_H
+#define TOFU_LIBS_GL_CONTEXT_DRAW_H
 
 #include "common.h"
 #include "context.h"
@@ -42,4 +42,4 @@ extern void GL_context_copy(const GL_Context_t *context, GL_Point_t position, co
 extern void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold);
 extern void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Functions_t function);
 
-#endif  /* __GL_DRAW_H__ */
+#endif  /* TOFU_LIBS_GL_CONTEXT_DRAW_H */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2022 Marco Lizza
+ * Copyright (c) 2019-2023 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,12 @@
 
 #include "program.h"
 
-#include <config.h>
+#include "internal/udt.h"
+
+#include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
 #include <systems/display.h>
-
-#include "udt.h"
 
 #define LOG_CONTEXT "program"
 #define META_TABLE  "Tofu_Graphics_Program_mt"
@@ -91,8 +91,8 @@ static int program_new_0_1o(lua_State *L)
             .program = program
         }, OBJECT_TYPE_PROGRAM, META_TABLE);
 
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program %p allocated", self);
 #else  /* VERBOSE_DEBUG */
     (void)self;
 #endif  /* VERBOSE_DEBUG */
@@ -109,8 +109,8 @@ static int program_gc_1o_0(lua_State *L)
 
     GL_program_destroy(self->program);
 
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p finalized", self);
+#if defined(VERBOSE_DEBUG)
+    LOG_D(LOG_CONTEXT, "program %p finalized", self);
 #endif  /* VERBOSE_DEBUG */
 
     return 0;
@@ -322,7 +322,7 @@ static int program_gradient_4ontN_0(lua_State *L)
 
     lua_pushnil(L); // O N T -> O N T N
     for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
         size_t count = lua_rawlen(L, 5);
         if (count != 4) {
             luaL_error(L, "marker #%d has %d components (out of 4 required)", i, count);
@@ -385,7 +385,7 @@ static int program_palette_5onntN_0(lua_State *L)
     for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
         const GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
 
-#ifdef __DEFENSIVE_CHECKS__
+#if defined(__DEFENSIVE_CHECKS__)
         size_t count = lua_rawlen(L, 6);
         if (count != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
