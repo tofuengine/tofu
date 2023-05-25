@@ -1,8 +1,3 @@
-# The Code
-
-**Tofu Engine** intellectual property is copyrighted by its author and is licensed under the *MIT License*.
-
-```txt
 MIT License
 
 Copyright (c) 2019-2023 Marco Lizza
@@ -24,14 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
-
-Other libraries and various pieces of code are used, whose licenses can be found in the `license` folder. Refer to it for any further details.
-
-# The Logo
-
-The lovely game-engine logo has been designed by [Blort](https://social.tchncs.de/@Blort).
-
-It is licensed under *CC BY 4.0* [License](https://creativecommons.org/licenses/by/4.0/).
-
-> Please, don't use the game-engine logo *as-it-is* for any other software product!
