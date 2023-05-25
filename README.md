@@ -4,7 +4,7 @@
 
 <p align="center">
     <a href="LICENSE.md"><img src="https://img.shields.io/github/license/tofuengine/tofu" alt="license"></a>
-    <img src="https://img.shields.io/website?url=https%3A%2F%2Ftofuengine.org%2F" alt="version">
+    <img src="https://img.shields.io/website?url=https%3A%2F%2Ftofuengine.org%2F" alt="site">
     <a href="https://mastodon.gamedev.place/@mode13h"><img src="https://img.shields.io/mastodon/follow/108299766418271519?color=blue&domain=https%3A%2F%2Fmastodon.gamedev.place/&label=mastodon&logo=mastodon&style=flat" alt="mastodon"></a>
 </p>
 
@@ -14,10 +14,9 @@
 </p>
 
 <p align="center">
-    <!-- <img src="https://img.shields.io/github/release-date/tofuengine/tofu" alt="version"> -->
-    <img src="https://img.shields.io/github/issues/tofuengine/tofu" alt="version">
-    <img src="https://img.shields.io/github/last-commit/tofuengine/tofu/dev?label=last%20commit%20%7C%20dev" alt="version">
-    <img src="https://img.shields.io/github/commit-activity/m/tofuengine/tofu/dev" alt="version">
+    <img src="https://img.shields.io/github/issues/tofuengine/tofu" alt="issues">
+    <img src="https://img.shields.io/github/last-commit/tofuengine/tofu/dev" alt="last-commit">
+    <img src="https://img.shields.io/github/commit-activity/m/tofuengine/tofu/dev" alt="commit-activity">
 </p>
 
 # Introduction
