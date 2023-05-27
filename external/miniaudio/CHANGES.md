@@ -1,3 +1,64 @@
+v0.11.7 - 2023-05-27
+====================
+* Fix compilation errors with MA_USE_STDINT.
+* Fix a possible runtime error with Windows 95/98.
+* Fix a very minor linting warning in VS2022.
+* Add support for AIFF/AIFC decoding.
+* Add support for RIFX decoding.
+* Work around some bad code generation by Clang.
+* Amalgamations of dr_wav, dr_flac, dr_mp3 and c89atomic have been updated so that they're now fully namespaced. This allows each of these libraries to be able to be used alongside miniaudio without any conflicts. In addition, some duplicate code, such as sized type declarations, result codes, etc. has been removed.
+
+
+v0.11.16 - 2023-05-15
+=====================
+* Fix a memory leak with `ma_sound_init_copy()`.
+* Improve performance of `ma_sound_init_*()` when using the `ASYNC | DECODE` flag combination.
+
+
+v0.11.15 - 2023-04-30
+=====================
+* Fix a bug where initialization of a duplex device fails on some backends.
+* Fix a bug in ma_gainer where smoothing isn't applied correctly thus resulting in glitching.
+* Add support for volume smoothing to sounds when changing the volume with `ma_sound_set_volume()`. To use this, you must configure it via the `volumeSmoothTimeInPCMFrames` member of ma_sound_config and use `ma_sound_init_ex()` to initialize your sound. Smoothing is disabled by default.
+* WASAPI: Fix a possible buffer overrun when initializing a device.
+* WASAPI: Make device initialization more robust by improving the handling of the querying of the internal data format.
+
+
+v0.11.14 - 2023-03-29
+=====================
+* Fix some pedantic warnings when compiling with GCC.
+* Fix some crashes with the WAV decoder when loading an invalid file.
+* Fix a channel mapping error with PipeWire which results in no audio being output.
+* Add support for using `ma_pcm_rb` as a data source.
+* Silence some C89 compatibility warnings with Clang.
+* The `pBytesRead` parameter of the VFS onRead callback is now pre-initialized to zero.
+
+
+v0.11.13 - 2023-03-23
+=====================
+* Fix compilation errors with the C++ build.
+* Fix compilation errors when WIN32_LEAN_AND_MEAN is defined.
+
+
+v0.11.12 - 2023-03-19
+=====================
+* Fix a bug with data source ranges which resulted in data being read from outside the range.
+* Fix a crash due to a race condition in the resource manager.
+* Fix a crash with some backends when rerouting the playback side of a duplex device.
+* Fix some bugs with initialization of POSIX threads.
+* Fix a bug where sounds are not resampled when `MA_SOUND_NO_PITCH` is used.
+* Fix a bug where changing the range of a data source would result in no audio being read.
+* Fix a bug where asynchronously loaded data sources via the resources manager would reset ranges and loop points.
+* Fix some Wimplicit-fallthrough warnings.
+* Add support for Windows 95/98.
+* Add support for configuring the stack size of resource manager job threads.
+* Add support for callback notifications when a sound reaches the end.
+* Optimizations to the high level API.
+* Remove the old runtime linking system for pthread. The `MA_USE_RUNTIME_LINKING_FOR_PTHREAD` option is no longer used.
+* WASAPI: Fix a crash when starting a device while it's in the process of rerouting.
+* Windows: Remove the Windows-specific default memcpy(), malloc(), etc.
+
+
 v0.11.11 - 2022-11-04
 =====================
 * Silence an unused variable warning.
