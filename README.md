@@ -92,7 +92,7 @@ For the courious ones, this is the current statistics of the game-engine codebas
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.40, v0.6.35, v0.13.9
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.41, v0.6.36, v0.13.10
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://github.com/Dav1dde/glad)
 * [GLFW](https://www.glfw.org/) v3.3.8
