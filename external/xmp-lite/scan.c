@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -478,6 +478,15 @@ end_module:
     return (time + m->time_factor * frame_count * base_time / bpm);
 }
 
+static void reset_scan_data(struct context_data *ctx)
+{
+	int i;
+	for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
+		ctx->m.xxo_info[i].time = -1;
+	}
+	memset(ctx->p.sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
+}
+
 int libxmp_get_sequence(struct context_data *ctx, int ord)
 {
 	struct player_data *p = &ctx->p;
@@ -504,12 +513,9 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	/* Initialize order data to prevent overwrite when a position is used
 	 * multiple times at different starting points (see janosik.xm).
 	 */
-	for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
-		m->xxo_info[i].time = -1;
-	}
+	reset_scan_data(ctx);
 
 	ep = 0;
-	memset(p->sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
 	temp_ep[0] = 0;
 	p->scan[0].time = scan_module(ctx, ep, 0);
 	seq = 1;
