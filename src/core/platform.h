@@ -90,7 +90,7 @@
   #define PLATFORM_PATH_CURRENT_SZ    "./"
   #define PLATFORM_PATH_PARENT_SZ     "../"
   #define PLATFORM_PATH_MAX           PATH_MAX
-  #define PLATFORM_PATH_USER          "~/.tofuengine"
+  #define PLATFORM_PATH_USER          "~/.local/share/tofuengine"
 #elif PLATFORM_ID == PLATFORM_WINDOWS
   #include <limits.h>
 
