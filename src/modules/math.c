@@ -54,18 +54,18 @@ static int math_rotate_3nnn_2nn(lua_State *L);
 
 int math_loader(lua_State *L)
 {
-    char file[PLATFORM_PATH_MAX] = { 0 };
-    path_lua_to_fs(file, MODULE_NAME);
+    char name[PLATFORM_PATH_MAX] = { 0 };
+    const char *file = path_lua_to_fs(name, MODULE_NAME);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
+    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
 
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
         (luaX_Script){
             .data = S_SCHARS(script),
             .size = S_SLENTGH(script),
-            .name = file
+            .name = name
         },
         (const struct luaL_Reg[]){
             { "lerp", math_lerp_3nnn_1n },

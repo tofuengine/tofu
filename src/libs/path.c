@@ -243,14 +243,15 @@ void path_join(char *path, const char *folder, const char *file)
     }
 }
 
-void path_lua_to_fs(char *path, const char *modname)
+const char *path_lua_to_fs(char *fqn, const char *module_name)
 {
-    strcpy(path, "@"); // Prepend a `@`, required by Lua to track files.
-    strcat(path, modname);
-    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
+    strcpy(fqn, "@"); // Prepend a `@`, required by Lua to track files.
+    strcat(fqn, module_name);
+    for (char *ptr = fqn; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
         if (*ptr == '.') {
             *ptr = FS_PATH_SEPARATOR;
         }
     }
-    strcat(path, ".lua");
+    strcat(fqn, ".lua");
+    return fqn + 1; // Skip the `@` character and return the actual path.
 }

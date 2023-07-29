@@ -173,27 +173,27 @@ static int _searcher(lua_State *L)
 {
     Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    const char *name = lua_tostring(L, 1);
+    const char *module_name = lua_tostring(L, 1);
 
-    char path[PLATFORM_PATH_MAX] = { 0 };
-    path_lua_to_fs(path, name);
+    char name[PLATFORM_PATH_MAX] = { 0 };
+    const char *file = path_lua_to_fs(name, module_name);
 
-    FS_Handle_t *handle = Storage_open(storage, path + 1); // Don't waste storage cache! The module will be cached by Lua!
+    FS_Handle_t *handle = Storage_open(storage, file); // Don't waste storage cache! The module will be cached by Lua!
     if (!handle) {
-        lua_pushfstring(L, "file `%s` can't be found into the storage", path + 1);
+        lua_pushfstring(L, "file `%s` can't be found into the storage", file);
         return 1;
     }
 
-    int result = lua_load(L, _reader, &(lua_Reader_Context_t){ .handle = handle }, path, NULL); // Set `mode` to `NULL`. Autodetect format to support both `text` and `binary` sources.
+    int result = lua_load(L, _reader, &(lua_Reader_Context_t){ .handle = handle }, name, NULL); // Set `mode` to `NULL`. Autodetect format to support both `text` and `binary` sources.
 
     FS_close(handle);
 
     if (result != LUA_OK) {
-        lua_pushfstring(L, "failed w/ error #%d while loading file `%s`", result, path + 1); // Skip the `@` character.
+        lua_pushfstring(L, "failed w/ error #%d while loading file `%s`", result, file);
         return 1;
     }
 
-    lua_pushstring(L, path); // Return the path of the loaded file as second return value.
+    lua_pushstring(L, name); // Return the path of the loaded file as second return value.
 
     return 2;
 }
