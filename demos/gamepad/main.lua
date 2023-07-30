@@ -140,7 +140,7 @@ function Main:render(_)
   canvas:line(mx, my - 3, mx, my - 1, index)
   canvas:line(mx, my + 1, mx, my + 3, index)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(width, height, self.font, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
     "right", "bottom")
 end

@@ -153,7 +153,7 @@ function Main:render(_)
   self:draw_blocks(canvas)
   self:draw_player(canvas)
 
-  canvas:write(0, 0, FONT, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

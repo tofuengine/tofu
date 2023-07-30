@@ -101,7 +101,7 @@ function Main:render(_)
   canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
   local width, _ = image:size()
-  canvas:write(0, 0, self.font, string.format("FPS: %.1f", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
   canvas:write(width, 0, self.font, string.format("M: %d, T: %d", self.mode, self.threshold), "right")
 end
 

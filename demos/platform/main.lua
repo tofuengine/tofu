@@ -300,7 +300,7 @@ function Main:render(_)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
-  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
 
 --  local a, b, c, d = System.stats()
 --  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)

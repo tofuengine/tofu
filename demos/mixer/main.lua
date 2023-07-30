@@ -136,7 +136,7 @@ function Main:render(_)
     y = y + th
   end
   canvas:write(x, y, self.font, PROPERTIES[self.property])
-  canvas:write(width, height, self.font, System.fps(), "right", "bottom")
+  canvas:write(width, height, self.font, string.format("%d FPS", System.fps()), "right", "bottom")
 end
 
 return Main

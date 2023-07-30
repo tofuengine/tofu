@@ -117,7 +117,7 @@ function Main:render(_)
   end
   canvas:pop()
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
 end
 
 return Main

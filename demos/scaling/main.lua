@@ -105,7 +105,7 @@ function Main:render(_)
       self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale)
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
   canvas:write(width, height, self.font, string.format("S:%.2f X:%s Y:%s",
     self.scale, self.flip_x, self.flip_y), "right", "bottom")
 end

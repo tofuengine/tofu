@@ -109,7 +109,7 @@ function Main:render(_)
       self.anchor, self.anchor)
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
   canvas:write(width, height, self.font, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
     "right", "bottom")
 end

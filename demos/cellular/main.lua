@@ -112,7 +112,7 @@ function Main:render(_)
   local cx, cy = cursor:position()
   draw_cursor(canvas, cx, cy, 2, CURSOR)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
 end
 
 return Main

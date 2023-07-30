@@ -139,7 +139,7 @@ function Main:render(_) -- ratio
 
   canvas:square("fill", self.c.x - 1, self.c.y - 1, 3, FOREGROUND)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
 end
 
 return Main

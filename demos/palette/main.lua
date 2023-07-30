@@ -220,7 +220,7 @@ function Main:render(_)
     canvas:pop()
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()), 1.5)
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()), 1.5)
   canvas:write(width, 0, self.font, string.format("mode: %d", self.mode), "right")
 end
 

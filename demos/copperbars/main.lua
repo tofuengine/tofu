@@ -89,7 +89,7 @@ function Main:render(_)
   local image = canvas:image()
   image:clear(0)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
 end
 
 return Main

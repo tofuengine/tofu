@@ -127,7 +127,7 @@ function Game:render(_)
     sprite:render(canvas)
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
 end
 

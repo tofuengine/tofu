@@ -117,7 +117,7 @@ function Main:render(_)
   self.background:render(canvas)
   self.scene:render(canvas)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(0, 10, self.font, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
 end
 

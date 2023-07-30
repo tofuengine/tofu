@@ -137,7 +137,7 @@ function Main:render(_)
   canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(width, 0, self.font, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
   canvas:write(width, height, self.font, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
 end

@@ -105,7 +105,7 @@ function Main:render(_)
   canvas:push()
     canvas:transparent(255, true)
     canvas:sprite(self.position.x, self.position.y, self.bank, 0)
-    canvas:write(0, 0, self.font, string.format("FPS: %.1f", System.fps()))
+    canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
   canvas:pop()
 
   canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)
