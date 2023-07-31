@@ -115,7 +115,7 @@ typedef struct luaX_String_s {
     #define LUAX_OVERLOAD_ARITY(n, f) \
             if (_argc == (n)) { return (f)(_L); } else
     #define LUAX_OVERLOAD_SIGNATURE(f, ...) \
-            if (luaX_hassignature(_L, (const int []){ __VA_ARGS__, LUA_TEOD })) { return (f)(_L); } else
+            if (luaX_hassignature(_L, (const int[]){ __VA_ARGS__, LUA_TEOD })) { return (f)(_L); } else
     #define LUAX_OVERLOAD_END \
             { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } while (0);
