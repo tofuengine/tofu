@@ -55,8 +55,8 @@ function Main:__ctor()
   -- Please note that, as default, palette colour `0` is set as transparent. This
   -- means that the font background colour won't be drawn.
   self.canvas = Canvas.new(Image.new(width, height))
-  self.font = Font.new(Image.new("assets/font-8x8.png", 0, 15), 8, 8)
-  self.font_digits = Font.new(Image.new("assets/digits.png", 0, 15), 8, 8, "0123456789")
+  self.font = Font.from_image("assets/font-8x8.png", 8, 8, 0, 15)
+  self.font_digits = Font.from_image("assets/digits.png", 8, 8, "0123456789", 0, 15)
 
   self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:wrap("border")

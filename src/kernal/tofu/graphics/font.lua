@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Bank = require("tofu.graphics.bank")
 local Image = require("tofu.graphics.image")
 
 local Font = {}
@@ -42,12 +43,41 @@ function Font.default(...)
   local args = { ... }
   if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]
-    return Font.new(Image.new(font.file, args[1], args[2]), font.width, font.height)
+    return Font.from_image(font.file, args[1], args[2], font.width, font.height)
   elseif #args == 3 then -- id, background_color, foreground_color
     local font = FONTS[args[1]]
-    return Font.new(Image.new(font.file, args[2], args[3]), font.width, font.height)
+    return Font.from_image(font.file, args[2], args[3], font.width, font.height)
   else
     error("invalid arguments for default font")
+  end
+end
+
+function Font.from_image(...)
+  local args = { ... }
+  if #args == 2 then -- file, cells_file
+    return Font.new(Bank.new(Image.new(args[1]), args[2]))
+  elseif #args == 3 then
+    if type(args[2]) == 'string' then -- file, cells_file, alphabet
+      return Font.new(Bank.new(Image.new(args[1]), args[2]), args[3])
+    else -- file, width, height
+      return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]))
+    end
+  elseif #args == 4 then
+    if type(args[2]) == 'string' then -- file, cells_file, background_color, foreground_color
+      return Font.new(Bank.new(Image.new(args[1], args[3], args[4]), args[2]))
+    else -- file, width, height, alphabet
+      return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]), args[4])
+    end
+  elseif #args == 5 then
+    if type(args[2]) == 'string' then -- file, cells_file, alphabet, background_color, foreground_color
+      return Font.new(Bank.new(Image.new(args[1], args[4], args[5]), args[2]), args[3])
+    else -- file, width, height, background_color, foreground_color
+      return Font.new(Bank.new(Image.new(args[1], args[4], args[5]), args[2], args[3]))
+    end
+  elseif #args == 6 then -- file, width, height, alphabet, background_color, foreground_color
+    return Font.new(Bank.new(Image.new(args[1], args[5], args[6]), args[2], args[3]), args[4])
+  else
+    error("invalid arguments for `from_image` method")
   end
 end
 

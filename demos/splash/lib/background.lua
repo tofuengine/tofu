@@ -24,10 +24,9 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
-local Program = require("tofu.graphics.program")
 local Font = require("tofu.graphics.font")
+local Program = require("tofu.graphics.program")
 
 local Background = Class.define()
 
@@ -35,8 +34,7 @@ function Background:__ctor(_, height, transparent, palette, pool)
   local half_height = height // 2
   local quarter_height = height // 4
 
-  self.font = Font.new(Image.new("assets/images/font-8x8.png", transparent, palette:match(255, 255, 255)),
-      8, 8)
+  self.font = Font.from_image("assets/images/font-8x8.png", 8, 8, transparent, palette:match(255, 255, 255))
 
   self.timer = pool:spawn(10, 0, function(_)
       local program = Program.new()

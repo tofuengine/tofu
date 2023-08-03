@@ -90,10 +90,9 @@ typedef struct Bank_Object_s {
 
 typedef struct Font_Object_s {
     struct {
-        const Image_Object_t *instance;
+        const Bank_Object_t *instance;
         luaX_Reference reference;
-    } atlas;
-    GL_Sheet_t *sheet;
+    } bank;
     GL_Cell_t glyphs[256];
 } Font_Object_t;
 

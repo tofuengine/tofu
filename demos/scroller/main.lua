@@ -95,7 +95,7 @@ function Main:__ctor()
   end
   Display.program(program)
 
-  self.font = Font.new(Image.new("assets/images/font-8x8.png", 63, FONT_INDEX), FONT_WIDTH, FONT_HEIGHT)
+  self.font = Font.from_image("assets/images/font-8x8.png", FONT_WIDTH, FONT_HEIGHT, 63, FONT_INDEX)
   self.offset = height
   self.current = 1
   self.running = true

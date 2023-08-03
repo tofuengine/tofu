@@ -44,7 +44,7 @@ function Main:__ctor()
   -- and `15` as foreground.
   -- Please note that, as default, palette colour `0` is set as transparent. This
   -- means that the font background colour won't be drawn.
-  self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
+  self.font = Font.from_image("assets/font-8x8.png", 8, 8, 0, 15)
 end
 
 function Main:process()

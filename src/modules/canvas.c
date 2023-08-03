@@ -1402,7 +1402,7 @@ static int canvas_text_5onnos_2nn(lua_State *L)
     const char *text = LUAX_STRING(L, 5);
 
     const GL_Context_t *context = self->context;
-    const GL_Sheet_t *sheet = font->sheet;
+    const GL_Sheet_t *sheet = font->bank.instance->sheet; // FIXME: too convoluted? Reuse `Bank` rendering?
     const GL_Cell_t *glyphs = font->glyphs;
 
     size_t width = 0, height = 0;
@@ -1446,7 +1446,7 @@ static int canvas_text_7onnosnN_2nn(lua_State *L)
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
 
     const GL_Context_t *context = self->context;
-    const GL_Sheet_t *sheet = font->sheet;
+    const GL_Sheet_t *sheet = font->bank.instance->sheet; // Ditto.
     const GL_Cell_t *glyphs = font->glyphs;
 
     size_t width = 0, height = 0;
