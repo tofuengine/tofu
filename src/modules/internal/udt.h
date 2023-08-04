@@ -93,6 +93,7 @@ typedef struct Font_Object_s {
         const Bank_Object_t *instance;
         luaX_Reference reference;
     } bank;
+    GL_Sheet_t *sheet; // This is not allocated, but a shortcut to the bank's sheet.
     GL_Cell_t glyphs[256];
 } Font_Object_t;
 

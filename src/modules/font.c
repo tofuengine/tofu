@@ -97,6 +97,7 @@ static int font_new_2oS_1o(lua_State *L)
                 .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
+            .sheet = bank->sheet, // Shortcut to save later accesses (see `canvas.c`).
             .glyphs = { 0 }
         }, OBJECT_TYPE_FONT, META_TABLE);
     _generate_alphabet(self->glyphs, alphabet);
@@ -145,7 +146,7 @@ static int font_size_4osNN_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -154,7 +155,7 @@ static int font_size_4osNN_2n(lua_State *L)
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
-    const GL_Sheet_t *sheet = self->bank.instance->sheet;
+    const GL_Sheet_t *sheet = self->sheet;
     const GL_Cell_t *glyphs = self->glyphs;
 
     const GL_Size_t size = _size(sheet, text, glyphs, scale_x, scale_y);
