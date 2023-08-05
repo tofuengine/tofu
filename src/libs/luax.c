@@ -387,7 +387,7 @@ int luaX_hassignature(lua_State *L, const int signature[])
         ++matched;
     }
 
-    return matched == argc; // We need to matched the exact count of actual arguments. Having `countof(signature)` would've be easier.
+    return matched == argc; // We need to match the exact count of actual arguments. Having `countof(signature)` would've be easier.
 }
 
 int luaX_pushupvalues(lua_State *L)
