@@ -60,8 +60,10 @@ int keyboard_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", keyboard_new_0_1o },
             { "__gc", keyboard_gc_1o_0 },
+            // -- accessors --
             { "is_available", keyboard_is_available_1o_1b },
             { "is_down", keyboard_is_down_2oe_1b },
             { "is_up", keyboard_is_up_2oe_1b },

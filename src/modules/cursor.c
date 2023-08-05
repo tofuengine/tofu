@@ -61,13 +61,16 @@ int cursor_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", cursor_new_0_1o },
             { "__gc", cursor_gc_1o_0 },
+            // -- accessors --
             { "is_available", cursor_is_available_1o_1b },
             { "is_down", cursor_is_down_2oe_1b },
             { "is_up", cursor_is_up_2oe_1b },
             { "is_pressed", cursor_is_pressed_2oe_1b },
             { "is_released", cursor_is_released_2oe_1b },
+            // -- getters/setters --
             { "position", cursor_position_v_v },
             { NULL, NULL }
         },

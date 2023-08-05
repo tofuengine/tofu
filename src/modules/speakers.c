@@ -33,10 +33,10 @@
 #define LOG_CONTEXT "speakers"
 
 static int speakers_volume_v_v(lua_State *L);
+static int speakers_gain_v_v(lua_State *L);
 static int speakers_mix_v_v(lua_State *L);
 static int speakers_pan_2nn_0(lua_State *L);
 static int speakers_balance_2nn_0(lua_State *L);
-static int speakers_gain_v_v(lua_State *L);
 static int speakers_halt_0_0(lua_State *L);
 
 int speakers_loader(lua_State *L)
@@ -45,11 +45,14 @@ int speakers_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- getters/setters --
             { "volume", speakers_volume_v_v },
+            { "gain", speakers_gain_v_v },
             { "mix", speakers_mix_v_v },
+            // -- mutators --
             { "pan", speakers_pan_2nn_0 },
             { "balance", speakers_balance_2nn_0 },
-            { "gain", speakers_gain_v_v },
+            // -- operations --
             { "halt", speakers_halt_0_0 },
             { NULL, NULL }
         },
@@ -90,6 +93,45 @@ static int speakers_volume_v_v(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, speakers_volume_0_1n)
         LUAX_OVERLOAD_ARITY(1, speakers_volume_1n_0)
+    LUAX_OVERLOAD_END
+}
+
+static int speakers_gain_1n_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t group_id = LUAX_UNSIGNED(L, 1);
+
+    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    lua_pushnumber(L, (lua_Number)Audio_get_gain(audio, group_id));
+
+    return 1;
+}
+
+static int speakers_gain_2nn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t group_id = LUAX_UNSIGNED(L, 1);
+    float gain = LUAX_NUMBER(L, 2);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    Audio_set_gain(audio, group_id, gain);
+    LOG_D(LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
+
+    return 0;
+}
+
+static int speakers_gain_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, speakers_gain_1n_1n)
+        LUAX_OVERLOAD_ARITY(2, speakers_gain_2nn_0)
     LUAX_OVERLOAD_END
 }
 
@@ -180,45 +222,6 @@ static int speakers_balance_2nn_0(lua_State *L)
     LOG_D(LOG_CONTEXT, "group #%d balance is %.f", group_id, balance);
 
     return 0;
-}
-
-static int speakers_gain_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
-
-    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
-
-    lua_pushnumber(L, (lua_Number)Audio_get_gain(audio, group_id));
-
-    return 1;
-}
-
-static int speakers_gain_2nn_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
-    float gain = LUAX_NUMBER(L, 2);
-
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
-
-    Audio_set_gain(audio, group_id, gain);
-    LOG_D(LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
-
-    return 0;
-}
-
-static int speakers_gain_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, speakers_gain_1n_1n)
-        LUAX_OVERLOAD_ARITY(2, speakers_gain_2nn_0)
-    LUAX_OVERLOAD_END
 }
 
 static int speakers_halt_0_0(lua_State *L)

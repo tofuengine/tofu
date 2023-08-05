@@ -58,6 +58,7 @@ int system_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- getters/setters --
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
@@ -70,6 +71,7 @@ int system_loader(lua_State *L)
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
             { "heap", system_heap_1S_1n },
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+            // -- operations --
             { "quit", system_quit_0_0 },
             { NULL, NULL }
         },

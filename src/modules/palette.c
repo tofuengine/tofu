@@ -37,14 +37,14 @@
 
 static int palette_new_v_1o(lua_State *L);
 static int palette_gc_1o_0(lua_State *L);
-static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
 static int palette_colors_1o_1t(lua_State *L);
 static int palette_size_1o_1n(lua_State *L);
 static int palette_get_2on_3nnn(lua_State *L);
 static int palette_set_5onnnn_0(lua_State *L);
-static int palette_match_4onnn_1n(lua_State *L);
 static int palette_lerp_5onnnN_0(lua_State *L);
 static int palette_merge_6ononnB_0(lua_State *L);
+static int palette_match_4onnn_1n(lua_State *L);
+static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
 
 int palette_loader(lua_State *L)
 {
@@ -62,16 +62,20 @@ int palette_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", palette_new_v_1o },
             { "__gc", palette_gc_1o_0 },
-            { "mix", palette_mix_7nnnnnnN_3nnn },
+            // -- accessors --
             { "colors", palette_colors_1o_1t },
             { "size", palette_size_1o_1n },
-            { "get", palette_get_2on_3nnn },
+            // -- mutators --
+            { "get", palette_get_2on_3nnn }, // TODO: rename to `peek` and `poke`? Or override?
             { "set", palette_set_5onnnn_0 },
-            { "match", palette_match_4onnn_1n },
             { "lerp", palette_lerp_5onnnN_0 },
             { "merge", palette_merge_6ononnB_0 },
+            // -- operations --
+            { "match", palette_match_4onnn_1n },
+            { "mix", palette_mix_7nnnnnnN_3nnn },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -253,37 +257,6 @@ static int palette_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint8_t ar = (uint8_t)LUAX_INTEGER(L, 1);
-    uint8_t ag = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t ab = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t br = (uint8_t)LUAX_INTEGER(L, 4);
-    uint8_t bg = (uint8_t)LUAX_INTEGER(L, 5);
-    uint8_t bb = (uint8_t)LUAX_INTEGER(L, 6);
-    float ratio = LUAX_OPTIONAL_NUMBER(L, 7, 0.5f);
-
-    const GL_Color_t a = (GL_Color_t){ .r = ar, .g = ag, .b = ab, .a = 255 };
-    const GL_Color_t b = (GL_Color_t){ .r = br, .g = bg, .b = bb, .a = 255 };
-
-    const GL_Color_t color = GL_palette_mix(a, b, ratio);
-
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
-
-    return 3;
-}
-
 static int palette_colors_1o_1t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -364,29 +337,6 @@ int palette_set_5onnnn_0(lua_State *L)
     return 0;
 }
 
-static int palette_match_4onnn_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
-
-    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-
-    const GL_Color_t *palette = self->palette;
-    const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
-
-    lua_pushinteger(L, (lua_Integer)index);
-
-    return 1;
-}
-
 static int palette_lerp_5onnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -434,4 +384,58 @@ static int palette_merge_6ononnB_0(lua_State *L)
     LOG_D(LOG_CONTEXT, "palette %p has now %d color(s)", self, size);
 
     return 0;
+}
+
+static int palette_match_4onnn_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
+    uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
+    uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
+    uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
+
+    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+
+    const GL_Color_t *palette = self->palette;
+    const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
+
+    lua_pushinteger(L, (lua_Integer)index);
+
+    return 1;
+}
+
+static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    uint8_t ar = (uint8_t)LUAX_INTEGER(L, 1);
+    uint8_t ag = (uint8_t)LUAX_INTEGER(L, 2);
+    uint8_t ab = (uint8_t)LUAX_INTEGER(L, 3);
+    uint8_t br = (uint8_t)LUAX_INTEGER(L, 4);
+    uint8_t bg = (uint8_t)LUAX_INTEGER(L, 5);
+    uint8_t bb = (uint8_t)LUAX_INTEGER(L, 6);
+    float ratio = LUAX_OPTIONAL_NUMBER(L, 7, 0.5f);
+
+    const GL_Color_t a = (GL_Color_t){ .r = ar, .g = ag, .b = ab, .a = 255 };
+    const GL_Color_t b = (GL_Color_t){ .r = br, .g = bg, .b = bb, .a = 255 };
+
+    const GL_Color_t color = GL_palette_mix(a, b, ratio);
+
+    lua_pushinteger(L, (lua_Integer)color.r);
+    lua_pushinteger(L, (lua_Integer)color.g);
+    lua_pushinteger(L, (lua_Integer)color.b);
+
+    return 3;
 }

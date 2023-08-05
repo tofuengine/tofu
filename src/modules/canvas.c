@@ -88,11 +88,12 @@ int canvas_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", canvas_new_1o_1o },
             { "__gc", canvas_gc_1o_0 },
-            // -- observers --
+            // -- accessors --
             { "image", canvas_image_1o_1o },
-            // -- modifiers --
+            // -- mutators --
             { "push", canvas_push_1o_0 },
             { "pop", canvas_pop_2oN_0 },
             { "reset", canvas_reset_1o_0 },

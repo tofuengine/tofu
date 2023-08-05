@@ -56,10 +56,10 @@ int image_loader(lua_State *L)
             // -- constructors/destructors --
             { "new", image_new_v_1o },
             { "__gc", image_gc_1o_0 },
-            // -- observers --
+            // -- accessors --
             { "size", image_size_1o_2nn },
             { "center", image_center_1o_2nn },
-            // -- operations --
+            // -- mutators --
             { "clear", image_clear_2oN_0 },
             { "peek", image_peek_3onn_1n },
             { "poke", image_poke_4onnn_0 },

@@ -46,12 +46,16 @@ int tweener_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", tweener_new_4eNNN_1o },
             { "__gc", tweener_gc_1o_0 },
-            { "__call", tweener_evaluate_2on_1n }, // Call meta-method, mapped to `at(...)`.
+            // -- metamethods --
+            { "__call", tweener_evaluate_2on_1n }, // Call metamethod, mapped to `evaluate(...)`.
+            // -- getters/setters --
             { "easing", tweener_easing_v_v },
             { "duration", tweener_duration_v_v },
             { "range", tweener_range_v_v },
+            // -- operations --
             { "evaluate", tweener_evaluate_2on_1n },
             { NULL, NULL }
         },

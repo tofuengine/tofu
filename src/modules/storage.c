@@ -42,6 +42,7 @@ int storage_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- operations --
             { "inject", storage_inject_3ssS_0 },
 #if !defined(TOFU_STORAGE_AUTO_COLLECT)
             { "flush", storage_flush_0_0 },

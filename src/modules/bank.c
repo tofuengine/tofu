@@ -46,8 +46,10 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", bank_new_v_1o },
             { "__gc", bank_gc_1o_0 },
+            // -- accessors --
             { "size", bank_size_4onNN_2n },
             { NULL, NULL }
         },

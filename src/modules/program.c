@@ -57,8 +57,10 @@ int program_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", program_new_0_1o },
             { "__gc", program_gc_1o_0 },
+            // -- mutators --
             { "clear", program_clear_1o_0 },
             { "erase", program_erase_3oNN_0 },
             { "nop", program_nop_2oN_0 },
@@ -68,6 +70,7 @@ int program_loader(lua_State *L)
             { "offset", program_offset_3onN_0 },
             { "color", program_color_6onnnnN_0 },
             { "shift", program_shift_v_0 },
+            // -- operations --
             { "gradient", program_gradient_4ontN_0 },
             { "palette", program_palette_5onntN_0 },
             { NULL, NULL }

@@ -38,6 +38,7 @@ int file_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- operations --
             { "load", file_load_1s_1s },
             { "store", file_store_2ss_0 },
             { NULL, NULL }

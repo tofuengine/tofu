@@ -62,8 +62,10 @@ int controller_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "from_id", controller_from_id_1n_1o },
             { "__gc", controller_gc_1o_0 },
+            // -- accessors --
             { "is_available", controller_is_available_1o_1b },
             { "is_down", controller_is_down_2oe_1b },
             { "is_up", controller_is_up_2oe_1b },

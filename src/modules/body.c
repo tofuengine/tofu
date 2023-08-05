@@ -54,9 +54,12 @@ int body_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", body_new_4ennn_1o },
             { "__gc", body_gc_1o_0 },
+            // -- accessors --
             { "shape", body_shape_1o_4snnn },
+            // -- getters/setters --
             { "center_of_gravity", body_center_of_gravity_v_v },
             { "type", body_type_v_v },
             { "mass", body_mass_v_v },

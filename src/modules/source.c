@@ -45,6 +45,7 @@ typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL
 
 static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
+static int source_is_playing_1o_1b(lua_State *L);
 static int source_looped_v_v(lua_State *L);
 static int source_group_v_v(lua_State *L);
 static int source_mix_v_v(lua_State *L);
@@ -55,7 +56,6 @@ static int source_speed_v_v(lua_State *L);
 static int source_play_1o_0(lua_State *L);
 static int source_resume_1o_0(lua_State *L);
 static int source_stop_1o_0(lua_State *L);
-static int source_is_playing_1o_1b(lua_State *L);
 
 int source_loader(lua_State *L)
 {
@@ -63,8 +63,12 @@ int source_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", source_new_2sE_1o },
             { "__gc", source_gc_1o_0 },
+            // -- accessors --
+            { "is_playing", source_is_playing_1o_1b },
+            // -- getters/setters --
             { "looped", source_looped_v_v },
             { "group", source_group_v_v },
             { "mix", source_mix_v_v },
@@ -72,10 +76,10 @@ int source_loader(lua_State *L)
             { "balance", source_balance_2on_0 },
             { "gain", source_gain_v_v },
             { "speed", source_speed_v_v },
+            // -- operations --
             { "play", source_play_1o_0 },
             { "resume", source_resume_1o_0 },
             { "stop", source_stop_1o_0 },
-            { "is_playing", source_is_playing_1o_1b },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -181,6 +185,20 @@ static int source_gc_1o_0(lua_State *L)
     LOG_D(LOG_CONTEXT, "source %p finalized", self);
 
     return 0;
+}
+
+static int source_is_playing_1o_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    lua_pushboolean(L, Audio_is_tracked(audio, self->source));
+
+    return 1;
 }
 
 static int source_looped_1o_1b(lua_State *L)
@@ -461,18 +479,4 @@ static int source_stop_1o_0(lua_State *L)
     Audio_untrack(audio, self->source);
 
     return 0;
-}
-
-static int source_is_playing_1o_1b(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
-
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
-
-    lua_pushboolean(L, Audio_is_tracked(audio, self->source));
-
-    return 1;
 }

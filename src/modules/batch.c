@@ -46,8 +46,10 @@ int batch_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", batch_new_2on_1o },
             { "__gc", batch_gc_1o_0 },
+            // -- mutators --
             { "resize", batch_resize_2on_0 },
             { "grow", batch_grow_2on_0 },
             { "clear", batch_clear_1o_0 },

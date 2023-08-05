@@ -63,13 +63,17 @@ int grid_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", grid_new_3nnT_1o },
             { "__gc", grid_gc_1o_0 },
+            // -- accessors --
             { "size", grid_size_1o_2nn },
+            // -- mutators --
             { "fill", grid_fill_2ot_0 },
             { "copy", grid_copy_2oo_0 },
             { "peek", grid_peek_v_1n },
             { "poke", grid_poke_v_0 },
+            // -- operations --
             { "scan", grid_scan_2of_0 },
             { "process", grid_process_2of_0 },
             { "path", grid_path_5onnnn_1t },

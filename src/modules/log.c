@@ -55,6 +55,7 @@ int log_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- operations --
             { "info", log_info_v_0 },
             { "warning", log_warning_v_0 },
             { "error", log_error_v_0 },

@@ -56,8 +56,10 @@ int font_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", font_new_2oS_1o },
             { "__gc", font_gc_1o_0 },
+            // -- accessors --
             { "size", font_size_4osNN_2n },
             { NULL, NULL }
         },

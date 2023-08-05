@@ -51,12 +51,15 @@ int xform_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", xform_new_1E_1o },
             { "__gc", xform_gc_1o_0 },
+            // -- mutators --
             { "offset", xform_offset_3onn_0 },
             { "matrix", xform_matrix_v_0 },
             { "wrap", xform_wrap_2oe_0 },
             { "table", xform_table_v_0 },
+            // -- operations --
             { "project", xform_project_4onnn_0 },
             { "warp", xform_warp_3onn_0 },
             { NULL, NULL }

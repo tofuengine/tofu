@@ -45,12 +45,16 @@ int wave_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", wave_new_3eNN_1o },
             { "__gc", wave_gc_1o_0 },
-            { "__call", wave_at_2on_1n }, // Call meta-method, mapped to `at(...)`.
+            // -- metamethods --
+            { "__call", wave_at_2on_1n }, // Call metamethod, mapped to `at(...)`.
+            // -- getters/setters --
             { "form", wave_form_v_v },
             { "period", wave_period_v_v },
             { "amplitude", wave_amplitude_v_v },
+            // -- operations --
             { "at", wave_at_2on_1n },
             { NULL, NULL }
         },

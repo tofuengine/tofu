@@ -68,6 +68,7 @@ int math_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- operations --
             { "lerp", math_lerp_3nnn_1n },
             { "invlerp", math_invlerp_3nnn_1n },
             { "clamp", math_clamp_v_1n },

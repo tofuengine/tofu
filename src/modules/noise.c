@@ -45,12 +45,16 @@ int noise_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", noise_new_1eNN_1o },
             { "__gc", noise_gc_1o_0 },
-            { "__call", noise_generate_3onNN_1n }, // Call meta-method, mapped to `generate(...)`.
+            // -- metamethods --
+            { "__call", noise_generate_3onNN_1n }, // Call metamethod, mapped to `generate(...)`.
+            // -- getters/setters --
             { "type", noise_type_v_v },
             { "seed", noise_seed_v_v },
             { "frequency", noise_frequency_v_v },
+            // -- operations --
             { "generate", noise_generate_3onNN_1n },
             { NULL, NULL }
         },

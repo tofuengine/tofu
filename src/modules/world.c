@@ -42,10 +42,10 @@ static int world_new_v_1o(lua_State *L);
 static int world_gc_1o_0(lua_State *L);
 static int world_gravity_v_v(lua_State *L);
 static int world_damping_v_v(lua_State *L);
-static int world_update_2on_0(lua_State *L);
 static int world_add_2oo_0(lua_State *L);
 static int world_remove_2oo_0(lua_State *L);
 static int world_clear_1o_0(lua_State *L);
+static int world_update_2on_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
@@ -63,14 +63,18 @@ int world_loader(lua_State *L)
             .name = name
         },
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", world_new_v_1o },
             { "__gc", world_gc_1o_0 },
+            // -- getters/setters --
             { "gravity", world_gravity_v_v },
             { "damping", world_damping_v_v },
-            { "update", world_update_2on_0 },
+            // -- mutators --
             { "add", world_add_2oo_0 },
             { "remove", world_remove_2oo_0 },
             { "clear", world_clear_1o_0 },
+            // -- operations --
+            { "update", world_update_2on_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -221,21 +225,6 @@ static int world_damping_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int world_update_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
-    cpFloat delta_time = (cpFloat)LUAX_NUMBER(L, 2);
-
-    cpSpace *space = self->space;
-    cpSpaceStep(space, delta_time);
-
-    return 0;
-}
-
 static int world_add_2oo_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -302,6 +291,21 @@ static int world_clear_1o_0(lua_State *L)
 
     _release(L, self);
     LOG_D(LOG_CONTEXT, "world %p entries cleared", self);
+
+    return 0;
+}
+
+static int world_update_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+    cpFloat delta_time = (cpFloat)LUAX_NUMBER(L, 2);
+
+    cpSpace *space = self->space;
+    cpSpaceStep(space, delta_time);
 
     return 0;
 }
