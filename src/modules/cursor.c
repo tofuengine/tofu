@@ -38,12 +38,12 @@
 
 static int cursor_new_0_1o(lua_State *L);
 static int cursor_gc_1o_0(lua_State *L);
+static int cursor_position_v_v(lua_State *L);
 static int cursor_is_available_1o_1b(lua_State *L);
 static int cursor_is_down_2oe_1b(lua_State *L);
 static int cursor_is_up_2oe_1b(lua_State *L);
 static int cursor_is_pressed_2oe_1b(lua_State *L);
 static int cursor_is_released_2oe_1b(lua_State *L);
-static int cursor_position_v_v(lua_State *L);
 
 int cursor_loader(lua_State *L)
 {
@@ -64,14 +64,14 @@ int cursor_loader(lua_State *L)
             // -- constructors/destructors --
             { "new", cursor_new_0_1o },
             { "__gc", cursor_gc_1o_0 },
+            // -- getters/setters --
+            { "position", cursor_position_v_v },
             // -- accessors --
             { "is_available", cursor_is_available_1o_1b },
             { "is_down", cursor_is_down_2oe_1b },
             { "is_up", cursor_is_up_2oe_1b },
             { "is_pressed", cursor_is_pressed_2oe_1b },
             { "is_released", cursor_is_released_2oe_1b },
-            // -- getters/setters --
-            { "position", cursor_position_v_v },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -110,6 +110,46 @@ static int cursor_gc_1o_0(lua_State *L)
     LOG_D(LOG_CONTEXT, "cursor %p finalized", self);
 
     return 0;
+}
+
+
+static int cursor_position_1o_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
+
+    const Input_Position_t position = Input_cursor_get_position(self->cursor);
+    lua_pushinteger(L, (lua_Integer)position.x);
+    lua_pushinteger(L, (lua_Integer)position.y);
+
+    return 2;
+}
+
+static int cursor_position_3onn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+
+    const Input_Position_t position = (Input_Position_t){ .x = x, .y = y };
+    Input_cursor_set_position(self->cursor, position);
+
+    return 0;
+}
+
+static int cursor_position_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, cursor_position_1o_2nn)
+        LUAX_OVERLOAD_ARITY(3, cursor_position_3onn_0)
+    LUAX_OVERLOAD_END
 }
 
 static int cursor_is_available_1o_1b(lua_State *L)
@@ -185,43 +225,4 @@ static int cursor_is_released_2oe_1b(lua_State *L)
     lua_pushboolean(L, Input_cursor_get_button(self->cursor, id).released);
 
     return 1;
-}
-
-static int cursor_position_1o_2nn(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-
-    const Input_Position_t position = Input_cursor_get_position(self->cursor);
-    lua_pushinteger(L, (lua_Integer)position.x);
-    lua_pushinteger(L, (lua_Integer)position.y);
-
-    return 2;
-}
-
-static int cursor_position_3onn_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
-    int x = LUAX_INTEGER(L, 2);
-    int y = LUAX_INTEGER(L, 3);
-
-    const Input_Position_t position = (Input_Position_t){ .x = x, .y = y };
-    Input_cursor_set_position(self->cursor, position);
-
-    return 0;
-}
-
-static int cursor_position_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, cursor_position_1o_2nn)
-        LUAX_OVERLOAD_ARITY(3, cursor_position_3onn_0)
-    LUAX_OVERLOAD_END
 }

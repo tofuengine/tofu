@@ -58,7 +58,7 @@ int system_loader(lua_State *L)
     return luaX_newmodule(L,
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            // -- getters/setters --
+            // -- accessors --
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
