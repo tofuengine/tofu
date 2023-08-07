@@ -55,7 +55,7 @@ Types are defined with [Pascal-case]() style. The following suffixes are used:
 
 * source files are terminated on a new line;
 * trailing spaces are to be eliminated;
-* 
+* ...
 
 ## Single Header Libraries
 
@@ -90,9 +90,7 @@ An header file must be constructed as follows:
 * module local variables,
 * functions and procedures.
 
-Local scoped functions/procedures/variable are `static` and prefixed with the `_` (underscore) character. They are to be defined
-just before they use. For example, if we a a function `foo_bar()` that uses the `_baz()` function, the would be defined
-as follows
+Local scoped functions/procedures/variable are `static` and prefixed with the `_` (underscore) character. They are to be defined just before they use. For example, if we a a function `foo_bar()` that uses the `_baz()` function, the would be defined as follows
 
 ```c
 static const int _value = 42;
@@ -218,6 +216,17 @@ The constructor function is not present in the v-table, but it's defined and use
 Custom binary files are stored in a way that network-byte-order is (i.e. big-endian) is used to store informations.
 
 ## Lua FFI
+
+### Functions Naming
+
+When implementing Lua OO code from within C we are classifying (and declaring) the methods in the following order:
+
+* `constructors/destructors`: this class includes, typically the `new(...)` and `__gc(...)` methods (although the second one is formally a metamethod). However, any additional "creational" method will be include, such as `from_XXX(...)` or `as_XXX(...)`.
+* `metamethods`: any `__call(...)`, `__index()`, `__len(...)`, and others will appear in this section.
+* `getters/setters`: we are referring to getters and setters when talking about a single overridden method that, according to the call, act as an access or as a mutator. Usually they have to form `XXX_v_v()`, indicating that both the arguments and the return values are overridden.
+* `accessors`: these are methods that gives insight of the internal state of the object *without changing it*, for example an `is_XXX()` method.
+* `mutators`: differently from the previous, these methods modifies the internal state of the object *without returning values*.
+* `operations`: this is the broader and less strictly defined class, as it include any exception to the other classes (i.e. a method that changes the internal state of the object *and* returns a value). It also includes, typically, *static* methods.
 
 ### Enumerations
 
