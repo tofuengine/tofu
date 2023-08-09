@@ -42,9 +42,9 @@ static int image_new_v_1o(lua_State *L);
 static int image_gc_1o_0(lua_State *L);
 static int image_size_1o_2nn(lua_State *L);
 static int image_center_1o_2nn(lua_State *L);
-static int image_clear_2oN_0(lua_State *L);
 static int image_peek_3onn_1n(lua_State *L);
 static int image_poke_4onnn_0(lua_State *L);
+static int image_clear_2oN_0(lua_State *L);
 //static int image_grab(lua_State *L);
 
 int image_loader(lua_State *L)
@@ -59,10 +59,10 @@ int image_loader(lua_State *L)
             // -- accessors --
             { "size", image_size_1o_2nn },
             { "center", image_center_1o_2nn },
-            // -- mutators --
-            { "clear", image_clear_2oN_0 },
             { "peek", image_peek_3onn_1n },
+            // -- mutators --
             { "poke", image_poke_4onnn_0 },
+            { "clear", image_clear_2oN_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -250,20 +250,6 @@ static int image_center_1o_2nn(lua_State *L)
     return 2;
 }
 
-static int image_clear_2oN_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
-
-    GL_surface_clear(self->surface, index);
-
-    return 0;
-}
-
 static int image_peek_3onn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -296,6 +282,20 @@ static int image_poke_4onnn_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
 
     GL_surface_poke(self->surface, (GL_Point_t){ .x = x, .y = y }, index);
+
+    return 0;
+}
+
+static int image_clear_2oN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+
+    GL_surface_clear(self->surface, index);
 
     return 0;
 }
