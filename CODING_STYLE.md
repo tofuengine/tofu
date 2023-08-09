@@ -157,6 +157,32 @@ same name won't share the same guard definition.
 We alse define the `FILE_H_INCLUDED` macro as it is useful anytime we need to test if a core header file is included
 (e.g. `config.h` or `platform.h`).
 
+## Pre-increments/post-increments
+
+The pre-/post-increment operators are permitted and suggested, as long as the are used for some real shortcut/benefit in the code without adding unnecessary complexity.
+
+That is, the are to be used in any idiomatic form like when pre-incrementing the index variable int he third part of loop
+
+```c
+for (int i = 0; i < LENGTH; ++i) {
+    // Do something...
+}
+```
+
+Note that, in this case, we prefer to use the *pre*-increment (although this is more like an habit that a real benefit, as the compiler will optimize the code anyway).
+
+The are permitted whenever their usage give some benefit to the code, such as when iterating over an array of pointers to gain access to the current item while moving the cursor
+
+```c
+const struct object_t *cursor = objects;
+while (*cursor) {
+    const object_t *object = *(cursor++);
+    // Do something...
+}
+```
+
+When used to increment/decrement the value of a variable on a single statement the *compound assigments* operators should be used (that is, `+=` or `-=`).
+
 ## Object-Orientation
 
 It's well established that even non OO languages can be used to implement an object-oriented approach to code.
