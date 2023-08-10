@@ -39,11 +39,11 @@ function Background:__ctor(_, height, transparent, palette, pool)
   self.timer = pool:spawn(10, 0, function(_)
       local program = Program.new()
       program:gradient(transparent, {
-          { 0, palette:get(math.random(0, transparent)) },
-          { quarter_height - 1, palette:get(math.random(0, transparent)) },
-          { half_height - 1, palette:get(math.random(0, transparent)) },
-          { height - quarter_height - 1, palette:get(math.random(0, transparent)) },
-          { height - 1, palette:get(math.random(0, transparent)) }
+          { 0, palette:peek(math.random(0, transparent)) },
+          { quarter_height - 1, palette:peek(math.random(0, transparent)) },
+          { half_height - 1, palette:peek(math.random(0, transparent)) },
+          { height - quarter_height - 1, palette:peek(math.random(0, transparent)) },
+          { height - 1, palette:peek(math.random(0, transparent)) }
         })
 --      program:wait(0, height - (quarter_height // 2) - 1)
 --      program:modulo(-width * 4)

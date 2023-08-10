@@ -39,8 +39,8 @@ static int palette_new_v_1o(lua_State *L);
 static int palette_gc_1o_0(lua_State *L);
 static int palette_colors_1o_1t(lua_State *L);
 static int palette_size_1o_1n(lua_State *L);
-static int palette_get_2on_3nnn(lua_State *L);
-static int palette_set_5onnnn_0(lua_State *L);
+static int palette_peek_2on_3nnn(lua_State *L);
+static int palette_poke_5onnnn_0(lua_State *L);
 static int palette_lerp_5onnnN_0(lua_State *L);
 static int palette_merge_6ononnB_0(lua_State *L);
 static int palette_match_4onnn_1n(lua_State *L);
@@ -68,9 +68,9 @@ int palette_loader(lua_State *L)
             // -- accessors --
             { "colors", palette_colors_1o_1t },
             { "size", palette_size_1o_1n },
+            { "peek", palette_peek_2on_3nnn }, // TODO: rename to `peek` and `poke`? Or override?
             // -- mutators --
-            { "get", palette_get_2on_3nnn }, // TODO: rename to `peek` and `poke`? Or override?
-            { "set", palette_set_5onnnn_0 },
+            { "poke", palette_poke_5onnnn_0 },
             { "lerp", palette_lerp_5onnnN_0 },
             { "merge", palette_merge_6ononnB_0 },
             // -- operations --
@@ -296,7 +296,7 @@ static int palette_size_1o_1n(lua_State *L)
     return 1;
 }
 
-int palette_get_2on_3nnn(lua_State *L)
+int palette_peek_2on_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -315,7 +315,7 @@ int palette_get_2on_3nnn(lua_State *L)
     return 3;
 }
 
-int palette_set_5onnnn_0(lua_State *L)
+int palette_poke_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

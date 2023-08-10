@@ -68,9 +68,9 @@ local function extra_half_brite(palette, target, ratio)
   palette:merge(32, tweaked, 0, 32, false) -- Just append.
 --  local size = palette:size()
 --  for index = 0, size - 1 do
---    local ar, ag, ab = palette:get(index)
+--    local ar, ag, ab = palette:peek(index)
 --    local mr, mg, mb = Palette.mix(r, g, b, ar, ag, ab, ratio)
---    palette:set(size + index, mr, mg, mb)
+--    palette:poke(size + index, mr, mg, mb)
 --  end
   return palette
 end
