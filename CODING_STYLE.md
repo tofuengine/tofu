@@ -254,6 +254,12 @@ When implementing Lua OO code from within C we are classifying (and declaring) t
 * `mutators`: differently from the previous, these methods modifies the internal state of the object *without returning values*.
 * `operations`: this is the broader and less strictly defined class, as it include any exception to the other classes (i.e. a method that changes the internal state of the object *and* returns a value). It also includes, typically, *static* methods.
 
+### Overloading
+
+This should be used anytime it feels suitable. However it is advised to keep it for the less time critical functions/methods.
+
+As an example, we kept the `Image.peek()` and `Image.poke()` methods separated and avoided an overloaded `Image.pixel()` method that bot gets and sets a pixel. This ensures faster access times.
+
 ### Enumerations
 
 We are implementing enumerated values as strings with a (case insensitive) value among a list of available ones.
