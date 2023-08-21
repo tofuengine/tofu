@@ -174,6 +174,7 @@ typedef enum Easing_Types_e {
 } Easing_Types_t;
 
 typedef struct Tweener_Object_s {
+    bool clamp;
     Easing_Types_t easing;
     Easing_Function_t function;
     float duration;

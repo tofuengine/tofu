@@ -35,6 +35,7 @@
 
 static int tweener_new_4eNNN_1o(lua_State *L);
 static int tweener_gc_1o_0(lua_State *L);
+static int tweener_clamp_v_v(lua_State *L);
 static int tweener_easing_v_v(lua_State *L);
 static int tweener_duration_v_v(lua_State *L);
 static int tweener_range_v_v(lua_State *L);
@@ -52,6 +53,7 @@ int tweener_loader(lua_State *L)
             // -- metamethods --
             { "__call", tweener_evaluate_2on_1n }, // Call metamethod, mapped to `evaluate(...)`.
             // -- getters/setters --
+            { "clamp", tweener_clamp_v_v }, // TODO: rename to `is_clamping()`?
             { "easing", tweener_easing_v_v },
             { "duration", tweener_duration_v_v },
             { "range", tweener_range_v_v },
@@ -147,6 +149,7 @@ static int tweener_new_4eNNN_1o(lua_State *L)
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
 
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
+            .clamp = true,
             .easing = easing,
             .function = _functions[easing],
             .duration = duration,
@@ -206,6 +209,41 @@ static int tweener_easing_v_v(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, tweener_easing_1o_1s)
         LUAX_OVERLOAD_ARITY(2, tweener_easing_2os_0)
+    LUAX_OVERLOAD_END
+}
+
+
+static int tweener_clamp_1o_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
+
+    lua_pushboolean(L, self->clamp);
+
+    return 1;
+}
+
+static int tweener_clamp_2ob_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
+    LUAX_SIGNATURE_END
+    Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
+    bool clamp = LUAX_BOOLEAN(L, 2);
+
+    self->clamp = clamp;
+
+    return 0;
+}
+
+static int tweener_clamp_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, tweener_clamp_1o_1b)
+        LUAX_OVERLOAD_ARITY(2, tweener_clamp_2ob_0)
     LUAX_OVERLOAD_END
 }
 
@@ -296,11 +334,7 @@ static int tweener_evaluate_2on_1n(lua_State *L)
     float time = LUAX_NUMBER(L, 2);
 
     float ratio = time / self->duration;
-#if defined(__TWEENER_CLAMP__)
-    float eased_ratio = self->function(FCLAMP(ratio, 0.0f, 1.0f));
-#else   /* __TWEENER_CLAMP__ */
-    float eased_ratio = self->function(ratio);
-#endif  /* __TWEENER_CLAMP__ */
+    float eased_ratio = self->function(self->clamp ? FCLAMP(ratio, 0.0f, 1.0f) : ratio);
     float value = FLERP(self->from, self->to, eased_ratio);
 
     lua_pushnumber(L, (lua_Number)value);
