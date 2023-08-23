@@ -33,7 +33,7 @@
 #define LOG_CONTEXT "tweener"
 #define META_TABLE  "Tofu_Generators_Tweener_mt"
 
-static int tweener_new_4eNNN_1o(lua_State *L);
+static int tweener_new_5eNNNE_1o(lua_State *L);
 static int tweener_gc_1o_0(lua_State *L);
 static int tweener_clamp_v_v(lua_State *L);
 static int tweener_easing_v_v(lua_State *L);
@@ -48,12 +48,12 @@ int tweener_loader(lua_State *L)
         (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
-            { "new", tweener_new_4eNNN_1o },
+            { "new", tweener_new_5eNNNE_1o },
             { "__gc", tweener_gc_1o_0 },
             // -- metamethods --
             { "__call", tweener_evaluate_2on_1n }, // Call metamethod, mapped to `evaluate(...)`.
             // -- getters/setters --
-            { "clamp", tweener_clamp_v_v }, // TODO: rename to `is_clamping()`?
+            { "clamp", tweener_clamp_v_v },
             { "easing", tweener_easing_v_v },
             { "duration", tweener_duration_v_v },
             { "range", tweener_range_v_v },
@@ -66,7 +66,7 @@ int tweener_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static const char *_easings[Easing_Types_t_CountOf + 1] = {
+static const char *_easing_types[Easing_Types_t_CountOf + 1] = {
     "linear",
     "quadratic-in",
     "quadratic-out",
@@ -101,7 +101,7 @@ static const char *_easings[Easing_Types_t_CountOf + 1] = {
     NULL
 };
 
-static const Easing_Function_t _functions[Easing_Types_t_CountOf] = {
+static const Easing_Function_t _easing_functions[Easing_Types_t_CountOf] = {
     easing_linear,
     easing_quadratic_in,
     easing_quadratic_out,
@@ -135,23 +135,61 @@ static const Easing_Function_t _functions[Easing_Types_t_CountOf] = {
     easing_bounce_in_out
 };
 
-static int tweener_new_4eNNN_1o(lua_State *L)
+static float _clamp_none(float value)
+{
+    return value;
+}
+
+static float _clamp_lower(float value)
+{
+    return FCLAMP(value, 0.0f, value);
+}
+
+static float _clamp_upper(float value)
+{
+    return FCLAMP(value, value, 1.0f);
+}
+
+static float _clamp_both(float value)
+{
+    return FCLAMP(value, 0.0f, 1.0f);
+}
+
+static const char *_clamp_modes[Clamp_Modes_t_CountOf + 1] = {
+    "none",
+    "lower",
+    "upper",
+    "both",
+    NULL
+};
+
+static const Clamp_Function_t _clamp_functions[Clamp_Modes_t_CountOf] = {
+    _clamp_none,
+    _clamp_lower,
+    _clamp_upper,
+    _clamp_both
+};
+
+static int tweener_new_5eNNNE_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TENUM)
     LUAX_SIGNATURE_END
-    Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 1, _easings);
+    Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 1, _easing_types);
     float duration = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
+    Clamp_Modes_t clamp = (Clamp_Modes_t)LUAX_OPTIONAL_ENUM(L, 5, _clamp_modes, CLAMP_MODE_BOTH);
 
     Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
-            .clamp = true,
+            .clamp = clamp,
+            .clamp_function = _clamp_functions[clamp],
             .easing = easing,
-            .function = _functions[easing],
+            .easing_function = _easing_functions[easing],
             .duration = duration,
             .from = from,
             .to = to
@@ -184,7 +222,7 @@ static int tweener_easing_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
-    lua_pushstring(L, _easings[self->easing]);
+    lua_pushstring(L, _easing_types[self->easing]);
 
     return 1;
 }
@@ -196,10 +234,10 @@ static int tweener_easing_2os_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 2, _easings);
+    Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 2, _easing_types);
 
     self->easing = easing;
-    self->function = _functions[easing];
+    self->easing_function = _easing_functions[easing];
 
     return 0;
 }
@@ -212,29 +250,29 @@ static int tweener_easing_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-
-static int tweener_clamp_1o_1b(lua_State *L)
+static int tweener_clamp_1o_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Tweener_Object_t *self = (const Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
 
-    lua_pushboolean(L, self->clamp);
+    lua_pushstring(L, _clamp_modes[self->clamp]);
 
     return 1;
 }
 
-static int tweener_clamp_2ob_0(lua_State *L)
+static int tweener_clamp_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
-    bool clamp = LUAX_BOOLEAN(L, 2);
+    Clamp_Modes_t clamp = (Clamp_Modes_t)LUAX_ENUM(L, 2, _clamp_modes);
 
     self->clamp = clamp;
+    self->clamp_function = _clamp_functions[clamp];
 
     return 0;
 }
@@ -242,8 +280,8 @@ static int tweener_clamp_2ob_0(lua_State *L)
 static int tweener_clamp_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_clamp_1o_1b)
-        LUAX_OVERLOAD_ARITY(2, tweener_clamp_2ob_0)
+        LUAX_OVERLOAD_ARITY(1, tweener_clamp_1o_1s)
+        LUAX_OVERLOAD_ARITY(2, tweener_clamp_2oe_0)
     LUAX_OVERLOAD_END
 }
 
@@ -334,7 +372,8 @@ static int tweener_evaluate_2on_1n(lua_State *L)
     float time = LUAX_NUMBER(L, 2);
 
     float ratio = time / self->duration;
-    float eased_ratio = self->function(self->clamp ? FCLAMP(ratio, 0.0f, 1.0f) : ratio);
+    float clamped_ratio = self->clamp_function(ratio);
+    float eased_ratio = self->easing_function(clamped_ratio);
     float value = FLERP(self->from, self->to, eased_ratio);
 
     lua_pushnumber(L, (lua_Number)value);
