@@ -173,10 +173,21 @@ typedef enum Easing_Types_e {
     Easing_Types_t_CountOf
 } Easing_Types_t;
 
+typedef enum Clamp_Modes_e {
+    CLAMP_MODE_NONE,
+    CLAMP_MODE_LOWER,
+    CLAMP_MODE_UPPER,
+    CLAMP_MODE_BOTH,
+    Clamp_Modes_t_CountOf
+} Clamp_Modes_t;
+
+typedef float (*Clamp_Function_t)(float value);
+
 typedef struct Tweener_Object_s {
-    bool clamp;
+    Clamp_Modes_t clamp;
+    Clamp_Function_t clamp_function;
     Easing_Types_t easing;
-    Easing_Function_t function;
+    Easing_Function_t easing_function;
     float duration;
     float from;
     float to;
