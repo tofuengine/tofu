@@ -36718,7 +36718,7 @@ OSS Backend
 
 #define MA_OSS_DEFAULT_DEVICE_NAME  "/dev/dsp"
 
-static int ma_open_temp_device__oss()
+static int ma_open_temp_device__oss(void)
 {
     /* The OSS sample code uses "/dev/mixer" as the device for getting system properties so I'm going to do the same. */
     int fd = open("/dev/mixer", O_RDONLY, 0);
@@ -39632,7 +39632,7 @@ TODO: Version 0.12: Swap this logic around so that AudioWorklets are used by def
 #define MA_WEBAUDIO_LATENCY_HINT_PLAYBACK       "playback"
 #endif
 
-static ma_bool32 ma_is_capture_supported__webaudio()
+static ma_bool32 ma_is_capture_supported__webaudio(void)
 {
     return EM_ASM_INT({
         return (navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined);
@@ -60570,7 +60570,7 @@ MA_API ma_decoder_config ma_decoder_config_init(ma_format outputFormat, ma_uint3
     return config;
 }
 
-MA_API ma_decoder_config ma_decoder_config_init_default()
+MA_API ma_decoder_config ma_decoder_config_init_default(void)
 {
     return ma_decoder_config_init(ma_format_unknown, 0, 0);
 }
