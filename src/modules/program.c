@@ -298,8 +298,8 @@ static int program_shift_4onnN_0(lua_State *L)
 static int program_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, program_shift_3otN_0)
-        LUAX_OVERLOAD_ARITY(3, program_shift_4onnN_0)
+        LUAX_OVERLOAD_BY_ARITY(program_shift_3otN_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(program_shift_4onnN_0, 3)
     LUAX_OVERLOAD_END
 }
 

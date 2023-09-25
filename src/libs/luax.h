@@ -101,7 +101,7 @@ typedef struct luaX_String_s {
             lua_State *_L = (L); \
             int _argc = lua_gettop(_L); \
             switch (_argc) {
-    #define LUAX_OVERLOAD_ARITY(n, f) \
+    #define LUAX_OVERLOAD_BY_ARITY(f, n) \
                 case (n): { return (f)(_L); }
     #define LUAX_OVERLOAD_END \
                 default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
@@ -112,9 +112,9 @@ typedef struct luaX_String_s {
         do { \
             lua_State *_L = (L); \
             int _argc = lua_gettop(_L);
-    #define LUAX_OVERLOAD_ARITY(n, f) \
+    #define LUAX_OVERLOAD_BY_ARITY(f, n) \
             if (_argc == (n)) { return (f)(_L); } else
-    #define LUAX_OVERLOAD_SIGNATURE(f, ...) \
+    #define LUAX_OVERLOAD_BY_TYPES(f, ...) \
             if (luaX_hassignature(_L, (const int[]){ __VA_ARGS__, LUA_TEOD })) { return (f)(_L); } else
     #define LUAX_OVERLOAD_END \
             { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \

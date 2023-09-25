@@ -146,8 +146,8 @@ static int wave_form_2oe_0(lua_State *L)
 static int wave_form_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_form_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, wave_form_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(wave_form_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(wave_form_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -182,8 +182,8 @@ static int wave_period_2on_0(lua_State *L)
 static int wave_period_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_period_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, wave_period_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(wave_period_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(wave_period_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -218,8 +218,8 @@ static int wave_amplitude_2on_0(lua_State *L)
 static int wave_amplitude_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_amplitude_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, wave_amplitude_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(wave_amplitude_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(wave_amplitude_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 

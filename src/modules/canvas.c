@@ -257,8 +257,8 @@ static int canvas_clipping_5onnnn_0(lua_State *L)
 static int canvas_clipping_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_clipping_1o_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_clipping_5onnnn_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_clipping_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(canvas_clipping_5onnnn_0, 5)
     LUAX_OVERLOAD_END
 }
 
@@ -321,9 +321,9 @@ static int canvas_shift_3onn_0(lua_State *L)
 static int canvas_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_shift_1o_0)
-        LUAX_OVERLOAD_ARITY(2, canvas_shift_2ot_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_shift_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_shift_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(canvas_shift_2ot_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_shift_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -386,9 +386,9 @@ static int canvas_transparent_3onb_0(lua_State *L)
 static int canvas_transparent_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_transparent_1o_0)
-        LUAX_OVERLOAD_ARITY(2, canvas_transparent_2ot_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_transparent_3onb_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_transparent_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(canvas_transparent_2ot_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_transparent_3onb_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -717,8 +717,8 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
 static int canvas_scan_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_scan_6ofNNNN_0)
-        LUAX_OVERLOAD_ARITY(6, canvas_scan_6ofNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_scan_6ofNNNN_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_scan_6ofNNNN_0, 6)
     LUAX_OVERLOAD_END
 }
 
@@ -782,9 +782,9 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
 static int canvas_process_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_process_9oofNNNNNN_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_process_9oofNNNNNN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_process_9oofNNNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_process_9oofNNNNNN_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(canvas_process_9oofNNNNNN_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_process_9oofNNNNNN_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -833,9 +833,9 @@ static int canvas_copy_8onnoNNNN_0(lua_State *L)
 static int canvas_copy_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_copy_2oo_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_copy_8onnoNNNN_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_copy_8onnoNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_copy_2oo_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_copy_8onnoNNNN_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(canvas_copy_8onnoNNNN_0, 8)
     LUAX_OVERLOAD_END
 }
 
@@ -884,9 +884,9 @@ static int canvas_blit_8onnoNNNN_0(lua_State *L)
 static int canvas_blit_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_blit_2oo_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_blit_8onnoNNNN_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_blit_8onnoNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blit_2oo_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blit_8onnoNNNN_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blit_8onnoNNNN_0, 8)
     LUAX_OVERLOAD_END
 }
 
@@ -966,9 +966,9 @@ static int canvas_xform_9onnonnnno_0(lua_State *L)
 static int canvas_xform_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_xform_3ooo_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_xform_5onnoo_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_xform_9onnonnnno_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_xform_3ooo_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(canvas_xform_5onnoo_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_xform_9onnonnnno_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -1069,9 +1069,9 @@ static int canvas_stencil_11onnonnnnoen_0(lua_State *L)
 static int canvas_stencil_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_stencil_5oooen_0)
-        LUAX_OVERLOAD_ARITY(7, canvas_stencil_7onnooen_0)
-        LUAX_OVERLOAD_ARITY(11, canvas_stencil_11onnonnnnoen_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_stencil_5oooen_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_stencil_7onnooen_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(canvas_stencil_11onnonnnnoen_0, 11)
     LUAX_OVERLOAD_END
 }
 
@@ -1163,9 +1163,9 @@ static int canvas_blend_9onnonnnne_0(lua_State *L)
 static int canvas_blend_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_blend_3ooe_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_blend_5onnoe_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_blend_9onnonnnne_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blend_3ooe_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blend_5onnoe_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blend_9onnonnnne_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -1281,12 +1281,12 @@ static int canvas_sprite_10onnonnnnNN_0(lua_State *L)
 static int canvas_sprite_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_sprite_5onnon_0)
-        LUAX_OVERLOAD_ARITY(6, canvas_sprite_6onnonn_0)
-        LUAX_OVERLOAD_ARITY(7, canvas_sprite_7onnonnn_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_sprite_10onnonnnnNN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_sprite_10onnonnnnNN_0)
-        LUAX_OVERLOAD_ARITY(10, canvas_sprite_10onnonnnnNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_5onnon_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_6onnonn_0, 6)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_7onnonnn_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_10onnonnnnNN_0, 8)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_10onnonnnnNN_0, 9)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_10onnonnnnNN_0, 10)
     LUAX_OVERLOAD_END
 }
 
@@ -1352,9 +1352,9 @@ static int canvas_tile_9onnonnnnN_0(lua_State *L)
 static int canvas_tile_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(7, canvas_tile_7onnonnn_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_tile_9onnonnnnN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_tile_9onnonnnnN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_tile_7onnonnn_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(canvas_tile_9onnonnnnN_0, 8)
+        LUAX_OVERLOAD_BY_ARITY(canvas_tile_9onnonnnnN_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -1475,8 +1475,8 @@ static int canvas_text_7onnosnN_2nn(lua_State *L)
 static int canvas_text_v_2nn(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_text_5onnos_2nn)
-        LUAX_OVERLOAD_ARITY(6, canvas_text_7onnosnN_2nn)
-        LUAX_OVERLOAD_ARITY(7, canvas_text_7onnosnN_2nn)
+        LUAX_OVERLOAD_BY_ARITY(canvas_text_5onnos_2nn, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_text_7onnosnN_2nn, 6)
+        LUAX_OVERLOAD_BY_ARITY(canvas_text_7onnosnN_2nn, 7)
     LUAX_OVERLOAD_END
 }

@@ -178,8 +178,8 @@ static int body_center_of_gravity_3onn_0(lua_State *L)
 static int body_center_of_gravity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_center_of_gravity_1o_2n)
-        LUAX_OVERLOAD_ARITY(3, body_center_of_gravity_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -223,8 +223,8 @@ static int body_type_2oe_0(lua_State *L)
 static int body_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, body_type_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(body_type_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_type_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -261,8 +261,8 @@ static int body_mass_2on_0(lua_State *L)
 static int body_mass_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_mass_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_mass_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_mass_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_mass_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -307,8 +307,8 @@ static int body_momentum_2on_0(lua_State *L)
 static int body_momentum_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_momentum_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_momentum_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_momentum_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_momentum_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -353,8 +353,8 @@ static int body_position_3onn_0(lua_State *L)
 static int body_position_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_position_1o_2n)
-        LUAX_OVERLOAD_ARITY(3, body_position_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(body_position_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_position_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -394,8 +394,8 @@ static int body_velocity_3onn_0(lua_State *L)
 static int body_velocity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_velocity_1o_2nn)
-        LUAX_OVERLOAD_ARITY(3, body_velocity_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(body_velocity_1o_2nn, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_velocity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -437,8 +437,8 @@ static int body_angle_2on_0(lua_State *L)
 static int body_angle_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_angle_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_angle_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_angle_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_angle_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -475,8 +475,8 @@ static int body_elasticity_2on_0(lua_State *L)
 static int body_elasticity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_elasticity_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_elasticity_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_elasticity_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_elasticity_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -513,8 +513,8 @@ static int body_density_2on_0(lua_State *L)
 static int body_density_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_density_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_density_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_density_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_density_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -556,8 +556,8 @@ static int body_sleep_2ob_0(lua_State *L)
 static int body_sleep_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_sleep_1o_1b)
-        LUAX_OVERLOAD_ARITY(2, body_sleep_2ob_0)
+        LUAX_OVERLOAD_BY_ARITY(body_sleep_1o_1b, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_sleep_2ob_0, 2)
     LUAX_OVERLOAD_END
 }
 

@@ -91,8 +91,8 @@ static int speakers_volume_1n_0(lua_State *L)
 static int speakers_volume_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, speakers_volume_0_1n)
-        LUAX_OVERLOAD_ARITY(1, speakers_volume_1n_0)
+        LUAX_OVERLOAD_BY_ARITY(speakers_volume_0_1n, 0)
+        LUAX_OVERLOAD_BY_ARITY(speakers_volume_1n_0, 1)
     LUAX_OVERLOAD_END
 }
 
@@ -130,8 +130,8 @@ static int speakers_gain_2nn_0(lua_State *L)
 static int speakers_gain_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, speakers_gain_1n_1n)
-        LUAX_OVERLOAD_ARITY(2, speakers_gain_2nn_0)
+        LUAX_OVERLOAD_BY_ARITY(speakers_gain_1n_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(speakers_gain_2nn_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -185,8 +185,8 @@ static int speakers_mix_5nnnnn_0(lua_State *L)
 static int speakers_mix_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, speakers_mix_1n_4nnnn)
-        LUAX_OVERLOAD_ARITY(5, speakers_mix_5nnnnn_0)
+        LUAX_OVERLOAD_BY_ARITY(speakers_mix_1n_4nnnn, 1)
+        LUAX_OVERLOAD_BY_ARITY(speakers_mix_5nnnnn_0, 5)
     LUAX_OVERLOAD_END
 }
 

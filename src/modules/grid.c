@@ -258,8 +258,8 @@ static int grid_peek_3onn_1n(lua_State *L)
 static int grid_peek_v_1n(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, grid_peek_2on_1n)
-        LUAX_OVERLOAD_ARITY(3, grid_peek_3onn_1n)
+        LUAX_OVERLOAD_BY_ARITY(grid_peek_2on_1n, 2)
+        LUAX_OVERLOAD_BY_ARITY(grid_peek_3onn_1n, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -313,8 +313,8 @@ static int grid_poke_4onnn_0(lua_State *L)
 static int grid_poke_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, grid_poke_3onn_0)
-        LUAX_OVERLOAD_ARITY(4, grid_poke_4onnn_0)
+        LUAX_OVERLOAD_BY_ARITY(grid_poke_3onn_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(grid_poke_4onnn_0, 4)
     LUAX_OVERLOAD_END
 }
 

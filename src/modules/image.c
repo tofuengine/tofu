@@ -196,12 +196,12 @@ static int image_new_3snn_1o(lua_State *L)
 static int image_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, image_new_0_1o)
-        LUAX_OVERLOAD_SIGNATURE(image_new_3sNO_1o, LUA_TSTRING)
-        LUAX_OVERLOAD_SIGNATURE(image_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER)
-        LUAX_OVERLOAD_ARITY(2, image_new_2nn_1o)
-        LUAX_OVERLOAD_SIGNATURE(image_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER, LUA_TOBJECT)
-        LUAX_OVERLOAD_ARITY(3, image_new_3snn_1o)
+        LUAX_OVERLOAD_BY_ARITY(image_new_0_1o, 0)
+        LUAX_OVERLOAD_BY_TYPES(image_new_3sNO_1o, LUA_TSTRING)
+        LUAX_OVERLOAD_BY_TYPES(image_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER)
+        LUAX_OVERLOAD_BY_ARITY(image_new_2nn_1o, 2)
+        LUAX_OVERLOAD_BY_TYPES(image_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER, LUA_TOBJECT)
+        LUAX_OVERLOAD_BY_ARITY(image_new_3snn_1o, 3)
     LUAX_OVERLOAD_END
 }
 

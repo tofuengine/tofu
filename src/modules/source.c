@@ -216,8 +216,8 @@ static int source_looped_2ob_0(lua_State *L)
 static int source_looped_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_looped_1o_1b)
-        LUAX_OVERLOAD_ARITY(2, source_looped_2ob_0)
+        LUAX_OVERLOAD_BY_ARITY(source_looped_1o_1b, 1)
+        LUAX_OVERLOAD_BY_ARITY(source_looped_2ob_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -250,8 +250,8 @@ static int source_group_2on_0(lua_State *L)
 static int source_group_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_group_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, source_group_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(source_group_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(source_group_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -300,8 +300,8 @@ static int source_mix_5onnnn_0(lua_State *L)
 static int source_mix_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_mix_1o_4nnnn)
-        LUAX_OVERLOAD_ARITY(5, source_mix_5onnnn_0)
+        LUAX_OVERLOAD_BY_ARITY(source_mix_1o_4nnnn, 1)
+        LUAX_OVERLOAD_BY_ARITY(source_mix_5onnnn_0, 5)
     LUAX_OVERLOAD_END
 }
 
@@ -338,8 +338,8 @@ static int source_pan_3onn_0(lua_State *L)
 static int source_pan_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, source_pan_2on_0)
-        LUAX_OVERLOAD_ARITY(3, source_pan_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(source_pan_2on_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(source_pan_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -386,8 +386,8 @@ static int source_gain_2on_0(lua_State *L)
 static int source_gain_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_gain_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, source_gain_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(source_gain_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(source_gain_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -420,8 +420,8 @@ static int source_speed_2on_0(lua_State *L)
 static int source_speed_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_speed_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, source_speed_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(source_speed_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(source_speed_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 

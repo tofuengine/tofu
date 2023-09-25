@@ -149,8 +149,8 @@ static int math_clamp_3nNN_1n(lua_State *L)
 static int math_clamp_v_1n(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_clamp_3nNN_1n)
-        LUAX_OVERLOAD_ARITY(3, math_clamp_3nNN_1n)
+        LUAX_OVERLOAD_BY_ARITY(math_clamp_3nNN_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(math_clamp_3nNN_1n, 3)
     LUAX_OVERLOAD_END
 }
 

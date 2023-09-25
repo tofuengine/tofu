@@ -147,8 +147,8 @@ static int cursor_position_3onn_0(lua_State *L)
 static int cursor_position_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, cursor_position_1o_2nn)
-        LUAX_OVERLOAD_ARITY(3, cursor_position_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(cursor_position_1o_2nn, 1)
+        LUAX_OVERLOAD_BY_ARITY(cursor_position_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 

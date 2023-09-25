@@ -164,9 +164,9 @@ static int display_shift_2nn_0(lua_State *L)
 static int display_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_shift_0_0)
-        LUAX_OVERLOAD_ARITY(1, display_shift_1t_0)
-        LUAX_OVERLOAD_ARITY(2, display_shift_2nn_0)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_0_0, 0)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_1t_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_2nn_0, 2)
     LUAX_OVERLOAD_END
 }
 

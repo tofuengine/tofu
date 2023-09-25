@@ -237,11 +237,11 @@ static int palette_new_3n_1o(lua_State *L)
 static int palette_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, palette_new_0_1o)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1o, LUA_TNUMBER)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1o, LUA_TTABLE)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1o_1o, LUA_TOBJECT)
-        LUAX_OVERLOAD_ARITY(3, palette_new_3n_1o)
+        LUAX_OVERLOAD_BY_ARITY(palette_new_0_1o, 0)
+        LUAX_OVERLOAD_BY_TYPES(palette_new_1n_1o, LUA_TNUMBER)
+        LUAX_OVERLOAD_BY_TYPES(palette_new_1t_1o, LUA_TTABLE)
+        LUAX_OVERLOAD_BY_TYPES(palette_new_1o_1o, LUA_TOBJECT)
+        LUAX_OVERLOAD_BY_ARITY(palette_new_3n_1o, 3)
     LUAX_OVERLOAD_END
 }
 

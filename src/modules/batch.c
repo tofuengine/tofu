@@ -268,11 +268,11 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
 static int batch_add_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, batch_add_4onNN_0)
-        LUAX_OVERLOAD_ARITY(5, batch_add_5onnnn_0)
-        LUAX_OVERLOAD_ARITY(6, batch_add_6onnnnn_0)
-        LUAX_OVERLOAD_ARITY(7, batch_add_9onnnnnNNN_0)
-        LUAX_OVERLOAD_ARITY(8, batch_add_9onnnnnNNN_0)
-        LUAX_OVERLOAD_ARITY(9, batch_add_9onnnnnNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_4onNN_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_5onnnn_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_6onnnnn_0, 6)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_9onnnnnNNN_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_9onnnnnNNN_0, 8)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_9onnnnnNNN_0, 9)
     LUAX_OVERLOAD_END
 }

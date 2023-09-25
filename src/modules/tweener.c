@@ -245,8 +245,8 @@ static int tweener_easing_2os_0(lua_State *L)
 static int tweener_easing_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_easing_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, tweener_easing_2os_0)
+        LUAX_OVERLOAD_BY_ARITY(tweener_easing_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(tweener_easing_2os_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -280,8 +280,8 @@ static int tweener_clamp_2oe_0(lua_State *L)
 static int tweener_clamp_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_clamp_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, tweener_clamp_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(tweener_clamp_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(tweener_clamp_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -316,8 +316,8 @@ static int tweener_duration_2on_0(lua_State *L)
 static int tweener_duration_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_duration_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, tweener_duration_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(tweener_duration_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(tweener_duration_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -357,8 +357,8 @@ static int tweener_range_3onn_0(lua_State *L)
 static int tweener_range_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, tweener_range_1o_2nn)
-        LUAX_OVERLOAD_ARITY(3, tweener_range_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(tweener_range_1o_2nn, 1)
+        LUAX_OVERLOAD_BY_ARITY(tweener_range_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 

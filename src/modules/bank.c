@@ -127,9 +127,9 @@ static int bank_new_3oNN_1o(lua_State *L)
 static int bank_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, bank_new_3oNN_1o)
-        LUAX_OVERLOAD_ARITY(2, bank_new_2os_1o)
-        LUAX_OVERLOAD_ARITY(3, bank_new_3oNN_1o)
+        LUAX_OVERLOAD_BY_ARITY(bank_new_3oNN_1o, 1)
+        LUAX_OVERLOAD_BY_ARITY(bank_new_2os_1o, 2)
+        LUAX_OVERLOAD_BY_ARITY(bank_new_3oNN_1o, 3)
     LUAX_OVERLOAD_END
 }
 

@@ -143,8 +143,8 @@ static int noise_type_2oe_0(lua_State *L)
 static int noise_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, noise_type_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(noise_type_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(noise_type_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -178,8 +178,8 @@ static int noise_seed_2on_0(lua_State *L)
 static int noise_seed_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_seed_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, noise_seed_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(noise_seed_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(noise_seed_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -213,8 +213,8 @@ static int noise_frequency_2on_0(lua_State *L)
 static int noise_frequency_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_frequency_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, noise_frequency_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(noise_frequency_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(noise_frequency_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 

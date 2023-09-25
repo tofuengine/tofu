@@ -215,9 +215,9 @@ static int xform_matrix_7onnnnnn_0(lua_State *L)
 static int xform_matrix_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, xform_matrix_3onn_0)
-        LUAX_OVERLOAD_ARITY(5, xform_matrix_5onnnn_0)
-        LUAX_OVERLOAD_ARITY(7, xform_matrix_7onnnnnn_0)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_3onn_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_5onnnn_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_7onnnnnn_0, 7)
     LUAX_OVERLOAD_END
 }
 
@@ -311,8 +311,8 @@ static int xform_table_2ot_0(lua_State *L)
 static int xform_table_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, xform_table_1o_0)
-        LUAX_OVERLOAD_ARITY(2, xform_table_2ot_0)
+        LUAX_OVERLOAD_BY_ARITY(xform_table_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(xform_table_2ot_0, 2)
     LUAX_OVERLOAD_END
 }
 

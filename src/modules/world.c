@@ -112,8 +112,8 @@ static int world_new_2NN_1o(lua_State *L)
 static int world_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, world_new_2NN_1o)
-        LUAX_OVERLOAD_ARITY(2, world_new_2NN_1o)
+        LUAX_OVERLOAD_BY_ARITY(world_new_2NN_1o, 0)
+        LUAX_OVERLOAD_BY_ARITY(world_new_2NN_1o, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -182,8 +182,8 @@ static int world_gravity_3onn_0(lua_State *L)
 static int world_gravity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, world_gravity_1o_2n)
-        LUAX_OVERLOAD_ARITY(3, world_gravity_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(world_gravity_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(world_gravity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -220,8 +220,8 @@ static int world_damping_2on_0(lua_State *L)
 static int world_damping_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, world_damping_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, world_damping_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(world_damping_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(world_damping_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
