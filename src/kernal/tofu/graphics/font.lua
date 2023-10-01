@@ -43,10 +43,10 @@ function Font.default(...)
   local args = { ... }
   if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]
-    return Font.from_image(font.file, args[1], args[2], font.width, font.height)
+    return Font.from_image(font.file, font.width, font.height, args[1], args[2])
   elseif #args == 3 then -- id, background_color, foreground_color
     local font = FONTS[args[1]]
-    return Font.from_image(font.file, args[2], args[3], font.width, font.height)
+    return Font.from_image(font.file, font.width, font.height, args[2], args[3])
   else
     error("invalid arguments for default font")
   end
