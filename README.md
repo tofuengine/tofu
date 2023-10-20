@@ -76,7 +76,7 @@ For the courious ones, this is the current statistics of the game-engine codebas
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root directory override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
-* [x] Up to 4 game-controller support. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
+* [x] Multiple player support, w/ up to 4 simultaneous game-controllers. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
@@ -166,26 +166,38 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ## Desiderata
 
-* [ ] Audio channels, to associate them to a source.
-* [ ] Audio effects (noise, reverb, filters, spatialization, etc...).
-* [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
+### Core
+
+* [ ] Boot splash-screen w/ resource preloading support (much like older consoles).
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
-* [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
-* [ ] Tiled-map support w/ camera support (zoom and scrolling).
-* [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
-* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
-* [ ] Game state and display transitions (at which level? Engine or script?).
-* [ ] Multiple players support.
-* [ ] Use a custom memory-management allocator.
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
+* [ ] Use a custom memory-management allocator.
+* [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
+* [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
+* [ ] (Script-level) game state/screen transitions, something similar to the concept of "rooms" that many engines offer.
+* [ ] Tweakable game-time management, to control the actual real-time game speed (speed up, slow down, pause, etc...)
+
+### Graphics
+
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
-* [ ] input handling in event-driver fashion (now is polled).
-* [ ] game time management, in system class (speed, up down pause)
-* [ ] both shoulder and trigger axes are analogue?
-* [ ] rumble?
-* [ ] analogues low pass filter (page 591) or moving average?
-* [ ] buttons states with XOR (page 594)
-* [ ] chords and gestures detection
+* [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
+* [ ] Tiled-map support w/ camera support (zoom and scrolling).
+* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
+
+### Audio
+
+* [ ] On-the-fly (could pre-cache it for later usage) sound synthesizer, similar to [srfx](https://github.com/grimfang4/sfxr).
+* [ ] Audio channels support -- each source is to associated to a channel.
+* [ ] Real-time audio effects (noise, reverb, filters, [spatialization](https://www.sfml-dev.org/tutorials/2.6/audio-spatialization.php), etc...).
+
+### Input
+
+* [ ] Better input handling by leveraging an event-driver approach -- this should reduces the current sub-system complexity ( as it polled).
+* [ ] Rumble and force feedback support -- this might be implemented with a specific library as GLFW doesn't support it.
+* [ ] Analogue support for shoulder and trigger axes.
+* [ ] Apply filtering for the analogues, either with a low pass filter (page 591) or moving average.
+* [ ] Implement buttons state check with XOR (page 594)
+* [ ] chords and gestures detection, for example for Street Fighter II-like combos.
 
 ## Profiling
 
