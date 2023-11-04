@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.6.37 - 2023-07-07
+dr_mp3 - v0.6.38 - 2023-11-02
 
 David Reid - mackron@gmail.com
 
@@ -95,7 +95,7 @@ extern "C" {
 
 #define DRMP3_VERSION_MAJOR     0
 #define DRMP3_VERSION_MINOR     6
-#define DRMP3_VERSION_REVISION  37
+#define DRMP3_VERSION_REVISION  38
 #define DRMP3_VERSION_STRING    DRMP3_XSTRINGIFY(DRMP3_VERSION_MAJOR) "." DRMP3_XSTRINGIFY(DRMP3_VERSION_MINOR) "." DRMP3_XSTRINGIFY(DRMP3_VERSION_REVISION)
 
 #include <stddef.h> /* For size_t. */
@@ -713,7 +713,7 @@ static int drmp3_have_simd(void)
 
 #endif
 
-#if defined(__ARM_ARCH) && (__ARM_ARCH >= 6) && !defined(__aarch64__) && !defined(_M_ARM64)
+#if defined(__ARM_ARCH) && (__ARM_ARCH >= 6) && !defined(__aarch64__) && !defined(_M_ARM64) && !defined(__ARM_ARCH_6M__)
 #define DRMP3_HAVE_ARMV6 1
 static __inline__ __attribute__((always_inline)) drmp3_int32 drmp3_clip_int16_arm(drmp3_int32 a)
 {
@@ -4495,6 +4495,9 @@ counts rather than sample counts.
 /*
 REVISION HISTORY
 ================
+v0.6.38 - 2023-11-02
+  - Fix build for ARMv6-M.
+
 v0.6.37 - 2023-07-07
   - Silence a static analysis warning.
 
