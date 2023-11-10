@@ -1,5 +1,43 @@
-v0.11.7 - 2023-05-27
-====================
+v0.11.20 - 2023-11-10
+=====================
+* Fix a compilation error with iOS.
+* Fix an error when dynamically linking libraries when forcing the UWP build on desktop.
+
+
+v0.11.19 - 2023-11-04
+=====================
+* Fix a bug where `ma_decoder_init_file()` can incorrectly return successfully.
+* Fix a crash when using a node with more than 2 outputs.
+* Fix a bug where `ma_standard_sample_rate_11025` uses the incorrect rate.
+* Fix a bug in `ma_noise` where only white noise would be generated even when specifying pink or Brownian.
+* Fix an SSE related bug when converting from mono streams.
+* Documentation fixes.
+* Remove the use of some deprecated functions.
+* Improvements to runtime linking on Apple platforms.
+* Web / Emscripten: Audio will no longer attempt to unlock in response to the "touchstart" event. This addresses an issue with iOS and Safari. This results in a change of behavior if you were previously depending on starting audio when the user's finger first touches the screen. Audio will now only unlock when the user's finger is lifted. See this discussion for details: https://github.com/mackron/miniaudio/issues/759
+* Web / Emscripten: Fix an error when using a sample rate of 0 in the device config.
+
+
+v0.11.18 - 2023-08-07
+=====================
+* Fix some AIFF compatibility issues.
+* Fix an error where the cursor of a Vorbis stream is incorrectly incremented.
+* Add support for setting a callback on an `ma_engine` object that get's fired after it processes a chunk of audio. This allows applications to do things such as apply a post-processing effect or output the audio to a file.
+* Add `ma_engine_get_volume()`.
+* Add `ma_sound_get_time_in_milliseconds()`.
+* Decouple `MA_API` and `MA_PRIVATE`. This relaxes applications from needing to define both of them if they're only wanting to redefine one.
+* Decoding backends will now have their onInitFile/W and onInitMemory initialization routines used where appropriate if they're defined.
+* Increase the accuracy of the linear resampler when setting the ratio with `ma_linear_resampler_set_rate_ratio()`.
+* Fix erroneous output with the linear resampler when in/out rates are the same.
+* AAudio: Fix an error where the buffer size is not configured correctly which sometimes results in excessively high latency.
+* ALSA: Fix a possible error when stopping and restarting a device.
+* PulseAudio: Minor changes to stream flags.
+* Win32: Fix an error where `CoUninialize()` is being called when the corresponding `CoInitializeEx()` fails.
+* Web / Emscripten: Add support for AudioWorklets. This is opt-in and can be enabled by defining `MA_ENABLE_AUDIO_WORKLETS`. You must compile with `-sAUDIO_WORKLET=1 -sWASM_WORKERS=1 -sASYNCIFY` for this to work. Requires at least Emscripten v3.1.32.
+
+
+v0.11.17 - 2023-05-27
+=====================
 * Fix compilation errors with MA_USE_STDINT.
 * Fix a possible runtime error with Windows 95/98.
 * Fix a very minor linting warning in VS2022.
