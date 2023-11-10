@@ -48,18 +48,28 @@
 +---------+
 | HEADER  | sizeof(Pak_Header_t)
 +---------+
-| ENTRY 0 | sizeof(Pak_Entry_t) + sizeof(Entry) * sizeof(uint8_t)
+| ENTRY 0 | sizeof(Pak_Entry_t)
 +---------+
-| ENTRY 1 |    "                                             "
+| ENTRY 1 |     "         "
 +---------+
     ...
     ...
     ...
 +---------+
-| ENTRY n |    "                                            "
+| ENTRY n |     "         "
++---------+
+| DATA 0  | sizeof(Entry) * sizeof(uint8_t)
++---------+
+| DATA 1  |     "                     "
++---------+
+    ...
+    ...
+    ...
++---------+
+| DATA n  |     "                     "
 +---------+
 
-NOTE: `uint16_t` and `uint32_t` data is explicitly stored in little-endian.
+NOTE: `uint16_t` and `uint32_t` data are explicitly stored in little-endian.
 */
 
 #define PAK_ID_LENGTH       MD5_SIZE
@@ -189,6 +199,7 @@ static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char 
     _to_hex(sz, id);
 }
 
+// FIXME: cache some entries into memory in order to avoid repeated seeks?
 static bool _peek_entry(FILE *stream, size_t index, Pak_Entry_Header_t *header)
 {
     long offset = sizeof(Pak_Header_t) + index * sizeof(Pak_Entry_Header_t);
