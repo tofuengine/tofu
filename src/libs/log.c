@@ -69,7 +69,7 @@ static const char _prefixes[Log_Levels_t_CountOf] = {
 static Log_Levels_t _level;
 static FILE *_stream;
 
-static void _write(Log_Levels_t level, const char *context, const char *text, va_list args)
+static void _write(Log_Levels_t level, const char *tag, const char *text, va_list args)
 {
     if (level < _level) {
         return;
@@ -80,9 +80,9 @@ static void _write(Log_Levels_t level, const char *context, const char *text, va
     }
 
 #if defined(USE_COLORS)
-    fprintf(_stream, "%s[%c/%s]%s %s", COLOR_WHITE, _prefixes[level], context, COLOR_OFF, _colors[level]);
+    fprintf(_stream, "%s[%c/%s]%s %s", COLOR_WHITE, _prefixes[level], tag, COLOR_OFF, _colors[level]);
 #else
-    fprintf(_stream, "[%c/%s] ", _prefixes[level], context);
+    fprintf(_stream, "[%c/%s] ", _prefixes[level], tag);
 #endif
     vfprintf(_stream, text, args);
 #if defined(USE_COLORS)
@@ -109,21 +109,21 @@ extern void Log_configure(bool enabled, FILE *stream)
     _stream = stream ? _stream : stderr;
 }
 
-void Log_write(Log_Levels_t level, const char *context, const char *text, ...)
+void Log_write(Log_Levels_t level, const char *tag, const char *text, ...)
 {
     va_list args;
     va_start(args, text);
-    _write(level, context, text, args);
+    _write(level, tag, text, args);
     va_end(args);
 }
 
-void Log_write_if(bool condition, Log_Levels_t level, const char *context, const char *text, ...)
+void Log_write_if(bool condition, Log_Levels_t level, const char *tag, const char *text, ...)
 {
     if (!condition) {
         return;
     }
     va_list args;
     va_start(args, text);
-    _write(level, context, text, args);
+    _write(level, tag, text, args);
     va_end(args);
 }
