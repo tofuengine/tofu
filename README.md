@@ -96,7 +96,7 @@ For the courious ones, this is the current statistics of the game-engine codebas
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://github.com/Dav1dde/glad)
 * [GLFW](https://www.glfw.org/) v3.3.9
-* [libxmp](http://xmp.sourceforge.net/) v4.5.0
+* [libxmp](http://xmp.sourceforge.net/) v4.6.1
 * [Lua](https://lua.org/) v5.4.6
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.21
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
