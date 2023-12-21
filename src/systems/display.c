@@ -555,6 +555,9 @@ void Display_present(const Display_t *display)
         (float)x1, (float)y1
     };
 
+    // glEnable(GL_SCISSOR_TEST);
+    // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.
+
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);

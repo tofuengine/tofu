@@ -23,11 +23,28 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
---local Source = require("tofu.sound.source")
 
-local Channel = Class.define()
+local Bunny = Class.define()
 
-function Channel:__ctor()
+local CELL_ID = 0
+
+function Bunny:__ctor(bank, batch, width, height)
+  local cw, ch = bank:size(CELL_ID)
+
+  local min_x = cw
+  local min_y = cw
+  local max_x = width - cw * 2
+  local max_y = height - ch * 2
+
+  self.batch = batch
+  self.x = math.random() * (max_x - min_x) + cw
+  self.y = math.random() * (max_y - min_y) + ch
+
+  self.batch:add(CELL_ID, self.x, self.y)
 end
 
-return Channel
+function Bunny:update(_)
+  self.batch:add(CELL_ID, self.x, self.y)
+end
+
+return Bunny

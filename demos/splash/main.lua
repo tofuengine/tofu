@@ -31,8 +31,8 @@ local Pool = require("tofu.timers.pool")
 
 local Background = require("lib/background")
 local Logo = require("lib/logo")
-local Stars = require("lib/stars")
-local Wave = require("lib/wave")
+local Stars = require("lib/stars-batch")
+local Wave = require("lib/wave-batch")
 
 local Main = Class.define()
 

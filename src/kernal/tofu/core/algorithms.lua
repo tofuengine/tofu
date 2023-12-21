@@ -22,12 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
---local Source = require("tofu.sound.source")
+local Algorithms = {}
 
-local Channel = Class.define()
+function Algorithms.bresenham(x0, y0, x1, y1, _, callback)
+  local delta_x <const> = x1 - x0
+  local delta_y <const> = y1 - y0
 
-function Channel:__ctor()
+  local delta <const> = math.abs(delta_x) >= math.abs(delta_y)
+    and math.abs(delta_x)
+    or math.abs(delta_y) -- Move along the longest delta
+
+  local step_x <const> = delta_x / delta
+  local step_y <const> = delta_y / delta
+
+  local x = x0
+  local y = y0
+
+  callback(x0, y0)
+  for _ = 1, delta - 1 do
+    x = x + step_x
+    y = y + step_y
+
+    callback(x, y)
+  end
+  callback(x1, y1)
 end
 
-return Channel
+return Algorithms

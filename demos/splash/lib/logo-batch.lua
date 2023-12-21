@@ -23,11 +23,32 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
---local Source = require("tofu.sound.source")
+local System = require("tofu.core.system")
+local Image = require("tofu.graphics.image")
 
-local Channel = Class.define()
+local Logo = Class.define()
 
-function Channel:__ctor()
+function Logo:__ctor(width, height, transparent, _, _)
+  self.images = {
+      Image.new("assets/images/tofu.png", transparent),
+      Image.new("assets/images/engine.png", transparent)
+    }
+  self.outline = Image.new("assets/images/outline.png", transparent)
+
+  local w, h = self.outline:size()
+  self.x = (width - w) * 0.5
+  self.y = (height - h) * 0.5
 end
 
-return Channel
+function Logo:update(_)
+end
+
+function Logo:render(canvas)
+  -- TODO: generate the outline w/ 4 offsetted blits.
+  local t = System.time()
+
+  canvas:blit(self.x, self.y, self.outline) -- Don't use `Canvas.copy()` as we want transparency!
+  canvas:blit(self.x, self.y, self.images[(math.tointeger(t * 1.0) % 2) + 1])
+end
+
+return Logo

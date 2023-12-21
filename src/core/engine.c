@@ -252,12 +252,29 @@ Engine_t *Engine_create(const Engine_Options_t *options)
         LOG_F(LOG_CONTEXT, "can't initialize interpreter");
         goto error_destroy_environment;
     }
+
+    // Initialize the VM now that all the sub-systems are ready.
+    bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
+            engine->storage,
+            engine->display,
+            engine->input,
+            engine->audio,
+            engine->environment,
+            engine->interpreter,
+            NULL
+        });
+    if (!booted) {
+        LOG_F(LOG_CONTEXT, "can't boot interpreter");
+        goto error_destroy_interpreter;
+    }
     LOG_I(LOG_CONTEXT, "interpreter ready");
 
     LOG_I(LOG_CONTEXT, "engine is up and running");
     return engine;
 
     // Goto clean-up section.
+error_destroy_interpreter:
+    Interpreter_destroy(engine->interpreter);
 error_destroy_environment:
     Environment_destroy(engine->environment);
 error_destroy_audio:
@@ -293,6 +310,7 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
+// FIXME: use a bit-mask to track the events?
 static const char **_prepare_events(Engine_t *engine, const char **events) // TODO: move to lower-priority?
 {
     arrsetlen(events, 0);
@@ -328,21 +346,6 @@ static const char **_prepare_events(Engine_t *engine, const char **events) // TO
 
 void Engine_run(Engine_t *engine)
 {
-    // Initialize the VM now that all the sub-systems are ready.
-    bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
-            engine->storage,
-            engine->display,
-            engine->input,
-            engine->audio,
-            engine->environment,
-            engine->interpreter,
-            NULL
-        });
-    if (!booted) {
-        LOG_F(LOG_CONTEXT, "can't initialize interpreter");
-        return;
-    }
-
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
     const float skippable_time = delta_time * skippable_frames; // This is the allowed "fast-forwardable" time window.

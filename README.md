@@ -169,6 +169,8 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ### Core
 
 * [ ] Boot splash-screen w/ resource preloading support (much like older consoles).
+* [ ] On-screen overlay w/ performance information (FPS, graph, frame-time, etc...).
+* [ ] Logging to file.
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
 * [ ] Use a custom memory-management allocator.
