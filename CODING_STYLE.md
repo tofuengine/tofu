@@ -53,6 +53,8 @@ Types are defined with [Pascal-case]() style. The following suffixes are used:
 
 ## Formatting Rules
 
+* 4 spaces indentation is used (soft tabs);
+* when splitting a structure/function-call over multiple lines we use an additional 4 spaces indentation;
 * source files are terminated on a new line;
 * trailing spaces are to be eliminated;
 * ...
@@ -90,7 +92,7 @@ An header file must be constructed as follows:
 * module local variables,
 * functions and procedures.
 
-Local scoped functions/procedures/variable are `static` and prefixed with the `_` (underscore) character. They are to be defined just before they use. For example, if we a a function `foo_bar()` that uses the `_baz()` function, the would be defined as follows
+Local scoped functions/procedures/variable are `static` and prefixed with the `_` (underscore) character. They are to be defined just before their use. For example, if we have a global function `foo_bar()` that uses the `_baz()` function, the would be defined as follows:
 
 ```c
 static const int _value = 42;
@@ -106,7 +108,7 @@ int foo_bar(void)
 }
 ```
 
-> In case the body of the local function is small enough, declare it as `inline` as an hint for the compiler.   
+> In case the body of the local function is small enough, declare it as `inline` as an hint for the compiler.
 
 ## Include Position and Ordering
 
@@ -154,7 +156,7 @@ with `PATH_FILE_H` being the capitalized relative (to the project `src` folder) 
 separator character is replaced with the `_` (underscore) character. This will ensure that two distinct files with the
 same name won't share the same guard definition.
 
-We alse define the `FILE_H_INCLUDED` macro as it is useful anytime we need to test if a core header file is included
+We also (might) define the `FILE_H_INCLUDED` macro as it is useful anytime we need to test if a core header file is included
 (e.g. `config.h` or `platform.h`).
 
 ## Pre-increments/post-increments
