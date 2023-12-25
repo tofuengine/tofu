@@ -207,14 +207,14 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
 	$(wildcard $(srcdir)/systems/storage/*.c)
 # Source files list (external)
-SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
+SOURCES+=$(wildcard $(externaldir)/chipmunk/*.c) \
+	$(wildcard $(externaldir)/dr_libs/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
 	$(wildcard $(externaldir)/lua/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
-	$(wildcard $(externaldir)/spleen/*.c) \
-	$(wildcard $(externaldir)/xmp-lite/*.c) \
 	$(wildcard $(externaldir)/noise/*.c) \
-	$(wildcard $(externaldir)/chipmunk/*.c)
+	$(wildcard $(externaldir)/spleen/*.c) \
+	$(wildcard $(externaldir)/xmp-lite/*.c)
 # Include files list (src)
 INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/core/*.h) \
@@ -227,15 +227,15 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
 	$(wildcard $(srcdir)/systems/storage/*.h)
 # Include files list (external)
-INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
+INCLUDES+=$(wildcard $(externaldir)/chipmunk/*.h) \
+	$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
+	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
 	$(wildcard $(externaldir)/stb/*.h) \
-	$(wildcard $(externaldir)/xmp-lite/*.h) \
-	$(wildcard $(externaldir)/noise/*.h) \
-	$(wildcard $(externaldir)/chipmunk/*.h)
+	$(wildcard $(externaldir)/xmp-lite/*.h)
 
 # Prepare GLFW flags according to the target platform.
 depends_from = $(shell cat $(1) | sed 's|^|$(2)|g' | tr '\n' ' ')

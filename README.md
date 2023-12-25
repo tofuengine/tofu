@@ -30,7 +30,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
-* Multi-platform support through cross-compilation (Windows, Linux and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not so distant future).
+* Multi-platform support through cross-compilation (Windows, Linux, and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not-so-distant future).
 
 For the courious ones, this is the current statistics of the game-engine codebase:
 
@@ -50,15 +50,15 @@ For the courious ones, this is the current statistics of the game-engine codebas
 * [x] Array of predefined common/famous resolutions (e.g. C64, Capcom's arcades, Nintendo DS, Sony PSP, etc...).
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
-* [x] Support for both proportional and non-proportional bitmap based fonts (alphabet subset can be specified, if required).
+* [x] Support for both proportional and non-proportional bitmap-based fonts (alphabet subset can be specified, if required).
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Tiles drawing with offset/scaling/flipping.
-* [x] Palette based graphics w/ 256 colors.
+* [x] Palette-based graphics w/ 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
-* [x] Multiple canvas, with drawing state stack support.
+* [x] Multiple (offscreen) canvas w/ drawing state stack support.
 * [x] SNES' Mode7-like transforms, with scanline based ([HDMA](https://wiki.superfamicom.org/grog's-guide-to-dma-and-hdma-on-the-snes)) changes.
 * [x] Amiga's Copper-like programs, with pixel-wide resolution.
 * [x] Image programmable copy functions, to implement *script-shaders*.
@@ -66,7 +66,7 @@ For the courious ones, this is the current statistics of the game-engine codebas
 * [x] Image blend copy, with user definable *blending function* (`repeat`, `add`, `sub`, `multiply`, `min`, `max`).
 * [x] Post-effect display-wise fragment shaders.
 * [x] Library of "retro-feel" post-effects (LCD, CRT, color-blindness, etc...).
-* [x] Audio support w/ real time sound streaming on a separate thread.
+* [x] Audio support w/real-time sound streaming on a separate thread.
 * [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
 * [x] Static and streamed audio data playback (FLAC format).
 * [x] Module playback support (MOD, S3M, XM, and IT).
@@ -76,11 +76,11 @@ For the courious ones, this is the current statistics of the game-engine codebas
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root directory override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
-* [x] Multiple player support, w/ up to 4 simultaneous game-controllers. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
+* [x] Multiple player support w/ up to 4 simultaneous game controllers. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
-* [x] Noise generators (perlin, simple, and cellular).
+* [x] Noise generators (Perlin, simple, and cellular).
 * [x] Logging facility (w/ selectable severity level).
 * [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom [RTTI](https://en.wikipedia.org/wiki/Run-time_type_information) implementation.
 * [x] Crash screen (debug build).
@@ -151,16 +151,17 @@ git clone https://github.com/tofuengine/tofu.git
 into a suitable work directory. Move into the `tofu` directory you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
-* `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
+* `PLATFORM`, can be `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please note that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
+* `WINDOWING`, can be `x11`, `wayland`, `gdi`, or `mesa`. If not specified, the build assumes `gd1` for the **Windows** platform, `x11` otherwise. Please note that `mesa` is not really supported and `wayland` is experimental (but should work).
 * `ARCHITECTURE`, can be either `x64` or `x32`. Please note that this is used only for the **Windows** build as the Linux one is 64-bit only, and the Raspberry-Pi is 32-bit only.
 
 The build artifacts will be placed in the `build` directory.
 
-> Alternatively, if you prefer not to tamper with you system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder.
+> Alternatively, if you prefer not to tamper with your system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder.
 
 ## Sample projects
 
-Along with the game-engine source, there's a bunch of (basic) demo projects. They are located in the `demos` sub-directory and can be launched using `make`, passing the name of the project as a target (e.g. `make splash`).
+Along with the game engine source, there are a bunch of (basic) demo projects. They are located in the `demos` sub-directory and can be launched using `make`, passing the name of the project as a target (e.g. `make splash`).
 
 # Addenda
 
@@ -169,6 +170,8 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ### Core
 
 * [ ] Boot splash-screen w/ resource preloading support (much like older consoles).
+* [ ] On-screen overlay w/ performance information (FPS, graph, frame-time, etc...).
+* [ ] Logging to file.
 * [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
 * [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
 * [ ] Use a custom memory-management allocator.
@@ -192,10 +195,10 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ### Input
 
-* [ ] Better input handling by leveraging an event-driver approach -- this should reduces the current sub-system complexity ( as it polled).
+* [ ] Better input handling by leveraging an event-driver approach -- this should reduce the current sub-system complexity ( as it polled).
 * [ ] Rumble and force feedback support -- this might be implemented with a specific library as GLFW doesn't support it.
 * [ ] Analogue support for shoulder and trigger axes.
-* [ ] Apply filtering for the analogues, either with a low pass filter (page 591) or moving average.
+* [ ] Apply filtering for the analogs, either with a low pass filter (page 591) or moving average.
 * [ ] Implement buttons state check with XOR (page 594)
 * [ ] chords and gestures detection, for example for Street Fighter II-like combos.
 
