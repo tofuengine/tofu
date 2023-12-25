@@ -214,6 +214,7 @@ SOURCES+=$(wildcard $(externaldir)/chipmunk/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
 	$(wildcard $(externaldir)/noise/*.c) \
 	$(wildcard $(externaldir)/spleen/*.c) \
+	$(wildcard $(externaldir)/spng/*.c) \
 	$(wildcard $(externaldir)/xmp-lite/*.c)
 # Include files list (src)
 INCLUDES:=$(wildcard $(srcdir)/*.h) \
@@ -234,6 +235,7 @@ INCLUDES+=$(wildcard $(externaldir)/chipmunk/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
+	$(wildcard $(externaldir)/spng/*.h) \
 	$(wildcard $(externaldir)/stb/*.h) \
 	$(wildcard $(externaldir)/xmp-lite/*.h)
 
