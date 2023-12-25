@@ -346,9 +346,9 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
 // exceed hundred of entries, typically). Also, since we were (occasionally) keeping the array sorted by "age",
 // binary-searching by name would be impossible! (unless we are re-sorting the array twice just for sake of it)
 //
-// We single-handedly got rid of both them. The array is never sorted which means a faster and more cache-friendly
+// We single-handedly got rid of both of them. The array is never sorted which means a faster and more cache-friendly
 // code. Also, we are removing the entries with the SWAP-AND-POP idiom, which is as fast as possible.
-static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const uint8_t id[STORAGE_RESOURCE_ID_LENGTH])
+static inline Storage_Resource_t *_lookup(const Storage_Resource_t **resources, const uint8_t id[STORAGE_RESOURCE_ID_LENGTH])
 {
     size_t length = arrlenu(resources);
     for (size_t i = 0; i < length; ++i) {
@@ -360,13 +360,12 @@ static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const 
     return NULL;
 }
 
-#if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
+#if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT) && defined(TOFU_STORAGE_AUTO_COLLECT)
 // Note: when this function is called the `resources` array does always contain
 //       at least one element (unless `TOFU_STORAGE_CACHE_ENTRIES_LIMIT` is
 //       set to `0` which is utterly nonsensical).
-static inline Storage_Resource_t *_lookup_oldest(Storage_Resource_t **resources)
+static inline Storage_Resource_t *_lookup_to_be_freed(Storage_Resource_t **resources)
 {
-#if defined(TOFU_STORAGE_AUTO_COLLECT)
     // Finds the oldest entry among the resources, excluding the the ones already "aged".
     const size_t length = arrlenu(resources);
     Storage_Resource_t *oldest = resources[0];
@@ -375,14 +374,11 @@ static inline Storage_Resource_t *_lookup_oldest(Storage_Resource_t **resources)
         if (resource->age >= TOFU_STORAGE_RESOURCE_MAX_AGE) { // Skip already aged ones...
             continue;
         }
-        if (!oldest || oldest->age < resource->age) {
+        if (oldest->age < resource->age) {
             oldest = resource;
         }
     }
     return oldest;
-#else
-    return resources[0];
-#endif
 }
 #endif
 
@@ -424,13 +420,14 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 #if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
     if (arrlenu(storage->resources) > TOFU_STORAGE_CACHE_ENTRIES_LIMIT) {
         LOG_D(LOG_CONTEXT, "cache is full, picking a resource to release");
-        Storage_Resource_t *oldest = _lookup_oldest(storage->resources);
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
-        oldest->age = TOFU_STORAGE_RESOURCE_MAX_AGE; // Mark the oldest for release in the next cycle.
-        LOG_D(LOG_CONTEXT, "resource %p marked for release", oldest);
+        Storage_Resource_t *to_be_freed = _lookup_to_be_freed(storage->resources);
+        to_be_freed->age = TOFU_STORAGE_RESOURCE_MAX_AGE; // Mark the oldest for release in the next cycle.
+        LOG_D(LOG_CONTEXT, "resource %p marked for release", to_be_freed);
 #else   /* TOFU_STORAGE_AUTO_COLLECT */
-        arrdel(storage->resources, 0); // On-the-stop removal, preserving cache ordering (not swap-and-pop).
-        LOG_D(LOG_CONTEXT, "resource %p released", oldest);
+        Storage_Resource_t *to_be_freed = storage->resources[0];
+        arrdel(storage->resources, 0); // FIFO removal.
+        LOG_D(LOG_CONTEXT, "resource %p released", to_be_freed);
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
     }
 #endif
