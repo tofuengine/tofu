@@ -360,25 +360,56 @@ static inline Storage_Resource_t *_lookup(const Storage_Resource_t **resources, 
     return NULL;
 }
 
-#if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT) && defined(TOFU_STORAGE_AUTO_COLLECT)
-// Note: when this function is called the `resources` array does always contain
-//       at least one element (unless `TOFU_STORAGE_CACHE_ENTRIES_LIMIT` is
-//       set to `0` which is utterly nonsensical).
-static inline Storage_Resource_t *_lookup_to_be_freed(Storage_Resource_t **resources)
+#if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
+static inline size_t _used_cache_slots(Storage_Resource_t **resources)
 {
-    // Finds the oldest entry among the resources, excluding the the ones already "aged".
     const size_t length = arrlenu(resources);
-    Storage_Resource_t *oldest = resources[0];
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
+    // Returns the amount of cache slots occupied by *not "aged" resources, as the one already "aged" will
+    // be automatically free on the next update call and are not really going to stay in the cache.
+    size_t count = 0;
     for (size_t i = 1; i < length; ++i) {
         Storage_Resource_t *resource = resources[i];
-        if (resource->age >= TOFU_STORAGE_RESOURCE_MAX_AGE) { // Skip already aged ones...
+        if (resource->age >= TOFU_STORAGE_RESOURCE_MAX_AGE) {
             continue;
         }
-        if (oldest->age < resource->age) {
+        count += 1;
+    }
+#else   /* TOFU_STORAGE_AUTO_COLLECT */
+    size_t count = length;
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+    LOG_D(LOG_CONTEXT, "cache is currently holding %d resources", count);
+    return count;
+}
+
+static inline void _free_cache_slot(Storage_Resource_t **resources)
+{
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
+    // Finds the oldest entry among the resources, we skip already "aged" ones.
+    const size_t length = arrlenu(resources);
+    Storage_Resource_t *oldest = NULL; // We can't pick the first one, as it might be already "aged".
+    for (size_t i = 0; i < length; ++i) {
+        Storage_Resource_t *resource = resources[i];
+        if (resource->age >= TOFU_STORAGE_RESOURCE_MAX_AGE) {
+            continue;
+        }
+        if (!oldest || oldest->age < resource->age) {
             oldest = resource;
         }
     }
-    return oldest;
+
+    if (!oldest) { // This is mostly an assertion, as it is IMPOSSIBLE that a resource is not found as to-be-released!
+        LOG_W(LOG_CONTEXT, "Great Scott! No resources marked for release!");
+        return;
+    }
+
+    oldest->age = TOFU_STORAGE_RESOURCE_MAX_AGE; // Mark the oldest for release in the next cycle.
+    LOG_D(LOG_CONTEXT, "resource %p marked for release", oldest);
+#else   /* TOFU_STORAGE_AUTO_COLLECT */
+    Storage_Resource_t *oldest = resources[0];
+    arrdel(resources, 0); // FIFO removal.
+    LOG_D(LOG_CONTEXT, "resource %p released", oldest);
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
 }
 #endif
 
@@ -418,17 +449,9 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     arrpush(storage->resources, resource);
 
 #if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
-    if (arrlenu(storage->resources) > TOFU_STORAGE_CACHE_ENTRIES_LIMIT) {
+    if (_used_cache_slots(storage->resources) > TOFU_STORAGE_CACHE_ENTRIES_LIMIT) {
         LOG_D(LOG_CONTEXT, "cache is full, picking a resource to release");
-#if defined(TOFU_STORAGE_AUTO_COLLECT)
-        Storage_Resource_t *to_be_freed = _lookup_to_be_freed(storage->resources);
-        to_be_freed->age = TOFU_STORAGE_RESOURCE_MAX_AGE; // Mark the oldest for release in the next cycle.
-        LOG_D(LOG_CONTEXT, "resource %p marked for release", to_be_freed);
-#else   /* TOFU_STORAGE_AUTO_COLLECT */
-        Storage_Resource_t *to_be_freed = storage->resources[0];
-        arrdel(storage->resources, 0); // FIFO removal.
-        LOG_D(LOG_CONTEXT, "resource %p released", to_be_freed);
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+        _free_cache_slot(storage->resources);
     }
 #endif
 
