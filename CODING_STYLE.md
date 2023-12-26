@@ -51,6 +51,21 @@ Types are defined with [Pascal-case]() style. The following suffixes are used:
 * `_u` for unions,
 * `_t` for typedefs.
 
+## `const` Modifier
+
+The `const` modifier should be *always* used for pointers, to indicate the purpose/rose of the pointer itself, especially in a function signature. This is not something new as the standard C-library adopts this style since... ever. :) See, for example, the `memcpy()` function signature. This has be *huge* benefit that protects as much as possible from actual-argument misplacement (as a compilation error would occur).
+
+We advice, also, to use the `const` modifier for integral types. We aren't referring the their usage in function signature (it would be a nice benefit, albeit pedant), but when defining a local variable that is not meant to change in the scope block. For example
+
+```c
+const size_t length = arrlenu(resources);
+for (size_t i = 0; i < length; ++i) {
+    // We can be sure that `length` won't change...
+}
+```
+
+Of course, global variables that are used as constants need to be declared as `const`, as well.
+
 ## Formatting Rules
 
 * 4 spaces indentation is used (soft tabs);
@@ -161,7 +176,7 @@ We also (might) define the `FILE_H_INCLUDED` macro as it is useful anytime we ne
 
 ## Pre-increments/post-increments
 
-The pre-/post-increment operators are permitted and suggested, as long as the are used for some real shortcut/benefit in the code without adding unnecessary complexity.
+The pre-/post-increment operators are permitted and suggested, as long as the are used for some real shortcut/benefit in the code without adding unnecessary complexity or (indirectly) obfuscating the code.
 
 That is, the are to be used in any idiomatic form like when pre-incrementing the index variable int he third part of loop
 
@@ -173,7 +188,7 @@ for (int i = 0; i < LENGTH; ++i) {
 
 Note that, in this case, we prefer to use the *pre*-increment (although this is more like an habit that a real benefit, as the compiler will optimize the code anyway).
 
-The are permitted whenever their usage give some benefit to the code, such as when iterating over an array of pointers to gain access to the current item while moving the cursor
+They are permitted whenever their usage give some benefit to the code, such as when iterating over an array of pointers to gain access to the current item while moving the cursor, for example
 
 ```c
 const struct object_t *cursor = objects;
@@ -183,7 +198,7 @@ while (*cursor) {
 }
 ```
 
-When used to increment/decrement the value of a variable on a single statement the *compound assigments* operators should be used (that is, `+=` or `-=`).
+> When used to increment/decrement the value of a variable on a single statement the *compound assignment* operators should be used (that is, `+=` or `-=`).
 
 ## Object-Orientation
 
