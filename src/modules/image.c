@@ -30,6 +30,7 @@
 #include <core/config.h>
 #include <libs/log.h>
 #include <libs/path.h>
+#include <libs/profile.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/storage.h>
@@ -135,6 +136,7 @@ static int image_new_3sNO_1o(lua_State *L)
             .threshold = 0
         };
 
+    PROFILE_BEGIN(LOG_CONTEXT, "image_new")
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", name);
@@ -143,6 +145,7 @@ static int image_new_3sNO_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
+    PROFILE_END
     LOG_D(LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
@@ -173,6 +176,7 @@ static int image_new_3snn_1o(lua_State *L)
             .foreground = foreground_index
         };
 
+    PROFILE_BEGIN(LOG_CONTEXT, "image_new")
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", name);
@@ -181,6 +185,7 @@ static int image_new_3snn_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
+    PROFILE_END
     LOG_D(LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
