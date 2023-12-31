@@ -9,6 +9,30 @@ https://www.kernel.org/doc/html/v4.10/process/coding-style.html
 
 Behavioural macros are also present in the file `config.h`.
 
+## Naming Macros
+
+The rules are simple:
+
+* each macro should begin with the prefix that defines the "namespace" (e.g. `LUAX_XXX`);
+* macros that are public have no other prefix, being them "costants", functions-like, or behavioural (e.g. to configure);
+* macros that are not public have an additional single underscore as prefix (e.g. `_LUAX_XXX`).
+
+> Please, don't ever a double underscore as this is meant for internally defined ones!
+
+## Declaring Macros
+
+If a behavioural macro has a selective optional/inferred value (e.g. to be active only in `DEBUG` mode) this idiom is adopted
+
+```c
+#if !defined(LUAX_NO_RTTI) && defined(DEBUG)
+    #define _LUAX_RTTI
+#endif  /* LUAX_NO_RTTI */
+```
+
+Note that this specific is interesting: we are checking a *public* macro (`LUAX_NO_RTTI`) that will eventually be used to define another one which is *private* (`_LUAX_RTTI`).
+
+> Also note that we use 4-spaces soft-tabs also for the internal macro definition.
+
 ## Identifiers
 
 For the identifiers is adopted the [snake-case]() style.
