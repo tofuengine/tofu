@@ -166,6 +166,17 @@ Along with the game engine source, there are a bunch of (basic) demo projects. T
 
 # Addenda
 
+## Contributing
+
+If **Tofu Engine** appeals you and
+
+* you are experiencing some issue,
+* you are seeing some unexpected behaviour,
+* you have some cool ideas do you want to share, or
+* you want to write some examples and/or documentation
+
+please don't hold you back and [contribute!](CONTRIBUTING.md) :)
+
 ## Desiderata
 
 ### Core
