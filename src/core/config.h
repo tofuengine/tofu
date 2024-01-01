@@ -146,6 +146,11 @@
 // statistics.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
 
+// Uncomment if you want the I/O and processing profiling to be enabled
+// regardless of the build mode. Otherwise, it will be automatically enabled
+// only for the `DEBUG` build.
+//#define TOFU_PROFILING_ENABLED
+
 // ##############
 // ### Events ###
 // ##############
