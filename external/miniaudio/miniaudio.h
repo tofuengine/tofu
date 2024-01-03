@@ -13413,7 +13413,7 @@ MA_API const char* ma_log_level_to_string(ma_uint32 logLevel)
     }
 }
 
-#if defined(MA_DEBUG_OUTPUT)
+#if defined(MA_DEBUG_OUTPUT_DEFAULT_CALLBACK)
 #if defined(MA_ANDROID)
     #include <android/log.h>
 #endif
@@ -13474,7 +13474,7 @@ MA_API ma_result ma_log_init(const ma_allocation_callbacks* pAllocationCallbacks
     #endif
 
     /* If we're using debug output, enable it. */
-    #if defined(MA_DEBUG_OUTPUT)
+    #if defined(MA_DEBUG_OUTPUT_DEFAULT_CALLBACK)
     {
         ma_log_register_callback(pLog, ma_log_callback_init(ma_log_callback_debug, NULL)); /* Doesn't really matter if this fails. */
     }
