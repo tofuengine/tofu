@@ -171,8 +171,8 @@ static void __inline D_(const char *text, ...) {
 #define D_CRIT "\x1b[31m"
 #define D_WARN "\x1b[36m"
 #define D_(...) do { \
-	printf("\x1b[33m%s \x1b[37m[%s:%d] " D_INFO, LIBXMP_FUNC, \
-		__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
+	printf("\x1b[37m[%s:%d@%s] " D_INFO, \
+		__FILE__, __LINE__, LIBXMP_FUNC); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
 	} while (0)
 #else
 #define D_(...) do {} while (0)
