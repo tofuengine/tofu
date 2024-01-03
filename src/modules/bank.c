@@ -34,7 +34,7 @@
 
 #include <math.h>
 
-#define META_TABLE  "Tofu_Graphics_Bank_mt"
+#define META_TABLE "Tofu_Graphics_Bank_mt"
 
 static int bank_new_v_1o(lua_State *L);
 static int bank_gc_1o_0(lua_State *L);
@@ -75,7 +75,7 @@ static int bank_new_2os_1o(lua_State *L)
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle32_t)); // Calculate the amount of entries on the fly.
+    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, SR_BPTR(cells), SR_BSIZE(cells) / sizeof(GL_Rectangle32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }

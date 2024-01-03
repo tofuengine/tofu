@@ -82,7 +82,7 @@ void shader_destroy(Shader_t *shader)
 
 bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
 {
-#if defined(__DEFENSIVE_CHECKS__)
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (shader->id == 0) {
         LOG_W("shader program can't be zero");
         return false;

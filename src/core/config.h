@@ -58,13 +58,6 @@
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
 
-// Includes checks inside some crucial functions. Could be useful in DEBUG mode.
-#if defined(DEBUG)
-  #define __DEFENSIVE_CHECKS__
-#else
-  #undef  __DEFENSIVE_CHECKS__
-#endif
-
 // #############
 // ### Audio ###
 // #############
@@ -94,6 +87,27 @@
 // OpenGL but with some cost. You can try and `#undef` it and try for
 // yourself. :)
 #define TOFU_DISPLAY_OPENGL_STATE_CLEANUP
+
+// ############
+// ### Core ###
+// ############
+
+// Define if you want the I/O and processing profiling to be enabled
+// regardless of the build mode. Otherwise, it will be automatically enabled
+// only for the `DEBUG` build.
+#undef  TOFU_CORE_PROFILING_ENABLED
+
+// When define the following macro enables "faster" integer and float math
+// operations. See the `imath.h` and `fmath.h` sources.
+#undef  TOFU_CORE_FAST_MATH
+
+// Includes checks inside some crucial functions. Could be useful in DEBUG mode.
+#if defined(DEBUG)
+    #define TOFU_CORE_DEFENSIVE_CHECKS
+#else
+    #undef  TOFU_CORE_DEFENSIVE_CHECKS
+#endif
+
 
 // ##############
 // ### Engine ###
@@ -145,11 +159,6 @@
 // Controls the period (in seconds) of the aforementioned debug performance
 // statistics.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
-
-// Uncomment if you want the I/O and processing profiling to be enabled
-// regardless of the build mode. Otherwise, it will be automatically enabled
-// only for the `DEBUG` build.
-//#define TOFU_PROFILING_ENABLED
 
 // ##############
 // ### Events ###
@@ -331,8 +340,9 @@
 
 // When this macro is defined, the main object (see the `boot-XXX.lua` files)
 // can be partially implemented (i.e. some of its method can be missing). This
-// is not the usual case, as the API is always fully implemented. Undefining
-// the macro will simplify the code, which is continously called.
+// is not the usual case, as the game API is usually fully implemented.
+// Please note that supporting "partial objects" could slow down the execution
+// as additional checks are introduced as a side-effect.
 #undef  TOFU_INTERPRETER_PARTIAL_OBJECT
 
 // As the game-engine uses a Lua custom reader we have to freedom to set the

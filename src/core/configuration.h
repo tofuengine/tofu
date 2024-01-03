@@ -31,25 +31,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MAX_VALUE_LENGTH   128
+#define CONFIGURATION_MAX_LINE_LENGTH      256
+#define CONFIGURATION_MAX_PARAMETER_LENGTH CONFIGURATION_MAX_LINE_LENGTH
+#define CONFIGURATION_MAX_CONTEXT_LENGTH   64
+#define CONFIGURATION_MAX_VALUE_LENGTH     128
 
 typedef struct Configuration_s {
     struct {
-        char identity[MAX_VALUE_LENGTH];
+        char identity[CONFIGURATION_MAX_VALUE_LENGTH];
         struct {
             int major, minor, revision;
         } version;
         bool debug;
-        char icon[MAX_VALUE_LENGTH];
-        char mappings[MAX_VALUE_LENGTH];
+        char icon[CONFIGURATION_MAX_VALUE_LENGTH];
+        char mappings[CONFIGURATION_MAX_VALUE_LENGTH];
         bool quit_on_close;
     } system;
     struct {
-        char title[MAX_VALUE_LENGTH];
+        char title[CONFIGURATION_MAX_VALUE_LENGTH];
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
-        char effect[MAX_VALUE_LENGTH];
+        char effect[CONFIGURATION_MAX_VALUE_LENGTH];
     } display;
     struct {
         int device_index;

@@ -35,14 +35,14 @@
 
 // Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
-#define MIN_SPEED_VALUE ((float)ma_standard_sample_rate_min / (float)ma_standard_sample_rate_max)
+#define _MIN_SPEED_VALUE ((float)ma_standard_sample_rate_min / (float)ma_standard_sample_rate_max)
 
 #if SL_BYTES_PER_SAMPLE == 2
-  #define INTERNAL_FORMAT   ma_format_s16
+    #define INTERNAL_FORMAT   ma_format_s16
 #elif SL_BYTES_PER_SAMPLE == 4
-  #define INTERNAL_FORMAT   ma_format_f32
+    #define INTERNAL_FORMAT   ma_format_f32
 #else
-  #error "Wrong internal format"
+    #error "Wrong internal format"
 #endif
 
 static void *_malloc(size_t sz, void *pUserData)
@@ -188,7 +188,7 @@ void SL_props_set_gain(SL_Props_t *props, float gain)
 
 void SL_props_set_speed(SL_Props_t *props, float speed)
 {
-    props->speed = fmaxf(MIN_SPEED_VALUE, speed);
+    props->speed = fmaxf(_MIN_SPEED_VALUE, speed);
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 

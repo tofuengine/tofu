@@ -34,7 +34,7 @@
 
 #include <time.h>
 
-#define MAX_DATE_LENGTH 64
+#define _MAX_DATE_LENGTH 64
 
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
@@ -149,8 +149,8 @@ static int system_date_2SS_1s(lua_State *L)
     const time_t t = time(NULL);
     const struct tm tm = (timezone[0] == 'g') ? *gmtime(&t) : *localtime(&t); // TODO: use table lookup.
 
-    char date[MAX_DATE_LENGTH] = { 0 };
-    size_t length = strftime(date, MAX_DATE_LENGTH, format, &tm);
+    char date[_MAX_DATE_LENGTH] = { 0 };
+    size_t length = strftime(date, _MAX_DATE_LENGTH, format, &tm);
 
     lua_pushlstring(L, date, length);
 

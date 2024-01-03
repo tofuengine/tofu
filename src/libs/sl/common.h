@@ -41,6 +41,8 @@
 
 #define SL_MIXING_BUFFER_SIZE_IN_FRAMES 128
 
+// We are using an unsigned integer to store the group-id. We could technically just use `-1` and cast to unsigned, to
+// model the "any" group... but it just sucks. :P
 #define SL_GROUPS_AMOUNT        256
 #define SL_FIRST_GROUP          0
 #define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)

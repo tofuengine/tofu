@@ -30,33 +30,33 @@
 #include <string.h>
 
 #if PLATFORM_ID == PLATFORM_LINUX
-  #define USE_COLORS
+    #define _USE_COLORS
 #endif
 
 // http://jafrog.com/2013/11/23/colors-in-terminal.html
-#if defined(USE_COLORS)
-  #define COLOR_BLACK       "\x1b[30m"
-  #define COLOR_RED         "\x1b[31m"
-  #define COLOR_GREEN       "\x1b[32m"
-  #define COLOR_YELLOW      "\x1b[33m"
-  #define COLOR_BLUE        "\x1b[34m"
-  #define COLOR_MAGENTA     "\x1b[35m"
-  #define COLOR_CYAN        "\x1b[36m"
-  #define COLOR_WHITE       "\x1b[37m"
-  
-  #define COLOR_BLACK_HC    "\x1b[90m"
-  #define COLOR_RED_HC      "\x1b[91m"
-  #define COLOR_GREEN_HC    "\x1b[92m"
-  #define COLOR_YELLOW_HC   "\x1b[93m"
-  #define COLOR_BLUE_HC     "\x1b[94m"
-  #define COLOR_MAGENTA_HC  "\x1b[95m"
-  #define COLOR_CYAN_HC     "\x1b[96m"
-  #define COLOR_WHITE_HC    "\x1b[97m"
-  
-  #define COLOR_OFF         "\x1b[0m"
+#if defined(_USE_COLORS)
+    #define COLOR_BLACK      "\x1b[30m"
+    #define COLOR_RED        "\x1b[31m"
+    #define COLOR_GREEN      "\x1b[32m"
+    #define COLOR_YELLOW     "\x1b[33m"
+    #define COLOR_BLUE       "\x1b[34m"
+    #define COLOR_MAGENTA    "\x1b[35m"
+    #define COLOR_CYAN       "\x1b[36m"
+    #define COLOR_WHITE      "\x1b[37m"
+
+    #define COLOR_BLACK_HC   "\x1b[90m"
+    #define COLOR_RED_HC     "\x1b[91m"
+    #define COLOR_GREEN_HC   "\x1b[92m"
+    #define COLOR_YELLOW_HC  "\x1b[93m"
+    #define COLOR_BLUE_HC    "\x1b[94m"
+    #define COLOR_MAGENTA_HC "\x1b[95m"
+    #define COLOR_CYAN_HC    "\x1b[96m"
+    #define COLOR_WHITE_HC   "\x1b[97m"
+
+    #define COLOR_OFF        "\x1b[0m"
 #endif
 
-#if defined(USE_COLORS)
+#if defined(_USE_COLORS)
 static const char *_colors[Log_Levels_t_CountOf] = {
     COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
 };
@@ -79,13 +79,13 @@ static void _write(Log_Levels_t level, const char *tag, const char *text, va_lis
         return;
     }
 
-#if defined(USE_COLORS)
+#if defined(_USE_COLORS)
     fprintf(_stream, "%s[%c/%s]%s %s", COLOR_WHITE, _prefixes[level], tag, COLOR_OFF, _colors[level]);
 #else
     fprintf(_stream, "[%c/%s] ", _prefixes[level], tag);
 #endif
     vfprintf(_stream, text, args);
-#if defined(USE_COLORS)
+#if defined(_USE_COLORS)
     fputs(COLOR_OFF, _stream);
 #endif
     if (text[strlen(text) - 1] != '\n') {

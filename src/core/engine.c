@@ -33,11 +33,10 @@
 #include <libs/sysinfo.h>
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #include <windows.h>
+    #include <windows.h>
 #endif
 
-#define EVENTS_INITIAL_CAPACITY 8
-
+#define _EVENTS_INITIAL_CAPACITY 8
 
 static inline void _wait_for(float seconds)
 {
@@ -77,7 +76,7 @@ static Configuration_t *_configure(Storage_t *storage)
         return NULL;
     }
 
-    Configuration_t *configuration = Configuration_create(S_SCHARS(resource));
+    Configuration_t *configuration = Configuration_create(SR_SCHARS(resource));
     if (!configuration) {
         LOG_F("can't create configuration");
         return NULL;
@@ -175,7 +174,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     LOG_I("mappings `%s` loaded", engine->configuration->system.mappings);
 
     engine->display = Display_create(&(const Display_Configuration_t){
-            .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
+            .icon = (GLFWimage){ .width = (int)SR_IWIDTH(icon), .height = (int)SR_IHEIGHT(icon), .pixels = SR_IPIXELS(icon) },
             .window = {
                 .title = engine->configuration->display.title,
                 .width = engine->configuration->display.width,
@@ -185,7 +184,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
             .quit_on_close = engine->configuration->system.quit_on_close,
-            .effect = S_SCHARS(effect)
+            .effect = SR_SCHARS(effect)
         });
     if (!engine->display) {
         LOG_F("can't create display");
@@ -193,14 +192,14 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("display ready");
 
-    const GL_Size_t phyisical_size = Display_get_physical_size(engine->display);
+    const GL_Size_t physical_size = Display_get_physical_size(engine->display);
     const GL_Size_t virtual_size = Display_get_virtual_size(engine->display);
     engine->input = Input_create(&(const Input_Configuration_t){
-            .mappings = S_SCHARS(mappings),
+            .mappings = SR_SCHARS(mappings),
             .screen = {
                 .physical = {
-                    .width = phyisical_size.width,
-                    .height = phyisical_size.height
+                    .width = physical_size.width,
+                    .height = physical_size.height
                 },
                 .virtual = {
                     .width = virtual_size.width,
@@ -358,7 +357,7 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
 
     const char **events = NULL;
-    arrsetcap(events, EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
+    arrsetcap(events, _EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Display_should_close(engine->display); ) {

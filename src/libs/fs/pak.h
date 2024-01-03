@@ -27,6 +27,44 @@
 
 #include "fs.h"
 
+/*
++---------+
+| HEADER  | sizeof(Pak_Header_t)
++---------+
+| ENTRY 0 | sizeof(Pak_Entry_t)
++---------+
+| ENTRY 1 |     "         "
++---------+
+    ...
+    ...
+    ...
++---------+
+| ENTRY n |     "         "
++---------+
+| DATA 0  | sizeof(Entry) * sizeof(uint8_t)
++---------+
+| DATA 1  |     "                     "
++---------+
+    ...
+    ...
+    ...
++---------+
+| DATA n  |     "                     "
++---------+
+
+NOTE: `uint16_t` and `uint32_t` data are explicitly stored in little-endian.
+*/
+
+#define PAK_SIGNATURE        "TOFUPAK!"
+#define PAK_SIGNATURE_LENGTH 8
+
+#define PAK_VERSION          0
+
+#define PAK_ID_LENGTH    MD5_SIZE
+#define PAK_ID_LENGTH_SZ (PAK_ID_LENGTH * 2 + 1)
+
+#define PAK_KEY_LENGTH   PAK_ID_LENGTH
+
 extern bool FS_pak_is_valid(const char *path);
 extern FS_Mount_t *FS_pak_mount(const char *path);
 

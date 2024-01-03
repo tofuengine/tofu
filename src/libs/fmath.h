@@ -29,6 +29,10 @@
 
 #include <math.h>
 
+#if defined(TOFU_CORE_FAST_MATH) && !defined(FMATH_FAST_OPERATIONS)
+    #define FMATH_FAST_OPERATIONS
+#endif
+
 #define F_E         2.7182818284590452354f
 #define F_LOG2E     1.4426950408889634074f
 #define F_LOG10E    0.43429448190325182765f
@@ -64,7 +68,7 @@
 #define FINVLERP(v0, v1, v) (((v) - (v0)) / ((v1) - (v0)))
 #define FSTEP(e, x)         ((x) < (e) ? 0.0f : 1.0f)
 
-#if defined(__FAST_FLOAT_MATH__)
+#if defined(FMATH_FAST_OPERATIONS)
 #define FFLOOR(x)           (ffloor((x)))
 #define FCEIL(x )           (fceil((x)))
 #define FROUND(x)           (ffloor((x) + 0.5f))
@@ -82,7 +86,7 @@ extern float fstep(float edge, float x);
 extern float fsmoothstep(float edge0, float edge1, float x);
 extern float fsmootherstep(float edge0, float edge1, float x);
 
-#if defined(__FAST_INTEGER_MATH__)
+#if defined(FMATH_FAST_OPERATIONS)
 extern float ffloor(float x);
 extern float fceil(float x);
 #endif

@@ -30,7 +30,9 @@
 // 128 steps per quadrant seems more than enough.
 #include <math.h>
 
-static const float _lut[640] = {
+#define _LUT_LENGTH (SINCOS_PERIOD + (SINCOS_PERIOD / 4))
+
+static const float _lut[_LUT_LENGTH] = {
     0.000000000f, /* [0] */
     0.012271538f, /* [1] */
     0.024541229f, /* [2] */

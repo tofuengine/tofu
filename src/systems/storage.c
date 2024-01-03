@@ -347,7 +347,10 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
 //
 // We single-handedly got rid of both of them. The array is never sorted which means a faster and more cache-friendly
 // code. Also, we are removing the entries with the SWAP-AND-POP idiom, which is as fast as possible.
-static inline Storage_Resource_t *_lookup(const Storage_Resource_t **resources, const uint8_t id[STORAGE_RESOURCE_ID_LENGTH])
+//
+// Note: we are receiving and passing a *non* `const` pointer to the resources array as the returned value
+//       is usually manipulated and modified in a *non* `const` manner.
+static inline Storage_Resource_t *_lookup(Storage_Resource_t **resources, const uint8_t id[STORAGE_RESOURCE_ID_LENGTH])
 {
     size_t length = arrlenu(resources);
     for (size_t i = 0; i < length; ++i) {
@@ -489,19 +492,19 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
 
     switch (resource->type) {
         case STORAGE_RESOURCE_STRING: {
-            size_t chars_to_write = S_SLENTGH(resource);
-            size_t chars_written = fwrite(S_SCHARS(resource), sizeof(char), chars_to_write, stream);
+            size_t chars_to_write = SR_SLENTGH(resource);
+            size_t chars_written = fwrite(SR_SCHARS(resource), sizeof(char), chars_to_write, stream);
             result = chars_written == chars_to_write;
             break;
         }
         case STORAGE_RESOURCE_BLOB: {
-            size_t bytes_to_write = S_BSIZE(resource);
-            size_t bytes_written = fwrite(S_BPTR(resource), sizeof(uint8_t), bytes_to_write, stream);
+            size_t bytes_to_write = SR_BSIZE(resource);
+            size_t bytes_written = fwrite(SR_BPTR(resource), sizeof(uint8_t), bytes_to_write, stream);
             result = bytes_written == bytes_to_write;
             break;
         }
         case STORAGE_RESOURCE_IMAGE: {
-            int done = stbi_write_png_to_func(_stbi_write_func, (void *)stream, S_IWIDTH(resource), S_IHEIGHT(resource), 4, S_IPIXELS(resource), S_IWIDTH(resource) * 4);
+            int done = stbi_write_png_to_func(_stbi_write_func, (void *)stream, SR_IWIDTH(resource), SR_IHEIGHT(resource), 4, SR_IPIXELS(resource), SR_IWIDTH(resource) * 4);
             result = done != 0;
             break;
         }

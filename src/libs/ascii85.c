@@ -85,13 +85,13 @@ static const bool ascii85_encode_z_for_zero  = true;
 static const bool ascii85_check_decode_chars = true;
 
 #if 0
-static inline bool ascii85_char_ok (uint8_t c)
+static inline bool _ascii85_char_ok (uint8_t c)
 {
     return ((c >= 33u) && (c <= 117u));
 }
 #endif
 
-static inline bool ascii85_char_ng (uint8_t c)
+static inline bool _ascii85_char_ng (uint8_t c)
 {
     return ((c < 33u) || (c > 117u));
 }
@@ -219,11 +219,11 @@ int32_t ascii85_decode(const char *inp, int32_t in_length, uint8_t *outp, int32_
                 chunk_len = 5; // to make out_length increment correct
             }
             else if (/*lint -e{506} -e{774}*/ascii85_check_decode_chars
-                    && (                       ascii85_char_ng(inp[in_rover    ])
-                        || ((chunk_len > 1) && ascii85_char_ng(inp[in_rover + 1]))
-                        || ((chunk_len > 2) && ascii85_char_ng(inp[in_rover + 2]))
-                        || ((chunk_len > 3) && ascii85_char_ng(inp[in_rover + 3]))
-                        || ((chunk_len > 4) && ascii85_char_ng(inp[in_rover + 4]))))
+                    && (                       _ascii85_char_ng(inp[in_rover    ])
+                        || ((chunk_len > 1) && _ascii85_char_ng(inp[in_rover + 1]))
+                        || ((chunk_len > 2) && _ascii85_char_ng(inp[in_rover + 2]))
+                        || ((chunk_len > 3) && _ascii85_char_ng(inp[in_rover + 3]))
+                        || ((chunk_len > 4) && _ascii85_char_ng(inp[in_rover + 4]))))
             {
                 out_length = (int32_t )ascii85_err_bad_decode_char;
                 break; // leave while loop early to report error

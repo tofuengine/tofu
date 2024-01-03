@@ -57,8 +57,8 @@ int controller_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
         (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
+            .data = SR_SCHARS(script),
+            .size = SR_SLENTGH(script),
             .name = name
         },
         (const struct luaL_Reg[]){

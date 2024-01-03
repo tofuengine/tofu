@@ -34,19 +34,19 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #if defined(__USE_OS_NATIVE_API__)
-    #include <shlobj.h>
-  #endif
+    #if defined(PATH_USE_OS_NATIVE_API)
+        #include <shlobj.h>
+    #endif
 #endif
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #define realpath(N,R) _fullpath((R),(N),PLATFORM_PATH_MAX)
+    #define realpath(N,R) _fullpath((R),(N),PLATFORM_PATH_MAX)
 #endif
 
 #if PLATFORM_ID == PLATFORM_LINUX
-  #define createdir(P)  mkdir((P), 0755)
+    #define createdir(P)  mkdir((P), 0755)
 #elif PLATFORM_ID == PLATFORM_WINDOWS
-  #define createdir(P)  mkdir((P))
+    #define createdir(P)  mkdir((P))
 #endif
 
 static inline bool _path_is_trailed(const char *path)
@@ -69,12 +69,12 @@ void path_expand(const char *path, char *expanded)
         strcat(resolved, path + 1);
 #elif PLATFORM_ID == PLATFORM_WINDOWS
     if (strncasecmp(path, "%AppData%", 9) == 0) {
-  #if defined(__USE_OS_NATIVE_API__)
+    #if defined(PATH_USE_OS_NATIVE_API)
         char appdata[PLATFORM_PATH_MAX] = { 0 };
         SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
-  #else
+    #else
         const char *appdata = getenv("APPDATA"); // https://pureinfotech.com/list-environment-variables-windows-10/
-  #endif
+    #endif
         strcpy(resolved, appdata);
         strcat(resolved, path + 9);
 #endif

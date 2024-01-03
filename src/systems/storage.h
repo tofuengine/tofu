@@ -90,13 +90,14 @@ typedef struct Storage_s {
     Storage_Resource_t **resources;
 } Storage_t;
 
-#define S_SCHARS(r)         ((r)->var.string.chars)
-#define S_SLENTGH(r)        ((r)->var.string.length)
-#define S_BPTR(r)           ((r)->var.blob.ptr)
-#define S_BSIZE(r)          ((r)->var.blob.size)
-#define S_IWIDTH(r)         ((r)->var.image.width)
-#define S_IHEIGHT(r)        ((r)->var.image.height)
-#define S_IPIXELS(r)        ((r)->var.image.pixels)
+// Faster accessors for a storage (S) resource (R) attributes.
+#define SR_SCHARS(r)  ((r)->var.string.chars)
+#define SR_SLENTGH(r) ((r)->var.string.length)
+#define SR_BPTR(r)    ((r)->var.blob.ptr)
+#define SR_BSIZE(r)   ((r)->var.blob.size)
+#define SR_IWIDTH(r)  ((r)->var.image.width)
+#define SR_IHEIGHT(r) ((r)->var.image.height)
+#define SR_IPIXELS(r) ((r)->var.image.pixels)
 
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);

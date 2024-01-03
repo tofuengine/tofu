@@ -32,8 +32,8 @@
 
 #include <malloc.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #include <windows.h>
-  #include <psapi.h>
+    #include <windows.h>
+    #include <psapi.h>
 #endif
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html

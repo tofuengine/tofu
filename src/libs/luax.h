@@ -29,6 +29,10 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
+#if !defined(LUAX_RUNTIME_CHECKS) && defined(DEBUG)
+    #define LUAX_RUNTIME_CHECKS
+#endif
+
 typedef enum luaX_Const_Type_e {
     LUA_CT_NIL,
     LUA_CT_BOOLEAN,
@@ -68,7 +72,7 @@ typedef struct luaX_String_s {
 #define LUA_TENUM       LUA_TSTRING
 #define LUA_TOBJECT     LUA_TUSERDATA
 
-#if defined(DEBUG)
+#if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_SIGNATURE_BEGIN(L) \
         do { \
             lua_State *_L = (L); \
@@ -121,7 +125,7 @@ typedef struct luaX_String_s {
         } while (0);
 #endif
 
-#if defined(DEBUG)
+#if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_BOOLEAN(L, idx)                 (!lua_isboolean((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
     #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
@@ -165,9 +169,9 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_OBJECT(l, idx, t, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toobject((L), (idx), (t)))
 #endif
 
-#define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
+#define luaX_dump(L) luaX_stackdump((L), __FILE__, __LINE__)
 
-#define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
+#define luaX_tofunction(L, idx) luaX_ref((L), (idx))
 
 extern luaX_String luaX_tolstring(lua_State *L, int idx);
 

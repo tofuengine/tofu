@@ -58,8 +58,8 @@ int palette_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L,
         (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
+            .data = SR_SCHARS(script),
+            .size = SR_SLENTGH(script),
             .name = name
         },
         (const struct luaL_Reg[]){
@@ -143,12 +143,12 @@ static int palette_new_1t_1o(lua_State *L)
     GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     lua_pushnil(L); // T -> T N
     for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
-#if defined(__DEFENSIVE_CHECKS__)
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
         size_t components = lua_rawlen(L, 3);
         if (components != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, components);
         }
-#endif /* __DEFENSIVE_CHECKS__ */
+#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
         lua_rawgeti(L, 3, 1); // T N T -> T N T I
         lua_rawgeti(L, 3, 2); // T N T I -> T N T I I
         lua_rawgeti(L, 3, 3); // T N T I I -> T N T I I I

@@ -28,10 +28,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define FS_PATH_SEPARATOR       '/'
-#define FS_PATH_SEPARATOR_SZ    "/"
+#define FS_PATH_SEPARATOR    '/'
+#define FS_PATH_SEPARATOR_SZ "/"
 
-#define FS_ARCHIVE_EXTENSION    ".pak"
+#define FS_ARCHIVE_EXTENSION_SZ ".pak"
 
 typedef struct FS_Mount_s FS_Mount_t;
 typedef struct FS_Handle_s FS_Handle_t;

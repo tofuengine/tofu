@@ -61,7 +61,7 @@ static int file_load_1s_1s(lua_State *L)
     if (!resource) {
         return luaL_error(L, "can't load file `%s`", name);
     }
-    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
+    lua_pushlstring(L, SR_BPTR(resource), SR_BSIZE(resource)); // Lua's strings can contain bytes.
 
     return 1;
 }

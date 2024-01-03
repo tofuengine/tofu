@@ -38,26 +38,18 @@
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
 // FIXME: greater value to reduce the I/O? Guess this would be required...
-#define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
+#define _STREAMING_BUFFER_SIZE_IN_FRAMES   SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
-#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
+#define _STREAMING_BUFFER_CHUNK_IN_FRAMES  (_STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
-#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
-#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
-#define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
-#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
+#define _MIXING_BUFFER_BYTES_PER_SAMPLE    SL_BYTES_PER_SAMPLE
+#define _MIXING_BUFFER_SAMPLES_PER_CHANNEL SL_SAMPLES_PER_CHANNEL
+#define _MIXING_BUFFER_CHANNELS_PER_FRAME  SL_CHANNELS_PER_FRAME
+#define _MIXING_BUFFER_SIZE_IN_FRAMES      SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
-#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
-
-#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
-  #define mix_additive  mix_1on2_additive
-#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
-  #define mix_additive  mix_2on2_additive
-#else
-  #error "Mixing buffer has wrong number of channels"
-#endif
+#define _MIXING_BUFFER_BYTES_PER_FRAME     (_MIXING_BUFFER_CHANNELS_PER_FRAME * _MIXING_BUFFER_SAMPLES_PER_CHANNEL * _MIXING_BUFFER_BYTES_PER_SAMPLE)
+#define _MIXING_BUFFER_SIZE_IN_BYTES       (_MIXING_BUFFER_SIZE_IN_FRAMES * _MIXING_BUFFER_BYTES_PER_FRAME)
 
 typedef struct Music_s { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
@@ -118,10 +110,10 @@ static inline bool _produce(Music_t *music)
     if (frames_to_produce == 0) {
         LOG_W("buffer overrrun for source %p - stalling (waiting for consumer)", music);
         return true;
-#if defined(STREAMING_BUFFER_CHUNK_IN_FRAMES)
+#if defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
-    if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
-        frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    if (frames_to_produce > _STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_produce = _STREAMING_BUFFER_CHUNK_IN_FRAMES;
 #endif
     }
 
@@ -223,7 +215,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     size_t bits_per_sample = music->decoder->bitsPerSample;
     LOG_D("music decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", music->decoder, music->length_in_frames, channels, sample_rate, bits_per_sample);
 
-    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
+    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, channels, _STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
         LOG_E("can't initialize music ring-buffer (%d frames)", _STREAMING_BUFFER_SIZE_IN_FRAMES);
         goto error_close_decoder;
@@ -237,7 +229,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     }
 #endif
 
-    music->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    music->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, _MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!music->props) {
         LOG_E("can't initialize music properties");
         goto error_deinitialize_ringbuffer;
@@ -301,7 +293,7 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
     ma_data_converter *converter = &music->props->converter;
     ma_pcm_rb *buffer = &music->buffer;
 
-    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    uint8_t converted_buffer[_MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = music->props->precomputed_mix;
 
@@ -320,7 +312,7 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
             }
         }
 
-        size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
+        size_t frames_to_generate = frames_remaining > _MIXING_BUFFER_SIZE_IN_FRAMES ? _MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
         ma_uint64 frames_to_consume;
         ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
@@ -335,7 +327,13 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
 
         ma_pcm_rb_commit_read(buffer, frames_consumed);
 
-        mix_additive(cursor, converted_buffer, frames_generated, mix);
+#if _MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+        mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
+#elif _MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+        mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
+#else
+    #error "Mixing buffer has wrong number of channels"
+#endif
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }

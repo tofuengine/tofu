@@ -85,7 +85,7 @@
 
 static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
 {
-#if defined(INSIST)
+#if defined(_INSIST)
     luaX_insisttable(L, "tofu");
     for (const luaL_Reg *module = modules; module->func; ++module) {
         luaX_pushvalues(L, nup);

@@ -93,7 +93,7 @@ void mix_2on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
         dptr[1] = _accumulate_f32(dptr[1], left, left_to_right, right, right_to_right);
     }
 #else
-  #error "Wrong internal format"
+    #error "Wrong internal format"
 #endif
 }
 
@@ -123,7 +123,7 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
         dptr[1] = _accumulate_f32(dptr[1], left, left_to_right, right, right_to_right);
     }
 #else
-  #error "Wrong internal format"
+    #error "Wrong internal format"
 #endif
 }
 

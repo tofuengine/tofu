@@ -58,7 +58,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MD5_SIZE    16
+#define MD5_SIZE 16
 
 typedef struct md5_context_s {
   uint32_t state[4]; // state (ABCD)

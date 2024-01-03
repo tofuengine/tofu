@@ -60,10 +60,10 @@ static void *_cache_open(void *user_data, const char *name)
     }
 
     *stream = (Storage_Cache_Stream_t){
-        .ptr = (const uint8_t *)value->data,
-        .size = value->size,
-        .position = 0
-    };
+            .ptr = (const uint8_t *)value->data,
+            .size = value->size,
+            .position = 0
+        };
 
     return stream;
 }

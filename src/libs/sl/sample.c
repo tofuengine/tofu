@@ -35,26 +35,19 @@
 
 #include <stdint.h>
 
-#define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
+// When defined this macro will pose a limit in maximum the length of a sample, as it is unpractical to have
+// too-long samples. However, we could also don't limit it and just leave it to the user.
+#define _SAMPLE_MAX_LENGTH_IN_SECONDS      10.0f
 
 // Samples differs from musics and modules since they are *mono* in nature. We have just *one* channel per frame.
 // This means that we will be using the `mix_1on2_additive()` mixing function to duplicate the mono channel to stereo.
-#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
-#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
-#define MIXING_BUFFER_CHANNELS_PER_FRAME    1
-#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
+#define _MIXING_BUFFER_BYTES_PER_SAMPLE    SL_BYTES_PER_SAMPLE
+#define _MIXING_BUFFER_SAMPLES_PER_CHANNEL SL_SAMPLES_PER_CHANNEL
+#define _MIXING_BUFFER_CHANNELS_PER_FRAME  1
+#define _MIXING_BUFFER_SIZE_IN_FRAMES      SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
-#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
-
-#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
-  #define mix_additive  mix_1on2_additive
-#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
-  #define mix_additive  mix_2on2_additive
-#else
-  #error "Mixing buffer has wrong number of channels"
-#endif
-
+#define _MIXING_BUFFER_BYTES_PER_FRAME     (_MIXING_BUFFER_CHANNELS_PER_FRAME * _MIXING_BUFFER_SAMPLES_PER_CHANNEL * _MIXING_BUFFER_BYTES_PER_SAMPLE)
+#define _MIXING_BUFFER_SIZE_IN_BYTES       (_MIXING_BUFFER_SIZE_IN_FRAMES * _MIXING_BUFFER_BYTES_PER_FRAME)
 
 typedef struct Sample_s {
     Source_VTable_t vtable;
@@ -66,7 +59,7 @@ typedef struct Sample_s {
     drflac *decoder;
     size_t length_in_frames;
 
-    uint8_t mixing_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    uint8_t mixing_buffer[_MIXING_BUFFER_SIZE_IN_BYTES];
 
     ma_audio_buffer buffer;
     size_t frames_completed;
@@ -218,11 +211,14 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
         LOG_E("samples need to be monaural (i.e. w/ 1 channel)");
         goto error_close_decoder;
     }
+
+#if defined(_SAMPLE_MAX_LENGTH_IN_SECONDS)
     float duration = (float)sample->length_in_frames / (float)sample_rate;
     if (duration > _SAMPLE_MAX_LENGTH_IN_SECONDS) {
         LOG_E("sample is too long (%.2f seconds)", duration);
         goto error_close_decoder;
     }
+#endif
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(INTERNAL_FORMAT, channels, sample->length_in_frames, NULL, NULL);
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
@@ -237,7 +233,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
         goto error_deinitialize_audio_buffer;
     }
 
-    sample->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    sample->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, _MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!sample->props) {
         LOG_E("can't initialize sample properties");
         goto error_deinitialize_audio_buffer;
@@ -307,7 +303,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
             }
         }
 
-        size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
+        size_t frames_to_generate = frames_remaining > _MIXING_BUFFER_SIZE_IN_FRAMES ? _MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
         ma_uint64 frames_to_consume;
         ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
@@ -323,7 +319,13 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
         sample->frames_completed += frames_consumed;
 
-        mix_additive(cursor, converted_buffer, frames_generated, mix);
+#if _MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+        mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
+#elif _MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+        mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
+#else
+    #error "Mixing buffer has wrong number of channels"
+#endif
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }

@@ -36,10 +36,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define LINE_LENGTH                 256
-#define PARAMETER_LENGTH            LINE_LENGTH
-#define PARAMETER_CONTEXT_LENGTH    64
-
 static inline void _parse_version(const char *version_string, int *major, int *minor, int *revision)
 {
     *major = *minor = *revision = 0; // Set to zero, minimum enforced value in case some parts are missing.
@@ -48,7 +44,7 @@ static inline void _parse_version(const char *version_string, int *major, int *m
 
 static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
-    char fqn[PARAMETER_LENGTH] = { 0 };
+    char fqn[CONFIGURATION_MAX_PARAMETER_LENGTH] = { 0 };
     if (context && context[0] != '\0') { // Skip context if not provided.
         strcpy(fqn, context);
         strcat(fqn, "-");
@@ -56,7 +52,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     strcat(fqn, key);
 
     if (strcmp(fqn, "system-identity") == 0) {
-        strncpy(configuration->system.identity, value, MAX_VALUE_LENGTH - 1);
+        strncpy(configuration->system.identity, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "system-version") == 0) {
         int major, minor, revision;
@@ -69,16 +65,16 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
         configuration->system.debug = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "system-icon") == 0) {
-        strncpy(configuration->system.icon, value, MAX_VALUE_LENGTH - 1);
+        strncpy(configuration->system.icon, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "system-mappings") == 0) {
-        strncpy(configuration->system.mappings, value, MAX_VALUE_LENGTH - 1);
+        strncpy(configuration->system.mappings, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "system-quit-on-close") == 0) {
         configuration->system.quit_on_close = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "display-title") == 0) {
-        strncpy(configuration->display.title, value, MAX_VALUE_LENGTH - 1);
+        strncpy(configuration->display.title, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "display-resolution") == 0) {
         const Resolution_t *resolution = Resolution_find(value);
@@ -105,7 +101,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "display-effect") == 0) {
-        strncpy(configuration->display.effect, value, MAX_VALUE_LENGTH - 1);
+        strncpy(configuration->display.effect, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "audio-device-index") == 0) {
         configuration->audio.device_index = (int)strtol(value, NULL, 0);
@@ -289,11 +285,11 @@ Configuration_t *Configuration_create(const char *data)
             }
         };
 
-    char context[PARAMETER_CONTEXT_LENGTH] = { 0 };
+    char context[CONFIGURATION_MAX_CONTEXT_LENGTH] = { 0 };
     for (const char *ptr = data; ptr;) {
-        char line[LINE_LENGTH] = { 0 };
-        ptr = _next(ptr, line, LINE_LENGTH);
-        if (_parse_context(line, context, PARAMETER_CONTEXT_LENGTH)) {
+        char line[CONFIGURATION_MAX_LINE_LENGTH] = { 0 };
+        ptr = _next(ptr, line, CONFIGURATION_MAX_LINE_LENGTH);
+        if (_parse_context(line, context, CONFIGURATION_MAX_CONTEXT_LENGTH)) {
             continue;
         }
         const char *key, *value;

@@ -38,35 +38,25 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-#define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
+#define _STREAMING_BUFFER_SIZE_IN_FRAMES   SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
-#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
+#define _STREAMING_BUFFER_CHUNK_IN_FRAMES  (_STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
 // Modules are generated in stereo mode, which means that we need to handle a stereo source (i.e. we have two channels per frame)
-#define MODULE_OUTPUT_FORMAT                ma_format_s16
-#define MODULE_OUTPUT_BYTES_PER_SAMPLE      2
-#define MODULE_OUTPUT_SAMPLES_PER_CHANNEL   1
-#define MODULE_OUTPUT_CHANNELS_PER_FRAME    2
-#define MODULE_OUTPUT_BYTES_PER_FRAME       (MODULE_OUTPUT_CHANNELS_PER_FRAME * MODULE_OUTPUT_SAMPLES_PER_CHANNEL * MODULE_OUTPUT_BYTES_PER_SAMPLE)
+#define _MODULE_OUTPUT_FORMAT              ma_format_s16
+#define _MODULE_OUTPUT_BYTES_PER_SAMPLE    2
+#define _MODULE_OUTPUT_SAMPLES_PER_CHANNEL 1
+#define _MODULE_OUTPUT_CHANNELS_PER_FRAME  2
+#define _MODULE_OUTPUT_BYTES_PER_FRAME     (_MODULE_OUTPUT_CHANNELS_PER_FRAME * _MODULE_OUTPUT_SAMPLES_PER_CHANNEL * _MODULE_OUTPUT_BYTES_PER_SAMPLE)
 
-#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
-#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
-#define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
-#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
+#define _MIXING_BUFFER_BYTES_PER_SAMPLE    SL_BYTES_PER_SAMPLE
+#define _MIXING_BUFFER_SAMPLES_PER_CHANNEL SL_SAMPLES_PER_CHANNEL
+#define _MIXING_BUFFER_CHANNELS_PER_FRAME  SL_CHANNELS_PER_FRAME
+#define _MIXING_BUFFER_SIZE_IN_FRAMES      SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
-#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
-
-#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
-  #define mix_additive  mix_1on2_additive
-#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
-  #define mix_additive  mix_2on2_additive
-#else
-  #error "Mixing buffer has wrong number of channels"
-#endif
-
-#define LOG_CONTEXT "sl-module"
+#define _MIXING_BUFFER_BYTES_PER_FRAME     (_MIXING_BUFFER_CHANNELS_PER_FRAME * _MIXING_BUFFER_SAMPLES_PER_CHANNEL * _MIXING_BUFFER_BYTES_PER_SAMPLE)
+#define _MIXING_BUFFER_SIZE_IN_BYTES       (_MIXING_BUFFER_SIZE_IN_FRAMES * _MIXING_BUFFER_BYTES_PER_FRAME)
 
 typedef struct Module_s {
     Source_VTable_t vtable;
@@ -117,10 +107,10 @@ static inline bool _produce(Module_t *module)
     if (frames_to_produce == 0) {
         LOG_W("buffer overrrun for source %p - stalling (waiting for consumer)", module);
         return true;
-#if defined(STREAMING_BUFFER_CHUNK_IN_FRAMES)
+#if defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
-    if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
-        frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    if (frames_to_produce > _STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_produce = _STREAMING_BUFFER_CHUNK_IN_FRAMES;
 #endif
     }
 
@@ -130,7 +120,7 @@ static inline bool _produce(Module_t *module)
     // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
     xmp_context context = module->context;
     const int loops = module->props->looped ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looped.
-    int play_result = xmp_play_buffer(context, write_buffer, (int)frames_to_produce * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
+    int play_result = xmp_play_buffer(context, write_buffer, (int)frames_to_produce * _MODULE_OUTPUT_BYTES_PER_FRAME, loops);
 
     ma_pcm_rb_commit_write(buffer, frames_to_produce);
 
@@ -215,13 +205,13 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
         goto error_free_context;
     }
 
-    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, MODULE_OUTPUT_CHANNELS_PER_FRAME, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
+    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, _MODULE_OUTPUT_CHANNELS_PER_FRAME, _STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
     if (result != MA_SUCCESS) {
         LOG_E("can't initialize music ring-buffer (%d frames)", _STREAMING_BUFFER_SIZE_IN_FRAMES);
         goto error_release_module;
     }
 
-    module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    module->props = SL_props_create(context, _MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, _MODULE_OUTPUT_CHANNELS_PER_FRAME, _MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!module->props) {
         LOG_E("can't initialize module properties");
         goto error_deinitialize_ring_buffer;
@@ -293,7 +283,7 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
     ma_data_converter *converter = &module->props->converter;
     ma_pcm_rb *buffer = &module->buffer;
 
-    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    uint8_t converted_buffer[_MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = module->props->precomputed_mix;
 
@@ -327,7 +317,13 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
         ma_pcm_rb_commit_read(buffer, frames_consumed);
 
-        mix_additive(cursor, converted_buffer, frames_generated, mix);
+#if _MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+        mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
+#elif _MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+        mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
+#else
+    #error "Mixing buffer has wrong number of channels"
+#endif
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }

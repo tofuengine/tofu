@@ -24,7 +24,8 @@
 
 #include "bytes.h"
 
-// Can't use `byteswap.h` because it's not available on Windows.
+// Can't use `byteswap.h` because it's not available on Windows, so we are just
+// rolling our own implementation.
 uint16_t bytes_swap16(uint16_t value)
 {
     return (((value & 0x00FF) << 8)

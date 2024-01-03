@@ -27,11 +27,11 @@
 #include <core/config.h>
 #include <libs/imath.h>
 
-#define REGION_INSIDE   0
-#define REGION_LEFT     1
-#define REGION_ABOVE    2
-#define REGION_RIGHT    4
-#define REGION_BELOW    8
+#define _REGION_INSIDE 0
+#define _REGION_LEFT   1
+#define _REGION_ABOVE  2
+#define _REGION_RIGHT  4
+#define _REGION_BELOW  8
 
 static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
 {
@@ -54,18 +54,18 @@ static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 // https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
 static inline int _compute_code(const GL_Quad_t *clipping_region, int x, int y)
 {
-    int code = REGION_INSIDE;
+    int code = _REGION_INSIDE;
     if (x < clipping_region->x0) {
-        code |= REGION_LEFT;
+        code |= _REGION_LEFT;
     } else
     if (x >= clipping_region->x1) {
-        code |= REGION_RIGHT;
+        code |= _REGION_RIGHT;
     }
     if (y < clipping_region->y0) {
-        code |= REGION_ABOVE;
+        code |= _REGION_ABOVE;
     } else
     if (y >= clipping_region->y1) {
-        code |= REGION_BELOW;
+        code |= _REGION_BELOW;
     }
     return code;
 }
@@ -100,19 +100,19 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
             //
             // Note that we are safe in using integer math (only, the division need to be performed at last).
             int x = 0, y = 0;
-            if (code & REGION_ABOVE) {
+            if (code & _REGION_ABOVE) {
                 y = clipping_region->y0;
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
-            if (code & REGION_BELOW) {
+            if (code & _REGION_BELOW) {
                 y = clipping_region->y1 - 1;
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
-            if (code & REGION_LEFT) {
+            if (code & _REGION_LEFT) {
                 x = clipping_region->x0;
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             } else
-            if (code & REGION_RIGHT) {
+            if (code & _REGION_RIGHT) {
                 x = clipping_region->x1 - 1;
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             }

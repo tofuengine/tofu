@@ -41,30 +41,30 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 
 #include <stdint.h>
 #if defined(TOFU_INTERPRETER_GC_REPORTING)
-  #include <time.h>
+    #include <time.h>
 #endif
 
 #if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
-  #define TRACEBACK_STACK_INDEX   1
-  #define OBJECT_STACK_INDEX      (TRACEBACK_STACK_INDEX + 1)
-  #define METHOD_STACK_INDEX(m)   (OBJECT_STACK_INDEX + 1 + (m))
+    #define _TRACEBACK_STACK_INDEX 1
+    #define _OBJECT_STACK_INDEX    (_TRACEBACK_STACK_INDEX + 1)
+    #define _METHOD_STACK_INDEX(m) (_OBJECT_STACK_INDEX + 1 + (m))
 #else   /* TOFU_INTERPRETER_PROTECTED_CALLS */
-  #define OBJECT_STACK_INDEX      1
-  #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
+    #define _OBJECT_STACK_INDEX    1
+    #define _METHOD_STACK_INDEX(m) _OBJECT_STACK_INDEX + 1 + (m)
 #endif  /* TOFU_INTERPRETER_PROTECTED_CALLS */
 
 #if defined(TOFU_INTERPRETER_READER_BUFFER_SIZE)
-  #define READER_CONTEXT_BUFFER_SIZE  1024
+    #define _READER_CONTEXT_BUFFER_SIZE TOFU_INTERPRETER_READER_BUFFER_SIZE
 #else   /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
-  #define READER_CONTEXT_BUFFER_SIZE  TOFU_INTERPRETER_READER_BUFFER_SIZE
+    #define _READER_CONTEXT_BUFFER_SIZE 1024
 #endif  /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
 
 #if defined(DEBUG)
-  #define BOOT_SCRIPT "boot-debug"
+    #define _BOOT_SCRIPT "boot-debug"
 #else   /* DEBUG */
-  #define BOOT_SCRIPT "boot-release"
+    #define _BOOT_SCRIPT "boot-release"
 #endif  /* DEBUG */
-static const char *_kickstart_lua = "return require(\"" BOOT_SCRIPT "\")";
+static const char *_kickstart_lua = "return require(\"" _BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
     ENTRY_POINT_METHOD_PROCESS,
@@ -151,14 +151,14 @@ static int _error_handler(lua_State *L)
 // return NULL or set size to zero. The reader function may return pieces of any size greater than zero. [...]
 typedef struct lua_Reader_Context_s {
     FS_Handle_t *handle;
-    uint8_t buffer[READER_CONTEXT_BUFFER_SIZE];
+    uint8_t buffer[_READER_CONTEXT_BUFFER_SIZE];
 } lua_Reader_Context_t;
 
 static const char *_reader(lua_State *L, void *data, size_t *size)
 {
     lua_Reader_Context_t *context = (lua_Reader_Context_t *)data;
 
-    const size_t bytes_read = FS_read(context->handle, context->buffer, READER_CONTEXT_BUFFER_SIZE);
+    const size_t bytes_read = FS_read(context->handle, context->buffer, _READER_CONTEXT_BUFFER_SIZE);
     if (bytes_read == 0) {
         *size = 0;
         return NULL;
@@ -237,7 +237,7 @@ static bool _detect(lua_State *L, const char *methods[])
 static inline int _raw_call(lua_State *L, int nargs, int nresults)
 {
 #if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
-    int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    int result = lua_pcall(L, nargs, nresults, _TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
         LOG_E("error #%d in call: %s", result, lua_tostring(L, -1));
         return luaL_error(L, "error #%d in call: %s", result, lua_tostring(L, -1));
@@ -251,7 +251,7 @@ static inline int _raw_call(lua_State *L, int nargs, int nresults)
 
 static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
 {
-    const int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
+    const int index = _METHOD_STACK_INDEX(method); // T O F1 .. Fn
 #if defined(TOFU_INTERPRETER_PARTIAL_OBJECT)
     if (lua_isnil(L, index)) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
@@ -262,7 +262,7 @@ static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int n
     }
 #endif
     lua_pushvalue(L, index);                // T O F1 ... Fn A1 ... An     -> T O F1 ... Fn A1 ... An F
-    lua_pushvalue(L, OBJECT_STACK_INDEX);   // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
+    lua_pushvalue(L, _OBJECT_STACK_INDEX);  // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
     return _raw_call(L, nargs + 1, nresults); // Add the object instance to the arguments count.

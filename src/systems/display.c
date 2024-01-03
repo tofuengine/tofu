@@ -34,9 +34,9 @@
 #include <time.h>
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #define PIXEL_FORMAT    GL_BGRA
+    #define _PIXEL_FORMAT GL_BGRA
 #else
-  #define PIXEL_FORMAT    GL_RGBA
+    #define _PIXEL_FORMAT GL_RGBA
 #endif
 
 typedef enum Uniforms_t {
@@ -55,7 +55,7 @@ typedef enum Uniforms_t {
 // https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.1.20.pdf
 // https://www.khronos.org/opengl/wiki/GLSL_:_common_mistakes
 
-#define VERTEX_SHADER \
+#define _VERTEX_SHADER \
     "#version 120\n" \
     "\n" \
     "void main()\n" \
@@ -66,7 +66,7 @@ typedef enum Uniforms_t {
     "   gl_TexCoord[0] = gl_MultiTexCoord0; // Retain texture #0 coordinates.\n" \
     "}\n" \
 
-#define FRAGMENT_SHADER \
+#define _FRAGMENT_SHADER \
     "#version 120\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
@@ -291,12 +291,12 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     LOG_D("loading shader %p", display->shader);
 
-    const size_t length = strlen(FRAGMENT_SHADER) + strlen(effect);
+    const size_t length = strlen(_FRAGMENT_SHADER) + strlen(effect);
     char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
-    strcpy(code, FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
+    strcpy(code, _FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
     strcat(code, effect);
 
-    if (!shader_attach(display->shader, VERTEX_SHADER, SHADER_TYPE_VERTEX) ||
+    if (!shader_attach(display->shader, _VERTEX_SHADER, SHADER_TYPE_VERTEX) ||
         !shader_attach(display->shader, code, SHADER_TYPE_FRAGMENT)) {
         shader_destroy(display->shader);
         return false;
@@ -530,7 +530,7 @@ void Display_present(const Display_t *display)
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 #endif
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
     const GL_Point_t *vram_position = &display->vram.position;
     const GL_Size_t *vram_size = &display->vram.size;

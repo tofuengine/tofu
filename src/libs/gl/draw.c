@@ -361,7 +361,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Bool_t *transparent = state->transparent; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
-#if defined(__DEFENSIVE_CHECKS__)
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (source->width != mask->width || source->height != mask->height) {
         LOG_W("source and mask surfaces need to match in size");
         return;

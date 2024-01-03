@@ -32,12 +32,12 @@
 
 /* This file provides an implementation only for the native Windows API.  */
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #include <windows.h>
-  #if !defined(VER_PLATFORM_WIN32_CE)
-    #define VER_PLATFORM_WIN32_CE 3
-  #endif
+    #include <windows.h>
+    #if !defined(VER_PLATFORM_WIN32_CE)
+        #define VER_PLATFORM_WIN32_CE 3
+    #endif
 #elif PLATFORM_ID == PLATFORM_LINUX
-  #include <sys/utsname.h>
+    #include <sys/utsname.h>
 #endif
 
 // FIXME: reformat!

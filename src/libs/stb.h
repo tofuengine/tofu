@@ -26,8 +26,8 @@
 #define TOFU_LIBS_STB_H
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #include <stb/stb_leakcheck.h>
-  #define STB_LEAKCHECK_INCLUDED
+    #include <stb/stb_leakcheck.h>
+    #define STB_LEAKCHECK_INCLUDED
 #endif
 #include <stb/stb_ds.h>
 #include <stb/stb_image.h>
