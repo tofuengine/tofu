@@ -162,6 +162,7 @@ endif
 LINKER=$(COMPILER)
 
 LFLAGS=-lpthread
+LFLAGS+=-lz
 ifeq ($(PLATFORM),windows)
 	LFLAGS+=-lpsapi
 else ifeq ($(PLATFORM),linux)
