@@ -134,7 +134,7 @@ sudo apt install lua5.4 liblua5.4-dev luarocks
 sudo luarocks --lua-version=5.4 install argparse
 sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck
-sudo luarocks --lua-version=5.4 install lua-hashings
+sudo luarocks --lua-version=5.4 install luazen
 ```
 
 Of course, `git` should also be installed to clone the repository.
