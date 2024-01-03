@@ -86,7 +86,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
             configuration->display.width = resolution->width;
             configuration->display.height = resolution->height;
         } else {
-            LOG_W(LOG_CONTEXT, "unknown resolution variant `%s`", value);
+            LOG_W("unknown resolution variant `%s`", value);
         }
     } else
     if (strcmp(fqn, "display-width") == 0) {
