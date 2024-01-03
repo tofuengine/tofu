@@ -25,10 +25,9 @@
 #include "input.h"
 
 #include <libs/fmath.h>
+#define _LOG_TAG "input"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "input"
 
 typedef void (*Input_Handler_t)(Input_t *input);
 
@@ -219,7 +218,7 @@ static void _controller_handler(Input_t *input)
         GLFWgamepadstate gamepad;
         int result = glfwGetGamepadState(jid, &gamepad);
         if (result == GLFW_FALSE) {
-            LOG_W(LOG_CONTEXT, "can't get controller #%d state", jid);
+            LOG_W("can't get controller #%d state", jid);
             continue;
         }
 
@@ -274,7 +273,7 @@ static size_t _controllers_detect(Input_Controller_t *controllers, bool used_gam
 
         bool available = glfwJoystickPresent(controller->jid) == GLFW_TRUE && glfwJoystickIsGamepad(controller->jid) == GLFW_TRUE;
         if (!available) {
-            LOG_D(LOG_CONTEXT, "controller #%d w/ jid #%d detached", id, controller->jid);
+            LOG_D("controller #%d w/ jid #%d detached", id, controller->jid);
             used_gamepads[controller->jid] = false;
             controller->jid = -1;
             continue;
@@ -303,7 +302,7 @@ static size_t _controllers_detect(Input_Controller_t *controllers, bool used_gam
             ++count;
             controller->jid = jid;
             used_gamepads[controller->jid] = true;
-            LOG_D(LOG_CONTEXT, "controller #%d found (jid #%d, GUID `%s`, name `%s`)", id, jid, glfwGetJoystickGUID(jid), glfwGetGamepadName(jid));
+            LOG_D("controller #%d found (jid #%d, GUID `%s`, name `%s`)", id, jid, glfwGetJoystickGUID(jid), glfwGetGamepadName(jid));
         }
     }
 
@@ -318,13 +317,13 @@ static inline size_t _initialize_controllers(Input_Controller_t *controllers, bo
         controller->id = id; // Set internal controller identifier and clear the gamepad/joystick id.
         controller->jid = -1;
     }
-    LOG_D(LOG_CONTEXT, "controller(s) initialized");
+    LOG_D("controller(s) initialized");
 
     size_t count = _controllers_detect(controllers, used_gamepads);
     if (count == 0) {
-        LOG_W(LOG_CONTEXT, "no controllers detected");
+        LOG_W("no controllers detected");
     } else {
-        LOG_I(LOG_CONTEXT, "%d controller(s) detected", count);
+        LOG_I("%d controller(s) detected", count);
     }
 
     return count;
@@ -334,14 +333,14 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 {
     int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
-        LOG_E(LOG_CONTEXT, "can't update controller mappings");
+        LOG_E("can't update controller mappings");
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "input controller mappings updated");
+    LOG_D("input controller mappings updated");
 
     Input_t *input = malloc(sizeof(Input_t));
     if (!input) {
-        LOG_E(LOG_CONTEXT, "can't allocate input");
+        LOG_E("can't allocate input");
         return NULL;
     }
 
@@ -356,7 +355,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 
     input->state.controllers_count = _initialize_controllers(input->state.controllers, input->state.used_gamepads);
 
-    LOG_D(LOG_CONTEXT, "enabling sticky input mode");
+    LOG_D("enabling sticky input mode");
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -367,7 +366,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
 void Input_destroy(Input_t *input)
 {
     free(input);
-    LOG_D(LOG_CONTEXT, "input freed");
+    LOG_D("input freed");
 }
 
 static inline void _keyboard_update(Input_t *input, float delta_time)
@@ -538,7 +537,7 @@ void Input_process(Input_t *input)
     const Input_Configuration_t *configuration = &input->configuration;
     if (configuration->keyboard.exit_key) {
         if (glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            LOG_I(LOG_CONTEXT, "exit key pressed");
+            LOG_I("exit key pressed");
             glfwSetWindowShouldClose(input->window, true);
         }
     }

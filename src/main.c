@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LOG_CONTEXT "main"
-
 static struct option _long_options[] = {
     { "help", no_argument, NULL, 'h' },
     { "kernal", optional_argument, NULL, 'k' },

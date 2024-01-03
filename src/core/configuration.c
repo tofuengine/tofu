@@ -28,14 +28,13 @@
 
 #include <core/version.h>
 #include <libs/imath.h>
+#define _LOG_TAG "configuration"
 #include <libs/log.h>
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#define LOG_CONTEXT "configuration"
 
 #define LINE_LENGTH                 256
 #define PARAMETER_LENGTH            LINE_LENGTH
@@ -244,10 +243,10 @@ Configuration_t *Configuration_create(const char *data)
 {
     Configuration_t *configuration = malloc(sizeof(Configuration_t));
     if (!configuration) {
-        LOG_E(LOG_CONTEXT, "can't allocate configuration");
+        LOG_E("can't allocate configuration");
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "configuration allocated");
+    LOG_D("configuration allocated");
 
     *configuration = (Configuration_t){
             .system = {
@@ -312,5 +311,5 @@ Configuration_t *Configuration_create(const char *data)
 void Configuration_destroy(Configuration_t *configuration)
 {
     free(configuration);
-    LOG_D(LOG_CONTEXT, "configuration freed");
+    LOG_D("configuration freed");
 }

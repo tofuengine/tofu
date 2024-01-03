@@ -27,9 +27,9 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "wave"
 #include <libs/log.h>
 
-#define LOG_CONTEXT "wave"
 #define META_TABLE  "Tofu_Generators_Wave_mt"
 
 static int wave_new_3eNN_1o(lua_State *L);
@@ -96,7 +96,7 @@ static int wave_new_3eNN_1o(lua_State *L)
             .amplitude = amplitude
         }, OBJECT_TYPE_WAVE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "wave %p allocated", self);
+    LOG_D("wave %p allocated", self);
 
     return 1;
 }
@@ -110,7 +110,7 @@ static int wave_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    LOG_D(LOG_CONTEXT, "wave %p finalized", self);
+    LOG_D("wave %p finalized", self);
 
     return 0;
 }

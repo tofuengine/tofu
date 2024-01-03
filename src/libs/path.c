@@ -26,6 +26,7 @@
 
 #include <core/platform.h>
 #include <libs/fs/fs.h>
+#define _LOG_TAG "path"
 #include <libs/log.h>
 
 #include <stdlib.h>
@@ -47,8 +48,6 @@
 #elif PLATFORM_ID == PLATFORM_WINDOWS
   #define createdir(P)  mkdir((P))
 #endif
-
-#define LOG_CONTEXT "path"
 
 static inline bool _path_is_trailed(const char *path)
 {
@@ -85,7 +84,7 @@ void path_expand(const char *path, char *expanded)
 
     char *ptr = realpath(resolved, expanded);
     if (!ptr) {
-        LOG_E(LOG_CONTEXT, "can't resolve path `%s`", resolved);
+        LOG_E("can't resolve path `%s`", resolved);
         return;
     }
 
@@ -154,7 +153,7 @@ bool path_is_folder(const char *path)
     struct stat path_stat;
     int result = _path_stat(path, &path_stat);
     if (result != 0) {
-        LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
+        LOG_E("can't get stats for file `%s`", path);
         return false;
     }
 
@@ -170,7 +169,7 @@ bool path_is_file(const char *path)
     struct stat path_stat;
     int result = _path_stat(path, &path_stat);
     if (result != 0) {
-        LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
+        LOG_E("can't get stats for file `%s`", path);
         return false;
     }
 

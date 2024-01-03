@@ -27,12 +27,12 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "controller"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <systems/input.h>
 #include <systems/storage.h>
 
-#define LOG_CONTEXT "controller"
 #define MODULE_NAME "tofu.input.controller"
 #define META_TABLE  "Tofu_Input_Controller_mt"
 
@@ -98,7 +98,7 @@ static int controller_from_id_1n_1o(lua_State *L)
             .controller = controller,
         }, OBJECT_TYPE_CONTROLLER, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "controller %p allocated w/ controller %p for id `%u`", self, controller, id);
+    LOG_D("controller %p allocated w/ controller %p for id `%u`", self, controller, id);
 
     return 1;
 }
@@ -110,7 +110,7 @@ static int controller_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Controller_Object_t *self = (Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
 
-    LOG_D(LOG_CONTEXT, "controller %p finalized", self);
+    LOG_D("controller %p finalized", self);
 
     return 0;
 }

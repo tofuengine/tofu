@@ -40,19 +40,23 @@ typedef enum Log_Levels_e {
     Log_Levels_t_CountOf
 } Log_Levels_t;
 
-#define LOG_T(tag, ...) Log_write(LOG_LEVELS_TRACE, (tag), __VA_ARGS__)
-#define LOG_D(tag, ...) Log_write(LOG_LEVELS_DEBUG, (tag), __VA_ARGS__)
-#define LOG_I(tag, ...) Log_write(LOG_LEVELS_INFO, (tag), __VA_ARGS__)
-#define LOG_W(tag, ...) Log_write(LOG_LEVELS_WARNING, (tag), __VA_ARGS__)
-#define LOG_E(tag, ...) Log_write(LOG_LEVELS_ERROR, (tag), __VA_ARGS__)
-#define LOG_F(tag, ...) Log_write(LOG_LEVELS_FATAL, (tag), __VA_ARGS__)
+#if !defined(_LOG_TAG)
+    #define _LOG_TAG __FILE__
+#endif
 
-#define LOG_IF_T(condition, tag, ...)   Log_write_if((condition), LOG_LEVELS_TRACE, (tag), __VA_ARGS__)
-#define LOG_IF_D(condition, tag, ...)   Log_write_if((condition), LOG_LEVELS_DEBUG, (tag), __VA_ARGS__)
-#define LOG_IF_I(condition, tag, ...)   Log_write_if((condition), LOG_LEVELS_INFO, (tag), __VA_ARGS__)
-#define LOG_IF_W(condition, tag, ...)   Log_write_if((condition), LOG_LEVELS_WARNING, (tag), __VA_ARGS__)
-#define LOG_IF_E(condition, tag, ...)   Log_write_if((condition), LOG_LEVELS_ERROR, (tag), __VA_ARGS__)
-#define LOG_IF_F(condition, tag, ...)   Log_write_if((condition), LOG_LEVELS_FATAL, (tag), __VA_ARGS__)
+#define LOG_T(...) Log_write(LOG_LEVELS_TRACE, (_LOG_TAG), __VA_ARGS__)
+#define LOG_D(...) Log_write(LOG_LEVELS_DEBUG, (_LOG_TAG), __VA_ARGS__)
+#define LOG_I(...) Log_write(LOG_LEVELS_INFO, (_LOG_TAG), __VA_ARGS__)
+#define LOG_W(...) Log_write(LOG_LEVELS_WARNING, (_LOG_TAG), __VA_ARGS__)
+#define LOG_E(...) Log_write(LOG_LEVELS_ERROR, (_LOG_TAG), __VA_ARGS__)
+#define LOG_F(...) Log_write(LOG_LEVELS_FATAL, (_LOG_TAG), __VA_ARGS__)
+
+#define LOG_IF_T(condition, ...) Log_write_if((condition), LOG_LEVELS_TRACE, (_LOG_TAG), __VA_ARGS__)
+#define LOG_IF_D(condition, ...) Log_write_if((condition), LOG_LEVELS_DEBUG, (_LOG_TAG), __VA_ARGS__)
+#define LOG_IF_I(condition, ...) Log_write_if((condition), LOG_LEVELS_INFO, (_LOG_TAG), __VA_ARGS__)
+#define LOG_IF_W(condition, ...) Log_write_if((condition), LOG_LEVELS_WARNING, (_LOG_TAG), __VA_ARGS__)
+#define LOG_IF_E(condition, ...) Log_write_if((condition), LOG_LEVELS_ERROR, (_LOG_TAG), __VA_ARGS__)
+#define LOG_IF_F(condition, ...) Log_write_if((condition), LOG_LEVELS_FATAL, (_LOG_TAG), __VA_ARGS__)
 
 // TODO: add log-to-file.
 extern void Log_initialize(void);

@@ -34,8 +34,6 @@
 
 #include <time.h>
 
-#define LOG_CONTEXT "system"
-
 #define MAX_DATE_LENGTH 64
 
 static int system_version_0_3nnn(lua_State *L);

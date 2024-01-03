@@ -25,6 +25,7 @@
 #include "sysinfo.h"
 
 #include <core/platform.h>
+#define _LOG_TAG "sysinfo"
 #include <libs/log.h>
 
 #include <string.h>
@@ -39,8 +40,7 @@
   #include <sys/utsname.h>
 #endif
 
-#define LOG_CONTEXT "sysinfo"
-
+// FIXME: reformat!
 bool SysInfo_inspect(SysInfo_Data_t *si)
 {
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -251,7 +251,7 @@ bool SysInfo_inspect(SysInfo_Data_t *si)
     struct utsname uts;
     int result = uname(&uts);
     if (result == -1) {
-        LOG_E(LOG_CONTEXT, "can't get system information");
+        LOG_E("can't get system information");
         return false;
     }
     strncpy(si->system, uts.sysname, SYSINFO_NAME_LENGTH);

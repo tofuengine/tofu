@@ -77,10 +77,9 @@
 #include "world.h"
 #include "xform.h"
 
+#define _LOG_TAG "modules"
 #include <libs/log.h>
 #include <libs/luax.h>
-
-#define LOG_CONTEXT "modules"
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
@@ -96,7 +95,7 @@ static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
     lua_pop(L, nup);
 #else
     for (const luaL_Reg *module = modules; module->func; ++module) {
-        LOG_D(LOG_CONTEXT, "preloading module `%s`", module->name);
+        LOG_D("preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
         luaX_preload(L, module->name, module->func, nup);
     }

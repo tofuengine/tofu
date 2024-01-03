@@ -26,10 +26,9 @@
 
 #include <core/config.h>
 #include <libs/imath.h>
+#define _LOG_TAG "gl-xform"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "gl-xform"
 
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
@@ -42,11 +41,11 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
     GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
     if (!xform) {
-        LOG_E(LOG_CONTEXT, "can't allocate xform");
+        LOG_E("can't allocate xform");
         return NULL;
     }
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "xform created at %p", xform);
+    LOG_D("xform created at %p", xform);
 #endif  /* VERBOSE_DEBUG */
 
     *xform = (GL_XForm_t){
@@ -67,13 +66,13 @@ void GL_xform_destroy(GL_XForm_t *xform)
     if (xform->table) {
         arrfree(xform->table);
 #if defined(VERBOSE_DEBUG)
-        LOG_D(LOG_CONTEXT, "xform table at %p freed", xform->table);
+        LOG_D("xform table at %p freed", xform->table);
 #endif  /* VERBOSE_DEBUG */
     }
 
     free(xform);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "xform %p freed", xform);
+    LOG_D("xform %p freed", xform);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -96,7 +95,7 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
     if (xform->table) {
         arrfree(xform->table);
 #if defined(VERBOSE_DEBUG)
-        LOG_D(LOG_CONTEXT, "xform table at %p freed", xform->table);
+        LOG_D("xform table at %p freed", xform->table);
 #endif  /* VERBOSE_DEBUG */
     }
 

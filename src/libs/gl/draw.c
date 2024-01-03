@@ -26,10 +26,9 @@
 
 #include <core/config.h>
 #include <libs/imath.h>
+#define _LOG_TAG "gl-draw"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "gl-draw"
 
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
@@ -364,7 +363,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
 
 #if defined(__DEFENSIVE_CHECKS__)
     if (source->width != mask->width || source->height != mask->height) {
-        LOG_W(LOG_CONTEXT, "source and mask surfaces need to match in size");
+        LOG_W("source and mask surfaces need to match in size");
         return;
     }
 #endif

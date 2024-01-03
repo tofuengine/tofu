@@ -28,11 +28,11 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
+#define _LOG_TAG "xform"
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 
-#define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
 
 static int xform_new_1E_1o(lua_State *L);
@@ -95,7 +95,7 @@ static int xform_new_1E_1o(lua_State *L)
             .xform = xform
         }, OBJECT_TYPE_XFORM, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "xform %p allocated", self);
+    LOG_D("xform %p allocated", self);
 
     return 1;
 }
@@ -109,7 +109,7 @@ static int xform_gc_1o_0(lua_State *L)
 
     GL_xform_destroy(self->xform);
 
-    LOG_D(LOG_CONTEXT, "xform %p finalized", self);
+    LOG_D("xform %p finalized", self);
 
     return 0;
 }
@@ -280,7 +280,7 @@ static int xform_table_2ot_0(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is a `pairs()` array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                LOG_W(LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
+                LOG_W("too many operations for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }

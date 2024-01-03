@@ -28,12 +28,12 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "bank"
 #include <libs/log.h>
 #include <systems/storage.h>
 
 #include <math.h>
 
-#define LOG_CONTEXT "bank"
 #define META_TABLE  "Tofu_Graphics_Bank_mt"
 
 static int bank_new_v_1o(lua_State *L);
@@ -88,7 +88,7 @@ static int bank_new_2os_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "bank %p with cells file `%s` allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D("bank %p with cells file `%s` allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, cells_file, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -118,7 +118,7 @@ static int bank_new_3oNN_1o(lua_State *L)
             .sheet = sheet
         }, OBJECT_TYPE_BANK, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "bank %p with %dx%d cells allocated w/ sheet %p for atlas %p w/ reference #%d",
+    LOG_D("bank %p with %dx%d cells allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, cell_width, cell_height, sheet, atlas, self->atlas.reference);
 
     return 1;
@@ -141,12 +141,12 @@ static int bank_gc_1o_0(lua_State *L)
     Bank_Object_t *self = (Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
 
     GL_sheet_destroy(self->sheet);
-    LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+    LOG_D("sheet %p destroyed", self->sheet);
 
     luaX_unref(L, self->atlas.reference);
-    LOG_D(LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
+    LOG_D("atlas reference #%d released", self->atlas.reference);
 
-    LOG_D(LOG_CONTEXT, "bank %p finalized", self);
+    LOG_D("bank %p finalized", self);
 
     return 0;
 }

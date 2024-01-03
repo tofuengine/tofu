@@ -26,6 +26,7 @@
 
 #include <core/config.h>
 #include <core/platform.h>
+#define _LOG_TAG "environment"
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -35,18 +36,16 @@
   #include <psapi.h>
 #endif
 
-#define LOG_CONTEXT "environment"
-
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
 Environment_t *Environment_create(const Display_t *display, const Input_t *input)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
-        LOG_E(LOG_CONTEXT, "can't allocate environment");
+        LOG_E("can't allocate environment");
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "environment allocated");
+    LOG_D("environment allocated");
 
     *environment = (Environment_t){
         .display = display,
@@ -69,7 +68,7 @@ Environment_t *Environment_create(const Display_t *display, const Input_t *input
 void Environment_destroy(Environment_t *environment)
 {
     free(environment);
-    LOG_D(LOG_CONTEXT, "environment freed");
+    LOG_D("environment freed");
 }
 
 const Environment_State_t *Environment_get_state(const Environment_t *environment)
@@ -153,7 +152,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     stats_time += frame_time;
     while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
         stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
-        LOG_I(LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
+        LOG_I("currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
             stats->fps, stats->times[0], stats->times[1], stats->times[2], stats->times[3]);
     }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
@@ -166,7 +165,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     heap_time += frame_time;
     while (heap_time > TOFU_ENGINE_HEAP_STATISTICS_PERIOD) {
         heap_time -= TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
-        LOG_I(LOG_CONTEXT, "currently using %u byte(s)", stats->memory_usage);
+        LOG_I("currently using %u byte(s)", stats->memory_usage);
     }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */

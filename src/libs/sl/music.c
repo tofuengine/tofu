@@ -29,6 +29,7 @@
 
 #include <core/config.h>
 #include <libs/dr_libs.h>
+#define _LOG_TAG "sl-music"
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -58,8 +59,6 @@
   #error "Mixing buffer has wrong number of channels"
 #endif
 
-#define LOG_CONTEXT "sl-music"
-
 typedef struct Music_s { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
 
@@ -82,11 +81,11 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
 
 static inline bool _rewind(Music_t *music)
 {
-    LOG_T(LOG_CONTEXT, "rewinding music %p", music);
+    LOG_T("rewinding music %p", music);
 
     drflac_bool32 sought = drflac_seek_to_pcm_frame(music->decoder, 0);
     if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't rewind music stream");
+        LOG_E("can't rewind music stream");
         return false;
     }
 
@@ -97,7 +96,7 @@ static inline bool _rewind(Music_t *music)
 
 static inline bool _reset(Music_t *music)
 {
-    LOG_T(LOG_CONTEXT, "rewinding music %p", music);
+    LOG_T("rewinding music %p", music);
 
     ma_pcm_rb *buffer = &music->buffer;
     ma_pcm_rb_reset(buffer);
@@ -109,7 +108,7 @@ static inline bool _produce(Music_t *music)
 {
     if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
         if (!music->props->looped || !_rewind(music)) {
-            LOG_D(LOG_CONTEXT, "end-of-data, early exit music %p", music);
+            LOG_D("end-of-data, early exit music %p", music);
             return false;
         }
     }
@@ -117,7 +116,7 @@ static inline bool _produce(Music_t *music)
     ma_pcm_rb *buffer = &music->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
     if (frames_to_produce == 0) {
-        LOG_W(LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", music);
+        LOG_W("buffer overrrun for source %p - stalling (waiting for consumer)", music);
         return true;
 #if defined(STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
@@ -140,7 +139,7 @@ static inline bool _produce(Music_t *music)
     music->frames_completed += frames_produced;
 
     if (frames_produced < frames_to_produce && music->frames_completed < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
-        LOG_E(LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
+        LOG_E("can't read %d bytes (%d read)", frames_to_produce, frames_produced);
         return false;
     }
 
@@ -154,18 +153,18 @@ SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbac
 {
     SL_Source_t *music = malloc(sizeof(Music_t));
     if (!music) {
-        LOG_E(LOG_CONTEXT, "can't allocate music structure");
+        LOG_E("can't allocate music structure");
         return NULL;
     }
 
     bool cted = _music_ctor(music, context, callbacks);
     if (!cted) {
-        LOG_E(LOG_CONTEXT, "can't initialize music structure");
+        LOG_E("can't initialize music structure");
         free(music);
         return NULL;
     }
 
-    LOG_D(LOG_CONTEXT, "music %p created", music);
+    LOG_D("music %p created", music);
     return music;
 }
 
@@ -209,38 +208,38 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
 
     music->decoder = drflac_open(_music_read, _music_seek, music, NULL);
     if (!music->decoder) {
-        LOG_E(LOG_CONTEXT, "can't create music decoder");
+        LOG_E("can't create music decoder");
         return false;
     }
 
     music->length_in_frames = music->decoder->totalPCMFrameCount;
     if (music->length_in_frames == 0) {
-        LOG_E(LOG_CONTEXT, "can't create music w/ zero length");
+        LOG_E("can't create music w/ zero length");
         goto error_close_decoder;
     }
 
     size_t channels = music->decoder->channels;
     size_t sample_rate = music->decoder->sampleRate;
     size_t bits_per_sample = music->decoder->bitsPerSample;
-    LOG_D(LOG_CONTEXT, "music decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", music->decoder, music->length_in_frames, channels, sample_rate, bits_per_sample);
+    LOG_D("music decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", music->decoder, music->length_in_frames, channels, sample_rate, bits_per_sample);
 
     ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
-        LOG_E(LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
+        LOG_E("can't initialize music ring-buffer (%d frames)", _STREAMING_BUFFER_SIZE_IN_FRAMES);
         goto error_close_decoder;
     }
 
 #if defined(TOFU_SOUND_MUSIC_PRELOAD)
     bool produced = _produce(music);
     if (!produced) {
-        LOG_E(LOG_CONTEXT, "can't pre-load music data");
+        LOG_E("can't pre-load music data");
         goto error_deinitialize_ringbuffer;
     }
 #endif
 
     music->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!music->props) {
-        LOG_E(LOG_CONTEXT, "can't initialize music properties");
+        LOG_E("can't initialize music properties");
         goto error_deinitialize_ringbuffer;
     }
 
@@ -258,13 +257,13 @@ static void _music_dtor(SL_Source_t *source)
     Music_t *music = (Music_t *)source;
 
     SL_props_destroy(music->props);
-    LOG_D(LOG_CONTEXT, "music properties destroyed");
+    LOG_D("music properties destroyed");
 
     ma_pcm_rb_uninit(&music->buffer);
-    LOG_D(LOG_CONTEXT, "music ring-buffer uninitialized");
+    LOG_D("music ring-buffer uninitialized");
 
     drflac_close(music->decoder);
-    LOG_D(LOG_CONTEXT, "music decoder closed");
+    LOG_D("music decoder closed");
 }
 
 static bool _music_reset(SL_Source_t *source)
@@ -273,14 +272,14 @@ static bool _music_reset(SL_Source_t *source)
 
     bool reset = _reset(music);
     if (!reset) {
-        LOG_E(LOG_CONTEXT, "can't reset music %p stream", source);
+        LOG_E("can't reset music %p stream", source);
         return false;
     }
 
 #if defined(TOFU_SOUND_MUSIC_PRELOAD)
     bool produced = _produce(music);
     if (!produced) {
-        LOG_E(LOG_CONTEXT, "can't pre-load music data");
+        LOG_E("can't pre-load music data");
         return false;
     }
 #else
@@ -313,10 +312,10 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
             if (music->frames_completed < music->length_in_frames) {
-                LOG_W(LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
+                LOG_W("buffer underrun for source %p - stalling (waiting for data)", source);
                 return true;
             } else {
-                LOG_D(LOG_CONTEXT, "end-of-data reached for source %p", source);
+                LOG_D("end-of-data reached for source %p", source);
                 return false;
             }
         }

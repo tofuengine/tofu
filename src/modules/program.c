@@ -28,10 +28,10 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
+#define _LOG_TAG "program"
 #include <libs/log.h>
 #include <systems/display.h>
 
-#define LOG_CONTEXT "program"
 #define META_TABLE  "Tofu_Graphics_Program_mt"
 #define SCRIPT_NAME "@program.lua"
 
@@ -95,7 +95,7 @@ static int program_new_0_1o(lua_State *L)
         }, OBJECT_TYPE_PROGRAM, META_TABLE);
 
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program %p allocated", self);
+    LOG_D("program %p allocated", self);
 #else  /* VERBOSE_DEBUG */
     (void)self;
 #endif  /* VERBOSE_DEBUG */
@@ -113,7 +113,7 @@ static int program_gc_1o_0(lua_State *L)
     GL_program_destroy(self->program);
 
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program %p finalized", self);
+    LOG_D("program %p finalized", self);
 #endif  /* VERBOSE_DEBUG */
 
     return 0;

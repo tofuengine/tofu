@@ -27,11 +27,10 @@
 #include <core/config.h>
 #include <libs/imath.h>
 #include <libs/fmath.h>
+#define _LOG_TAG "gl-palette"
 #include <libs/log.h>
 
 #include <string.h>
-
-#define LOG_CONTEXT "gl-palette"
 
 //
 // Due to the nature of the `GL_Palette_t` type, the total amount of bits for RGB components *cannot* be greater than
@@ -227,7 +226,7 @@ size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other,
     size_t to_i = to;
     for (size_t i = 0; i < count; ++i) {
         if (to_i == GL_MAX_PALETTE_COLORS) {
-            LOG_W(LOG_CONTEXT, "maximum palette size reached when merging palette %p w/ %p", palette, other);
+            LOG_W("maximum palette size reached when merging palette %p w/ %p", palette, other);
             break;
         }
         size_t from_i = from + i;

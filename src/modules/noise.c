@@ -27,9 +27,9 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "noise"
 #include <libs/log.h>
 
-#define LOG_CONTEXT "noise"
 #define META_TABLE  "Tofu_Generators_Noise_mt"
 
 static int noise_new_1eNN_1o(lua_State *L);
@@ -94,7 +94,7 @@ static int noise_new_1eNN_1o(lua_State *L)
             .frequency = frequency
         }, OBJECT_TYPE_NOISE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "noise %p allocated", self);
+    LOG_D("noise %p allocated", self);
 
     return 1;
 }
@@ -108,7 +108,7 @@ static int noise_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    LOG_D(LOG_CONTEXT, "noise %p finalized", self);
+    LOG_D("noise %p finalized", self);
 
     return 0;
 }

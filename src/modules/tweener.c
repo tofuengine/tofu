@@ -28,9 +28,9 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
+#define _LOG_TAG "tweener"
 #include <libs/log.h>
 
-#define LOG_CONTEXT "tweener"
 #define META_TABLE  "Tofu_Generators_Tweener_mt"
 
 static int tweener_new_5eNNNE_1o(lua_State *L);
@@ -195,7 +195,7 @@ static int tweener_new_5eNNNE_1o(lua_State *L)
             .to = to
         }, OBJECT_TYPE_TWEENER, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "tweener %p allocated", self);
+    LOG_D("tweener %p allocated", self);
 
     return 1;
 }
@@ -209,7 +209,7 @@ static int tweener_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    LOG_D(LOG_CONTEXT, "tweener %p finalized", self);
+    LOG_D("tweener %p finalized", self);
 
     return 0;
 }

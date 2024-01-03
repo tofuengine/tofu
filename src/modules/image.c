@@ -28,6 +28,7 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "image"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/profile.h>
@@ -35,7 +36,6 @@
 #include <systems/display.h>
 #include <systems/storage.h>
 
-#define LOG_CONTEXT "image"
 #define MODULE_NAME "tofu.graphics.image"
 #define META_TABLE  "Tofu_Graphics_Image_mt"
 
@@ -79,14 +79,14 @@ static int image_new_0_1o(lua_State *L)
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface = Display_get_surface(display);
-    LOG_D(LOG_CONTEXT, "default surface %p retrieved", surface);
+    LOG_D("default surface %p retrieved", surface);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = false
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "image %p allocated w/ default surface", self);
+    LOG_D("image %p allocated w/ default surface", self);
 
     return 1;
 }
@@ -104,14 +104,14 @@ static int image_new_2nn_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't create %dx%d surface", width, height);
     }
-    LOG_D(LOG_CONTEXT, "%dx%d surface allocate at %p", width, height, surface);
+    LOG_D("%dx%d surface allocate at %p", width, height, surface);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
+    LOG_D("image %p allocated w/ surface %p", self, surface);
 
     return 1;
 }
@@ -136,24 +136,24 @@ static int image_new_3sNO_1o(lua_State *L)
             .threshold = 0
         };
 
-    PROFILE_BEGIN(LOG_CONTEXT, "image_new")
+    //PROFILE_BEGIN("image_new")
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", name);
     }
-    GL_Surface_t *surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&closure);
+    GL_Surface_t *surface = GL_surface_decode(SR_IWIDTH(image), SR_IHEIGHT(image), SR_IPIXELS(image), surface_callback_palette, (void *)&closure);
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
-    PROFILE_END
-    LOG_D(LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
+    //PROFILE_END
+    LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
+    LOG_D("image %p allocated w/ surface %p", self, surface);
 
     return 1;
 }
@@ -176,24 +176,24 @@ static int image_new_3snn_1o(lua_State *L)
             .foreground = foreground_index
         };
 
-    PROFILE_BEGIN(LOG_CONTEXT, "image_new")
+    //PROFILE_BEGIN("image_new")
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", name);
     }
-    GL_Surface_t *surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_indexes, (void *)&closure);
+    GL_Surface_t *surface = GL_surface_decode(SR_IWIDTH(image), SR_IHEIGHT(image), SR_IPIXELS(image), surface_callback_indexes, (void *)&closure);
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
-    PROFILE_END
-    LOG_D(LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
+    //PROFILE_END
+    LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
         }, OBJECT_TYPE_IMAGE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "image %p allocated w/ surface %p", self, surface);
+    LOG_D("image %p allocated w/ surface %p", self, surface);
 
     return 1;
 }
@@ -219,10 +219,10 @@ static int image_gc_1o_0(lua_State *L)
 
     if (self->allocated) {
         GL_surface_destroy(self->surface);
-        LOG_D(LOG_CONTEXT, "surface %p destroyed", self->surface);
+        LOG_D("surface %p destroyed", self->surface);
     }
 
-    LOG_D(LOG_CONTEXT, "image %p finalized", self);
+    LOG_D("image %p finalized", self);
 
     return 0;
 }

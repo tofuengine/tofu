@@ -25,6 +25,7 @@
 #include "storage.h"
 
 #include <core/config.h>
+#define _LOG_TAG "storage"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
@@ -33,13 +34,11 @@
 
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
-#define LOG_CONTEXT "storage"
-
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
     Storage_t *storage = malloc(sizeof(Storage_t));
     if (!storage) {
-        LOG_E(LOG_CONTEXT, "can't allocate storage");
+        LOG_E("can't allocate storage");
         return NULL;
     }
 
@@ -52,24 +51,24 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         };
 
     path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependent folder.
-    LOG_D(LOG_CONTEXT, "user path is `%s`", storage->path.user);
+    LOG_D("user path is `%s`", storage->path.user);
 
     // This would be correct to do, since the local path is initialized, but it's also very pedant.
     // Storage_set_identity(storage, DEFAULT_IDENTITY);
 
     storage->context = FS_create();
     if (!storage->context) {
-        LOG_E(LOG_CONTEXT, "can't create file-system context");
+        LOG_E("can't create file-system context");
         goto error_free;
     }
-    LOG_D(LOG_CONTEXT, "file-system context %p created", storage->context);
+    LOG_D("file-system context %p created", storage->context);
 
     storage->cache = Storage_Cache_create(storage->context);
     if (!storage->cache) {
-        LOG_E(LOG_CONTEXT, "can't create cache");
+        LOG_E("can't create cache");
         goto error_destroy_context;
     }
-    LOG_D(LOG_CONTEXT, "cache %p created", storage->cache);
+    LOG_D("cache %p created", storage->cache);
 
     // Scan for `xxx.pak.0`, `xxx.pak.1`, ...
     //
@@ -93,14 +92,14 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
                     break;
                 }
             }
-            LOG_D(LOG_CONTEXT, "attaching folder/archive `%s`", archive_path);
+            LOG_D("attaching folder/archive `%s`", archive_path);
 
             bool archive_attached = FS_attach_folder_or_archive(storage->context, archive_path);
             if (!archive_attached) {
-                LOG_E(LOG_CONTEXT, "can't attach folder/archive at `%s`", archive_path);
+                LOG_E("can't attach folder/archive at `%s`", archive_path);
                 goto error_destroy_cache;
             }
-            LOG_D(LOG_CONTEXT, "folder/archive attached w/ path `%s`", archive_path);
+            LOG_D("folder/archive attached w/ path `%s`", archive_path);
         }
     }
 
@@ -119,21 +118,21 @@ static void _release(Storage_Resource_t *resource)
 {
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
-        LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%d characters string)",
+        LOG_D("resource-data %p at %p freed (%d characters string)",
             resource, resource->var.string.chars, resource->var.string.length);
     } else
     if (resource->type == STORAGE_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
-        LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%d bytes blob)",
+        LOG_D("resource-data %p at %p freed (%d bytes blob)",
             resource, resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
-        LOG_D(LOG_CONTEXT, "resource-data %p at %p freed (%dx%d image)",
+        LOG_D("resource-data %p at %p freed (%dx%d image)",
             resource, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
     free(resource);
-    LOG_D(LOG_CONTEXT, "resource %p freed", resource);
+    LOG_D("resource %p freed", resource);
 }
 
 void Storage_destroy(Storage_t *storage)
@@ -144,16 +143,16 @@ void Storage_destroy(Storage_t *storage)
         _release(resource);
     }
     arrfree(storage->resources);
-    LOG_D(LOG_CONTEXT, "storage cache emptied");
+    LOG_D("storage cache emptied");
 
     Storage_Cache_destroy(storage->cache);
-    LOG_D(LOG_CONTEXT, "storage cache destroyed");
+    LOG_D("storage cache destroyed");
 
     FS_destroy(storage->context);
-    LOG_D(LOG_CONTEXT, "file-system context destroyed");
+    LOG_D("file-system context destroyed");
 
     free(storage);
-    LOG_D(LOG_CONTEXT, "storage freed");
+    LOG_D("storage freed");
 }
 
 bool Storage_inject_base64(Storage_t *storage, const char *name, const char *encoded_data, size_t length)
@@ -175,24 +174,24 @@ bool Storage_set_identity(Storage_t *storage, const char *identity)
 {
     // if (storage->path.local[0] != '\0') {
     //     FS_detach(storage->context, storage->path.local);
-    //     LOG_D(LOG_CONTEXT, "user-dependent path `%s` detached", storage->path.local);
+    //     LOG_D("user-dependent path `%s` detached", storage->path.local);
     // }
 
     path_join(storage->path.local, storage->path.user, identity); // Build the local storage-path, using identity.
 
     bool created = path_mkdirs(storage->path.local);
     if (!created) {
-        LOG_E(LOG_CONTEXT, "can't create used-dependent path `%s`", storage->path.local);
+        LOG_E("can't create used-dependent path `%s`", storage->path.local);
         return false;
     }
 
     bool attached = FS_attach_folder(storage->context, storage->path.local);
     if (!attached) {
-        LOG_E(LOG_CONTEXT, "can't attach user-dependent path path `%s`", storage->path.local);
+        LOG_E("can't attach user-dependent path path `%s`", storage->path.local);
         return false;
     }
 
-    LOG_D(LOG_CONTEXT, "user-dependent path `%s` attached", storage->path.local);
+    LOG_D("user-dependent path `%s` attached", storage->path.local);
     return true;
 }
 
@@ -203,14 +202,14 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     size_t bytes_to_allocate = bytes_requested + (null_terminate ? 1 : 0);
     void *data = malloc(sizeof(uint8_t) * bytes_to_allocate); // Add null terminator for the string.
     if (!data) {
-        LOG_E(LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
+        LOG_E("can't allocate %d bytes of memory", bytes_to_allocate);
         FS_close(handle);
         return NULL;
     }
 
     size_t bytes_read = FS_read(handle, data, bytes_requested);
     if (bytes_read < bytes_requested) {
-        LOG_E(LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
+        LOG_E("can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
         free(data);
         return NULL;
     }
@@ -230,7 +229,7 @@ static bool _load_as_string(Storage_Resource_t *resource, FS_Handle_t *handle)
     if (!chars) {
         return false;
     }
-    LOG_D(LOG_CONTEXT, "loaded a %d characters long string", length);
+    LOG_D("loaded a %d characters long string", length);
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_STRING,
@@ -255,7 +254,7 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
     if (!ptr) {
         return false;
     }
-    LOG_D(LOG_CONTEXT, "loaded %d bytes blob", size);
+    LOG_D("loaded %d bytes blob", size);
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_BLOB,
@@ -302,10 +301,10 @@ static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
-        LOG_E(LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
+        LOG_E("can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
         return false;
     }
-    LOG_D(LOG_CONTEXT, "loaded %dx%d image", width, height);
+    LOG_D("loaded %dx%d image", width, height);
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_IMAGE,
@@ -378,7 +377,7 @@ static inline size_t _used_cache_slots(Storage_Resource_t **resources)
 #else   /* TOFU_STORAGE_AUTO_COLLECT */
     size_t count = length;
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
-    LOG_D(LOG_CONTEXT, "cache is currently holding %d resources", count);
+    LOG_D("cache is currently holding %d resources", count);
     return count;
 }
 
@@ -399,16 +398,16 @@ static inline void _free_cache_slot(Storage_Resource_t **resources)
     }
 
     if (!oldest) { // This is mostly an assertion, as it is IMPOSSIBLE that a resource is not found as to-be-released!
-        LOG_W(LOG_CONTEXT, "Great Scott! No resources marked for release!");
+        LOG_W("Great Scott! No resources marked for release!");
         return;
     }
 
     oldest->age = TOFU_STORAGE_RESOURCE_MAX_AGE; // Mark the oldest for release in the next cycle.
-    LOG_D(LOG_CONTEXT, "resource %p marked for release", oldest);
+    LOG_D("resource %p marked for release", oldest);
 #else   /* TOFU_STORAGE_AUTO_COLLECT */
     Storage_Resource_t *oldest = resources[0];
     arrdel(resources, 0); // FIFO removal.
-    LOG_D(LOG_CONTEXT, "resource %p released", oldest);
+    LOG_D("resource %p released", oldest);
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
 }
 #endif
@@ -416,7 +415,7 @@ static inline void _free_cache_slot(Storage_Resource_t **resources)
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
     if (path_is_absolute(name) || !path_is_normalized(name)) {
-        LOG_E(LOG_CONTEXT, "path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
+        LOG_E("path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
         return NULL;
     }
 
@@ -425,7 +424,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     Storage_Resource_t *entry = _lookup(storage->resources, id);
     if (entry) {
-        LOG_D(LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
+        LOG_D("cache-hit for resource `%s`, resetting age and returning", name);
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
         entry->age = 0.0f; // Reset age on cache-hit.
 #endif  /* TOFU_STORAGE_AUTO_COLLECT) */
@@ -434,14 +433,14 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
-        LOG_E(LOG_CONTEXT, "can't allocate resource");
+        LOG_E("can't allocate resource");
         return NULL;
     }
 
     if (_resource_load(resource, name, type, storage->context)) {
-        LOG_D(LOG_CONTEXT, "resource `%s` loaded from file-system", name);
+        LOG_D("resource `%s` loaded from file-system", name);
     } else {
-        LOG_E(LOG_CONTEXT, "can't load resource `%s`", name);
+        LOG_E("can't load resource `%s`", name);
         goto error_free_resource;
     }
     md5_hash_sz(resource->id, name, false);
@@ -450,12 +449,12 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
 #if defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT)
     if (_used_cache_slots(storage->resources) > TOFU_STORAGE_CACHE_ENTRIES_LIMIT) {
-        LOG_D(LOG_CONTEXT, "cache is full, picking a resource to release");
+        LOG_D("cache is full, picking a resource to release");
         _free_cache_slot(storage->resources);
     }
 #endif
 
-    LOG_D(LOG_CONTEXT, "resource `%s` stored as %p", name, resource);
+    LOG_D("resource `%s` stored as %p", name, resource);
 
     return resource;
 
@@ -470,7 +469,7 @@ static void _stbi_write_func(void *context, void *data, int size)
     size_t bytes_to_write = (size_t)size;
     size_t bytes_written = fwrite(data, sizeof(uint8_t), bytes_to_write, stream);
     if (bytes_written != bytes_to_write) {
-        LOG_E(LOG_CONTEXT, "can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
+        LOG_E("can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
     }
 }
 
@@ -482,7 +481,7 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
 
     FILE *stream = fopen(path, "wb");
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't create file `%s`", path);
+        LOG_E("can't create file `%s`", path);
         return false;
     }
 
@@ -514,7 +513,7 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
     fclose(stream);
 
     if (!result) {
-        LOG_E(LOG_CONTEXT, "can't write resource `%s` w/ type %d to file `%s`", name, resource->type, path);
+        LOG_E("can't write resource `%s` w/ type %d to file `%s`", name, resource->type, path);
     }
 
     return result;

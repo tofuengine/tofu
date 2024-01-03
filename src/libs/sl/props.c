@@ -27,6 +27,7 @@
 #include "mix.h"
 
 #include <core/config.h>
+#define _LOG_TAG "sl-props"
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -43,8 +44,6 @@
 #else
   #error "Wrong internal format"
 #endif
-
-#define LOG_CONTEXT "sl-props"
 
 static void *_malloc(size_t sz, void *pUserData)
 {
@@ -65,7 +64,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
 {
     SL_Props_t *props = malloc(sizeof(SL_Props_t));
     if (!props) {
-        LOG_E(LOG_CONTEXT, "can't allocate properties");
+        LOG_E("can't allocate properties");
         return NULL;
     }
 
@@ -88,7 +87,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
             .onFree = _free
         }, &props->converter);
     if (result != MA_SUCCESS) {
-        LOG_E(LOG_CONTEXT, "failed to create data converter");
+        LOG_E("failed to create data converter");
         goto error_free;
     }
 
@@ -107,10 +106,10 @@ void SL_props_destroy(SL_Props_t *props)
             .onRealloc = _realloc,
             .onFree = _free
         });
-    LOG_D(LOG_CONTEXT, "data converted uninitialized");
+    LOG_D("data converted uninitialized");
 
     free(props);
-    LOG_D(LOG_CONTEXT, "properties freed");
+    LOG_D("properties freed");
 }
 
 void SL_props_set_group(SL_Props_t *props, size_t group_id)

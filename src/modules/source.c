@@ -27,6 +27,7 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "source"
 #include <libs/log.h>
 #include <systems/audio.h>
 #include <systems/storage.h>
@@ -40,7 +41,6 @@ typedef enum Source_Types_e {
 
 typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL_Callbacks_t callbacks);
 
-#define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
 
 static int source_new_2sE_1o(lua_State *L);
@@ -140,7 +140,7 @@ static int source_new_2sE_1o(lua_State *L)
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", name);
     }
-    LOG_D(LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
+    LOG_D("handle %p opened for file `%s`", handle, name);
 
     SL_Source_t *source = _create_functions[type](audio->context, (SL_Callbacks_t){
             .read = _handle_read,
@@ -153,14 +153,14 @@ static int source_new_2sE_1o(lua_State *L)
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
-    LOG_D(LOG_CONTEXT, "source %p created, type #%d", source, type);
+    LOG_D("source %p created, type #%d", source, type);
 
     Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
         }, OBJECT_TYPE_SOURCE, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "source %p allocated", self);
+    LOG_D("source %p allocated", self);
 
     return 1;
 }
@@ -177,12 +177,12 @@ static int source_gc_1o_0(lua_State *L)
     Audio_untrack(audio, self->source); // Make sure we aren't leaving dangling pointers...
 
     SL_source_destroy(self->source);
-    LOG_D(LOG_CONTEXT, "source %p destroyed", self->source);
+    LOG_D("source %p destroyed", self->source);
 
     FS_close(self->handle);
-    LOG_D(LOG_CONTEXT, "handle %p closed", self->handle);
+    LOG_D("handle %p closed", self->handle);
 
-    LOG_D(LOG_CONTEXT, "source %p finalized", self);
+    LOG_D("source %p finalized", self);
 
     return 0;
 }

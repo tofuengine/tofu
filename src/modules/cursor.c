@@ -27,12 +27,12 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "cursor"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <systems/input.h>
 #include <systems/storage.h>
 
-#define LOG_CONTEXT "cursor"
 #define MODULE_NAME "tofu.input.cursor"
 #define META_TABLE  "Tofu_Input_Cursor_mt"
 
@@ -95,7 +95,7 @@ static int cursor_new_0_1o(lua_State *L)
             .cursor = cursor,
         }, OBJECT_TYPE_CURSOR, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "cursor %p allocated w/ cursor %p", self, cursor);
+    LOG_D("cursor %p allocated w/ cursor %p", self, cursor);
 
     return 1;
 }
@@ -107,7 +107,7 @@ static int cursor_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Cursor_Object_t *self = (Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
 
-    LOG_D(LOG_CONTEXT, "cursor %p finalized", self);
+    LOG_D("cursor %p finalized", self);
 
     return 0;
 }

@@ -27,11 +27,11 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "log"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <systems/storage.h>
 
-#define LOG_CONTEXT "log"
 #define MODULE_NAME "tofu.core.log"
 
 static int log_info_v_0(lua_State *L);
@@ -79,7 +79,7 @@ static int _write(lua_State *L, Log_Levels_t level)
         if (!s) {
             return luaL_error(L, "`tostring` must return a string `log_write`");
         }
-        Log_write(level, LOG_CONTEXT, (i > 1) ? "\t%s" : "%s", s);
+        Log_write(level, _LOG_TAG, (i > 1) ? "\t%s" : "%s", s);
         lua_pop(L, 1); // F R -> F
     }
     lua_pop(L, 1); // F -> <empty>

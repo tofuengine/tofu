@@ -28,11 +28,11 @@
 
 #include <core/config.h>
 #include <libs/gl/gl.h>
+#define _LOG_TAG "font"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <systems/storage.h>
 
-#define LOG_CONTEXT "font"
 #define MODULE_NAME "tofu.graphics.font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
 
@@ -104,7 +104,7 @@ static int font_new_2oS_1o(lua_State *L)
         }, OBJECT_TYPE_FONT, META_TABLE);
     _generate_alphabet(self->glyphs, alphabet);
 
-    LOG_D(LOG_CONTEXT, "font %p allocated w/ bank %p w/ reference #%d",
+    LOG_D("font %p allocated w/ bank %p w/ reference #%d",
         self, bank, self->bank.reference);
 
     return 1;
@@ -118,9 +118,9 @@ static int font_gc_1o_0(lua_State *L)
     Font_Object_t *self = (Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
 
     luaX_unref(L, self->bank.reference);
-    LOG_D(LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
+    LOG_D("bank reference #%d released", self->bank.reference);
 
-    LOG_D(LOG_CONTEXT, "font %p finalized", self);
+    LOG_D("font %p finalized", self);
 
     return 0;
 }

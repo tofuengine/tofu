@@ -29,6 +29,7 @@
 #include <core/config.h>
 #include <core/platform.h>
 #include <libs/bytes.h>
+#define _LOG_TAG "fs-pak"
 #include <libs/log.h>
 #include <libs/md5.h>
 #include <libs/path.h>
@@ -36,8 +37,6 @@
 #include <libs/xor.h>
 
 #include <ctype.h>
-
-#define LOG_CONTEXT "fs-pak"
 
 #define PAK_SIGNATURE           "TOFUPAK!"
 #define PAK_SIGNATURE_LENGTH    8
@@ -153,15 +152,15 @@ static bool _pak_validate_archive(FILE *stream, const char *path)
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
-        LOG_E(LOG_CONTEXT, "can't read header from file `%s`", path);
+        LOG_E("can't read header from file `%s`", path);
         return false;
     }
     if (strncmp(header.signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) != 0) {
-        LOG_E(LOG_CONTEXT, "file `%s` is not a valid archive", path);
+        LOG_E("file `%s` is not a valid archive", path);
         return false;
     }
     if (header.version != PAK_VERSION) {
-        LOG_E(LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
+        LOG_E("archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
         return false;
     }
     return true;
@@ -175,7 +174,7 @@ bool FS_pak_is_valid(const char *path)
 
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
+        LOG_E("can't access file `%s`", path);
         return false;
     }
 
@@ -222,7 +221,7 @@ static bool _linear_search(FILE *stream, size_t entries, const uint8_t id[PAK_ID
     for (size_t i = 0; i < entries; ++i) {
         bool read = _peek_entry(stream, i, header);
         if (!read) {
-            LOG_E(LOG_CONTEXT, "can't read header #%d", i);
+            LOG_E("can't read header #%d", i);
             return false;
         }
 
@@ -244,7 +243,7 @@ static bool _binary_search(FILE *stream, size_t entries, const uint8_t id[PAK_ID
         size_t m = (l + u) / 2;
         bool read = _peek_entry(stream, m, header);
         if (!read) {
-            LOG_E(LOG_CONTEXT, "can't read header #%d", m);
+            LOG_E("can't read header #%d", m);
             return false;
         }
 
@@ -266,13 +265,13 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
 {
     FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access entry `%s`", pak_mount->path);
+        LOG_E("can't access entry `%s`", pak_mount->path);
         return NULL;
     }
 
     char id_hex[PAK_ID_LENGTH_SZ];
     _hash_file(name, entry->id, id_hex);
-    LOG_T(LOG_CONTEXT, "entry `%s` has id `%s`", name, id_hex);
+    LOG_T("entry `%s` has id `%s`", name, id_hex);
 
     Pak_Entry_Header_t header = { 0 };
     bool found = pak_mount->search(stream,  pak_mount->entries, entry->id, &header);
@@ -286,7 +285,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     entry->offset = bytes_ui32le(header.offset);
     entry->size = bytes_ui32le(header.size);
 
-    LOG_T(LOG_CONTEXT, "entry `%s` w/ size %u located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
+    LOG_T("entry `%s` w/ size %u located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
 
     return stream;
 
@@ -300,23 +299,23 @@ FS_Mount_t *FS_pak_mount(const char *path)
 {
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
+        LOG_E("can't access file `%s`", path);
         return NULL;
     }
 
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
-        LOG_E(LOG_CONTEXT, "can't read header from file `%s`", path);
+        LOG_E("can't read header from file `%s`", path);
         goto error_close;
     }
 
     size_t entries = bytes_ui32le(header.entries);
-    LOG_T(LOG_CONTEXT, "archive `%s` contains %d entries", path, entries);
+    LOG_T("archive `%s` contains %d entries", path, entries);
 
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
-        LOG_E(LOG_CONTEXT, "can't allocate mount for archive `%s`", path);
+        LOG_E("can't allocate mount for archive `%s`", path);
         goto error_close;
     }
 
@@ -352,7 +351,7 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
 
     strncpy(pak_mount->path, path, PLATFORM_PATH_MAX - 1);
 
-    LOG_T(LOG_CONTEXT, "mount %p initialized w/ %d entries (encrypted is %d, sorted is %d) for archive `%s`", mount, entries, encrypted, sorted, path);
+    LOG_T("mount %p initialized w/ %d entries (encrypted is %d, sorted is %d) for archive `%s`", mount, entries, encrypted, sorted, path);
 }
 
 static void _pak_mount_dtor(FS_Mount_t *mount)
@@ -361,7 +360,7 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
 
     *pak_mount = (Pak_Mount_t){ 0 };
 
-    LOG_T(LOG_CONTEXT, "mount %p uninitialized", mount);
+    LOG_T("mount %p uninitialized", mount);
 }
 
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
@@ -372,7 +371,7 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
     FILE *stream = _find_entry(pak_mount, name, &entry);
 
     bool found = !!stream;
-    LOG_IF_T(!found, LOG_CONTEXT, "entry `%s` not found in mount %p", name, pak_mount);
+    LOG_IF_T(!found, "entry `%s` not found in mount %p", name, pak_mount);
 
     if (stream) {
         fclose(stream);
@@ -388,25 +387,25 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     Pak_Entry_t entry;
     FILE *stream = _find_entry(pak_mount, name, &entry);
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't find entry `%s` in mount %p", name, pak_mount);
+        LOG_E("can't find entry `%s` in mount %p", name, pak_mount);
         return NULL;
     }
 
     bool sought = fseek(stream, entry.offset, SEEK_SET) != -1; // Move to the found entry position into the file.
     if (!sought) {
-        LOG_E(LOG_CONTEXT, "can't seek entry `%s` at offset %d mount %p", name, entry.offset, pak_mount);
+        LOG_E("can't seek entry `%s` at offset %d mount %p", name, entry.offset, pak_mount);
         goto error_close;
     }
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
-        LOG_E(LOG_CONTEXT, "can't allocate handle for entry `%s`", name);
+        LOG_E("can't allocate handle for entry `%s`", name);
         goto error_close;
     }
 
     _pak_handle_ctor(handle, stream, entry.offset, entry.size, pak_mount->flags.encrypted, entry.id);
 
-    LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p", name, handle);
+    LOG_D("entry `%s` opened w/ handle %p", name, handle);
 
     return handle;
 
@@ -449,11 +448,11 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
 
         xor_schedule(&pak_handle->cipher_context, key, PAK_ID_LENGTH);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-        LOG_T(LOG_CONTEXT, "cipher context initialized");
+        LOG_T("cipher context initialized");
 #endif
     }
 
-    LOG_T(LOG_CONTEXT, "handle %p initialized at %ld (%d bytes)", handle, begin_of_stream, size);
+    LOG_T("handle %p initialized at %ld (%d bytes)", handle, begin_of_stream, size);
 }
 
 static void _pak_handle_dtor(FS_Handle_t *handle)
@@ -462,7 +461,7 @@ static void _pak_handle_dtor(FS_Handle_t *handle)
 
     fclose(pak_handle->stream);
 
-    LOG_T(LOG_CONTEXT, "handle %p uninitialized", handle);
+    LOG_T("handle %p uninitialized", handle);
 }
 
 static size_t _pak_handle_size(FS_Handle_t *handle)
@@ -470,7 +469,7 @@ static size_t _pak_handle_size(FS_Handle_t *handle)
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "handle %p is", std_handle);
+    LOG_D("handle %p is", std_handle);
 #endif  /* VERBOSE_DEBUG */
 
     return pak_handle->stream_size;
@@ -482,7 +481,7 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
-        LOG_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
+        LOG_E("can't get current position for handle %p", handle);
         return 0;
     }
 
@@ -495,18 +494,18 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_T(LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
+    LOG_T("%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 #endif
 
     if (pak_handle->encrypted) {
         xor_process(&pak_handle->cipher_context, buffer, buffer, bytes_read);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-        LOG_T(LOG_CONTEXT, "%d bytes decrypted", bytes_read);
+        LOG_T("%d bytes decrypted", bytes_read);
 #endif
     }
 
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    LOG_D("%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
 }
@@ -525,26 +524,26 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     if (whence == SEEK_END) {
         origin = pak_handle->end_of_stream;
     } else {
-        LOG_E(LOG_CONTEXT, "wrong seek mode %d for handle %p", whence, handle);
+        LOG_E("wrong seek mode %d for handle %p", whence, handle);
         return false;
     }
 
     long position = origin + offset;
     if (position < pak_handle->begin_of_stream || position > pak_handle->end_of_stream) {
-        LOG_E(LOG_CONTEXT, "offset %d (position %d) is outside valid range for handle %p", offset, position, handle);
+        LOG_E("offset %d (position %d) is outside valid range for handle %p", offset, position, handle);
         return false;
     }
 
     bool sought = fseek(pak_handle->stream, position, SEEK_SET) == 0;
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_T(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
+    LOG_T("%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the sought position.
         size_t index = position - pak_handle->begin_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-        LOG_T(LOG_CONTEXT, "cipher context adjusted to %d", index);
+        LOG_T("cipher context adjusted to %d", index);
 #endif
     }
 
@@ -564,13 +563,13 @@ static bool _pak_handle_eof(FS_Handle_t *handle)
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
-        LOG_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
+        LOG_E("can't get current position for handle %p", handle);
         return true;
     }
 
     bool end_of_file = position > pak_handle->end_of_stream;
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(end_of_file, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

@@ -28,9 +28,9 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "batch"
 #include <libs/log.h>
 
-#define LOG_CONTEXT "batch"
 #define META_TABLE  "Tofu_Graphics_Batch_mt"
 
 static int batch_new_2on_1o(lua_State *L);
@@ -74,7 +74,7 @@ static int batch_new_2on_1o(lua_State *L)
     if (!queue) {
         return luaL_error(L, "can't create queue");
     }
-    LOG_D(LOG_CONTEXT, "queue %p created for bank %p w/ %d slots", queue, bank, capacity);
+    LOG_D("queue %p created for bank %p w/ %d slots", queue, bank, capacity);
 
     Batch_Object_t *self = (Batch_Object_t *)luaX_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
             .bank = {
@@ -84,7 +84,7 @@ static int batch_new_2on_1o(lua_State *L)
             .queue = queue
         }, OBJECT_TYPE_BATCH, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
+    LOG_D("batch %p created w/ bank %p", self, bank);
 
     return 1;
 }
@@ -97,12 +97,12 @@ static int batch_gc_1o_0(lua_State *L)
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
 
     luaX_unref(L, self->bank.reference);
-    LOG_D(LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
+    LOG_D("bank reference #%d released", self->bank.reference);
 
     GL_queue_destroy(self->queue);
-    LOG_D(LOG_CONTEXT, "queue %p destroyed", self->queue);
+    LOG_D("queue %p destroyed", self->queue);
 
-    LOG_D(LOG_CONTEXT, "batch %p finalized", self);
+    LOG_D("batch %p finalized", self);
 
     return 0;
 }

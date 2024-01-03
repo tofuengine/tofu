@@ -27,11 +27,8 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
-#include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-
-#define LOG_CONTEXT "display"
 
 static int display_size_0_2nn(lua_State *L);
 static int display_palette_1o_0(lua_State *L);

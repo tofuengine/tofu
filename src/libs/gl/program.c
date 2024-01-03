@@ -23,10 +23,9 @@
  */
 #include "program.h"
 
+#define _LOG_TAG "gl-program"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "gl-program"
 
 static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, const GL_Program_Entry_t entry)
 {
@@ -49,11 +48,11 @@ GL_Program_t *GL_program_create(void)
 {
     GL_Program_t *program = malloc(sizeof(GL_Program_t));
     if (!program) {
-        LOG_E(LOG_CONTEXT, "can't allocate program");
+        LOG_E("can't allocate program");
         return NULL;
     }
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program created at %p", program);
+    LOG_D("program created at %p", program);
 #endif  /* VERBOSE_DEBUG */
 
     *program = (GL_Program_t){ 0 };
@@ -70,11 +69,11 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 {
     GL_Program_t *clone = malloc(sizeof(GL_Program_t));
     if (!clone) {
-        LOG_E(LOG_CONTEXT, "can't allocate program");
+        LOG_E("can't allocate program");
         return NULL;
     }
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program created at %p", clone);
+    LOG_D("program created at %p", clone);
 #endif  /* VERBOSE_DEBUG */
 
     *clone = (GL_Program_t){ 0 };
@@ -92,12 +91,12 @@ void GL_program_destroy(GL_Program_t *program)
 {
     arrfree(program->entries);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
+    LOG_D("program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     free(program);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program %p freed", program);
+    LOG_D("program %p freed", program);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -112,7 +111,7 @@ void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
+    LOG_D("program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
@@ -124,7 +123,7 @@ void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
 {
     arrdeln(program->entries, position, length);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
+    LOG_D("program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 }
 

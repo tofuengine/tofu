@@ -27,12 +27,12 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "grid"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/interpreter.h>
 
-#define LOG_CONTEXT "grid"
 #define MODULE_NAME "tofu.util.grid"
 #define META_TABLE  "Tofu_Util_Grid_mt"
 
@@ -113,7 +113,7 @@ static int grid_new_3nnT_1o(lua_State *L)
             lua_pop(L, 1);
         }
     } else {
-        LOG_W(LOG_CONTEXT, "grid content left uninitialized");
+        LOG_W("grid content left uninitialized");
     }
 
     Grid_Object_t *self = (Grid_Object_t *)luaX_newobject(L, sizeof(Grid_Object_t), &(Grid_Object_t){
@@ -123,7 +123,7 @@ static int grid_new_3nnT_1o(lua_State *L)
             .data_size = data_size
         }, OBJECT_TYPE_GRID, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
+    LOG_D("grid %p allocated w/ data %p", self, data);
 
     return 1;
 }
@@ -136,9 +136,9 @@ static int grid_gc_1o_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 
     free(self->data);
-    LOG_D(LOG_CONTEXT, "data %p freed", self->data);
+    LOG_D("data %p freed", self->data);
 
-    LOG_D(LOG_CONTEXT, "grid %p finalized", self);
+    LOG_D("grid %p finalized", self);
 
     return 0;
 }

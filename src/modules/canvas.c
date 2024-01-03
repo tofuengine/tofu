@@ -27,13 +27,13 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "canvas"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/interpreter.h>
 
-#define LOG_CONTEXT "canvas"
 #define MODULE_NAME "tofu.graphics.canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
 // FIXME: collapse meta and script name? or desume the meta-table name from the module and try and load always?
@@ -149,7 +149,7 @@ static int canvas_new_1o_1o(lua_State *L)
             }
         }, OBJECT_TYPE_CANVAS, META_TABLE);
 
-    LOG_D(LOG_CONTEXT, "canvas %p allocated w/ context %p for image %p", self, context, image);
+    LOG_D("canvas %p allocated w/ context %p for image %p", self, context, image);
 
     return 1;
 }
@@ -162,12 +162,12 @@ static int canvas_gc_1o_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
     luaX_unref(L, self->image.reference);
-    LOG_D(LOG_CONTEXT, "image reference #%d released", self->image.reference);
+    LOG_D("image reference #%d released", self->image.reference);
 
     GL_context_destroy(self->context);
-    LOG_D(LOG_CONTEXT, "context %p destroyed", self->context);
+    LOG_D("context %p destroyed", self->context);
 
-    LOG_D(LOG_CONTEXT, "canvas %p finalized", self);
+    LOG_D("canvas %p finalized", self);
 
     return 0;
 }

@@ -29,6 +29,7 @@
 
 #include <core/config.h>
 #include <libs/dr_libs.h>
+#define _LOG_TAG "sl-sample"
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -54,7 +55,6 @@
   #error "Mixing buffer has wrong number of channels"
 #endif
 
-#define LOG_CONTEXT "sl-sample"
 
 typedef struct Sample_s {
     Source_VTable_t vtable;
@@ -80,7 +80,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
 static inline bool _rewind(Sample_t *sample)
 {
-    LOG_T(LOG_CONTEXT, "rewinding sample %p", sample);
+    LOG_T("rewinding sample %p", sample);
 
     ma_audio_buffer *buffer = &sample->buffer;
     ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewinding into memory (frame-seeking is safe).
@@ -92,7 +92,7 @@ static inline bool _rewind(Sample_t *sample)
 
 static inline bool _reset(Sample_t *sample)
 {
-    LOG_T(LOG_CONTEXT, "rewinding sample %p", sample);
+    LOG_T("rewinding sample %p", sample);
 
     return _rewind(sample);
 }
@@ -122,7 +122,7 @@ SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callba
 {
     SL_Source_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
-        LOG_E(LOG_CONTEXT, "can't allocate sample structure");
+        LOG_E("can't allocate sample structure");
         return NULL;
     }
 
@@ -131,7 +131,7 @@ SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callba
         goto error_free;
     }
 
-    LOG_D(LOG_CONTEXT, "sample %p created", sample);
+    LOG_D("sample %p created", sample);
     return sample;
 
 error_free:
@@ -199,47 +199,47 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
             .onFree    = _free
         });
     if (!sample->decoder) {
-        LOG_E(LOG_CONTEXT, "can't create sample decoder");
+        LOG_E("can't create sample decoder");
         return false;
     }
 
     sample->length_in_frames = sample->decoder->totalPCMFrameCount;
     if (sample->length_in_frames == 0) {
-        LOG_E(LOG_CONTEXT, "can't create sample w/ zero length");
+        LOG_E("can't create sample w/ zero length");
         goto error_close_decoder;
     }
 
     size_t channels = sample->decoder->channels;
     size_t sample_rate = sample->decoder->sampleRate;
     size_t bits_per_sample = sample->decoder->bitsPerSample;
-    LOG_D(LOG_CONTEXT, "sample decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", sample->decoder, sample->length_in_frames, channels, sample_rate, bits_per_sample);
+    LOG_D("sample decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", sample->decoder, sample->length_in_frames, channels, sample_rate, bits_per_sample);
 
     if (channels != 1) {
-        LOG_E(LOG_CONTEXT, "samples need to be 1 channel");
+        LOG_E("samples need to be monaural (i.e. w/ 1 channel)");
         goto error_close_decoder;
     }
     float duration = (float)sample->length_in_frames / (float)sample_rate;
-    if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
-        LOG_E(LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
+    if (duration > _SAMPLE_MAX_LENGTH_IN_SECONDS) {
+        LOG_E("sample is too long (%.2f seconds)", duration);
         goto error_close_decoder;
     }
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(INTERNAL_FORMAT, channels, sample->length_in_frames, NULL, NULL);
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
     if (result != MA_SUCCESS) {
-        LOG_E(LOG_CONTEXT, "can't allocate buffer for %d frames", sample->length_in_frames);
+        LOG_E("can't allocate buffer for %d frames", sample->length_in_frames);
         goto error_close_decoder;
     }
 
     bool produced = _produce(sample);
     if (!produced) {
-        LOG_E(LOG_CONTEXT, "can't read %d frames for sample", sample->length_in_frames);
+        LOG_E("can't read %d frames for sample", sample->length_in_frames);
         goto error_deinitialize_audio_buffer;
     }
 
     sample->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!sample->props) {
-        LOG_E(LOG_CONTEXT, "can't initialize sample properties");
+        LOG_E("can't initialize sample properties");
         goto error_deinitialize_audio_buffer;
     }
 
@@ -257,13 +257,13 @@ static void _sample_dtor(SL_Source_t *source)
     Sample_t *sample = (Sample_t *)source;
 
     SL_props_destroy(sample->props);
-    LOG_D(LOG_CONTEXT, "sample properties destroyed");
+    LOG_D("sample properties destroyed");
 
     ma_audio_buffer_uninit(&sample->buffer);
-    LOG_D(LOG_CONTEXT, "sample buffer uninitialized");
+    LOG_D("sample buffer uninitialized");
 
     drflac_close(sample->decoder);
-    LOG_D(LOG_CONTEXT, "sample decoder closed");
+    LOG_D("sample decoder closed");
 }
 
 static bool _sample_reset(SL_Source_t *source)
@@ -272,7 +272,7 @@ static bool _sample_reset(SL_Source_t *source)
 
     bool reset = _reset(sample);
     if (!reset) {
-        LOG_E(LOG_CONTEXT, "can't reset sample %p data", source);
+        LOG_E("can't reset sample %p data", source);
         return false;
     }
 
@@ -302,7 +302,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
     while (frames_remaining > 0) {
         if (sample->frames_completed == sample->length_in_frames) {
             if (!looped || !_rewind(sample)) {
-                LOG_D(LOG_CONTEXT, "end-of-data reached for source %p", source);
+                LOG_D("end-of-data reached for source %p", source);
                 return false;
             }
         }
