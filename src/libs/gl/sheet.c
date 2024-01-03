@@ -49,7 +49,7 @@ static GL_Rectangle_t *_parse_cells(const GL_Rectangle32_t *rectangles, size_t c
                 .y = bytes_i32le(rectangles[i].y),
                 .width = bytes_ui32le(rectangles[i].width),
                 .height = bytes_ui32le(rectangles[i].height)
-        };
+            };
     }
 
     return cells;

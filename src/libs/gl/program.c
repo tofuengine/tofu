@@ -35,7 +35,10 @@ static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int posit
     if (index < entries) { // Overwrite an existing entry, if present.
         program[index] = entry;
     } else { // Otherwise, fill with `NOP` operations and append (moving the end-of-data marker).
-        const GL_Program_Entry_t nop = (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_NOP, .args = { { 0 } } };
+        const GL_Program_Entry_t nop = (GL_Program_Entry_t){
+                .command = GL_PROGRAM_COMMAND_NOP,
+                .args = { { 0 } }
+            };
         for (int i = entries; i < index; ++i) {
             arrins(program, i, nop);
         }
@@ -59,7 +62,10 @@ GL_Program_t *GL_program_create(void)
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     // We will be adding the other entries at the end of the array, keeping the `WAIT/max/max` terminator.
-    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } };
+    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
+            .command = GL_PROGRAM_COMMAND_WAIT,
+            .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
+        };
     arrpush(program->entries, end_of_data);
 
     return program;
@@ -115,7 +121,10 @@ void GL_program_clear(GL_Program_t *program)
 #endif  /* VERBOSE_DEBUG */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } };
+    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
+            .command = GL_PROGRAM_COMMAND_WAIT,
+            .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
+        };
     arrpush(program->entries, end_of_data);
 }
 

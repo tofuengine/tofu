@@ -185,11 +185,11 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 
     *module = (Module_t){
             .vtable = (Source_VTable_t){
-                    .dtor = _module_dtor,
-                    .reset = _module_reset,
-                    .update = _module_update,
-                    .generate = _module_generate
-                },
+                .dtor = _module_dtor,
+                .reset = _module_reset,
+                .update = _module_update,
+                .generate = _module_generate
+            },
             .completed = false
         };
 

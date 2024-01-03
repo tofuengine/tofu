@@ -189,11 +189,11 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
 
     *music = (Music_t){
             .vtable = (Source_VTable_t){
-                    .dtor = _music_dtor,
-                    .reset = _music_reset,
-                    .update = _music_update,
-                    .generate = _music_generate
-                },
+                .dtor = _music_dtor,
+                .reset = _music_reset,
+                .update = _music_update,
+                .generate = _music_generate
+            },
             .callbacks = callbacks,
             .frames_completed = 0
         };

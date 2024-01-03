@@ -35,7 +35,12 @@ static void _reset(GL_Context_t *context)
     const GL_Surface_t *surface = context->surface;
 
     GL_State_t state = (GL_State_t){
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width, .y1 = (int)surface->height },
+            .clipping_region = (GL_Quad_t){
+                .x0 = 0,
+                .y0 = 0,
+                .x1 = (int)surface->width,
+                .y1 = (int)surface->height
+            },
             .shifting = { 0 },
             .transparent = { 0 }
         };

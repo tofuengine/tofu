@@ -48,19 +48,19 @@ Environment_t *Environment_create(const Display_t *display, const Input_t *input
     LOG_D("environment allocated");
 
     *environment = (Environment_t){
-        .display = display,
-        .input = input,
-        .state = (Environment_State_t){
+            .display = display,
+            .input = input,
+            .state = (Environment_State_t){
 #if defined(TOFU_EVENTS_FOCUS_SUPPORT)
-            .active = { .is = false, .was = false },
+                .active = { .is = false, .was = false },
 #endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
 #if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
-            .controllers = { .previous = -1, .current = 0 },
+                .controllers = { .previous = -1, .current = -1 },
 #endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
-            .stats = { 0 },
-            .time = 0.0
-        },
-    };
+                .stats = { 0 },
+                .time = 0.0
+            }
+        };
 
     return environment;
 }

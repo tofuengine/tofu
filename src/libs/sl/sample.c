@@ -176,11 +176,11 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 
     *sample = (Sample_t){
             .vtable = (Source_VTable_t){
-                    .dtor = _sample_dtor,
-                    .reset = _sample_reset,
-                    .update = _sample_update,
-                    .generate = _sample_generate
-                },
+                .dtor = _sample_dtor,
+                .reset = _sample_reset,
+                .update = _sample_update,
+                .generate = _sample_generate
+            },
             .callbacks = callbacks,
             .frames_completed = 0
         };

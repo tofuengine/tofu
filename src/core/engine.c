@@ -174,7 +174,11 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     LOG_I("mappings `%s` loaded", engine->configuration->system.mappings);
 
     engine->display = Display_create(&(const Display_Configuration_t){
-            .icon = (GLFWimage){ .width = (int)SR_IWIDTH(icon), .height = (int)SR_IHEIGHT(icon), .pixels = SR_IPIXELS(icon) },
+            .icon = (GLFWimage){
+                .width = (int)SR_IWIDTH(icon),
+                .height = (int)SR_IHEIGHT(icon),
+                .pixels = SR_IPIXELS(icon)
+            },
             .window = {
                 .title = engine->configuration->display.title,
                 .width = engine->configuration->display.width,
