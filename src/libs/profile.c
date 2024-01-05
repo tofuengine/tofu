@@ -26,9 +26,9 @@
 
 #include <GLFW/glfw3.h>
 
-void profile_init(Profile_t *profile)
+Profile_t profile_init(void)
 {
-    *profile = (Profile_t){
+    return (Profile_t){
             .marker = glfwGetTime()
         };
 }

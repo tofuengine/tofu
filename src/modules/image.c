@@ -136,7 +136,9 @@ static int image_new_3sNO_1o(lua_State *L)
             .threshold = 0
         };
 
-    //PROFILE_BEGIN("image_new")
+#if defined(TOFU_CORE_PROFILING_ENABLED)
+    Profile_t marker = profile_init();
+#endif
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", name);
@@ -145,7 +147,9 @@ static int image_new_3sNO_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
-    //PROFILE_END
+#if defined(TOFU_CORE_PROFILING_ENABLED)
+    LOG_I("loading and decoding image `%s` took %.3fs", name, profile_elapsed(&marker));
+#endif
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
@@ -176,7 +180,9 @@ static int image_new_3snn_1o(lua_State *L)
             .foreground = foreground_index
         };
 
-    //PROFILE_BEGIN("image_new")
+#if defined(TOFU_CORE_PROFILING_ENABLED)
+    Profile_t marker = profile_init();
+#endif
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", name);
@@ -185,7 +191,9 @@ static int image_new_3snn_1o(lua_State *L)
     if (!surface) {
         return luaL_error(L, "can't decode file `%s`", name);
     }
-    //PROFILE_END
+#if defined(TOFU_CORE_PROFILING_ENABLED)
+    LOG_I("loading and decoding image `%s` took %.3fs", name, profile_elapsed(&marker));
+#endif
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){

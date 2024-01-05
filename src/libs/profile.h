@@ -27,33 +27,11 @@
 
 #include <core/config.h>
 
-// Note: we assume `log.h` has already been included by the current translation-unit,
-// so that the logging context is declared.
-
-#if defined(TOFU_CORE_PROFILING_ENABLED) || defined(DEBUG)
-    #define _PROFILE
-#endif
-
 typedef struct Profile_s {
     double marker;
 } Profile_t;
 
-#if defined(_PROFILE)
-    #define PROFILE_BEGIN(context) \
-        do { \
-            const char *_context = (context); \
-            Profile_t _profile; \
-            profile_init(&_profile);
-    #define PROFILE_END \
-            float _elapsed = profile_elapsed(&_profile); \
-            LOG_I("`%s` took %.3fs", _context, _elapsed); \
-        } while (0);
-#else
-    #define PROFILE_BEGIN(context)
-    #define PROFILE_END
-#endif
-
-extern void profile_init(Profile_t *profile);
+extern Profile_t profile_init(void);
 extern float profile_elapsed(const Profile_t *profile);
 
 #endif  /* TOFU_LIBS_PROFILE_H */

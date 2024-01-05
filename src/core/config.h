@@ -95,7 +95,10 @@
 // Define if you want the I/O and processing profiling to be enabled
 // regardless of the build mode. Otherwise, it will be automatically enabled
 // only for the `DEBUG` build.
-#undef  TOFU_CORE_PROFILING_ENABLED
+#define TOFU_CORE_PROFILING_ENABLED
+
+// Includes checks inside some crucial functions. Could be useful in DEBUG mode.
+#define TOFU_CORE_DEFENSIVE_CHECKS
 
 // When define the following macro enables "faster" integer and float math
 // operations. See the `imath.h` and `fmath.h` sources.
@@ -466,6 +469,7 @@
 // In release build, disable VM calls debug and periodic collection for better
 // performance.
 #if defined(NDEBUG)
+  #undef TOFU_CORE_PROFILING_ENABLED
   #undef TOFU_ENGINE_PERFORMANCE_STATISTICS
   #undef TOFU_ENGINE_HEAP_STATISTICS
   #undef TOFU_FILE_DEBUG_ENABLED
