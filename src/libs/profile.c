@@ -29,7 +29,7 @@
 void profile_init(Profile_t *profile)
 {
     *profile = (Profile_t){
-            .marker = glfwGetTime();
+            .marker = glfwGetTime()
         };
 }
 
