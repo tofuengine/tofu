@@ -104,14 +104,6 @@
 // operations. See the `imath.h` and `fmath.h` sources.
 #undef  TOFU_CORE_FAST_MATH
 
-// Includes checks inside some crucial functions. Could be useful in DEBUG mode.
-#if defined(DEBUG)
-    #define TOFU_CORE_DEFENSIVE_CHECKS
-#else
-    #undef  TOFU_CORE_DEFENSIVE_CHECKS
-#endif
-
-
 // ##############
 // ### Engine ###
 // ##############
@@ -470,6 +462,7 @@
 // performance.
 #if defined(NDEBUG)
   #undef TOFU_CORE_PROFILING_ENABLED
+  #undef TOFU_CORE_DEFENSIVE_CHECKS
   #undef TOFU_ENGINE_PERFORMANCE_STATISTICS
   #undef TOFU_ENGINE_HEAP_STATISTICS
   #undef TOFU_FILE_DEBUG_ENABLED
