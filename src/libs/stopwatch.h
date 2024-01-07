@@ -22,19 +22,16 @@
  * SOFTWARE.
  */
 
-#include "profile.h"
+#ifndef TOFU_LIBS_STOPWATCH_H
+#define TOFU_LIBS_STOPWATCH_H
 
-#include <GLFW/glfw3.h>
+#include <core/config.h>
 
-Profile_t profile_init(void)
-{
-    return (Profile_t){
-            .marker = glfwGetTime()
-        };
-}
+typedef struct StopWatch_s {
+    double marker;
+} StopWatch_t;
 
-float profile_elapsed(const Profile_t *profile)
-{
-    const double now = glfwGetTime();
-    return (float)(now - profile->marker);
-}
+extern StopWatch_t stopwatch_init(void);
+extern float stopwatch_elapsed(const StopWatch_t *stopwatch);
+
+#endif  /* TOFU_LIBS_STOPWATCH_H */

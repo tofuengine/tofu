@@ -31,7 +31,7 @@
 #define _LOG_TAG "image"
 #include <libs/log.h>
 #include <libs/path.h>
-#include <libs/profile.h>
+#include <libs/stopwatch.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/storage.h>
@@ -137,7 +137,8 @@ static int image_new_3sNO_1o(lua_State *L)
         };
 
 #if defined(TOFU_CORE_PROFILING_ENABLED)
-    Profile_t marker = profile_init();
+    StopWatch_t stopwatch = stopwatch_init();
+    LOG_I("profiling loading and decoding for image `%s`", name);
 #endif
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
@@ -148,7 +149,7 @@ static int image_new_3sNO_1o(lua_State *L)
         return luaL_error(L, "can't decode file `%s`", name);
     }
 #if defined(TOFU_CORE_PROFILING_ENABLED)
-    LOG_I("loading and decoding image `%s` took %.3fs", name, profile_elapsed(&marker));
+    LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
 #endif
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
@@ -181,7 +182,8 @@ static int image_new_3snn_1o(lua_State *L)
         };
 
 #if defined(TOFU_CORE_PROFILING_ENABLED)
-    Profile_t marker = profile_init();
+    StopWatch_t stopwatch = stopwatch_init();
+    LOG_I("profiling loading and decoding for image `%s`", name);
 #endif
     const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
     if (!image) {
@@ -192,7 +194,7 @@ static int image_new_3snn_1o(lua_State *L)
         return luaL_error(L, "can't decode file `%s`", name);
     }
 #if defined(TOFU_CORE_PROFILING_ENABLED)
-    LOG_I("loading and decoding image `%s` took %.3fs", name, profile_elapsed(&marker));
+    LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
 #endif
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
