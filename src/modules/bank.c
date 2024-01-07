@@ -34,8 +34,6 @@
 
 #include <math.h>
 
-#define META_TABLE "Tofu_Graphics_Bank_mt"
-
 static int bank_new_v_1o(lua_State *L);
 static int bank_gc_1o_0(lua_State *L);
 static int bank_size_4onNN_2n(lua_State *L);
@@ -56,7 +54,7 @@ int bank_loader(lua_State *L)
         (const luaX_Const[]){
             { "NIL", LUA_CT_INTEGER, { .i = GL_CELL_NIL } },
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int bank_new_2os_1o(lua_State *L)
@@ -86,7 +84,7 @@ static int bank_new_2os_1o(lua_State *L)
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK, META_TABLE);
+        }, OBJECT_TYPE_BANK, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("bank %p with cells file `%s` allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, cells_file, sheet, atlas, self->atlas.reference);
@@ -116,7 +114,7 @@ static int bank_new_3oNN_1o(lua_State *L)
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK, META_TABLE);
+        }, OBJECT_TYPE_BANK, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("bank %p with %dx%d cells allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, cell_width, cell_height, sheet, atlas, self->atlas.reference);

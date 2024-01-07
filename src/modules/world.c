@@ -35,9 +35,6 @@
 
 #include <chipmunk/chipmunk.h>
 
-#define MODULE_NAME "tofu.physics.world"
-#define META_TABLE  "Tofu_Physics_World_mt"
-
 static int world_new_v_1o(lua_State *L);
 static int world_gc_1o_0(lua_State *L);
 static int world_gravity_v_v(lua_State *L);
@@ -49,8 +46,11 @@ static int world_update_2on_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
@@ -79,7 +79,7 @@ int world_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int world_new_2NN_1o(lua_State *L)
@@ -102,7 +102,7 @@ static int world_new_2NN_1o(lua_State *L)
 
     World_Object_t *self = (World_Object_t *)luaX_newobject(L, sizeof(World_Object_t), &(World_Object_t){
             .space = space
-        }, OBJECT_TYPE_WORLD, META_TABLE);
+        }, OBJECT_TYPE_WORLD, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("world %p created", self);
 

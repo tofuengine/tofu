@@ -31,8 +31,6 @@
 #define _LOG_TAG "batch"
 #include <libs/log.h>
 
-#define META_TABLE  "Tofu_Graphics_Batch_mt"
-
 static int batch_new_2on_1o(lua_State *L);
 static int batch_gc_1o_0(lua_State *L);
 static int batch_resize_2on_0(lua_State *L);
@@ -58,7 +56,7 @@ int batch_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int batch_new_2on_1o(lua_State *L)
@@ -82,7 +80,7 @@ static int batch_new_2on_1o(lua_State *L)
                 .reference = luaX_ref(L, 1)
             },
             .queue = queue
-        }, OBJECT_TYPE_BATCH, META_TABLE);
+        }, OBJECT_TYPE_BATCH, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("batch %p created w/ bank %p", self, bank);
 

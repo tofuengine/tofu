@@ -33,9 +33,6 @@
 #include <systems/input.h>
 #include <systems/storage.h>
 
-#define MODULE_NAME "tofu.input.cursor"
-#define META_TABLE  "Tofu_Input_Cursor_mt"
-
 static int cursor_new_0_1o(lua_State *L);
 static int cursor_gc_1o_0(lua_State *L);
 static int cursor_position_v_v(lua_State *L);
@@ -47,8 +44,11 @@ static int cursor_is_released_2oe_1b(lua_State *L);
 
 int cursor_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
@@ -76,7 +76,7 @@ int cursor_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int cursor_new_0_1o(lua_State *L)
@@ -93,7 +93,7 @@ static int cursor_new_0_1o(lua_State *L)
 
     Cursor_Object_t *self = (Cursor_Object_t *)luaX_newobject(L, sizeof(Cursor_Object_t), &(Cursor_Object_t){
             .cursor = cursor,
-        }, OBJECT_TYPE_CURSOR, META_TABLE);
+        }, OBJECT_TYPE_CURSOR, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("cursor %p allocated w/ cursor %p", self, cursor);
 

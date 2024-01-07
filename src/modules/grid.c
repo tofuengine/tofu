@@ -33,9 +33,6 @@
 #include <libs/stb.h>
 #include <systems/interpreter.h>
 
-#define MODULE_NAME "tofu.util.grid"
-#define META_TABLE  "Tofu_Util_Grid_mt"
-
 static int grid_new_3nnT_1o(lua_State *L);
 static int grid_gc_1o_0(lua_State *L);
 static int grid_size_1o_2nn(lua_State *L);
@@ -49,8 +46,11 @@ static int grid_path_5onnnn_1t(lua_State *L);
 
 int grid_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
@@ -81,7 +81,7 @@ int grid_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int grid_new_3nnT_1o(lua_State *L)
@@ -121,7 +121,7 @@ static int grid_new_3nnT_1o(lua_State *L)
             .height = height,
             .data = data,
             .data_size = data_size
-        }, OBJECT_TYPE_GRID, META_TABLE);
+        }, OBJECT_TYPE_GRID, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("grid %p allocated w/ data %p", self, data);
 

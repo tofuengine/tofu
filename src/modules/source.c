@@ -41,8 +41,6 @@ typedef enum Source_Types_e {
 
 typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL_Callbacks_t callbacks);
 
-#define META_TABLE  "Tofu_Sound_Source_mt"
-
 static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
 static int source_looped_v_v(lua_State *L);
@@ -84,7 +82,7 @@ int source_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
@@ -158,7 +156,7 @@ static int source_new_2sE_1o(lua_State *L)
     Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
-        }, OBJECT_TYPE_SOURCE, META_TABLE);
+        }, OBJECT_TYPE_SOURCE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("source %p allocated", self);
 

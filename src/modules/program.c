@@ -32,9 +32,6 @@
 #include <libs/log.h>
 #include <systems/display.h>
 
-#define META_TABLE  "Tofu_Graphics_Program_mt"
-#define SCRIPT_NAME "@program.lua"
-
 static int program_new_0_1o(lua_State *L);
 static int program_gc_1o_0(lua_State *L);
 static int program_clear_1o_0(lua_State *L);
@@ -77,7 +74,7 @@ int program_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int program_new_0_1o(lua_State *L)
@@ -92,7 +89,7 @@ static int program_new_0_1o(lua_State *L)
 
     Program_Object_t *self = (Program_Object_t *)luaX_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
             .program = program
-        }, OBJECT_TYPE_PROGRAM, META_TABLE);
+        }, OBJECT_TYPE_PROGRAM, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
 #if defined(VERBOSE_DEBUG)
     LOG_D("program %p allocated", self);

@@ -34,10 +34,6 @@
 #include <systems/display.h>
 #include <systems/interpreter.h>
 
-#define MODULE_NAME "tofu.graphics.canvas"
-#define META_TABLE  "Tofu_Graphics_Canvas_mt"
-// FIXME: collapse meta and script name? or desume the meta-table name from the module and try and load always?
-
 static int canvas_new_1o_1o(lua_State *L);
 static int canvas_gc_1o_0(lua_State *L);
 static int canvas_image_1o_1o(lua_State *L);
@@ -74,8 +70,11 @@ static int canvas_text_v_2nn(lua_State *L);
 
 int canvas_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
@@ -126,7 +125,7 @@ int canvas_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int canvas_new_1o_1o(lua_State *L)
@@ -147,7 +146,7 @@ static int canvas_new_1o_1o(lua_State *L)
                 .instance = image,
                 .reference = luaX_ref(L, 1)
             }
-        }, OBJECT_TYPE_CANVAS, META_TABLE);
+        }, OBJECT_TYPE_CANVAS, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("canvas %p allocated w/ context %p for image %p", self, context, image);
 

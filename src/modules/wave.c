@@ -30,8 +30,6 @@
 #define _LOG_TAG "wave"
 #include <libs/log.h>
 
-#define META_TABLE  "Tofu_Generators_Wave_mt"
-
 static int wave_new_3eNN_1o(lua_State *L);
 static int wave_gc_1o_0(lua_State *L);
 static int wave_form_v_v(lua_State *L);
@@ -60,7 +58,7 @@ int wave_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static const char *_forms[Wave_Types_t_CountOf + 1] = {
@@ -94,7 +92,7 @@ static int wave_new_3eNN_1o(lua_State *L)
             .function = _functions[form],
             .period = period,
             .amplitude = amplitude
-        }, OBJECT_TYPE_WAVE, META_TABLE);
+        }, OBJECT_TYPE_WAVE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("wave %p allocated", self);
 

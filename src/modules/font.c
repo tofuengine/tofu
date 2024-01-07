@@ -33,17 +33,17 @@
 #include <libs/path.h>
 #include <systems/storage.h>
 
-#define MODULE_NAME "tofu.graphics.font"
-#define META_TABLE  "Tofu_Graphics_Font_mt"
-
 static int font_new_2oS_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
 static int font_size_4osNN_2n(lua_State *L);
 
 int font_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
@@ -65,7 +65,7 @@ int font_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static inline void _generate_alphabet(GL_Cell_t glyphs[256], const char *alphabet)
@@ -101,7 +101,7 @@ static int font_new_2oS_1o(lua_State *L)
             },
             .sheet = bank->sheet, // Shortcut to save later accesses (see `canvas.c`).
             .glyphs = { 0 }
-        }, OBJECT_TYPE_FONT, META_TABLE);
+        }, OBJECT_TYPE_FONT, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
     _generate_alphabet(self->glyphs, alphabet);
 
     LOG_D("font %p allocated w/ bank %p w/ reference #%d",

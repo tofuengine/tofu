@@ -35,8 +35,6 @@
 
 #include <stdint.h>
 
-#define MODULE_NAME "tofu.core.math"
-
 static int math_lerp_3nnn_1n(lua_State *L);
 static int math_invlerp_3nnn_1n(lua_State *L);
 static int math_clamp_v_1n(lua_State *L);
@@ -54,8 +52,11 @@ static int math_rotate_3nnn_2nn(lua_State *L);
 
 int math_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);

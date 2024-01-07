@@ -36,9 +36,6 @@
 #include <systems/display.h>
 #include <systems/storage.h>
 
-#define MODULE_NAME "tofu.graphics.image"
-#define META_TABLE  "Tofu_Graphics_Image_mt"
-
 static int image_new_v_1o(lua_State *L);
 static int image_gc_1o_0(lua_State *L);
 static int image_size_1o_2nn(lua_State *L);
@@ -68,7 +65,7 @@ int image_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int image_new_0_1o(lua_State *L)
@@ -84,7 +81,7 @@ static int image_new_0_1o(lua_State *L)
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = false
-        }, OBJECT_TYPE_IMAGE, META_TABLE);
+        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("image %p allocated w/ default surface", self);
 
@@ -109,7 +106,7 @@ static int image_new_2nn_1o(lua_State *L)
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
-        }, OBJECT_TYPE_IMAGE, META_TABLE);
+        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("image %p allocated w/ surface %p", self, surface);
 
@@ -156,7 +153,7 @@ static int image_new_3sNO_1o(lua_State *L)
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
-        }, OBJECT_TYPE_IMAGE, META_TABLE);
+        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("image %p allocated w/ surface %p", self, surface);
 
@@ -201,7 +198,7 @@ static int image_new_3snn_1o(lua_State *L)
     Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
-        }, OBJECT_TYPE_IMAGE, META_TABLE);
+        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("image %p allocated w/ surface %p", self, surface);
 

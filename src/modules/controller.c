@@ -33,9 +33,6 @@
 #include <systems/input.h>
 #include <systems/storage.h>
 
-#define MODULE_NAME "tofu.input.controller"
-#define META_TABLE  "Tofu_Input_Controller_mt"
-
 static int controller_from_id_1n_1o(lua_State *L);
 static int controller_gc_1o_0(lua_State *L);
 static int controller_is_available_1o_1b(lua_State *L);
@@ -48,8 +45,11 @@ static int controller_triggers_1o_2nn(lua_State *L);
 
 int controller_loader(lua_State *L)
 {
+    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    LOG_D("loading module `%s`", module_name);
+
     char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, MODULE_NAME);
+    const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
@@ -77,7 +77,7 @@ int controller_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static int controller_from_id_1n_1o(lua_State *L)
@@ -96,7 +96,7 @@ static int controller_from_id_1n_1o(lua_State *L)
 
     Controller_Object_t *self = (Controller_Object_t *)luaX_newobject(L, sizeof(Controller_Object_t), &(Controller_Object_t){
             .controller = controller,
-        }, OBJECT_TYPE_CONTROLLER, META_TABLE);
+        }, OBJECT_TYPE_CONTROLLER, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("controller %p allocated w/ controller %p for id `%u`", self, controller, id);
 

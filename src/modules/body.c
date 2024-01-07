@@ -32,8 +32,6 @@
 
 #include <chipmunk/chipmunk.h>
 
-#define META_TABLE  "Tofu_Physics_Body_mt"
-
 static int body_new_4ennn_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
 static int body_center_of_gravity_v_v(lua_State *L);
@@ -74,7 +72,7 @@ int body_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static const char *_kinds[Body_Kinds_t_CountOf + 1] = {
@@ -104,7 +102,7 @@ static int body_new_4ennn_1o(lua_State *L)
             .shape = NULL,
             .kind = kind,
             .size = { { 0 } }
-        }, OBJECT_TYPE_BODY, META_TABLE);
+        }, OBJECT_TYPE_BODY, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     if (self->kind == BODY_KIND_BOX) {
         self->size.box.width = (cpFloat)LUAX_NUMBER(L, 2);

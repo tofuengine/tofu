@@ -30,8 +30,6 @@
 #define _LOG_TAG "noise"
 #include <libs/log.h>
 
-#define META_TABLE  "Tofu_Generators_Noise_mt"
-
 static int noise_new_1eNN_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
 static int noise_type_v_v(lua_State *L);
@@ -60,7 +58,7 @@ int noise_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static const char *_types[Noise_Types_t_CountOf + 1] = {
@@ -92,7 +90,7 @@ static int noise_new_1eNN_1o(lua_State *L)
             .function = _functions[type],
             .seed = seed,
             .frequency = frequency
-        }, OBJECT_TYPE_NOISE, META_TABLE);
+        }, OBJECT_TYPE_NOISE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("noise %p allocated", self);
 

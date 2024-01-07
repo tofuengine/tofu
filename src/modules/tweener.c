@@ -31,8 +31,6 @@
 #define _LOG_TAG "tweener"
 #include <libs/log.h>
 
-#define META_TABLE  "Tofu_Generators_Tweener_mt"
-
 static int tweener_new_5eNNNE_1o(lua_State *L);
 static int tweener_gc_1o_0(lua_State *L);
 static int tweener_clamp_v_v(lua_State *L);
@@ -63,7 +61,7 @@ int tweener_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static const char *_easing_types[Easing_Types_t_CountOf + 1] = {
@@ -193,7 +191,7 @@ static int tweener_new_5eNNNE_1o(lua_State *L)
             .duration = duration,
             .from = from,
             .to = to
-        }, OBJECT_TYPE_TWEENER, META_TABLE);
+        }, OBJECT_TYPE_TWEENER, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("tweener %p allocated", self);
 

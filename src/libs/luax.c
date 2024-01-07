@@ -285,7 +285,7 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
         lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
     }
 
-    lua_insert(L, -(nup + 1)); // Move the table above the upvalues (to permit them to be consumed while preservig the table).
+    lua_insert(L, -(nup + 1)); // Move the table above the upvalues (to permit them to be consumed while preserving the table).
     luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods.
 
     for (; c->name; c++) {

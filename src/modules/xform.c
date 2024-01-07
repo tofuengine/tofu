@@ -33,8 +33,6 @@
 #include <libs/stb.h>
 #include <systems/display.h>
 
-#define META_TABLE  "Tofu_Graphics_XForm_mt"
-
 static int xform_new_1E_1o(lua_State *L);
 static int xform_gc_1o_0(lua_State *L);
 static int xform_offset_3onn_0(lua_State *L);
@@ -66,7 +64,7 @@ int xform_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 }
 
 static const char *_modes[GL_XForm_Wraps_t_CountOf + 1] = {
@@ -93,7 +91,7 @@ static int xform_new_1E_1o(lua_State *L)
 
     XForm_Object_t *self = (XForm_Object_t *)luaX_newobject(L, sizeof(XForm_Object_t), &(XForm_Object_t){
             .xform = xform
-        }, OBJECT_TYPE_XFORM, META_TABLE);
+        }, OBJECT_TYPE_XFORM, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
 
     LOG_D("xform %p allocated", self);
 
