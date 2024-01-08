@@ -30,8 +30,6 @@
 #include <libs/gl/gl.h>
 #define _LOG_TAG "font"
 #include <libs/log.h>
-#include <libs/path.h>
-#include <systems/storage.h>
 
 static int font_new_2oS_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
@@ -39,22 +37,7 @@ static int font_size_4osNN_2n(lua_State *L);
 
 int font_loader(lua_State *L)
 {
-    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
-    LOG_D("loading module `%s`", module_name);
-
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, module_name);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = SR_SCHARS(script),
-            .size = SR_SLENTGH(script),
-            .name = name
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", font_new_2oS_1o },
@@ -65,7 +48,7 @@ int font_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static inline void _generate_alphabet(GL_Cell_t glyphs[256], const char *alphabet)
@@ -94,14 +77,14 @@ static int font_new_2oS_1o(lua_State *L)
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
     const char *alphabet = LUAX_OPTIONAL_STRING(L, 2, NULL);
 
-    Font_Object_t *self = (Font_Object_t *)luaX_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
+    Font_Object_t *self = (Font_Object_t *)udt_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
             .bank = {
                 .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
             .sheet = bank->sheet, // Shortcut to save later accesses (see `canvas.c`).
             .glyphs = { 0 }
-        }, OBJECT_TYPE_FONT, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_FONT);
     _generate_alphabet(self->glyphs, alphabet);
 
     LOG_D("font %p allocated w/ bank %p w/ reference #%d",

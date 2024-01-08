@@ -34,9 +34,7 @@ static int file_store_2ss_0(lua_State *L);
 
 int file_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- operations --
             { "load", file_load_1s_1s },
@@ -45,7 +43,7 @@ int file_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int file_load_1s_1s(lua_State *L)

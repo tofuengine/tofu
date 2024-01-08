@@ -52,9 +52,7 @@ static int system_quit_0_0(lua_State *L);
 
 int system_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- accessors --
             { "version", system_version_0_3nnn },
@@ -75,7 +73,7 @@ int system_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int system_version_0_3nnn(lua_State *L)

@@ -45,9 +45,7 @@ static int xform_warp_3onn_0(lua_State *L);
 
 int xform_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", xform_new_1E_1o },
@@ -64,7 +62,7 @@ int xform_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static const char *_modes[GL_XForm_Wraps_t_CountOf + 1] = {
@@ -89,9 +87,9 @@ static int xform_new_1E_1o(lua_State *L)
         return luaL_error(L, "can't create xform");
     }
 
-    XForm_Object_t *self = (XForm_Object_t *)luaX_newobject(L, sizeof(XForm_Object_t), &(XForm_Object_t){
+    XForm_Object_t *self = (XForm_Object_t *)udt_newobject(L, sizeof(XForm_Object_t), &(XForm_Object_t){
             .xform = xform
-        }, OBJECT_TYPE_XFORM, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_XFORM);
 
     LOG_D("xform %p allocated", self);
 

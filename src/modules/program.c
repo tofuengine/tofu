@@ -50,9 +50,7 @@ static int program_palette_5onntN_0(lua_State *L);
 
 int program_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", program_new_0_1o },
@@ -74,7 +72,7 @@ int program_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int program_new_0_1o(lua_State *L)
@@ -87,9 +85,9 @@ static int program_new_0_1o(lua_State *L)
         return luaL_error(L, "can't create program");
     }
 
-    Program_Object_t *self = (Program_Object_t *)luaX_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
+    Program_Object_t *self = (Program_Object_t *)udt_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
             .program = program
-        }, OBJECT_TYPE_PROGRAM, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_PROGRAM);
 
 #if defined(VERBOSE_DEBUG)
     LOG_D("program %p allocated", self);

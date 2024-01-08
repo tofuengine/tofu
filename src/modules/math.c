@@ -29,9 +29,7 @@
 #include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/sincos.h>
-#include <systems/storage.h>
 
 #include <stdint.h>
 
@@ -52,22 +50,7 @@ static int math_rotate_3nnn_2nn(lua_State *L);
 
 int math_loader(lua_State *L)
 {
-    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
-    LOG_D("loading module `%s`", module_name);
-
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, module_name);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = SR_SCHARS(script),
-            .size = SR_SLENTGH(script),
-            .name = name
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- operations --
             { "lerp", math_lerp_3nnn_1n },
@@ -90,7 +73,7 @@ int math_loader(lua_State *L)
             { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
             { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int math_lerp_3nnn_1n(lua_State *L)

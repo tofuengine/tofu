@@ -40,9 +40,7 @@ static int batch_add_v_0(lua_State *L);
 
 int batch_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", batch_new_2on_1o },
@@ -56,7 +54,7 @@ int batch_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int batch_new_2on_1o(lua_State *L)
@@ -74,13 +72,13 @@ static int batch_new_2on_1o(lua_State *L)
     }
     LOG_D("queue %p created for bank %p w/ %d slots", queue, bank, capacity);
 
-    Batch_Object_t *self = (Batch_Object_t *)luaX_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
+    Batch_Object_t *self = (Batch_Object_t *)udt_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
             .bank = {
                 .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
             .queue = queue
-        }, OBJECT_TYPE_BATCH, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_BATCH);
 
     LOG_D("batch %p created w/ bank %p", self, bank);
 

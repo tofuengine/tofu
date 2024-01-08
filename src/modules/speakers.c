@@ -40,9 +40,7 @@ static int speakers_halt_0_0(lua_State *L);
 
 int speakers_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- getters/setters --
             { "volume", speakers_volume_v_v },
@@ -58,7 +56,7 @@ int speakers_loader(lua_State *L)
         (const luaX_Const[]){
             { "DEFAULT_GROUP", LUA_CT_INTEGER, { .i = SL_DEFAULT_GROUP } },
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int speakers_volume_0_1n(lua_State *L)

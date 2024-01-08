@@ -39,9 +39,7 @@ static int wave_at_2on_1n(lua_State *L);
 
 int wave_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", wave_new_3eNN_1o },
@@ -58,7 +56,7 @@ int wave_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static const char *_forms[Wave_Types_t_CountOf + 1] = {
@@ -87,12 +85,12 @@ static int wave_new_3eNN_1o(lua_State *L)
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
+    Wave_Object_t *self = (Wave_Object_t *)udt_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
             .form = form,
             .function = _functions[form],
             .period = period,
             .amplitude = amplitude
-        }, OBJECT_TYPE_WAVE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_WAVE);
 
     LOG_D("wave %p allocated", self);
 

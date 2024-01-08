@@ -41,7 +41,7 @@
 //   t -> table
 //   u -> userdata
 //   f -> function
-//   e -> enum (i.e. a string from a list of possibile ones)
+//   e -> enum (i.e. a string from a list of possible ones)
 //   o -> object (i.e. userdata with optionally encoded type)
 //
 // Example:
@@ -51,6 +51,7 @@
 //
 
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
+#include "internal/udt.h"
 #include "bank.h"
 #include "batch.h"
 #include "body.h"
@@ -81,35 +82,9 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
-// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-
-// We tail-add the module name in the upvalues, as it will later used in the loading process both to
-// find the (optional) script name and as a metatable name (when a class is created).
-static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
-{
-#if defined(_INSIST)
-    luaX_insisttable(L, "tofu");
-    for (const luaL_Reg *module = modules; module->func; ++module) {
-        luaX_pushvalues(L, nup);
-        lua_pushstring(L, module->name);
-        luaX_require(L, module->name, module->func, nup + 1, 1);
-        lua_setfield(L, -1, module->name);
-    }
-    lua_pop(L, nup);
-#else
-    for (const luaL_Reg *module = modules; module->func; ++module) {
-        LOG_D("preloading module `%s`", module->name);
-        luaX_pushvalues(L, nup);
-        lua_pushstring(L, module->name); // Tail-add the module name (for later usage during the loading process)
-        luaX_preload(L, module->name, module->func, nup + 1);
-    }
-    lua_pop(L, nup); // Free the caller-supplied upvalues.
-#endif
-}
-
 void modules_initialize(lua_State *L, int nup)
 {
-    _preload_modules(L, nup, (const luaL_Reg[]){
+    udt_preload_modules(L, nup, (const luaL_Reg[]){
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },

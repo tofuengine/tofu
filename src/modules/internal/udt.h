@@ -45,8 +45,9 @@ typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
-    USERDATA_INTERPRETER
-} UserData_t;
+    USERDATA_INTERPRETER,
+    USERDATA_MODULE_NAME
+} UserData_t; // FIXME: rename to `UpValue_t`.
 
 typedef enum Object_Types_e {
     // Graphics
@@ -270,5 +271,10 @@ typedef struct Grid_Object_s {
     Grid_Object_Value_t *data;
     size_t data_size;
 } Grid_Object_t;
+
+extern void udt_preload_modules(lua_State *L, int nup, const luaL_Reg *modules);
+extern int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c);
+extern void *udt_newobject(lua_State *L, size_t size, void *state, int type);
+extern void *udt_get_userdata(lua_State *L, UserData_t id);
 
 #endif  /* TOFU_MODULES_INTERNAL_UDT_H */

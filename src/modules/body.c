@@ -48,9 +48,7 @@ static int body_shape_1o_4snnn(lua_State *L);
 
 int body_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", body_new_4ennn_1o },
@@ -72,7 +70,7 @@ int body_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static const char *_kinds[Body_Kinds_t_CountOf + 1] = {
@@ -97,12 +95,12 @@ static int body_new_4ennn_1o(lua_State *L)
     }
 //    LOG_D("body %p created for world %p", body, physics->world);
 
-    Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
+    Body_Object_t *self = (Body_Object_t *)udt_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
             .shape = NULL,
             .kind = kind,
             .size = { { 0 } }
-        }, OBJECT_TYPE_BODY, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_BODY);
 
     if (self->kind == BODY_KIND_BOX) {
         self->size.box.width = (cpFloat)LUAX_NUMBER(L, 2);

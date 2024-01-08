@@ -29,8 +29,6 @@
 #include <core/config.h>
 #define _LOG_TAG "log"
 #include <libs/log.h>
-#include <libs/path.h>
-#include <systems/storage.h>
 
 static int log_info_v_0(lua_State *L);
 static int log_warning_v_0(lua_State *L);
@@ -39,22 +37,7 @@ static int log_fatal_v_0(lua_State *L);
 
 int log_loader(lua_State *L)
 {
-    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
-    LOG_D("loading module `%s`", module_name);
-
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, module_name);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = SR_SCHARS(script),
-            .size = SR_SLENTGH(script),
-            .name = name
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- operations --
             { "info", log_info_v_0 },
@@ -65,7 +48,7 @@ int log_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int _write(lua_State *L, Log_Levels_t level)

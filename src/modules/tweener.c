@@ -41,9 +41,7 @@ static int tweener_evaluate_2on_1n(lua_State *L);
 
 int tweener_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", tweener_new_5eNNNE_1o },
@@ -61,7 +59,7 @@ int tweener_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static const char *_easing_types[Easing_Types_t_CountOf + 1] = {
@@ -183,7 +181,7 @@ static int tweener_new_5eNNNE_1o(lua_State *L)
     float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
     Clamp_Modes_t clamp = (Clamp_Modes_t)LUAX_OPTIONAL_ENUM(L, 5, _clamp_modes, CLAMP_MODE_BOTH);
 
-    Tweener_Object_t *self = (Tweener_Object_t *)luaX_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
+    Tweener_Object_t *self = (Tweener_Object_t *)udt_newobject(L, sizeof(Tweener_Object_t), &(Tweener_Object_t){
             .clamp = clamp,
             .clamp_function = _clamp_functions[clamp],
             .easing = easing,
@@ -191,7 +189,7 @@ static int tweener_new_5eNNNE_1o(lua_State *L)
             .duration = duration,
             .from = from,
             .to = to
-        }, OBJECT_TYPE_TWEENER, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_TWEENER);
 
     LOG_D("tweener %p allocated", self);
 

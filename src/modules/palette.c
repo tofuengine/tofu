@@ -29,8 +29,6 @@
 #include <core/config.h>
 #define _LOG_TAG "palette"
 #include <libs/log.h>
-#include <libs/path.h>
-#include <systems/storage.h>
 
 static int palette_new_v_1o(lua_State *L);
 static int palette_gc_1o_0(lua_State *L);
@@ -45,22 +43,7 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
 
 int palette_loader(lua_State *L)
 {
-    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
-    LOG_D("loading module `%s`", module_name);
-
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, module_name);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = SR_SCHARS(script),
-            .size = SR_SLENTGH(script),
-            .name = name
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", palette_new_v_1o },
@@ -80,7 +63,7 @@ int palette_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int palette_new_0_1o(lua_State *L)
@@ -88,9 +71,9 @@ static int palette_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = GL_MAX_PALETTE_COLORS
-        }, OBJECT_TYPE_PALETTE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_greyscale(self->palette, GL_MAX_PALETTE_COLORS);
     LOG_D("greyscale palette %p allocated w/ %d color(s)", self, GL_MAX_PALETTE_COLORS);
@@ -109,9 +92,9 @@ static int palette_new_1n_1o(lua_State *L)
         return luaL_error(L, "palette can't be empty!");
     }
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = levels
-        }, OBJECT_TYPE_PALETTE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_greyscale(self->palette, levels);
     LOG_D("palette %p allocated w/ %d color(s)", self, levels);
@@ -165,9 +148,9 @@ static int palette_new_1t_1o(lua_State *L)
         palette[i] = palette[size - 1];
     }
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = size
-        }, OBJECT_TYPE_PALETTE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, palette);
     LOG_D("palette %p allocated w/ %d color(s)", self, size);
@@ -184,9 +167,9 @@ static int palette_new_1o_1o(lua_State *L)
 
     LOG_D("cloning palette %p", other);
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = other->size
-        }, OBJECT_TYPE_PALETTE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, other->palette);
     LOG_D("palette %p allocated", self);
@@ -217,9 +200,9 @@ static int palette_new_3n_1o(lua_State *L)
 
     LOG_D("generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
 
-    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .size = size
-        }, OBJECT_TYPE_PALETTE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_quantized(self->palette, red_bits, green_bits, blue_bits);
     LOG_D("palette %p allocated w/ %d colors(s)", self, size);

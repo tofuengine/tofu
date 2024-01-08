@@ -30,8 +30,6 @@
 #define _LOG_TAG "world"
 #include <libs/log.h>
 #include <libs/stb.h>
-#include <libs/path.h>
-#include <systems/storage.h>
 
 #include <chipmunk/chipmunk.h>
 
@@ -46,22 +44,7 @@ static int world_update_2on_0(lua_State *L);
 
 int world_loader(lua_State *L)
 {
-    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
-    LOG_D("loading module `%s`", module_name);
-
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, module_name);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = SR_SCHARS(script),
-            .size = SR_SLENTGH(script),
-            .name = name
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", world_new_v_1o },
@@ -79,7 +62,7 @@ int world_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int world_new_2NN_1o(lua_State *L)
@@ -100,9 +83,9 @@ static int world_new_2NN_1o(lua_State *L)
     cpSpaceSetGravity(space, (cpVect){ .x = x, .y = y });
     LOG_T("gravity set to <%.3f, %.3f> for space %p", x, y, space);
 
-    World_Object_t *self = (World_Object_t *)luaX_newobject(L, sizeof(World_Object_t), &(World_Object_t){
+    World_Object_t *self = (World_Object_t *)udt_newobject(L, sizeof(World_Object_t), &(World_Object_t){
             .space = space
-        }, OBJECT_TYPE_WORLD, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_WORLD);
 
     LOG_D("world %p created", self);
 

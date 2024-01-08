@@ -29,7 +29,6 @@
 #include <core/config.h>
 #define _LOG_TAG "canvas"
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/interpreter.h>
@@ -70,22 +69,7 @@ static int canvas_text_v_2nn(lua_State *L);
 
 int canvas_loader(lua_State *L)
 {
-    const char *module_name = LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
-    LOG_D("loading module `%s`", module_name);
-
-    char name[PLATFORM_PATH_MAX] = { 0 };
-    const char *file = path_lua_to_fs(name, module_name);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = SR_SCHARS(script),
-            .size = SR_SLENTGH(script),
-            .name = name
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", canvas_new_1o_1o },
@@ -125,7 +109,7 @@ int canvas_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int canvas_new_1o_1o(lua_State *L)
@@ -140,13 +124,13 @@ static int canvas_new_1o_1o(lua_State *L)
         return luaL_error(L, "can't create context");
     }
 
-    Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
+    Canvas_Object_t *self = (Canvas_Object_t *)udt_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .context = context,
             .image = {
                 .instance = image,
                 .reference = luaX_ref(L, 1)
             }
-        }, OBJECT_TYPE_CANVAS, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_CANVAS);
 
     LOG_D("canvas %p allocated w/ context %p for image %p", self, context, image);
 

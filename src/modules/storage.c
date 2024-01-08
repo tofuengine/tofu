@@ -38,9 +38,7 @@ static int storage_flush_0_0(lua_State *L);
 
 int storage_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- operations --
             { "inject", storage_inject_3ssS_0 },
@@ -51,7 +49,7 @@ int storage_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int storage_inject_3ssS_0(lua_State *L)

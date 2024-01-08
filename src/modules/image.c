@@ -30,7 +30,6 @@
 #include <core/config.h>
 #define _LOG_TAG "image"
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/stopwatch.h>
 #include <libs/stb.h>
 #include <systems/display.h>
@@ -47,9 +46,7 @@ static int image_clear_2oN_0(lua_State *L);
 
 int image_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", image_new_v_1o },
@@ -65,7 +62,7 @@ int image_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int image_new_0_1o(lua_State *L)
@@ -78,10 +75,10 @@ static int image_new_0_1o(lua_State *L)
     GL_Surface_t *surface = Display_get_surface(display);
     LOG_D("default surface %p retrieved", surface);
 
-    Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
+    Image_Object_t *self = (Image_Object_t *)udt_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = false
-        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_IMAGE);
 
     LOG_D("image %p allocated w/ default surface", self);
 
@@ -103,10 +100,10 @@ static int image_new_2nn_1o(lua_State *L)
     }
     LOG_D("%dx%d surface allocate at %p", width, height, surface);
 
-    Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
+    Image_Object_t *self = (Image_Object_t *)udt_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
-        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_IMAGE);
 
     LOG_D("image %p allocated w/ surface %p", self, surface);
 
@@ -150,10 +147,10 @@ static int image_new_3sNO_1o(lua_State *L)
 #endif
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
-    Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
+    Image_Object_t *self = (Image_Object_t *)udt_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
-        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_IMAGE);
 
     LOG_D("image %p allocated w/ surface %p", self, surface);
 
@@ -195,10 +192,10 @@ static int image_new_3snn_1o(lua_State *L)
 #endif
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
-    Image_Object_t *self = (Image_Object_t *)luaX_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
+    Image_Object_t *self = (Image_Object_t *)udt_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
             .surface = surface,
             .allocated = true
-        }, OBJECT_TYPE_IMAGE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_IMAGE);
 
     LOG_D("image %p allocated w/ surface %p", self, surface);
 

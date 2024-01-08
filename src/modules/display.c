@@ -39,9 +39,7 @@ static int display_reset_0_0(lua_State *L);
 
 int display_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- getters/setters --
             { "size", display_size_0_2nn },
@@ -55,7 +53,7 @@ int display_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int display_size_0_2nn(lua_State *L)

@@ -57,9 +57,7 @@ static int source_stop_1o_0(lua_State *L);
 
 int source_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", source_new_2sE_1o },
@@ -82,7 +80,7 @@ int source_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
@@ -153,10 +151,10 @@ static int source_new_2sE_1o(lua_State *L)
     }
     LOG_D("source %p created, type #%d", source, type);
 
-    Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
+    Source_Object_t *self = (Source_Object_t *)udt_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
-        }, OBJECT_TYPE_SOURCE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_SOURCE);
 
     LOG_D("source %p allocated", self);
 

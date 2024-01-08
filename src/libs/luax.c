@@ -264,6 +264,8 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
         luaL_loadbuffer(L, script.data, script.size, script.name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
+            // Partially taken from `luaL_newmetatable()` in order to use the script return value (the export table)
+            // as metatable (see https://www.lua.org/pil/28.2.html).
             lua_pushstring(L, name);
             lua_setfield(L, -2, "__name");  /* metatable.__name = tname */
             lua_pushvalue(L, -1);

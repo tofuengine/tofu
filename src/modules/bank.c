@@ -40,9 +40,7 @@ static int bank_size_4onNN_2n(lua_State *L);
 
 int bank_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", bank_new_v_1o },
@@ -54,7 +52,7 @@ int bank_loader(lua_State *L)
         (const luaX_Const[]){
             { "NIL", LUA_CT_INTEGER, { .i = GL_CELL_NIL } },
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static int bank_new_2os_1o(lua_State *L)
@@ -78,13 +76,13 @@ static int bank_new_2os_1o(lua_State *L)
         return luaL_error(L, "can't create sheet");
     }
 
-    Bank_Object_t *self = (Bank_Object_t *)luaX_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
+    Bank_Object_t *self = (Bank_Object_t *)udt_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
             .atlas = {
                 .instance = atlas,
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_BANK);
 
     LOG_D("bank %p with cells file `%s` allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, cells_file, sheet, atlas, self->atlas.reference);
@@ -108,13 +106,13 @@ static int bank_new_3oNN_1o(lua_State *L)
         return luaL_error(L, "can't create sheet");
     }
 
-    Bank_Object_t *self = (Bank_Object_t *)luaX_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
+    Bank_Object_t *self = (Bank_Object_t *)udt_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
             .atlas = {
                 .instance = atlas,
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_BANK);
 
     LOG_D("bank %p with %dx%d cells allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, cell_width, cell_height, sheet, atlas, self->atlas.reference);

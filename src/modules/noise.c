@@ -39,9 +39,7 @@ static int noise_generate_3onNN_1n(lua_State *L);
 
 int noise_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
             { "new", noise_new_1eNN_1o },
@@ -58,7 +56,7 @@ int noise_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        });
 }
 
 static const char *_types[Noise_Types_t_CountOf + 1] = {
@@ -85,12 +83,12 @@ static int noise_new_1eNN_1o(lua_State *L)
     float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
     float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
+    Noise_Object_t *self = (Noise_Object_t *)udt_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
             .type = type,
             .function = _functions[type],
             .seed = seed,
             .frequency = frequency
-        }, OBJECT_TYPE_NOISE, LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME)));
+        }, OBJECT_TYPE_NOISE);
 
     LOG_D("noise %p allocated", self);
 
