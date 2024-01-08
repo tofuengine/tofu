@@ -127,7 +127,7 @@ static int system_time_0_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     lua_pushnumber(L, (lua_Number)state->time);
@@ -160,7 +160,7 @@ static int system_fps_0_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
@@ -175,7 +175,7 @@ static int system_stats_0_4nnnn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
@@ -196,7 +196,7 @@ static int system_heap_1S_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const char *unit = LUAX_OPTIONAL_STRING(L, 1, "b");
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
@@ -217,7 +217,7 @@ static int system_quit_0_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_close(display);
 

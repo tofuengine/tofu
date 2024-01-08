@@ -64,7 +64,7 @@ static int speakers_volume_0_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Audio_t *audio = (const Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     lua_pushnumber(L, (lua_Number)Audio_get_volume(audio));
 
@@ -78,7 +78,7 @@ static int speakers_volume_1n_0(lua_State *L)
     LUAX_SIGNATURE_END
     float volume = LUAX_NUMBER(L, 1);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_set_volume(audio, volume);
 
@@ -100,7 +100,7 @@ static int speakers_gain_1n_1n(lua_State *L)
     LUAX_SIGNATURE_END
     size_t group_id = LUAX_UNSIGNED(L, 1);
 
-    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Audio_t *audio = (const Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     lua_pushnumber(L, (lua_Number)Audio_get_gain(audio, group_id));
 
@@ -116,7 +116,7 @@ static int speakers_gain_2nn_0(lua_State *L)
     size_t group_id = LUAX_UNSIGNED(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_set_gain(audio, group_id, gain);
     LOG_D("group #%d gain is %.f", group_id, gain);
@@ -139,7 +139,7 @@ static int speakers_mix_1n_4nnnn(lua_State *L)
     LUAX_SIGNATURE_END
     size_t group_id = LUAX_UNSIGNED(L, 1);
 
-    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Audio_t *audio = (const Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     SL_Mix_t mix = Audio_get_mix(audio, group_id);
 
@@ -166,7 +166,7 @@ static int speakers_mix_5nnnnn_0(lua_State *L)
     float right_to_left = LUAX_NUMBER(L, 4);
     float right_to_right = LUAX_NUMBER(L, 5);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_set_mix(audio, group_id, (SL_Mix_t){
             .left_to_left = left_to_left,
@@ -196,7 +196,7 @@ static int speakers_pan_2nn_0(lua_State *L)
     size_t group_id = LUAX_UNSIGNED(L, 1);
     float pan = LUAX_NUMBER(L, 2);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_set_pan(audio, group_id, pan);
     LOG_D("group #%d pan is %.f", group_id, pan);
@@ -213,7 +213,7 @@ static int speakers_balance_2nn_0(lua_State *L)
     size_t group_id = LUAX_UNSIGNED(L, 1);
     float balance = LUAX_NUMBER(L, 2);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_set_balance(audio, group_id, balance);
     LOG_D("group #%d balance is %.f", group_id, balance);
@@ -226,7 +226,7 @@ static int speakers_halt_0_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_halt(audio);
 

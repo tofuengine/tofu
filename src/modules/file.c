@@ -53,7 +53,7 @@ static int file_load_1s_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     const Storage_Resource_t *resource = Storage_load(storage, name, STORAGE_RESOURCE_BLOB);
     if (!resource) {
@@ -73,7 +73,7 @@ static int file_store_2ss_0(lua_State *L)
     const char *name = LUAX_STRING(L, 1);
     luaX_String data = LUAX_LSTRING(L, 2);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     Storage_Resource_t resource = (Storage_Resource_t){
             // .name = name,

@@ -311,7 +311,7 @@ static int grid_scan_2of_0(lua_State *L)
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     const Grid_Object_Value_t *data = self->data;
 
@@ -337,7 +337,7 @@ static int grid_process_2of_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     Grid_Object_Value_t *data = self->data;
 

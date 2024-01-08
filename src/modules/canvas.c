@@ -689,7 +689,7 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 5, self->context->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 6, self->context->surface->height);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     GL_context_scan(self->context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height },
         _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 2 });
@@ -753,7 +753,7 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, image->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, image->surface->height);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     GL_context_process(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },

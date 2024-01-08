@@ -70,7 +70,7 @@ static int controller_from_id_1n_1o(lua_State *L)
     LUAX_SIGNATURE_END
     size_t id = LUAX_OPTIONAL_UNSIGNED(L, 1, 0);
 
-    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+    Input_t *input = (Input_t *)udt_get_userdata(L, USERDATA_INPUT);
 
     Input_Controller_t *controller = Input_get_controller(input, id);
     if (!controller) {

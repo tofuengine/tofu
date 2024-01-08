@@ -129,8 +129,8 @@ static int source_new_2sE_1o(lua_State *L)
     const char *name = LUAX_STRING(L, 1);
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_ENUM(L, 2, _types, SOURCE_TYPE_MUSIC);
 
-    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Storage_t *storage = (const Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
     if (!handle) {
@@ -168,7 +168,7 @@ static int source_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_untrack(audio, self->source); // Make sure we aren't leaving dangling pointers...
 
@@ -428,7 +428,7 @@ static int source_is_playing_1o_1b(lua_State *L)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     lua_pushboolean(L, Audio_is_tracked(audio, self->source));
 
@@ -442,7 +442,7 @@ static int source_play_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_track(audio, self->source, true);
 
@@ -456,7 +456,7 @@ static int source_resume_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_track(audio, self->source, false);
 
@@ -470,7 +470,7 @@ static int source_stop_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_untrack(audio, self->source);
 

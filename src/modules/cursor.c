@@ -67,7 +67,7 @@ static int cursor_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+    Input_t *input = (Input_t *)udt_get_userdata(L, USERDATA_INPUT);
 
     Input_Cursor_t *cursor = Input_get_cursor(input);
     if (!cursor) {

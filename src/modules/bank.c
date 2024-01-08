@@ -64,7 +64,7 @@ static int bank_new_2os_1o(lua_State *L)
     const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     const char *cells_file = LUAX_STRING(L, 2);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     const Storage_Resource_t *cells = Storage_load(storage, cells_file, STORAGE_RESOURCE_BLOB);
     if (!cells) {

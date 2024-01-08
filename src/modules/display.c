@@ -61,7 +61,7 @@ static int display_size_0_2nn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     GL_Size_t size = Display_get_virtual_size(display);
     lua_pushinteger(L, (lua_Integer)size.width);
@@ -77,7 +77,7 @@ static int display_palette_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_set_palette(display, palette->palette);
 
@@ -93,7 +93,7 @@ static int display_offset_2NN_0(lua_State *L)
     int x = LUAX_OPTIONAL_INTEGER(L, 1, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 2, 0);
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_set_offset(display, (GL_Point_t){ .x = x, .y = y });
 
@@ -105,7 +105,7 @@ static int display_shift_0_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_set_shifting(display, NULL, NULL, 0);
 
@@ -130,7 +130,7 @@ static int display_shift_1t_0(lua_State *L)
         lua_pop(L, 1);
     }
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_set_shifting(display, from, to, arrlenu(from));
 
@@ -149,7 +149,7 @@ static int display_shift_2nn_0(lua_State *L)
     GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 1);
     GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_set_shifting(display, &from, &to, 1);
 
@@ -172,7 +172,7 @@ static int display_program_1O_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 1, OBJECT_TYPE_PROGRAM, NULL);
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     if (program) {
         Display_set_program(display, program->program);
@@ -188,7 +188,7 @@ static int display_reset_0_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_reset(display);
 

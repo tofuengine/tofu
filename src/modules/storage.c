@@ -63,7 +63,7 @@ static int storage_inject_3ssS_0(lua_State *L)
     luaX_String data = LUAX_LSTRING(L, 2);
     const char *mode = LUAX_OPTIONAL_STRING(L, 3, "base64");
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     bool injected;
     switch (mode[0]) {
@@ -98,7 +98,7 @@ static int storage_flush_0_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     Storage_flush(storage);
 

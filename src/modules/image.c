@@ -70,7 +70,7 @@ static int image_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     GL_Surface_t *surface = Display_get_surface(display);
     LOG_D("default surface %p retrieved", surface);
@@ -121,8 +121,8 @@ static int image_new_3sNO_1o(lua_State *L)
     GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_OBJECT(L, 3, OBJECT_TYPE_PALETTE, NULL);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
+    const Display_t *display = (const Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Callback_Palette_Closure_t closure = (Callback_Palette_Closure_t){
             .palette = palette ? palette->palette : Display_get_palette(display), // Use current display's if not passed.
@@ -168,7 +168,7 @@ static int image_new_3snn_1o(lua_State *L)
     GL_Pixel_t background_index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
     GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     Callback_Indexes_Closure_t closure = (Callback_Indexes_Closure_t){
             .background = background_index,
