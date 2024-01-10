@@ -39,15 +39,30 @@
 
 // TODO: rename them as PODs? (Plain-old-Data)
 
-typedef enum UserData_e { // TODO: move to a separate file.
-    USERDATA_STORAGE = 1,
+typedef enum UpValue_e { 
+    UpValue_t_First = 1,
+    UPVALUE_STORAGE = UpValue_t_First,
+    UPVALUE_DISPLAY,
+    UPVALUE_INPUT,
+    UPVALUE_AUDIO,
+    UPVALUE_ENVIRONMENT,
+    UPVALUE_INTERPRETER,
+    UPVALUE_MODULE_NAME,
+    UpValue_t_Last = UPVALUE_MODULE_NAME,
+    UpValue_t_CountOf
+} UpValue_t;
+
+typedef enum UserData_e {
+    UserData_t_First = 1,
+    USERDATA_STORAGE = UserData_t_First,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
     USERDATA_INTERPRETER,
-    USERDATA_MODULE_NAME
-} UserData_t; // FIXME: rename to `UpValue_t`.
+    UserData_t_Last = USERDATA_INTERPRETER,
+    UserData_t_CountOf
+} UserData_t;
 
 typedef enum Object_Types_e {
     // Graphics

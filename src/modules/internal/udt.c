@@ -45,7 +45,7 @@ void udt_preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
 
 static const char *_get_module_name(lua_State *L)
 {
-    return LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    return LUAX_STRING(L, lua_upvalueindex(UPVALUE_MODULE_NAME));
 }
 
 // FIXME: derive something different from the module as metatable name?
@@ -53,7 +53,7 @@ static const char *_get_metatable_name(lua_State *L)
 {
     // Any identifier is valid, as long as it won't clash with another metatable in the registry table. The module
     // name (which is a "namespace" in our context) is unique enough.
-    return LUAX_STRING(L, lua_upvalueindex(USERDATA_MODULE_NAME));
+    return LUAX_STRING(L, lua_upvalueindex(UPVALUE_MODULE_NAME));
 }
 
 // This wraps the `LuaX` module creation API by:
