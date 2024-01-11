@@ -287,7 +287,7 @@ typedef struct Grid_Object_s {
     size_t data_size;
 } Grid_Object_t;
 
-extern void udt_preload_modules(lua_State *L, int nup, const luaL_Reg *modules);
+extern void udt_preload_modules(lua_State *L, const void *userdatas[], const luaL_Reg *modules);
 extern int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c);
 extern void *udt_newobject(lua_State *L, size_t size, void *state, int type);
 extern void *udt_get_userdata(lua_State *L, UserData_t id);

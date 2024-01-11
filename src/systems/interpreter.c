@@ -332,12 +332,7 @@ void Interpreter_destroy(Interpreter_t *interpreter)
 
 bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
 {
-    int nup = 0;
-    for (int i = 0; userdatas[i]; ++i) {
-        lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]); // Discard `const` qualifier.
-        nup += 1;
-    }
-    modules_initialize(interpreter->state, nup);
+    modules_initialize(interpreter->state, userdatas);
 
     luaL_loadstring(interpreter->state, _kickstart_lua);
     int result = _raw_call(interpreter->state, 0, 1);

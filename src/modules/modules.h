@@ -27,6 +27,6 @@
 
 #include <lua/lua.h>
 
-extern void modules_initialize(lua_State *L, int nup);
+extern void modules_initialize(lua_State *L, const void *userdatas[]);
 
 #endif  /* TOFU_MODULES_H */

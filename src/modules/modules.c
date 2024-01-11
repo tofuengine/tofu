@@ -82,9 +82,9 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
-void modules_initialize(lua_State *L, int nup)
+void modules_initialize(lua_State *L, const void *userdatas[])
 {
-    udt_preload_modules(L, nup, (const luaL_Reg[]){
+    udt_preload_modules(L, userdatas, (const luaL_Reg[]){
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },

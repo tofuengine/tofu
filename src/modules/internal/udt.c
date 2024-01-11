@@ -32,15 +32,22 @@
 
 // We tail-add the module name in the upvalues, as it will later used in the loading process both to
 // find the (optional) script name and as a metatable name (when a class is created).
-void udt_preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
+void udt_preload_modules(lua_State *L, const void *userdatas[], const luaL_Reg *modules)
 {
+    int nup = 0;
+    for (int i = 0; userdatas[i]; ++i) {
+        lua_pushlightuserdata(L, (void *)userdatas[i]); // Discard `const` qualifier.
+        nup += 1;
+    }
+
     for (const luaL_Reg *module = modules; module->func; ++module) {
         LOG_D("preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
         lua_pushstring(L, module->name); // Tail-add the module name (for later usage during the loading process)
         luaX_preload(L, module->name, module->func, nup + 1);
     }
-    lua_pop(L, nup); // Free the caller-supplied upvalues.
+
+    lua_pop(L, nup); // Free the upvalues from the stack.
 }
 
 static const char *_get_module_name(lua_State *L)
