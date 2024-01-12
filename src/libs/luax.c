@@ -241,6 +241,8 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup, int s
     }
 
     lua_pop(L, 2); // Pop the `package` and `searchers` table.
+
+    // Upvalues have already been consumed by `lua_pushcclosure()`. No need to clear the stack.
 }
 
 int luaX_insisttable(lua_State *L, const char *name)
@@ -333,6 +335,9 @@ void luaX_openlibs(lua_State *L)
     }
 }
 
+// Preloading a Lua module from the FFI API is achieved by storing the a loader
+// function in the `_PRELOAD` registry table. The module is not loaded, yet, but
+// also prepared for later usage.
 void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);

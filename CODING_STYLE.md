@@ -284,6 +284,20 @@ Custom binary files are stored in a way that network-byte-order is (i.e. big-end
 
 ## Lua FFI
 
+### Stack Cleaning Policies
+
+When a function exposes in its signature the idiomatic `int nup` argument to indicate the amount of upvalues passed to the callee we adopt the *callee clears the stack* policy. This is the usual Lua way of doing it and it means that in the following situation
+
+```c
+    lua_pushstring(L, "Hello");
+    lua_pushstring(L, ",");
+    lua_pushstring(L, "World");
+    lua_pushstring(L, "!");
+    process_words(L, 4);
+```
+
+when the `process_words()` function returns the stack will be cleared of the four items that where pushed. This corresponds to the `__stdcall` calling convention and has the practical benefit that less boilerplate code (to clear the stack) is spread throught the codebase, especially when a function is called in more that one point.
+
 ### Functions Naming
 
 When implementing Lua OO code from within C we are classifying (and declaring) the methods in the following order:
