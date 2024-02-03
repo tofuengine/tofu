@@ -139,8 +139,8 @@ typedef enum Input_Controller_Sticks_e {
 } Input_Controller_Sticks_t;
 
 typedef struct Input_Controller_Stick_s {
-    float x, y;
-    float angle, magnitude;
+    float x, y; // Actual controller's stick stimula.
+    float angle, magnitude; // Calculated from the above two.
 } Input_Controller_Stick_t;
 
 typedef struct Input_Controller_Triggers_s {

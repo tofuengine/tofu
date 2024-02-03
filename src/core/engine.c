@@ -295,6 +295,7 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
+// FIXME: use a bit-mask to track the events?
 static const char **_prepare_events(Engine_t *engine, const char **events) // TODO: move to lower-priority?
 {
     arrsetlen(events, 0);

@@ -22,9 +22,6 @@
  * SOFTWARE.
  */
 
-// https://jfdube.wordpress.com/2011/12/06/trigonometric-look-up-tables-revisited/
-// http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-
 #include "sincos.h"
 
 // 128 steps per quadrant seems more than enough.
