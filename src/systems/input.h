@@ -177,6 +177,7 @@ typedef struct Input_Configuration_s {
         float speed;
     } cursor;
     struct {
+        // TODO: adopt separate triggers/sticks deadzones?
         float deadzone; // TODO: what is anti-deadzone?
         float range;
     } controller;

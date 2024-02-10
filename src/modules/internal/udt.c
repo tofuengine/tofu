@@ -43,8 +43,8 @@ void udt_preload_modules(lua_State *L, const void *userdatas[], const luaL_Reg *
     for (const luaL_Reg *module = modules; module->func; ++module) {
         LOG_D("preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
-        lua_pushstring(L, module->name); // Tail-add the module name (for later usage during the loading process)
-        luaX_preload(L, module->name, module->func, nup + 1);
+        lua_pushstring(L, module->name); // Tail-add the module name (for later usage during the loading process)...
+        luaX_preload(L, module->name, module->func, nup + 1); // ... and count an upvalue more, we just added it! :)
     }
 
     lua_pop(L, nup); // Free the upvalues from the stack.
@@ -55,11 +55,12 @@ static const char *_get_module_name(lua_State *L)
     return LUAX_STRING(L, lua_upvalueindex(UPVALUE_MODULE_NAME));
 }
 
-// FIXME: derive something different from the module as metatable name?
 static const char *_get_metatable_name(lua_State *L)
 {
     // Any identifier is valid, as long as it won't clash with another metatable in the registry table. The module
     // name (which is a "namespace" in our context) is unique enough.
+    //
+    // TODO: could we derive something different from the module as metatable name?
     return LUAX_STRING(L, lua_upvalueindex(UPVALUE_MODULE_NAME));
 }
 
@@ -67,7 +68,7 @@ static const char *_get_metatable_name(lua_State *L)
 //
 // 1) retrieving the module-name from the upvalues so that it is automatically carried along the code w/o the need to
 //    double-define it somewhere else;
-// 2) checking it a `.lua` module script is present, and in case use it to bootstrap the module initialization to
+// 2) checking if a `.lua` module script is present, and in case use it to bootstrap the module initialization to
 //    support mixed Lua-and-C module code;
 // 3) pass the module name as meta-table identifier, as this is required when a object-constructor is implemented in
 //    C.
