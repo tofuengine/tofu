@@ -57,6 +57,7 @@ extern bool FS_attach_folder(FS_Context_t *context, const char *path);
 extern bool FS_attach_archive(FS_Context_t *context, const char *path);
 extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data);
 
+extern bool FS_exists(const FS_Context_t *context, const char *name);
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);
 extern size_t FS_size(FS_Handle_t *handle);

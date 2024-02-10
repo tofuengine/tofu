@@ -415,6 +415,11 @@ static inline void _free_cache_slot(Storage_Resource_t **resources)
 }
 #endif
 
+bool Storage_exists(Storage_t *storage, const char *name)
+{
+    return FS_exists(storage->context, name);
+}
+
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
     if (path_is_absolute(name) || !path_is_normalized(name)) {

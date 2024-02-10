@@ -109,6 +109,7 @@ extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void 
 
 extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 
+extern bool Storage_exists(Storage_t *storage, const char *name);
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
 

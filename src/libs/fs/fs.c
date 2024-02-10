@@ -130,9 +130,8 @@ bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, v
     return true;
 }
 
-FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
+static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)
 {
-    const FS_Mount_t *mount = NULL;
 #if defined(TOFU_FILE_SUPPORT_MOUNT_OVERRIDE)
     // Backward scan, later mounts gain priority over existing ones.
     for (int index = arrlen(context->mounts) - 1; index >= 0; --index) {
@@ -141,10 +140,21 @@ FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 #endif
         FS_Mount_t *current = context->mounts[index];
         if (current->vtable.contains(current, name)) {
-            mount = current;
-            break;
+            return current;
         }
     }
+
+    return NULL;
+}
+
+bool FS_exists(const FS_Context_t *context, const char *name)
+{
+    return _locate(context, name) != NULL;
+}
+
+FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
+{
+    const FS_Mount_t *mount = _locate(context, name);
 
     if (!mount) {
         return NULL;
