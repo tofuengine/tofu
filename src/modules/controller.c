@@ -27,6 +27,7 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#include <libs/fmath.h>
 #define _LOG_TAG "controller"
 #include <libs/log.h>
 #include <systems/input.h>
@@ -40,6 +41,7 @@ static int controller_is_pressed_2oe_1b(lua_State *L);
 static int controller_is_released_2oe_1b(lua_State *L);
 static int controller_stick_2oe_4nnnn(lua_State *L);
 static int controller_triggers_1o_2nn(lua_State *L);
+static int controller_vector_v_2nn(lua_State *L);
 
 int controller_loader(lua_State *L)
 {
@@ -56,6 +58,7 @@ int controller_loader(lua_State *L)
             { "is_released", controller_is_released_2oe_1b },
             { "stick", controller_stick_2oe_4nnnn },
             { "triggers", controller_triggers_1o_2nn },
+            { "vector", controller_vector_v_2nn },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -220,4 +223,94 @@ static int controller_triggers_1o_2nn(lua_State *L)
     lua_pushnumber(L, (lua_Number)triggers.right);
 
     return 2;
+}
+
+typedef enum Vector_Modes_e {
+    VECTOR_MODE_ARROWS,
+    VECTOR_MODE_LEFT_STICK,
+    VECTOR_MODE_RIGHT_STICK,
+    Vector_Modes_t_CountOf
+} Vector_Modes_t;
+
+static const char *_modes[Vector_Modes_t_CountOf + 1] = {
+    "arrows",
+    "left-stick",
+    "right-stick",
+    NULL
+};
+
+static int controller_vector_3oeB_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
+    LUAX_SIGNATURE_END
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+    Vector_Modes_t mode = (Vector_Modes_t)LUAX_ENUM(L, 2, _modes);
+    bool discrete = LUAX_OPTIONAL_BOOLEAN(L, 3, false);
+//    float deadzone = LUAX_OPTIONAL_BOOLEAN(L, 4, true);
+
+    float x = 0.0f;
+    float y = 0.0f;
+
+    if (mode == VECTOR_MODE_ARROWS) {
+        x = INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_RIGHT)
+            - INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_LEFT);
+        y = INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_UP)
+            - INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_DOWN);
+
+        float magnitude = sqrtf(x * x + y * y);
+        if (magnitude > 0.0f) {
+            x = x / magnitude;
+            y = y / magnitude;
+        }
+    } else
+    if (mode == VECTOR_MODE_LEFT_STICK) {
+        Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, INPUT_CONTROLLER_STICK_LEFT);
+        x = stick.x;
+        y = stick.y;
+    } else
+    if (mode == VECTOR_MODE_RIGHT_STICK) {
+        Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, INPUT_CONTROLLER_STICK_RIGHT);
+        x = stick.x;
+        y = stick.y;
+    }
+
+    if (discrete) {
+        x = FSIGNUM(x);
+        y = FSIGNUM(y);
+    }
+
+    lua_pushnumber(L, (lua_Number)x);
+    lua_pushnumber(L, (lua_Number)y);
+
+    return 2;
+}
+
+static int controller_vector_1o_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
+
+    float x = INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_RIGHT)
+        - INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_LEFT);
+    float y = INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_UP)
+        - INPUT_CONTROLLER_BUTTON_STRENGTH(self->controller, INPUT_CONTROLLER_BUTTON_DOWN);
+
+    lua_pushnumber(L, (lua_Number)x);
+    lua_pushnumber(L, (lua_Number)y);
+
+    return 2;
+}
+
+static int controller_vector_v_2nn(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_BY_ARITY(controller_vector_1o_2nn, 1)
+        LUAX_OVERLOAD_BY_ARITY(controller_vector_3oeB_2nn, 2)
+        LUAX_OVERLOAD_BY_ARITY(controller_vector_3oeB_2nn, 3)
+    LUAX_OVERLOAD_END
 }
