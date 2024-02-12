@@ -102,16 +102,30 @@ error_destroy_configuration:
     return NULL;
 }
 
+static const char *_banner =
+                            "        ___________________  _______________ ___        \n"
+                            "        \\__    ___/\\_____  \\ \\_   _____/    |   \\       \n"
+                            "          |    |    /   |   \\ |    __) |    |   /       \n"
+                            "          |    |   /    |    \\|     \\  |    |  /        \n"
+                            "          |____|   \\_______  /\\___  /  |______/         \n"
+                            "                           \\/     \\/                    \n"
+                            "___________ _______    ________.___ _______  ___________\n"
+                            "\\_   _____/ \\      \\  /  _____/|   |\\      \\ \\_   _____/\n"
+                            " |    __)_  /   |   \\/   \\  ___|   |/   |   \\ |    __)_ \n"
+                            " |        \\/    |    \\    \\_\\  \\   /    |    \\|        \\\n"
+                            "/_______  /\\____|__  /\\______  /___\\____|__  /_______  /\n"
+                            "        \\/         \\/        \\/            \\/        \\/";
+
 static inline void _information(void)
 {
+    LOG_I("Tofu Engine v%s (%s build)\n%s", TOFU_VERSION_STRING, PLATFORM_NAME, _banner);
+
     SysInfo_Data_t si = { 0 };
     bool result = SysInfo_inspect(&si);
     if (!result) {
         LOG_E("can't get system information");
         return;
     }
-
-    LOG_I("Tofu Engine v%s (%s build)", TOFU_VERSION_STRING, PLATFORM_NAME);
     LOG_I("running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
 }
 
