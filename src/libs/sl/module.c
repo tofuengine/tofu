@@ -105,7 +105,9 @@ static inline bool _produce(Module_t *module)
     ma_pcm_rb *buffer = &module->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
     if (frames_to_produce == 0) {
-        LOG_W("buffer overrrun for source %p - stalling (waiting for consumer)", module);
+#if defined(TOFU_MODULE_DEBUG_ENABLED)
+        LOG_T("buffer overrrun for source %p - stalling (waiting for consumer)", module);
+#endif
         return true;
 #if defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
