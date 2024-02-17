@@ -375,9 +375,8 @@ void Engine_run(Engine_t *engine)
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
-    const float skippable_time = delta_time * skippable_frames; // This is the allowed "fast-forwardable" time window.
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
-    LOG_I("now running, update-time is %.6fs w/ %d skippable frames (skippable-time is %.6fs), reference-time is %.6fs", delta_time, skippable_frames, skippable_time, reference_time);
+    LOG_I("now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using `double` to keep the min resolution consistent over time!
     // For intervals (i.e. deltas), `float` is sufficient.
@@ -385,7 +384,7 @@ void Engine_run(Engine_t *engine)
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float deltas[4] = { 0 };
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-    double previous = glfwGetTime();
+    double previous_frame = glfwGetTime();
     float lag = 0.0f;
 
     const char **events = NULL;
@@ -393,23 +392,20 @@ void Engine_run(Engine_t *engine)
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Display_should_close(engine->display); ) {
-        const double current = glfwGetTime();
+        const double start_of_frame = glfwGetTime();
 
         // If the frame delta time exceeds the maximum allowed skippable one (because the system can't
         //  keep the pace we want) we forcibly cap the elapsed time.
-        float elapsed = (float)(current - previous);
+        float elapsed = (float)(start_of_frame - previous_frame);
+        previous_frame = start_of_frame;
 #if defined(DEBUG)
         // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
         // time to a single frame `delta_time`.
         if (elapsed >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
             elapsed = delta_time;
-        } else
-#endif  /* DEBUG */
-        if (elapsed > skippable_time) {
-            elapsed = skippable_time;
         }
-        previous = current;
+#endif  /* DEBUG */
         lag += elapsed;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
@@ -428,13 +424,13 @@ void Engine_run(Engine_t *engine)
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         const double process_marker = glfwGetTime();
-        deltas[0] = (float)(process_marker - current);
+        deltas[0] = (float)(process_marker - start_of_frame);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         // We already capped the `elapsed` value (relative to a maximum amount of skippable
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
         // could make `ratio` fall outside the `[0, 1]` range.
-        while (lag >= delta_time) {
+        for (size_t i = 0; lag >= delta_time && i < skippable_frames; ++i) {
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
@@ -466,16 +462,14 @@ void Engine_run(Engine_t *engine)
         deltas[2] = (float)(render_marker - update_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        if (reference_time != 0.0f) {
-            const float frame_time = (float)(glfwGetTime() - current);
-            const float leftover = reference_time - frame_time;
-            if (leftover > 0.0f) {
-                _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
-            }
+        const float frame_time = (float)(glfwGetTime() - start_of_frame);
+        const float leftover = reference_time - frame_time; // When non-positive it means we are not capping. :P
+        if (leftover > __FLT_EPSILON__) {
+            _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        deltas[3] = (float)(glfwGetTime() - current);
+        deltas[3] = (float)(glfwGetTime() - start_of_frame);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
 
