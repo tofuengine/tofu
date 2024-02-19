@@ -45,15 +45,32 @@
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
 
+#if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_ENGINE_USE_NANOSLEEP)
+    #define _NANOSLEEP
+#endif
+
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #include <windows.h>
+#elif defined(_NANOSLEEP)
+    #include <sched.h>
+    #include <time.h>
+#else
+    #include <sched.h>
+    #include <unistd.h>
 #endif
 
 #define _EVENTS_INITIAL_CAPACITY 8
 
 static inline void _wait_for(float seconds)
 {
-#if PLATFORM_ID == PLATFORM_LINUX
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    long millis = (long)(seconds * 1000.0f);
+    if (millis == 0L) {
+        YieldProcessor();
+    } else {
+        Sleep(millis);
+    }
+#elif defined(_NANOSLEEP)
     long millis = (long)(seconds * 1000.0f); // Can use `floorf()`, too.
     if (millis == 0L) {
         sched_yield();
@@ -62,14 +79,10 @@ static inline void _wait_for(float seconds)
                 .tv_sec = millis / 1000L,
                 .tv_nsec = (millis % 1000L) * 1000000L
             };
-        nanosleep(&ts, NULL);
-    }
-#elif PLATFORM_ID == PLATFORM_WINDOWS
-    long millis = (long)(seconds * 1000.0f);
-    if (millis == 0L) {
-        YieldProcessor();
-    } else {
-        Sleep(millis);
+        // while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL) && errno == EINTR)
+        //     ;
+        while (nanosleep(&ts, &ts))
+            ;
     }
 #else
     int micro = (int)(seconds * 1000000.0f);
@@ -463,12 +476,17 @@ void Engine_run(Engine_t *engine)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         const float frame_time = (float)(glfwGetTime() - start_of_frame);
-        const float leftover = reference_time - frame_time; // When non-positive it means we are not capping. :P
-        if (leftover > __FLT_EPSILON__) {
-            _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
+        const float wait_time = reference_time - frame_time; // When non-positive it means we are not capping. :P
+        if (wait_time > __FLT_EPSILON__) {
+            const double start_of_wait = glfwGetTime();
+            _wait_for(wait_time);
+            const float actual_wait_time = (float)(glfwGetTime() - start_of_wait);
+            const float skid = actual_wait_time - wait_time;
+            previous_frame += skid; // Move the start-of-frame marker to account for 
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+        // The frame-time statistic doesn't take into account of time 
         deltas[3] = (float)(glfwGetTime() - start_of_frame);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
