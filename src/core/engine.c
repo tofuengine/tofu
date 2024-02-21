@@ -482,11 +482,15 @@ void Engine_run(Engine_t *engine)
         const float frame_time = (float)(glfwGetTime() - start_of_frame);
         const float wait_time = reference_time - frame_time; // When non-positive it means we are not capping. :P
         if (wait_time > __FLT_EPSILON__) {
+            // We wait for the require amount of time but, at the same time, we also calculate the "skid"
+            // (i.e. the difference) from the actual waited time. We then take into account for the difference,
+            // as this will ensure rock-steady (average) FPS, especially if the system takes over during the
+            // yield time and makes the application wait more than expected.
             const double start_of_wait = glfwGetTime();
             _wait_for(wait_time);
             const float actual_wait_time = (float)(glfwGetTime() - start_of_wait);
             const float skid = actual_wait_time - wait_time;
-            previous_frame += skid; // Move the start-of-frame marker to account for 
+            previous_frame += skid; // Move the start-of-frame marker to account for the difference.
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
