@@ -45,53 +45,57 @@
 #include <libs/stb.h>
 #include <libs/sysinfo.h>
 
-#if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_ENGINE_USE_NANOSLEEP)
-    #define _NANOSLEEP
+#if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_ENGINE_USE_USLEEP)
+    #define _USE_USLEEP
 #endif
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #include <windows.h>
-#elif defined(_NANOSLEEP)
-    #include <sched.h>
-    #include <time.h>
-#else
+#elif defined(_USE_USLEEP)
     #include <sched.h>
     #include <unistd.h>
+#else
+    #include <sched.h>
+    #include <time.h>
 #endif
 
 #define _EVENTS_INITIAL_CAPACITY 8
 
 static inline void _wait_for(float seconds)
 {
+    const double end_of_wait = glfwGetTime() + (double)seconds;
+
+    for (;;) {
+        const double delta = end_of_wait - glfwGetTime(); // The delta time is expressed in seconds...
+        if (delta <= 0.0) {
+            break;
+        }
+        long millis = (long)(delta * 1000.0); // ... but we are interested in waiting for longer than a millisecond (Windows' limit).
+        if (millis > 0) {
+            // If more than a millisecond is left to wait then suspend the execution
+            // for that amount of time.
 #if PLATFORM_ID == PLATFORM_WINDOWS
-    long millis = (long)(seconds * 1000.0f);
-    if (millis == 0L) {
-        YieldProcessor();
-    } else {
-        Sleep(millis);
-    }
-#elif defined(_NANOSLEEP)
-    long millis = (long)(seconds * 1000.0f); // Can use `floorf()`, too.
-    if (millis == 0L) {
-        sched_yield();
-    } else {
-        struct timespec ts = (struct timespec){
-                .tv_sec = millis / 1000L,
-                .tv_nsec = (millis % 1000L) * 1000000L
-            };
-        // while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL) && errno == EINTR)
-        //     ;
-        while (nanosleep(&ts, &ts))
-            ;
-    }
+            Sleep(millis);
+#elif defined(_USE_USLEEP)
+            usleep(millis * 1000L); // usleep takes sleep time in us (1 millionth of a second)
 #else
-    int micro = (int)(seconds * 1000000.0f);
-    if (micro == 0) {
-        sched_yield();
-    } else {
-        usleep(micro); // usleep takes sleep time in us (1 millionth of a second)
-    }
+            struct timespec ts = (struct timespec){
+                    .tv_sec = (time_t)(millis / 1000L),
+                    .tv_nsec = (time_t)((millis % 1000L) * 1000000L)
+                };
+            nanosleep(&ts, NULL);
+//            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 #endif
+        } else {
+            // ... or yield the processor usage to avoid "clogging" the system
+            // and successive "sleep spikes".
+#if PLATFORM_ID == PLATFORM_WINDOWS
+            YieldProcessor();
+#else
+            sched_yield();
+#endif
+        }
+    }
 }
 
 static Configuration_t *_configure(Storage_t *storage)
