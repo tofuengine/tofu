@@ -392,6 +392,7 @@ void Engine_run(Engine_t *engine)
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
+    const float skippable_time = delta_time * skippable_frames; // This is the allowed "fast-forwardable" time window.
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
     LOG_I("now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
@@ -424,6 +425,9 @@ void Engine_run(Engine_t *engine)
         }
 #endif  /* DEBUG */
         lag += elapsed;
+        if (lag > skippable_time) { // If we accumulated more that we can process just cap...
+            lag = skippable_time;
+        }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         Environment_process(engine->environment, elapsed, deltas);
@@ -444,10 +448,10 @@ void Engine_run(Engine_t *engine)
         deltas[0] = (float)(process_marker - start_of_frame);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        // We already capped the `elapsed` value (relative to a maximum amount of skippable
+        // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
         // could make `ratio` fall outside the `[0, 1]` range.
-        for (size_t i = 0; lag >= delta_time && i < skippable_frames; ++i) {
+        while (lag >= delta_time) {
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
