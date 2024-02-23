@@ -121,6 +121,12 @@
 // ### Engine ###
 // ##############
 
+// Forces the usage of the (deprecated) POSIX API `usleep()`, instead of the
+// more efficient and supported `nanosleep()`.
+//
+// Note: this is valid only for the Linux build.
+#undef  TOFU_ENGINE_USE_USLEEP
+
 // When a breakpoint is "hit" in the game-loop the current frame time most
 // certainly becomes way greater than the usual ones. When the execution resumes
 // the `update()` sub-loop will *fast-forward* to recover the missed time.
