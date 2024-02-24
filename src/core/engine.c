@@ -61,34 +61,50 @@
 
 #define _EVENTS_INITIAL_CAPACITY 8
 
+// This is the lowest amount of time (in milliseconds) that we are willing to
+// suspend the execution (i.e. sleep) in a single loop.
+//
+// We set it to `1` as the actual sleep call will almost certainly (overall)
+// consume a bit more than the requested amount (due to the call overhead). This
+// way we are reasonably sure not to oversleep, at the cost of burning with a
+// "semi-busy wait" the last millisecond (at most).
+//
+// See: https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
+//      https://github.com/urho3d/urho3d/blob/master/Source/Urho3D/Engine/Engine.cpp#L750
+#define _WAIT_SLOT  1
+
 static inline void _wait_for(float seconds)
 {
     const double end_of_wait = glfwGetTime() + (double)seconds;
 
     for (;;) {
-        const double delta = end_of_wait - glfwGetTime(); // The delta time is expressed in seconds...
-        if (delta <= 0.0) {
+        const double delta = end_of_wait - glfwGetTime();
+        if (delta <= 0.0) { // We passed the wait marker, bail out!
             break;
         }
-        long millis = (long)(delta * 1000.0); // ... but we are interested in waiting for longer than a millisecond (Windows' limit).
-        if (millis > 0) {
-            // If more than a millisecond is left to wait then suspend the execution
-            // for that amount of time.
+        long millis = (long)(delta * 1000.0); // The delta time is expressed in seconds...
+        if (millis > _WAIT_SLOT) {
+            // If more than a the wait-slot is left to wait then suspend the execution
+            // for that amount of time...
+            long millis_to_wait = millis - _WAIT_SLOT;
 #if PLATFORM_ID == PLATFORM_WINDOWS
-            Sleep(millis);
+            Sleep(millis_to_wait);
 #elif defined(_USE_USLEEP)
-            usleep(millis * 1000L); // usleep takes sleep time in us (1 millionth of a second)
+            usleep(millis_to_wait * 1000L); // usleep takes sleep time in us (1 millionth of a second)
 #else
             struct timespec ts = (struct timespec){
-                    .tv_sec = (time_t)(millis / 1000L),
-                    .tv_nsec = (time_t)((millis % 1000L) * 1000000L)
+                    .tv_sec = (time_t)(millis_to_wait / 1000L),
+                    .tv_nsec = (time_t)((millis_to_wait % 1000L) * 1000000L)
                 };
+#if !defined(_USE_CLOCK_NANOSLEEP)
             nanosleep(&ts, NULL);
-//            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
+#else
+            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
+#endif
 #endif
         } else {
-            // ... or yield the processor usage to avoid "clogging" the system
-            // and successive "sleep spikes".
+            // ... otherwise adopt as semi-busy wait, yielding the processor
+            // usage to avoid "clogging" the system and successive "sleep spikes".
 #if PLATFORM_ID == PLATFORM_WINDOWS
             YieldProcessor();
 #else
