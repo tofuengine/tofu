@@ -47,7 +47,7 @@
 typedef struct Environment_Stats_s {
     size_t fps;
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-    float times[4];
+    float times[5];
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
     size_t memory_usage;
@@ -83,7 +83,7 @@ extern void Environment_destroy(Environment_t *environment);
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
+extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[5]);
 #else
 extern void Environment_process(Environment_t *environment, float frame_time);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */

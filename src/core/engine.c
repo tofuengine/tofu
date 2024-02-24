@@ -400,7 +400,7 @@ void Engine_run(Engine_t *engine)
     // For intervals (i.e. deltas), `float` is sufficient.
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-    float deltas[4] = { 0 };
+    float deltas[5] = { 0 };
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     double previous_frame = glfwGetTime();
     float lag = 0.0f;
@@ -498,8 +498,13 @@ void Engine_run(Engine_t *engine)
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+        const double wait_marker = glfwGetTime();
+        deltas[3] = (float)(wait_marker - render_marker);
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         // The frame-time statistic doesn't take into account of time 
-        deltas[3] = (float)(glfwGetTime() - start_of_frame);
+        deltas[4] = (float)(glfwGetTime() - start_of_frame);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
 

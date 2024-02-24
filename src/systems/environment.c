@@ -104,13 +104,13 @@ static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a
 }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-static inline void _calculate_times(float times[4], const float deltas[4])
+static inline void _calculate_times(float times[5], const float deltas[5])
 {
-    static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
+    static float samples[5][FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
-    static float sums[4] = { 0 };
+    static float sums[5] = { 0 };
 
-    for (size_t i = 0; i < 4; ++i) {
+    for (size_t i = 0; i < 5; ++i) {
         const float t = deltas[i] * 1000.0f;
         sums[i] -= samples[i][index];
         samples[i][index] = t;
@@ -140,7 +140,7 @@ static inline size_t _heap_usage(void)
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
+void Environment_process(Environment_t *environment, float frame_time, const float deltas[5])
 #else
 void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
@@ -165,8 +165,13 @@ void Environment_process(Environment_t *environment, float frame_time)
     stats_time += frame_time;
     while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
         stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
-        LOG_I("currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
-            stats->fps, stats->times[0], stats->times[1], stats->times[2], stats->times[3]);
+        LOG_I("currently running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
+            stats->fps,
+            stats->times[0], stats->times[0] / stats->times[4],
+            stats->times[1], stats->times[1] / stats->times[4],
+            stats->times[2], stats->times[2] / stats->times[4],
+            stats->times[3], stats->times[3] / stats->times[4],
+            stats->times[4]);
     }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
