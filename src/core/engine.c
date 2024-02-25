@@ -43,6 +43,7 @@
 #define _LOG_TAG "engine"
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <libs/stopwatch.h>
 #include <libs/sysinfo.h>
 
 #if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_ENGINE_USE_USLEEP)
@@ -75,14 +76,14 @@
 
 static inline void _wait_for(float seconds)
 {
-    const double end_of_wait = glfwGetTime() + (double)seconds;
+    StopWatch_t now = stopwatch_init();
 
     for (;;) {
-        const double delta = end_of_wait - glfwGetTime();
-        if (delta <= 0.0) { // We passed the wait marker, bail out!
+        const double elapsed = stopwatch_elapsed(&now);
+        if (elapsed >= seconds) { // The requested time has passed, bail out!
             break;
         }
-        long millis = (long)(delta * 1000.0); // The delta time is expressed in seconds...
+        long millis = (long)((seconds - elapsed) * 1000.0); // The delta time is expressed in seconds...
         if (millis > _WAIT_SLOT) {
             // If more than a the wait-slot is left to wait then suspend the execution
             // for that amount of time...
@@ -412,26 +413,19 @@ void Engine_run(Engine_t *engine)
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
     LOG_I("now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
-    // Track time using `double` to keep the min resolution consistent over time!
-    // For intervals (i.e. deltas), `float` is sufficient.
-    // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float deltas[5] = { 0 };
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-    double previous_frame = glfwGetTime();
+    StopWatch_t marker = stopwatch_init();
     float lag = 0.0f;
 
     const char **events = NULL;
     arrsetcap(events, _EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
 
-    // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !Display_should_close(engine->display); ) {
-        const double start_of_frame = glfwGetTime();
-
         // If the frame delta time exceeds the maximum allowed skippable one (because the system can't
-        //  keep the pace we want) we forcibly cap the elapsed time.
-        float elapsed = (float)(start_of_frame - previous_frame);
-        previous_frame = start_of_frame;
+        // keep the pace we want) we forcibly cap the elapsed time.
+        float elapsed = stopwatch_partial(&marker);
 #if defined(DEBUG)
         // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
@@ -444,6 +438,10 @@ void Engine_run(Engine_t *engine)
         if (lag > skippable_time) { // If we accumulated more that we can process just cap...
             lag = skippable_time;
         }
+
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+        StopWatch_t stats_marker = stopwatch_clone(&marker);
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         Environment_process(engine->environment, elapsed, deltas);
@@ -460,8 +458,7 @@ void Engine_run(Engine_t *engine)
         running = running && Interpreter_process(engine->interpreter, events); // Lazy evaluate `running`, will avoid calls when error.
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        const double process_marker = glfwGetTime();
-        deltas[0] = (float)(process_marker - start_of_frame);
+        deltas[0] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
@@ -486,8 +483,7 @@ void Engine_run(Engine_t *engine)
 //        running = running && Storage_update_variable(engine->storage, elapsed);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        const double update_marker = glfwGetTime();
-        deltas[1] = (float)(update_marker - process_marker);
+        deltas[1] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         running = running && Interpreter_render(engine->interpreter, lag / delta_time); // ratio in the range `[0, 1]`
@@ -495,12 +491,11 @@ void Engine_run(Engine_t *engine)
         Display_present(engine->display);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        const double render_marker = glfwGetTime();
-        deltas[2] = (float)(render_marker - update_marker);
+        deltas[2] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        const float frame_time = (float)(glfwGetTime() - start_of_frame);
-        const float wait_time = reference_time - frame_time; // When non-positive it means we are not capping. :P
+        const float busy_time = stopwatch_elapsed(&marker);
+        const float wait_time = reference_time - busy_time; // When non-positive it means we are not capping. :P
         if (wait_time > __FLT_EPSILON__) {
             // We wait for the require amount of time but, at the same time, we also calculate the "skid"
             // (i.e. the difference) from the actual waited time. We then take into account for the difference,
@@ -514,13 +509,12 @@ void Engine_run(Engine_t *engine)
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        const double wait_marker = glfwGetTime();
-        deltas[3] = (float)(wait_marker - render_marker);
+        deltas[3] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         // The frame-time statistic doesn't take into account of time 
-        deltas[4] = (float)(glfwGetTime() - start_of_frame);
+        deltas[4] = stopwatch_elapsed(&marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
 

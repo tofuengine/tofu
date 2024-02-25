@@ -50,6 +50,13 @@ StopWatch_t stopwatch_init(void)
         };
 }
 
+StopWatch_t stopwatch_clone(const StopWatch_t *stopwatch)
+{
+    return (StopWatch_t){
+            .marker = stopwatch->marker
+        };
+}
+
 void stopwatch_reset(StopWatch_t *stopwatch)
 {
     stopwatch->marker = glfwGetTime();
