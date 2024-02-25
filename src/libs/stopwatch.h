@@ -45,6 +45,8 @@ typedef struct StopWatch_s {
 } StopWatch_t;
 
 extern StopWatch_t stopwatch_init(void);
+extern void stopwatch_reset(StopWatch_t *stopwatch);
+extern float stopwatch_partial(StopWatch_t *stopwatch);
 extern float stopwatch_elapsed(const StopWatch_t *stopwatch);
 
 #endif  /* TOFU_LIBS_STOPWATCH_H */

@@ -39,11 +39,28 @@
 
 #include <GLFW/glfw3.h>
 
+// Track time using `double` to keep the min resolution consistent over time!
+// For intervals (i.e. deltas), `float` is sufficient.
+//
+// See: https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
 StopWatch_t stopwatch_init(void)
 {
     return (StopWatch_t){
             .marker = glfwGetTime()
         };
+}
+
+void stopwatch_reset(StopWatch_t *stopwatch)
+{
+    stopwatch->marker = glfwGetTime();
+}
+
+float stopwatch_partial(StopWatch_t *stopwatch)
+{
+    const double now = glfwGetTime();
+    const float delta = (float)(now - stopwatch->marker);
+    stopwatch->marker = now;
+    return delta;
 }
 
 float stopwatch_elapsed(const StopWatch_t *stopwatch)
