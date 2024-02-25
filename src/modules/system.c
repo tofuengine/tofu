@@ -183,8 +183,9 @@ static int system_stats_0_4nnnn(lua_State *L)
     lua_pushnumber(L, (lua_Number)stats->times[1]);
     lua_pushnumber(L, (lua_Number)stats->times[2]);
     lua_pushnumber(L, (lua_Number)stats->times[3]);
+    lua_pushnumber(L, (lua_Number)stats->times[4]);
 
-    return 4;
+    return 5;
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
