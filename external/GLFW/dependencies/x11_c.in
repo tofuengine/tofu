@@ -1,8 +1,0 @@
-x11_init.c
-x11_monitor.c
-x11_window.c
-xkb_unicode.c
-posix_time.c
-posix_thread.c
-glx_context.c
-linux_joystick.c

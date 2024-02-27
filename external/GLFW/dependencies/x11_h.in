@@ -1,6 +1,0 @@
-x11_platform.h
-xkb_unicode.h
-posix_time.h
-posix_thread.h
-glx_context.h
-linux_joystick.h

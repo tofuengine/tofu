@@ -1,6 +1,0 @@
-null_init.c
-null_monitor.c
-null_window.c
-null_joystick.c
-posix_time.c
-posix_thread.c

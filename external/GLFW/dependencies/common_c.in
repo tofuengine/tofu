@@ -1,8 +1,0 @@
-context.c
-init.c
-input.c
-monitor.c
-vulkan.c
-window.c
-egl_context.c
-osmesa_context.c

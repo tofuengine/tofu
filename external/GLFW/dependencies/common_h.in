@@ -1,6 +1,0 @@
-internal.h
-mappings.h
-glfw3.h
-glfw3native.h
-egl_context.h
-osmesa_context.h
