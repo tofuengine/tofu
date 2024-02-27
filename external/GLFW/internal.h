@@ -46,7 +46,7 @@
 #endif
 
 #define GLFW_INCLUDE_NONE
-#include "../include/GLFW/glfw3.h"
+#include "glfw3.h"
 
 #define _GLFW_INSERT_FIRST      0
 #define _GLFW_INSERT_LAST       1
@@ -325,7 +325,7 @@ typedef VkResult (APIENTRY * PFN_vkEnumerateInstanceExtensionProperties)(const c
 #include "platform.h"
 
 #define GLFW_NATIVE_INCLUDE_NONE
-#include "../include/GLFW/glfw3native.h"
+#include "glfw3native.h"
 
 // Checks for whether the library has been initialized
 #define _GLFW_REQUIRE_INIT()                         \
