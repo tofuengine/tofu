@@ -1,4 +1,5 @@
 linux_joystick.c
+posix_module.c
 posix_poll.c
 posix_thread.c
 posix_time.c
