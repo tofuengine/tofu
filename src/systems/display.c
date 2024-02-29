@@ -33,6 +33,14 @@
 
 #include <time.h>
 
+// Value for setting the "zero time" of the engine. This will trick the system
+// and get the consistent precision of an integer, with the convenient units
+// of a double, as the exponent will remain constant for ~136 years (when them
+// time represents seconds).
+//
+// See: `Four billion dollar question`, here https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
+#define _ENGINE_EPOCH 4294967296.0
+
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #define _PIXEL_FORMAT GL_BGRA
 #else
@@ -239,6 +247,10 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
+    // Note: technically starting from GLFW v3.4 we could display the window from the very first moment at the
+    //       correct position with the correct size. However, we find useful to leverage the "size callback" to set
+    //       OpenGL up. Otherwise we would call it directly. Also, we prefer to set everything up (e.g. the icon) and
+    //       then display the window.
     GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window) {
         LOG_F("can't create window");
@@ -343,6 +355,7 @@ static void *_reallocate(void* block, size_t size, void *user)
 {
     return realloc(block, size);
 }
+
 Display_t *Display_create(const Display_Configuration_t *configuration)
 {
     Display_t *display = malloc(sizeof(Display_t));
@@ -370,6 +383,10 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .user = NULL
         });
     LOG_D("GLFW allocator set");
+
+    glfwSetTime(_ENGINE_EPOCH);
+    LOG_D("time initialized");
+
     GL_Rectangle_t vram_rectangle;
     display->window = _window_create(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
