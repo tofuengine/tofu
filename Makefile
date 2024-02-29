@@ -133,6 +133,7 @@ CFLAGS=-D_DEFAULT_SOURCE \
 	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DMA_NO_NODE_GRAPH -DMA_NO_RESOURCE_MANAGER \
 	-DLIBXMP_BUILDING_STATIC \
 	-DLUAX_NO_SYSTEM_LIBRARIES \
+	-DSPNG_USE_MINIZ \
 	-I$(srcdir) \
 	-I$(externaldir)
 ifeq ($(PLATFORM),linux)
@@ -226,6 +227,7 @@ SOURCES+=$(wildcard $(externaldir)/chipmunk/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
 	$(wildcard $(externaldir)/lua/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
+	$(wildcard $(externaldir)/miniz/*.c) \
 	$(wildcard $(externaldir)/noise/*.c) \
 	$(wildcard $(externaldir)/spleen/*.c) \
 	$(wildcard $(externaldir)/spng/*.c) \
@@ -247,6 +249,7 @@ INCLUDES+=$(wildcard $(externaldir)/chipmunk/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
+	$(wildcard $(externaldir)/miniz/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
 	$(wildcard $(externaldir)/spng/*.h) \

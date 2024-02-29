@@ -16,7 +16,7 @@
     #include "tests/framac_stubs.h"
 #else
     #ifdef SPNG_USE_MINIZ
-        #include <miniz.h>
+        #include <miniz/miniz.h>
     #else
         #include <zlib.h>
     #endif
@@ -45,7 +45,9 @@
     #elif defined(__aarch64__) || defined(_M_ARM64) /* || defined(__ARM_NEON) */
         #define SPNG_ARM /* NOTE: only arm64 builds are tested! */
     #else
-        #pragma message "disabling SIMD optimizations for unknown target"
+        #if defined(_MSC_VER)
+            #pragma message "disabling SIMD optimizations for unknown target"
+        #endif
         #define SPNG_DISABLE_OPT
     #endif
 
@@ -1209,7 +1211,9 @@ static int spng__inflate_init(spng_ctx *ctx, int window_bits)
     if(inflateValidate(&ctx->zstream, validate)) return SPNG_EZLIB_INIT;
 
 #else /* This requires zlib >= 1.2.11 */
-    #pragma message ("inflateValidate() not available, SPNG_CTX_IGNORE_ADLER32 will be ignored")
+    #if _MSC_VER
+        #pragma message ("inflateValidate() not available, SPNG_CTX_IGNORE_ADLER32 will be ignored")
+    #endif
 #endif
 
     return 0;
