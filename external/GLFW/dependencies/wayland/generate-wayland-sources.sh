@@ -23,22 +23,22 @@
 # SOFTWARE.
 #
 
-wayland-scanner client-header ./wayland.xml ../wayland-client-protocol.h
-wayland-scanner client-header ./viewporter.xml ../viewporter-client-protocol.h
-wayland-scanner client-header ./xdg-shell.xml ../xdg-shell-client-protocol.h
-wayland-scanner client-header ./idle-inhibit-unstable-v1.xml ../idle-inhibit-unstable-v1-client-protocol.h
-wayland-scanner client-header ./pointer-constraints-unstable-v1.xml ../pointer-constraints-unstable-v1-client-protocol.h
-wayland-scanner client-header ./relative-pointer-unstable-v1.xml ../relative-pointer-unstable-v1-client-protocol.h
-wayland-scanner client-header ./fractional-scale-v1.xml ../fractional-scale-v1-client-protocol.h
-wayland-scanner client-header ./xdg-activation-v1.xml ../xdg-activation-v1-client-protocol.h
-wayland-scanner client-header ./xdg-decoration-unstable-v1.xml ../xdg-decoration-unstable-v1-client-protocol.h
+wayland-scanner client-header ./wayland.xml ../../wayland-client-protocol.h
+wayland-scanner client-header ./viewporter.xml ../../viewporter-client-protocol.h
+wayland-scanner client-header ./xdg-shell.xml ../../xdg-shell-client-protocol.h
+wayland-scanner client-header ./idle-inhibit-unstable-v1.xml ../../idle-inhibit-unstable-v1-client-protocol.h
+wayland-scanner client-header ./pointer-constraints-unstable-v1.xml ../../pointer-constraints-unstable-v1-client-protocol.h
+wayland-scanner client-header ./relative-pointer-unstable-v1.xml ../../relative-pointer-unstable-v1-client-protocol.h
+wayland-scanner client-header ./fractional-scale-v1.xml ../../fractional-scale-v1-client-protocol.h
+wayland-scanner client-header ./xdg-activation-v1.xml ../../xdg-activation-v1-client-protocol.h
+wayland-scanner client-header ./xdg-decoration-unstable-v1.xml ../../xdg-decoration-unstable-v1-client-protocol.h
 
-wayland-scanner private-code ./wayland.xml ../wayland-client-protocol-code.h
-wayland-scanner private-code ./viewporter.xml ../viewporter-client-protocol-code.h
-wayland-scanner private-code ./xdg-shell.xml ../xdg-shell-client-protocol-code.h
-wayland-scanner private-code ./idle-inhibit-unstable-v1.xml ../idle-inhibit-unstable-v1-client-protocol-code.h
-wayland-scanner private-code ./pointer-constraints-unstable-v1.xml ../pointer-constraints-unstable-v1-client-protocol-code.h
-wayland-scanner private-code ./relative-pointer-unstable-v1.xml ../relative-pointer-unstable-v1-client-protocol-code.h
-wayland-scanner private-code ./fractional-scale-v1.xml ../fractional-scale-v1-client-protocol-code.h
-wayland-scanner private-code ./xdg-activation-v1.xml ../xdg-activation-v1-client-protocol-code.h
-wayland-scanner private-code ./xdg-decoration-unstable-v1.xml ../xdg-decoration-unstable-v1-client-protocol-code.h
+wayland-scanner private-code ./wayland.xml ../../wayland-client-protocol-code.h
+wayland-scanner private-code ./viewporter.xml ../../viewporter-client-protocol-code.h
+wayland-scanner private-code ./xdg-shell.xml ../../xdg-shell-client-protocol-code.h
+wayland-scanner private-code ./idle-inhibit-unstable-v1.xml ../../idle-inhibit-unstable-v1-client-protocol-code.h
+wayland-scanner private-code ./pointer-constraints-unstable-v1.xml ../../pointer-constraints-unstable-v1-client-protocol-code.h
+wayland-scanner private-code ./relative-pointer-unstable-v1.xml ../../relative-pointer-unstable-v1-client-protocol-code.h
+wayland-scanner private-code ./fractional-scale-v1.xml ../../fractional-scale-v1-client-protocol-code.h
+wayland-scanner private-code ./xdg-activation-v1.xml ../../xdg-activation-v1-client-protocol-code.h
+wayland-scanner private-code ./xdg-decoration-unstable-v1.xml ../../xdg-decoration-unstable-v1-client-protocol-code.h
