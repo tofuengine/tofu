@@ -329,6 +329,20 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     return true;
 }
 
+static void *_allocate(size_t size, void *user)
+{
+    return malloc(size);
+}
+
+static void _deallocate(void* block, void *user)
+{
+    free(block);
+}
+
+static void *_reallocate(void* block, size_t size, void *user)
+{
+    return realloc(block, size);
+}
 Display_t *Display_create(const Display_Configuration_t *configuration)
 {
     Display_t *display = malloc(sizeof(Display_t));
@@ -349,6 +363,13 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     LOG_D("GLFW initialized");
 
+    glfwInitAllocator(&(GLFWallocator){
+            .allocate = _allocate,
+            .deallocate = _deallocate,
+            .reallocate = _reallocate,
+            .user = NULL
+        });
+    LOG_D("GLFW allocator set");
     GL_Rectangle_t vram_rectangle;
     display->window = _window_create(&display->configuration, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
