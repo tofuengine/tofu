@@ -1,3 +1,4 @@
-win32_platform.h
 win32_joystick.h
-wgl_context.h
+win32_platform.h
+win32_thread.h
+win32_time.h
