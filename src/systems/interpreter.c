@@ -170,7 +170,7 @@ static const char *_reader(lua_State *L, void *data, size_t *size)
 
 static int _searcher(lua_State *L)
 {
-    Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
+    const Storage_t *storage = (const Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *module_name = lua_tostring(L, 1);
 

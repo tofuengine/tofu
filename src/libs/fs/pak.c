@@ -147,7 +147,7 @@ bool FS_pak_is_valid(const char *path)
     return is_valid;
 }
 
-static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], uint8_t id[PAK_ID_LENGTH])
+static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], const uint8_t id[PAK_ID_LENGTH])
 {
     for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
         sprintf(sz + i * 2, "%02x", id[i]);
@@ -307,7 +307,7 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
             .search = sorted ? _binary_search : _linear_search,
             .flags = {
                 .encrypted = encrypted,
-                sorted
+                .sorted = sorted
             }
         };
 

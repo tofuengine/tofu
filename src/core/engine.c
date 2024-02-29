@@ -357,11 +357,13 @@ void Engine_destroy(Engine_t *engine)
 }
 
 // FIXME: use a bit-mask to track the events?
-static const char **_prepare_events(Engine_t *engine, const char **events) // TODO: move to lower-priority?
+static const char **_prepare_events(const Engine_t *engine, const char **events) // TODO: move to lower-priority?
 {
     arrsetlen(events, 0);
 
+#if defined(TOFU_EVENTS_FOCUS_SUPPORT) || defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
     const Environment_State_t *environment_state = Environment_get_state(engine->environment);
+#endif
 
 #if defined(TOFU_EVENTS_FOCUS_SUPPORT)
     if (environment_state->active.was != environment_state->active.is) {
@@ -409,8 +411,8 @@ void Engine_run(Engine_t *engine)
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
-    const float skippable_time = delta_time * skippable_frames; // This is the allowed "fast-forwardable" time window.
-    const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
+    const float skippable_time = delta_time * (float)skippable_frames; // This is the allowed "fast-forwardable" time window.
+    const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / (float)engine->configuration->engine.frames_limit;
     LOG_I("now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)

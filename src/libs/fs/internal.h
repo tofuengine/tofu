@@ -35,8 +35,8 @@
  * SOFTWARE.
  */
 
-#ifndef TOFU_LIBS_FS_INTERNALS_H
-#define TOFU_LIBS_FS_INTERNALS_H
+#ifndef TOFU_LIBS_FS_INTERNAL_H
+#define TOFU_LIBS_FS_INTERNAL_H
 
 #include "fs.h"
 
@@ -63,4 +63,4 @@ struct FS_Handle_s {
     Handle_VTable_t vtable;
 };
 
-#endif /* TOFU_LIBS_FS_INTERNALS_H */
+#endif /* TOFU_LIBS_FS_INTERNAL_H */

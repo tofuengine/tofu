@@ -274,9 +274,8 @@ static bool _music_reset(SL_Source_t *source)
         LOG_E("can't pre-load music data");
         return false;
     }
-#else
-    return true;
 #endif
+    return true;
 }
 
 static bool _music_update(SL_Source_t *source, float delta_time)
