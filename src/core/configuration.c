@@ -152,6 +152,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "engine-frames-limit") == 0) {
         configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
         //configuration->engine.frames_per_seconds = imin(configuration->engine.frames_per_seconds, configuration->engine.frames_limit); // Ditto.
+    } else
+    if (strcmp(fqn, "engine-low-priority-multiplier") == 0) {
+        configuration->engine.low_priority_multiplier = (size_t)strtoul(value, NULL, 0);
     }
 }
 
@@ -294,7 +297,8 @@ Configuration_t *Configuration_create(const char *data)
             .engine = {
                 .frames_per_seconds = 60,
                 .skippable_frames = 3, // About 5% of the FPS amount.
-                .frames_limit = 60
+                .frames_limit = 60,
+                .low_priority_multiplier = 2
             }
         };
 

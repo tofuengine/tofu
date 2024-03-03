@@ -410,6 +410,7 @@ void Engine_run(Engine_t *engine)
     }
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
+    const float low_priority_delta_time = delta_time * (float)engine->configuration->engine.low_priority_multiplier;
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
     const float skippable_time = delta_time * (float)skippable_frames; // This is the allowed "fast-forwardable" time window.
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / (float)engine->configuration->engine.frames_limit;
@@ -420,6 +421,7 @@ void Engine_run(Engine_t *engine)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     StopWatch_t marker = stopwatch_init();
     float lag = 0.0f;
+    float low_priority_lag = 0.0f;
 
     const char **events = NULL;
     arrsetcap(events, _EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
@@ -467,15 +469,23 @@ void Engine_run(Engine_t *engine)
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
         // could make `ratio` fall outside the `[0, 1]` range.
         while (lag >= delta_time) {
+            lag -= delta_time;
+
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
-            running = running && Audio_update(engine->audio, delta_time); // Note: we could update audio/storage one every two steps (or more).
+
+            // Note: we could update audio/storage one every two steps (or more).
+            low_priority_lag += delta_time;
+            while (low_priority_lag > low_priority_delta_time) {
+                low_priority_lag -= low_priority_delta_time;
+
+                running = running && Audio_update(engine->audio, low_priority_delta_time);
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
-            running = running && Storage_update(engine->storage, delta_time);
+                running = running && Storage_update(engine->storage, low_priority_delta_time);
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
-            lag -= delta_time;
+            }
         }
 
 //        running = running && Input_update_variable(engine->storage, elapsed);

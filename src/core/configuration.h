@@ -87,6 +87,7 @@ typedef struct Configuration_s {
         size_t frames_per_seconds;
         size_t skippable_frames;
         size_t frames_limit;
+        size_t low_priority_multiplier;
     } engine;
 } Configuration_t;
 
