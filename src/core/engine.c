@@ -410,7 +410,7 @@ void Engine_run(Engine_t *engine)
     }
 
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
-    const float low_priority_delta_time = delta_time * (float)engine->configuration->engine.low_priority_multiplier;
+    const float low_priority_delta_time = 1.0f / (float)engine->configuration->engine.low_priority_frames_per_seconds;
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
     const float skippable_time = delta_time * (float)skippable_frames; // This is the allowed "fast-forwardable" time window.
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / (float)engine->configuration->engine.frames_limit;
