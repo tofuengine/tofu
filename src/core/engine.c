@@ -468,24 +468,33 @@ void Engine_run(Engine_t *engine)
         // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
         // could make `ratio` fall outside the `[0, 1]` range.
+        lag += elapsed;
+        if (lag > skippable_time) { // If we accumulated more that we can process just cap...
+            lag = skippable_time;
+        }
         while (lag >= delta_time) {
             lag -= delta_time;
 
+            // TODO: move to a `_high_priority_update(engine, delta_time)` function? Then move to data-orientation?
             running = running && Environment_update(engine->environment, delta_time);
             running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
             running = running && Display_update(engine->display, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
+        }
 
-            // Note: we could update audio/storage one every two steps (or more).
-            low_priority_lag += delta_time;
-            while (low_priority_lag > low_priority_delta_time) {
-                low_priority_lag -= low_priority_delta_time;
+        // Same as above, but we are executing on another time-frame.
+        low_priority_lag += elapsed;
+        if (low_priority_lag > skippable_time) {
+            low_priority_lag = skippable_time;
+        }
+        while (low_priority_lag > low_priority_delta_time) {
+            low_priority_lag -= low_priority_delta_time;
 
-                running = running && Audio_update(engine->audio, low_priority_delta_time);
+            // TODO: move to a `_low_priority_update(engine, delta_time)` function?
+            running = running && Audio_update(engine->audio, low_priority_delta_time);
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
-                running = running && Storage_update(engine->storage, low_priority_delta_time);
+            running = running && Storage_update(engine->storage, low_priority_delta_time);
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
-            }
         }
 
 //        running = running && Input_update_variable(engine->storage, elapsed);
