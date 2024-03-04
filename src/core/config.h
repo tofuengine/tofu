@@ -127,6 +127,12 @@
 // Note: this is valid only for the Linux build.
 #undef  TOFU_ENGINE_USE_USLEEP
 
+// Takes into account the actual wait time, during the frame capping, and
+// compensate (in the next frame) if the wait is longer than the requested
+// amount. This can occasionally happen in some slower systems where there are
+// occasional system "hiccups".
+#undef  TOFU_ENGINE_WAIT_SKID_COMPENSATION
+
 // When a breakpoint is "hit" in the game-loop the current frame time most
 // certainly becomes way greater than the usual ones. When the execution resumes
 // the `update()` sub-loop will *fast-forward* to recover the missed time.

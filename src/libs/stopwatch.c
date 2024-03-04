@@ -62,6 +62,11 @@ void stopwatch_reset(StopWatch_t *stopwatch)
     stopwatch->marker = glfwGetTime();
 }
 
+void stopwatch_delta(StopWatch_t *stopwatch, double delta)
+{
+    stopwatch->marker += delta;
+}
+
 float stopwatch_partial(StopWatch_t *stopwatch)
 {
     const double now = glfwGetTime();
