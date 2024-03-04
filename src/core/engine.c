@@ -392,23 +392,26 @@ static const char **_prepare_events(const Engine_t *engine, const char **events)
     return events;
 }
 
+static inline bool _high_priority_update(Engine_t *engine, float delta_time)
+{
+    return Environment_update(engine->environment, delta_time)
+            && Input_update(engine->input, delta_time) // First, update the input, accessed in the interpreter step.
+            && Display_update(engine->display, delta_time)
+            && Interpreter_update(engine->interpreter, delta_time)  // Update the subsystems w/ fixed steps (fake interrupt based).
+            ;
+}
+
+static inline bool _low_priority_update(Engine_t *engine, float delta_time)
+{
+    return Audio_update(engine->audio, delta_time)
+#if defined(TOFU_STORAGE_AUTO_COLLECT)
+            && Storage_update(engine->storage, delta_time)
+#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+            ;
+}
+
 void Engine_run(Engine_t *engine)
 {
-    // Initialize the VM now that all the sub-systems are ready.
-    bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
-            engine->storage,
-            engine->display,
-            engine->input,
-            engine->audio,
-            engine->environment,
-            engine->interpreter,
-            NULL
-        });
-    if (!booted) {
-        LOG_F(LOG_CONTEXT, "can't initialize interpreter");
-        return;
-    }
-
     const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const float low_priority_delta_time = 1.0f / (float)engine->configuration->engine.low_priority_frames_per_seconds;
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
@@ -475,11 +478,8 @@ void Engine_run(Engine_t *engine)
         while (lag >= delta_time) {
             lag -= delta_time;
 
-            // TODO: move to a `_high_priority_update(engine, delta_time)` function? Then move to data-orientation?
-            running = running && Environment_update(engine->environment, delta_time);
-            running = running && Input_update(engine->input, delta_time); // First, update the input, accessed in the interpreter step.
-            running = running && Display_update(engine->display, delta_time);
-            running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
+            // TODO: move to data-orientation?
+            running = running && _high_priority_update(engine, delta_time);
         }
 
         // Same as above, but we are executing on another time-frame.
@@ -490,11 +490,7 @@ void Engine_run(Engine_t *engine)
         while (low_priority_lag > low_priority_delta_time) {
             low_priority_lag -= low_priority_delta_time;
 
-            // TODO: move to a `_low_priority_update(engine, delta_time)` function?
-            running = running && Audio_update(engine->audio, low_priority_delta_time);
-#if defined(TOFU_STORAGE_AUTO_COLLECT)
-            running = running && Storage_update(engine->storage, low_priority_delta_time);
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+            running = running && _low_priority_update(engine, low_priority_delta_time);
         }
 
 //        running = running && Input_update_variable(engine->storage, elapsed);
