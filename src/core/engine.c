@@ -392,19 +392,7 @@ static const char **_prepare_events(const Engine_t *engine, const char **events)
     return events;
 }
 
-typedef struct _TimeLine_s {
-    bool (*update)(Engine_t *engine, float delta_time);
-    float delta_time;
-    float lag;
-} _TimeLine_t;
-
-typedef enum _TimeLine_Identifier_e {
-    TIMELINE_IDENTIFIER_HIGH,
-    TIMELINE_IDENTIFIER_LOW,
-    _TimeLine_Identifier_t_CountOf
-} _TimeLine_Identifier_t;
-
-static bool _high_priority_update(Engine_t *engine, float delta_time)
+static inline bool _high_priority_update(Engine_t *engine, float delta_time)
 {
     return Environment_update(engine->environment, delta_time)
             && Input_update(engine->input, delta_time) // First, update the input, accessed in the interpreter step.
@@ -413,7 +401,7 @@ static bool _high_priority_update(Engine_t *engine, float delta_time)
             ;
 }
 
-static bool _low_priority_update(Engine_t *engine, float delta_time)
+static inline bool _low_priority_update(Engine_t *engine, float delta_time)
 {
     return Audio_update(engine->audio, delta_time)
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
@@ -431,23 +419,12 @@ void Engine_run(Engine_t *engine)
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / (float)engine->configuration->engine.frames_limit;
     LOG_I("now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
-    _TimeLine_t timelines[_TimeLine_Identifier_t_CountOf] = {
-            {
-                .update = _high_priority_update,
-                .delta_time = delta_time,
-                .lag = 0.0f
-            },
-            {
-                .update = _low_priority_update,
-                .delta_time = low_priority_delta_time,
-                .lag = 0.0f
-            },
-        };
-
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float deltas[5] = { 0 };
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     StopWatch_t marker = stopwatch_init();
+    float lag = 0.0f;
+    float low_priority_lag = 0.0f;
 
     const char **events = NULL;
     arrsetcap(events, _EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
@@ -464,6 +441,10 @@ void Engine_run(Engine_t *engine)
             elapsed = delta_time;
         }
 #endif  /* DEBUG */
+        lag += elapsed;
+        if (lag > skippable_time) { // If we accumulated more that we can process just cap...
+            lag = skippable_time;
+        }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         StopWatch_t stats_marker = stopwatch_clone(&marker);
@@ -490,18 +471,26 @@ void Engine_run(Engine_t *engine)
         // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
         // could make `ratio` fall outside the `[0, 1]` range.
-        for (size_t i = 0; i < _TimeLine_Identifier_t_CountOf; ++i) {
-            _TimeLine_t *timeline = &timelines[i];
+        lag += elapsed;
+        if (lag > skippable_time) { // If we accumulated more that we can process just cap...
+            lag = skippable_time;
+        }
+        while (lag >= delta_time) {
+            lag -= delta_time;
 
-            timeline->lag += elapsed;
-            if (timeline->lag > skippable_time) { // If we accumulated more that we can process just cap...
-                timeline->lag = skippable_time;
-            }
-            while (timeline->lag >= timeline->delta_time) {
-                timeline->lag -= timeline->delta_time;
+            // TODO: move to data-orientation?
+            running = running && _high_priority_update(engine, delta_time);
+        }
 
-                running = running && timeline->update(engine, timeline->delta_time);
-            }
+        // Same as above, but we are executing on another time-frame.
+        low_priority_lag += elapsed;
+        if (low_priority_lag > skippable_time) {
+            low_priority_lag = skippable_time;
+        }
+        while (low_priority_lag > low_priority_delta_time) {
+            low_priority_lag -= low_priority_delta_time;
+
+            running = running && _low_priority_update(engine, low_priority_delta_time);
         }
 
 //        running = running && Input_update_variable(engine->storage, elapsed);
@@ -514,8 +503,7 @@ void Engine_run(Engine_t *engine)
         deltas[1] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        const _TimeLine_t *timeline = &timeline[TIMELINE_IDENTIFIER_HIGH];
-        running = running && Interpreter_render(engine->interpreter, timeline->lag / timeline->delta_time); // ratio in the range `[0, 1]`
+        running = running && Interpreter_render(engine->interpreter, lag / delta_time); // ratio in the range `[0, 1]`
 
         Display_present(engine->display);
 
