@@ -32,7 +32,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
 * Multi-platform support through cross-compilation (Windows, Linux, and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not-so-distant future).
 
-For the courious ones, this is the current statistics of the game-engine codebase:
+For the courious ones, these are the current statistics of the game-engine codebase:
 
 | Language       | Files  | Blank  | Comment  | Code   |
 | -------------- | ------ | ------ | -------- | ------ |
@@ -91,23 +91,27 @@ For the courious ones, this is the current statistics of the game-engine codebas
 
 ## Dependencies
 
+Although I have been known to take pleasure in reinventing the wheel at every possible opportunity, Tofu Engine leverages some *awesome* libraries:
+
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.42, v0.6.38, v0.13.15
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
-* [Glad](https://github.com/Dav1dde/glad)
-* [GLFW](https://www.glfw.org/) v3.3.9
+* [Glad](https://gen.glad.sh/) v2.0.5
+* [GLFW](https://www.glfw.org/) v3.4.0
 * [libspng](https://libspng.org/) v0.7.4
 * [libxmp](https://xmp.sourceforge.net/) v4.6.1
 * [Lua](https://lua.org/) v5.4.6
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.21
+* [miniz](https://github.com/richgel999/miniz) v3.0.2
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
+* [sokol](https://github.com/floooh/sokol) libraries
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) libraries
 
 ## Inspirations
 
-**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other software in one way or another. Here's a brief list.
+**Tofu Engine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other software in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
