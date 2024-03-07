@@ -14,7 +14,7 @@ Behavioural macros are also present in the file `config.h`.
 The rules are simple:
 
 * each macro should begin with the prefix that defines the "namespace" (e.g. `LUAX_XXX`);
-* macros that are public have no other prefix, being them "costants", functions-like, or behavioural (e.g. to configure);
+* macros that are public have no other prefix, being them "constants", functions-like, or behavioural (e.g. to configure);
 * macros that are not public have an additional single underscore as prefix (e.g. `_LUAX_XXX`).
 
 > Please, don't ever a double underscore as this is meant for internally defined ones!
@@ -133,7 +133,13 @@ An header file must be constructed as follows:
 
 Local scoped functions/procedures/variable are `static` and prefixed with the `_` (underscore) character. They are to be defined just before their use. For example, if we have a global function `foo_bar()` that uses the `_baz()` function, the would be defined as follows:
 
+> Also locally scoped UDTs are preceded with the `_` (underscore) character.
+
 ```c
+typedef struct _object_s {
+    int id;
+} _object_t;
+
 static const int _value = 42;
 
 static inline int _baz(void)
