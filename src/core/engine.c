@@ -356,6 +356,25 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+static inline bool _process(Engine_t *engine, float elapsed, const float *deltas)
+#else
+static inline bool _process(Engine_t *engine, float elapsed)
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+{
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+    Environment_process(engine->environment, elapsed, deltas);
+#else   /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+    Environment_process(engine->environment, elapsed);
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+
+    glfwPollEvents();
+
+    Input_process(engine->input);
+
+    return Interpreter_process(engine->interpreter);
+}
+
 static inline bool _high_priority_update(Engine_t *engine, float delta_time)
 {
     return Environment_update(engine->environment, delta_time)
@@ -372,6 +391,17 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
             && Storage_update(engine->storage, delta_time)
 #endif  /* TOFU_STORAGE_AUTO_COLLECT */
             ;
+}
+
+static inline bool _render(Engine_t *engine, float ratio)
+{
+    if (!Interpreter_render(engine->interpreter, ratio)) {
+        return false;
+    }
+
+    Display_present(engine->display);
+
+    return true;
 }
 
 void Engine_run(Engine_t *engine)
@@ -408,16 +438,10 @@ void Engine_run(Engine_t *engine)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        Environment_process(engine->environment, elapsed, deltas);
-#else   /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-        Environment_process(engine->environment, elapsed);
+        running = running && _process(engine, elapsed, deltas); // Lazy evaluate `running`, will avoid calls when error.
+#else
+        running = running && _process(engine, elapsed); // Lazy evaluate `running`, will avoid calls when error.
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-
-        glfwPollEvents();
-
-        Input_process(engine->input);
-
-        running = running && Interpreter_process(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[0] = stopwatch_partial(&stats_marker);
@@ -433,7 +457,6 @@ void Engine_run(Engine_t *engine)
         while (lag >= delta_time) {
             lag -= delta_time;
 
-            // TODO: move to data-orientation?
             running = running && _high_priority_update(engine, delta_time);
         }
 
@@ -458,9 +481,7 @@ void Engine_run(Engine_t *engine)
         deltas[1] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        running = running && Interpreter_render(engine->interpreter, lag / delta_time); // ratio in the range `[0, 1]`
-
-        Display_present(engine->display);
+        running = running && _render(engine, lag / delta_time); // ratio in the range `[0, 1]`
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[2] = stopwatch_partial(&stats_marker);
