@@ -304,7 +304,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("audio ready");
 
-    engine->environment = Environment_create(engine->display, engine->input);
+    engine->environment = Environment_create(engine->display);
     if (!engine->environment) {
         LOG_F("can't initialize environment");
         goto error_destroy_audio;
@@ -356,42 +356,6 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
-// FIXME: use a bit-mask to track the events?
-static const char **_prepare_events(const Engine_t *engine, const char **events) // TODO: move to lower-priority?
-{
-    arrsetlen(events, 0);
-
-#if defined(TOFU_EVENTS_FOCUS_SUPPORT) || defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
-    const Environment_State_t *environment_state = Environment_get_state(engine->environment);
-#endif
-
-#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
-    if (environment_state->active.was != environment_state->active.is) {
-        arrpush(events, environment_state->active.is ? "on_focus_acquired" : "on_focus_lost");
-    }
-#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
-
-#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
-    if (environment_state->controllers.previous != environment_state->controllers.current) {
-        if (environment_state->controllers.current > environment_state->controllers.previous) {
-            arrpush(events, "on_controller_connected");
-            if (environment_state->controllers.current == 1) {
-                arrpush(events, "on_controller_available");
-            }
-        } else {
-            arrpush(events, "on_controller_disconnected");
-            if (environment_state->controllers.current == 0) {
-                arrpush(events, "on_controller_unavailable");
-            }
-        }
-    }
-#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
-
-    arrpush(events, NULL);
-
-    return events;
-}
-
 static inline bool _high_priority_update(Engine_t *engine, float delta_time)
 {
     return Environment_update(engine->environment, delta_time)
@@ -426,9 +390,6 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
     float low_priority_lag = 0.0f;
 
-    const char **events = NULL;
-    arrsetcap(events, _EVENTS_INITIAL_CAPACITY); // Pre-allocate some entries for the events, reducing reallocation in the main-loop.
-
     for (bool running = true; running && !Display_should_close(engine->display); ) {
         // If the frame delta time exceeds the maximum allowed skippable one (because the system can't
         // keep the pace we want) we forcibly cap the elapsed time.
@@ -460,9 +421,7 @@ void Engine_run(Engine_t *engine)
 
         Input_process(engine->input);
 
-        events = _prepare_events(engine, events);
-
-        running = running && Interpreter_process(engine->interpreter, events); // Lazy evaluate `running`, will avoid calls when error.
+        running = running && Interpreter_process(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[0] = stopwatch_partial(&stats_marker);
@@ -538,6 +497,4 @@ void Engine_run(Engine_t *engine)
         deltas[4] = stopwatch_elapsed(&marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
-
-    arrfree(events);
 }

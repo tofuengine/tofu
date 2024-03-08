@@ -39,7 +39,6 @@
 #define TOFU_SYSTEMS_ENVIRONMENT_H
 
 #include "display.h"
-#include "input.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -55,29 +54,17 @@ typedef struct Environment_Stats_s {
 } Environment_Stats_t;
 
 typedef struct Environment_State_s {
-#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
-    struct {
-        bool is;
-        bool was;
-    } active;
-#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
-#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
-    struct {
-        int previous;
-        int current;
-    } controllers;
-#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
+    bool is_active;
     Environment_Stats_t stats;
     double time;
 } Environment_State_t;
 
 typedef struct Environment_s {
     const Display_t *display;
-    const Input_t *input;
     Environment_State_t state;
 } Environment_t;
 
-extern Environment_t *Environment_create(const Display_t *display, const Input_t *input);
+extern Environment_t *Environment_create(const Display_t *display);
 extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);

@@ -351,19 +351,10 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     return true;
 }
 
-bool Interpreter_process(const Interpreter_t *interpreter, const char *events[])
+// TODO: is this callback really useful? I don't think so... it's called on every loop and does nothing...
+bool Interpreter_process(const Interpreter_t *interpreter)
 {
-//    if (events && events[0]) {
-    if (events[0]) { // Create an event table, or `nil` when non presents.
-        lua_newtable(interpreter->state);
-        for (size_t i = 0; events[i]; ++i) {
-            lua_pushstring(interpreter->state, events[i]);
-            lua_rawseti(interpreter->state, -2, i + 1);
-        }
-    } else {
-        lua_pushnil(interpreter->state);
-    }
-    return _method_call(interpreter->state, ENTRY_POINT_METHOD_PROCESS, 1, 0) == LUA_OK;
+    return _method_call(interpreter->state, ENTRY_POINT_METHOD_PROCESS, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)

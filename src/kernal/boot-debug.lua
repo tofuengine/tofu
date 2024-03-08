@@ -62,13 +62,7 @@ function Boot:__ctor()
           canvas:reset() -- Reset default canvas from the game state.
           me.main = nil
         end,
-      process = function(me, events)
-          for _, event in ipairs(events) do
-            local callback = me.main[event]
-            if callback then
-              callback(me.main)
-            end
-          end
+      process = function(me)
           me.main:process()
         end,
       update = function(me, delta_time)
@@ -139,11 +133,11 @@ function Boot:__ctor()
   self:switch_to("normal")
 end
 
-function Boot:process(events)
+function Boot:process()
   self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
 
   local me = self.state
-  self:call(me.process, me, events)
+  self:call(me.process, me)
 end
 
 function Boot:update(delta_time)

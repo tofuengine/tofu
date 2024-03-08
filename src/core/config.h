@@ -180,21 +180,6 @@
 // statistics.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
 
-// ##############
-// ### Events ###
-// ##############
-
-// Controls whether the game-engine should process and fire "focus changed"
-// events during the execution. This could be used to automatically pause the
-// game when the focus is lost.
-#define TOFU_EVENTS_FOCUS_SUPPORT
-
-// Controls the events related to the game-controller state changes. When
-// enabled, events will be fired whenever a controller is attached/detached.
-// Also, when the last controller is disconnected (or reconnected), suitable
-// events will be issued.
-#define TOFU_EVENTS_CONTROLLER_SUPPORT
-
 // ############
 // ### File ###
 // ############
