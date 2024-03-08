@@ -402,10 +402,6 @@ void Engine_run(Engine_t *engine)
             elapsed = delta_time;
         }
 #endif  /* DEBUG */
-        lag += elapsed;
-        if (lag > skippable_time) { // If we accumulated more that we can process just cap...
-            lag = skippable_time;
-        }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         StopWatch_t stats_marker = stopwatch_clone(&marker);
