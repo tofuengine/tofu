@@ -48,6 +48,7 @@ static int system_stats_0_4nnnn(lua_State *L);
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static int system_heap_1S_1n(lua_State *L);
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+static int system_active_0_1b(lua_State *L);
 static int system_quit_0_0(lua_State *L);
 
 int system_loader(lua_State *L)
@@ -67,6 +68,7 @@ int system_loader(lua_State *L)
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
             { "heap", system_heap_1S_1n },
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+            { "active", system_active_0_1b },
             // -- operations --
             { "quit", system_quit_0_0 },
             { NULL, NULL }
@@ -212,6 +214,19 @@ static int system_heap_1S_1n(lua_State *L)
     return 1;
 }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+
+static int system_active_0_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
+
+    const Environment_State_t *state = Environment_get_state(environment);
+    lua_pushboolean(L, state->is_active);
+
+    return 1;
+}
 
 static int system_quit_0_0(lua_State *L)
 {
