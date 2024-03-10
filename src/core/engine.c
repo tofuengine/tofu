@@ -458,17 +458,16 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
 
             running = running && _high_priority_update(engine, delta_time);
-        }
 
-        // Same as above, but we are executing on another time-frame.
-        low_priority_lag += elapsed;
-        if (low_priority_lag > skippable_time) {
-            low_priority_lag = skippable_time;
-        }
-        while (low_priority_lag > low_priority_delta_time) {
-            low_priority_lag -= low_priority_delta_time;
+            // Same as above, but we are executing on another time-frame and with `delta_time` steps.
+            // As we are putting lower-priority activities here there's no need for us to be as
+            // consistent and precise with the updates.
+            low_priority_lag += delta_time;
+            while (low_priority_lag > low_priority_delta_time) {
+                low_priority_lag -= low_priority_delta_time;
 
-            running = running && _low_priority_update(engine, low_priority_delta_time);
+                running = running && _low_priority_update(engine, low_priority_delta_time);
+            }
         }
 
 //        running = running && Input_update_variable(engine->storage, elapsed);
