@@ -42,9 +42,10 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-typedef void (*Input_Handler_t)(Input_t *input);
+typedef void (*Input_Process_t)(Input_t *input);
+typedef void (*Input_Update_t)(Input_t *input, float delta_time);
 
-static void _keyboard_handler(Input_t *input)
+static void _keyboard_process(Input_t *input)
 {
     static const int keys[Input_Keyboard_Buttons_t_CountOf] = {
         GLFW_KEY_1,
@@ -120,7 +121,7 @@ static inline void _move_and_bound_cursor(Input_Cursor_t *cursor, float x, float
     cursor->position.y = FCLAMP(y, cursor->area.y0, cursor->area.y1);
 }
 
-static void _mouse_handler(Input_t *input)
+static void _mouse_process(Input_t *input)
 {
     static const int mouse_buttons[Input_Cursor_Buttons_t_CountOf] = {
         GLFW_MOUSE_BUTTON_LEFT,
@@ -175,7 +176,7 @@ static inline float _controller_trigger(float magnitude, float deadzone, float r
     }
 }
 
-static void _controller_handler(Input_t *input)
+static void _controller_process(Input_t *input)
 {
     static const int controller_buttons[Input_Controller_Buttons_t_CountOf] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
@@ -425,9 +426,16 @@ static inline void _controllers_update(Input_t *input, float delta_time)
 
 bool Input_update(Input_t *input, float delta_time)
 {
-    _keyboard_update(input, delta_time);
-    _cursor_update(input, delta_time);
-    _controllers_update(input, delta_time);
+    static const Input_Update_t updaters[] = {
+        _keyboard_update,
+        _cursor_update,
+        _controllers_update,
+        NULL
+    };
+
+    for (const Input_Update_t *updater = updaters; *updater; ++updater) {
+        (*updater)(input, delta_time);
+    }
 
     return true;
 }
@@ -536,15 +544,15 @@ static inline void _buttons_process(Input_t *input)
 
 void Input_process(Input_t *input)
 {
-    static const Input_Handler_t handlers[] = {
-        _keyboard_handler,
-        _mouse_handler,
-        _controller_handler,
+    static const Input_Process_t processors[] = {
+        _keyboard_process,
+        _mouse_process,
+        _controller_process,
         NULL
     };
 
-    for (const Input_Handler_t *handler = handlers; *handler; ++handler) {
-        (*handler)(input);
+    for (const Input_Process_t *process = processors; *process; ++process) {
+        (*process)(input);
     }
 
     _buttons_process(input);
