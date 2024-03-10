@@ -148,13 +148,6 @@ static void _mouse_handler(Input_t *input)
         Input_Button_t *button = &buttons[i];
         button->is = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
     }
-
-    double x, y;
-    glfwGetCursorPos(window, &x, &y);
-
-    const float scale_x = input->state.cursor.scale.x;
-    const float scale_y = input->state.cursor.scale.y;
-    _move_and_bound_cursor(cursor, (float)x * scale_x + 0.5f, (float)y * scale_y + 0.5f);
 }
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
@@ -389,25 +382,33 @@ static inline void _keyboard_update(Input_t *input, float delta_time)
 
 static inline void _cursor_update(Input_t *input, float delta_time)
 {
-#if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     Input_Cursor_t *cursor = &input->state.cursor;
     if (cursor->enabled) {
-        return;
-    }
+        GLFWwindow *window = input->window;
 
-    Input_Controller_t *controllers = input->state.controllers;
-    for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
-        Input_Controller_t *controller = &controllers[i];
+        // Note: getting the cursor position is slow, so we are doing it only in the update step.
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
 
-        if (controller->jid != -1) { // First available controller cursor-mapped will control the cursor.
-            const Input_Controller_Stick_t *stick = &controller->sticks[INPUT_CONTROLLER_STICK_RIGHT]; // Right stick for cursor movement.
-            const float delta = input->configuration.cursor.speed * delta_time;
-            _move_and_bound_cursor(cursor, cursor->position.x + stick->x * delta, cursor->position.y + stick->y * delta);
+        const float scale_x = cursor->scale.x;
+        const float scale_y = cursor->scale.y;
+        _move_and_bound_cursor(cursor, (float)x * scale_x + 0.5f, (float)y * scale_y + 0.5f);
+#if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
+    } else {
+        const Input_Controller_t *controllers = input->state.controllers;
+        for (size_t i = 0; i < INPUT_CONTROLLERS_COUNT; ++i) {
+            const Input_Controller_t *controller = &controllers[i];
 
-            break;
+            if (controller->jid != -1) { // First available controller cursor-mapped will control the cursor.
+                const Input_Controller_Stick_t *stick = &controller->sticks[INPUT_CONTROLLER_STICK_RIGHT]; // Right stick for cursor movement.
+                const float delta = input->configuration.cursor.speed * delta_time;
+                _move_and_bound_cursor(cursor, cursor->position.x + stick->x * delta, cursor->position.y + stick->y * delta);
+
+                break;
+            }
         }
+#endif  /* TOFU_INPUT_CURSOR_IS_EMULATED */
     }
-#endif  /* TOFU_INPUT_CURSOR_IS_EMULATED*/
 }
 
 static inline void _controllers_update(Input_t *input, float delta_time)
