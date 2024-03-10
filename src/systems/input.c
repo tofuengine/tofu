@@ -453,8 +453,8 @@ typedef struct Int_To_Int_s {
 #endif
 
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
-#define KEYBOARD_A_CONTROLLER_ID    0
-#define KEYBOARD_B_CONTROLLER_ID    1
+#define _KEYBOARD_A_CONTROLLER_ID   0
+#define _KEYBOARD_B_CONTROLLER_ID   1
 
 static Int_To_Int_t _keyboard_to_controller_0[] = {
     { INPUT_KEYBOARD_BUTTON_W, INPUT_CONTROLLER_BUTTON_UP },
@@ -486,7 +486,7 @@ static Int_To_Int_t _keyboard_to_controller_1[] = {
 #endif
 
 #if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
-#define CURSOR_CONTROLLER_ID    0
+#define _CURSOR_CONTROLLER_ID   0
 
 static Int_To_Int_t _controller_to_cursor[] = {
     { INPUT_CONTROLLER_BUTTON_Y, INPUT_CURSOR_BUTTON_LEFT },
@@ -522,12 +522,12 @@ static inline void _buttons_process(Input_t *input)
     }
 
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
-    _buttons_accumulate(controllers[KEYBOARD_A_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_0);
-    _buttons_accumulate(controllers[KEYBOARD_B_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_1);
+    _buttons_accumulate(controllers[_KEYBOARD_A_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_0);
+    _buttons_accumulate(controllers[_KEYBOARD_B_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_1);
 #endif
 
 #if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
-    const Input_Controller_t *controller = &controllers[CURSOR_CONTROLLER_ID];
+    const Input_Controller_t *controller = &controllers[_CURSOR_CONTROLLER_ID];
     if (!cursor->enabled) {
         _buttons_accumulate(cursor->buttons, controller->buttons, _controller_to_cursor);
     }
