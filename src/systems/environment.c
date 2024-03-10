@@ -113,24 +113,6 @@ static inline void _calculate_times(float times[5], const float deltas[5])
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-#if defined(TOFU_ENGINE_HEAP_STATISTICS)
-static inline size_t _heap_usage(void)
-{
-#if PLATFORM_ID == PLATFORM_WINDOWS
-    PROCESS_MEMORY_COUNTERS pmc = { 0 };
-    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-    return pmc.WorkingSetSize;
-#elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
-    // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
-    struct mallinfo2 mi = mallinfo2();
-    return mi.uordblks;
-#else
-    struct mallinfo mi = mallinfo();
-    return mi.uordblks;
-#endif
-}
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
-
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 void Environment_process(Environment_t *environment, float frame_time, const float deltas[5])
 #else
@@ -139,10 +121,8 @@ void Environment_process(Environment_t *environment, float frame_time)
 {
     Environment_State_t *state = &environment->state;
 
-    state->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
-
     Environment_Stats_t *stats = &state->stats;
-    stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
+    stats->fps = _calculate_fps(frame_time); // We could use `1 / frame_time` but it would be inaccurate due to rounding/representation.
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     _calculate_times(stats->times, deltas);
@@ -161,8 +141,41 @@ void Environment_process(Environment_t *environment, float frame_time)
     }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+}
+
+static inline bool _is_active(const Display_t *display)
+{
+    return glfwGetWindowAttrib(display->window, GLFW_FOCUSED) == GLFW_TRUE;
+}
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
+static inline size_t _heap_usage(void)
+{
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    PROCESS_MEMORY_COUNTERS pmc = { 0 };
+    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+    return pmc.WorkingSetSize;
+#elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
+    // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
+    struct mallinfo2 mi = mallinfo2();
+    return mi.uordblks;
+#else
+    struct mallinfo mi = mallinfo();
+    return mi.uordblks;
+#endif
+}
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+
+bool Environment_update(Environment_t *environment, float delta_time)
+{
+    Environment_State_t *state = &environment->state;
+
+    state->time += delta_time;
+
+    state->is_active = _is_active(environment->display);
+
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+    Environment_Stats_t *stats = &state->stats;
     stats->memory_usage = _heap_usage();
 #if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
     static float heap_time = TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
@@ -173,11 +186,6 @@ void Environment_process(Environment_t *environment, float frame_time)
     }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
-}
-
-bool Environment_update(Environment_t *environment, float frame_time)
-{
-    environment->state.time += frame_time;
 
     return true;
 }
