@@ -162,15 +162,6 @@ typedef struct Input_Controller_Triggers_s {
 
 #define INPUT_CONTROLLERS_COUNT 4
 
-typedef enum Input_Handlers_e {
-    Input_Handlers_t_First = 0,
-    INPUT_HANDLER_KEYBOARD = Input_Handlers_t_First,
-    INPUT_HANDLER_MOUSE,
-    INPUT_HANDLER_GAMEPAD,
-    Input_Handlers_t_Last = INPUT_HANDLER_GAMEPAD,
-    Input_Handlers_t_CountOf
-} Input_Handlers_t;
-
 typedef struct Input_Configuration_s {
     const char *mappings;
     struct {

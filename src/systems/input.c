@@ -536,14 +536,15 @@ static inline void _buttons_process(Input_t *input)
 
 void Input_process(Input_t *input)
 {
-    static const Input_Handler_t handlers[Input_Handlers_t_CountOf] = {
+    static const Input_Handler_t handlers[] = {
         _keyboard_handler,
         _mouse_handler,
-        _controller_handler
+        _controller_handler,
+        NULL
     };
 
-    for (size_t i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
-        handlers[i](input);
+    for (const Input_Handler_t *handler = handlers; *handler; ++handler) {
+        (*handler)(input);
     }
 
     _buttons_process(input);
