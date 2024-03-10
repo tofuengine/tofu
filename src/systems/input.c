@@ -115,12 +115,6 @@ static void _keyboard_process(Input_t *input)
     }
 }
 
-static inline void _move_and_bound_cursor(Input_Cursor_t *cursor, float x, float y)
-{
-    cursor->position.x = FCLAMP(x, cursor->area.x0, cursor->area.x1);
-    cursor->position.y = FCLAMP(y, cursor->area.y0, cursor->area.y1);
-}
-
 static void _mouse_process(Input_t *input)
 {
     static const int mouse_buttons[Input_Cursor_Buttons_t_CountOf] = {
@@ -379,6 +373,12 @@ void Input_destroy(Input_t *input)
 static inline void _keyboard_update(Input_t *input, float delta_time)
 {
     // NOP.
+}
+
+static inline void _move_and_bound_cursor(Input_Cursor_t *cursor, float x, float y)
+{
+    cursor->position.x = FCLAMP(x, cursor->area.x0, cursor->area.x1);
+    cursor->position.y = FCLAMP(y, cursor->area.y0, cursor->area.y1);
 }
 
 static inline void _cursor_update(Input_t *input, float delta_time)
