@@ -558,11 +558,9 @@ void Input_process(Input_t *input)
     _buttons_process(input);
 
     const Input_Configuration_t *configuration = &input->configuration;
-    if (configuration->keyboard.exit_key) {
-        if (glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            LOG_I("exit key pressed");
-            glfwSetWindowShouldClose(input->window, true);
-        }
+    if (configuration->keyboard.exit_key && glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        LOG_I("exit key pressed");
+        glfwSetWindowShouldClose(input->window, true);
     }
 }
 
