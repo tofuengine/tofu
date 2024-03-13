@@ -424,22 +424,6 @@ static inline void _controllers_update(Input_t *input, float delta_time)
     }
 }
 
-bool Input_update(Input_t *input, float delta_time)
-{
-    static const Input_Update_t updaters[] = {
-        _keyboard_update,
-        _cursor_update,
-        _controllers_update,
-        NULL
-    };
-
-    for (const Input_Update_t *updater = updaters; *updater; ++updater) {
-        (*updater)(input, delta_time);
-    }
-
-    return true;
-}
-
 static inline void _buttons_sync(Input_Button_t *buttons, size_t first, size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
@@ -542,26 +526,36 @@ static inline void _buttons_process(Input_t *input)
 #endif
 }
 
-void Input_process(Input_t *input)
+bool Input_update(Input_t *input, float delta_time)
 {
     static const Input_Process_t processors[] = {
         _keyboard_process,
         _mouse_process,
         _controller_process,
+        _buttons_process,
         NULL
     };
-
     for (const Input_Process_t *process = processors; *process; ++process) {
         (*process)(input);
     }
 
-    _buttons_process(input);
+    static const Input_Update_t updaters[] = {
+        _keyboard_update,
+        _cursor_update,
+        _controllers_update,
+        NULL
+    };
+    for (const Input_Update_t *updater = updaters; *updater; ++updater) {
+        (*updater)(input, delta_time);
+    }
 
     const Input_Configuration_t *configuration = &input->configuration;
     if (configuration->keyboard.exit_key && glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         LOG_I("exit key pressed");
         glfwSetWindowShouldClose(input->window, true);
     }
+
+    return true;
 }
 
 Input_Keyboard_t *Input_get_keyboard(Input_t *input)

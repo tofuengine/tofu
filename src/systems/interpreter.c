@@ -67,14 +67,12 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 static const char *_kickstart_lua = "return require(\"" _BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
-    ENTRY_POINT_METHOD_PROCESS,
     ENTRY_POINT_METHOD_UPDATE,
     ENTRY_POINT_METHOD_RENDER,
     Entry_Point_Methods_t_CountOf
 } Entry_Point_Methods_t;
 
 static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
-    "process",
     "update",
     "render",
     NULL
@@ -349,12 +347,6 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     LOG_D("entry-points detected");
 
     return true;
-}
-
-// TODO: is this callback really useful? I don't think so... it's called on every loop and does nothing...
-bool Interpreter_process(const Interpreter_t *interpreter)
-{
-    return _method_call(interpreter->state, ENTRY_POINT_METHOD_PROCESS, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)

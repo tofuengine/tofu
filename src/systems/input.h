@@ -243,7 +243,6 @@ extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwin
 extern void Input_destroy(Input_t *input);
 
 extern bool Input_update(Input_t *input, float delta_time);
-extern void Input_process(Input_t *input);
 
 extern Input_Keyboard_t *Input_get_keyboard(Input_t *input);
 extern Input_Cursor_t *Input_get_cursor(Input_t *input);
