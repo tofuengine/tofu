@@ -114,9 +114,9 @@ static inline void _calculate_times(float times[5], const float deltas[5])
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-void Environment_process(Environment_t *environment, float frame_time, const float deltas[5])
+void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[5])
 #else
-void Environment_process(Environment_t *environment, float frame_time)
+void Environment_accumulate(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 {
     Environment_State_t *state = &environment->state;

@@ -70,9 +70,9 @@ extern void Environment_destroy(Environment_t *environment);
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[5]);
+extern void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[5]);
 #else
-extern void Environment_process(Environment_t *environment, float frame_time);
+extern void Environment_accumulate(Environment_t *environment, float frame_time);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 extern bool Environment_update(Environment_t *environment, float delta_time);
