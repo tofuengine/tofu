@@ -62,9 +62,6 @@ function Boot:__ctor()
           canvas:reset() -- Reset default canvas from the game state.
           me.main = nil
         end,
-      process = function(me)
-          me.main:process()
-        end,
       update = function(me, delta_time)
           me.main:update(delta_time)
         end,
@@ -114,8 +111,6 @@ function Boot:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      process = function(_, _)
-        end,
       update = function(_, _)
         end,
       render = function(me, _)
@@ -133,20 +128,21 @@ function Boot:__ctor()
   self:switch_to("normal")
 end
 
-function Boot:process()
+function Boot:update(delta_time)
   self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
 
   local me = self.state
-  self:call(me.process, me)
-end
-
-function Boot:update(delta_time)
-  local me = self.state
+  if not me then
+    return
+  end
   self:call(me.update, me, delta_time)
 end
 
 function Boot:render(ratio)
   local me = self.state
+  if not me then
+    return
+  end
   self:call(me.render, me, ratio)
 end
 
