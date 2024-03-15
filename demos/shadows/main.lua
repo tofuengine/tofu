@@ -70,7 +70,7 @@ function Main:__ctor()
   self.cursor = { x = 0, y = 0 }
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_down("up") then
     self.velocity.y = -SPEED
@@ -94,6 +94,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.position.x = self.position.x + self.velocity.x * delta_time
   self.position.y = self.position.y + self.velocity.y * delta_time
 

@@ -62,7 +62,7 @@ function Main:__ctor()
   self.mode = 0
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     System.quit()
@@ -74,6 +74,7 @@ function Main:process()
 end
 
 function Main:update(_) -- delta_time
+  self:handle_input()
 end
 
 function Main:render(_) -- ratio

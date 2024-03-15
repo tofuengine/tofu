@@ -63,7 +63,7 @@ function Main:__ctor()
   self.dirg = Grid.new(width, height, { 0 })
 end
 
-function Main:process()
+function Main:handle_input()
   local controller <const> = Controller.default()
   if controller:is_pressed("select") then
     self.windy = not self.windy
@@ -83,6 +83,8 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
+
   self.dirg:copy(self.grid)
 
   local width, height = self.dirg:size()

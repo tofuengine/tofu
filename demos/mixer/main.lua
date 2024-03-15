@@ -80,7 +80,7 @@ end
 
 local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("a") then
     local source = self.sources[self.current]
@@ -130,6 +130,7 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
 end
 
 function Main:render(_)

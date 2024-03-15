@@ -75,7 +75,7 @@ function Main:__ctor()
   end
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
 
   if controller:is_pressed("start") then
@@ -105,6 +105,8 @@ function Main:update(delta_time)
   if not self.running then
     return
   end
+
+  self:handle_input()
 
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time * self.speed)

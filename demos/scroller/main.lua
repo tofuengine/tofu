@@ -114,7 +114,7 @@ function Main:__ctor()
   self.running = true
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("select") then
     self.running = not self.running
@@ -122,6 +122,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if not self.running then
     return
   end

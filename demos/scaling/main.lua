@@ -64,7 +64,7 @@ function Main:__ctor()
   self.flip_y = false
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
 
   self.y_speed = 0
@@ -100,6 +100,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.scale = math.max(0, self.scale + self.scale_speed * delta_time)
   self.x = self.x + self.x_speed * delta_time
   self.y = self.y + self.y_speed * delta_time

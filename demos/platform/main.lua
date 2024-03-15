@@ -135,7 +135,7 @@ function Main:__ctor()
 --  self.pixies:clear(0)
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if self.jumps < 2 and controller:is_pressed("up") then
     self.velocity.y = 128
@@ -160,6 +160,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.velocity:add(self.acceleration)
   self.position:fma(self.velocity, delta_time)
 

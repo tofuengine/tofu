@@ -86,7 +86,7 @@ function Main:__ctor()
   self.changed = true
 end
 
-function Main:process()
+function Main:handle_input()
   local cursor = Cursor.default()
   local cx, cy = cursor:position()
   self.c.x = cx
@@ -114,6 +114,8 @@ function Main:process()
 end
 
 function Main:update(_) -- delta_time
+  self:handle_input()
+
   local lines = {}
   for index, color in ipairs(self.colors) do
     local points = {}

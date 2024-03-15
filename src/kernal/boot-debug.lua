@@ -129,7 +129,7 @@ function Boot:__ctor()
 end
 
 function Boot:update(delta_time)
-  self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
+  self:switch_if_needed() -- Switch state on the update step
 
   local me = self.state
   if not me then

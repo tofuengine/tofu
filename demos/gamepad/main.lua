@@ -71,7 +71,7 @@ function Main:__ctor()
   self.scale = {}
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
 
   for _, id in ipairs(IDS) do
@@ -83,6 +83,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   for _, id in ipairs(IDS) do
     if self.scale[id] and self.scale[id] > 1.0 then
       self.scale[id] = math.max(1.0, self.scale[id] - delta_time * 12.0)

@@ -74,7 +74,7 @@ function Main:__ctor()
   self.running = true
 end
 
-function Main:process()
+function Main:handle_input()
   local controller <const> = Controller.default()
 
   local camera <const> = self.camera
@@ -100,10 +100,12 @@ function Main:process()
     self.running = not self.running
   end
 
-  self.player:process()
+  self.player:handle_input(controller)
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if not self.running then
     return
   end

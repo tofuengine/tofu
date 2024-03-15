@@ -91,7 +91,7 @@ function Main:__ctor()
   end
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
@@ -109,6 +109,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.world:update(delta_time)
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time)

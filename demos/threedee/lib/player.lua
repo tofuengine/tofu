@@ -36,7 +36,6 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
-local Controller = require("tofu.input.controller")
 
 local config = require("config")
 
@@ -58,9 +57,7 @@ function Player:__ctor()
   self.pause = false
 end
 
-function Player:process()
-  local controller <const> = Controller.default()
-
+function Player:handle_input(controller)
   local dx = 0
   local dy = 0
   local dz = 1

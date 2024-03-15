@@ -87,7 +87,7 @@ function Main:__ctor()
   end
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     collectgarbage("collect")
@@ -134,6 +134,7 @@ function Main:update_blocks(delta_time)
 end
 
 function Main:update(delta_time)
+  self:handle_input()
   self:update_player(delta_time)
   self:update_blocks(delta_time)
 end

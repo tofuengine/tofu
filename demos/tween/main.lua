@@ -83,9 +83,6 @@ function Main:__ctor()
   self.wave = Wave.new("triangle", PERIOD)
 end
 
-function Main:process()
-end
-
 function Main:update(_)
 end
 

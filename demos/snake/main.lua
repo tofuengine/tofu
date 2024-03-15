@@ -134,7 +134,7 @@ function Main:reset()
   self:generate_food()
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
 
   if self.state == "game-over" then
@@ -184,6 +184,8 @@ function Main:generate_food()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if self.state == "game-over" then
     return
   end

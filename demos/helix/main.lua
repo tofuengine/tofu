@@ -58,7 +58,7 @@ function Main:__ctor()
   self.factor = 0.75
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("left") then
     self.factor = self.factor - 0.01
@@ -68,6 +68,7 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
 end
 
 function Main:render(_)

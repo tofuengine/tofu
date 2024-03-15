@@ -66,7 +66,7 @@ function Main:__ctor()
   self.flip_y = false
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
 
   self.scale_speed = 0
@@ -102,6 +102,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.scale = math.max(0, self.scale + self.scale_speed * delta_time)
   self.rotation = self.rotation + self.rotation_speed * delta_time
   self.anchor = math.min(1.0, math.max(0.0, self.anchor + self.anchor_speed * delta_time))

@@ -118,7 +118,7 @@ function Main:_change_palette(palette)
   Display.palette(palette)
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("down") then
     self.scale_y = 1.0
@@ -148,6 +148,8 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
+
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index

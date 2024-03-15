@@ -77,7 +77,7 @@ function Main:__ctor()
   self.xform:warp(height, self.factor)
 end
 
-function Main:process()
+function Main:handle_input()
   local recompute = false
 
   local controller = Controller.default()
@@ -98,6 +98,7 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
 end
 
 function Main:render(_)

@@ -77,7 +77,7 @@ function Main:__ctor()
   self.xform:project(height, math.pi * 0.5 - self.angle, self.elevation)
 end
 
-function Main:process()
+function Main:handle_input()
   local recompute = false
 
   local controller = Controller.default()
@@ -124,6 +124,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if not self.running then
     return
   end

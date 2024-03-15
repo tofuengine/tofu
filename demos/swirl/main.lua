@@ -79,7 +79,7 @@ function Main:on_focus_lost()
   self.running = false
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     self.fan = not self.fan
@@ -87,9 +87,12 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if not self.running then
     return
   end
+
   self.time = self.time + delta_time
 end
 

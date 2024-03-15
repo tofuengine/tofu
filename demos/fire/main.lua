@@ -80,7 +80,7 @@ function Main:reset()
   end)
 end
 
-function Main:process()
+function Main:handle_input()
   local controller <const> = Controller.default()
 
   if controller:is_pressed("select") then
@@ -95,6 +95,8 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
+
   local windy = self.windy
   self.grid:process(function(column, row, value)
       if row == 0 then -- Skip the 1st row entirely.

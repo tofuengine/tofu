@@ -84,7 +84,7 @@ function Main:__ctor()
   self.mode = 0
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("y") then
     self.mode = (self.mode + 1) % 10
@@ -92,6 +92,7 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
 end
 
 function Main:render(_)

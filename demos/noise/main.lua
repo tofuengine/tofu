@@ -73,7 +73,7 @@ function Main:__ctor()
   self.frequency = 5
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("right") then
     self.current = (self.current % #NOISES) + 1
@@ -91,6 +91,8 @@ end
 
 -- https://www.redblobgames.com/maps/terrain-from-noise/
 function Main:update(_)
+  self:handle_input()
+
   local canvas = Canvas.default()
   local image = canvas:image()
   local width, height = image:size()

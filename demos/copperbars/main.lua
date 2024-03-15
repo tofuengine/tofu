@@ -82,9 +82,6 @@ function Main:__ctor()
   self.program = program
 end
 
-function Main:process()
-end
-
 function Main:update(_)
   local canvas = Canvas.default()
   local image = canvas:image()

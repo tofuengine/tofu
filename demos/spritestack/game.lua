@@ -86,7 +86,7 @@ end
 -- http://samd.site/2020/04/10/sprite-stacking.html
 -- https://medium.com/@avsnoopy/beginners-guide-to-sprite-stacking-in-gamemaker
 -- -studio-2-and-magica-voxel-part-1-f7a1394569c0
-function Game:process()
+function Game:handle_input()
   self.force = 0
   self.torque = 0
 

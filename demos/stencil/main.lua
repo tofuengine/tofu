@@ -75,7 +75,7 @@ function Main:__ctor()
   Display.palette(color)
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("select") then
     self.mode = (self.mode + 1) % 2
@@ -91,6 +91,8 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
+
   if self.mode == 1 then
     local t = System.time()
     self.threshold = math.tointeger(((math.sin(t) + 1) * 0.5) * self.limit + 0.5)

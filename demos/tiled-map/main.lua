@@ -72,7 +72,7 @@ function Main:__ctor()
   end
 end
 
-function Main:process()
+function Main:handle_input()
   local controller <const> = Controller.default()
 
   self.dx = 0
@@ -92,6 +92,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   local camera = self.map:camera_from_id("left")
 
   local t = System.time() * 0.5
