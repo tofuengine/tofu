@@ -102,11 +102,11 @@ function Main:handle_input()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if not self.running then
     return
   end
-
-  self:handle_input()
 
   for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time * self.speed)
