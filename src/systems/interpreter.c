@@ -67,12 +67,14 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 static const char *_kickstart_lua = "return require(\"" _BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {
+    ENTRY_POINT_METHOD_INIT,
     ENTRY_POINT_METHOD_UPDATE,
     ENTRY_POINT_METHOD_RENDER,
     Entry_Point_Methods_t_CountOf
 } Entry_Point_Methods_t;
 
 static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
+    "init",
     "update",
     "render",
     NULL
@@ -346,6 +348,12 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     }
     LOG_D("entry-points detected");
 
+    if (_method_call(interpreter->state, ENTRY_POINT_METHOD_INIT, 0, 0) != LUA_OK) {
+        LOG_F("can't call `init` entry-point");
+        return false;
+    }
+    LOG_D("`init` entry-point called");
+
     return true;
 }
 
@@ -395,7 +403,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     // TODO: pass the default `Canvas` instance?
-    lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
+    lua_pushnumber(interpreter->state, (lua_Number)ratio);
     return _method_call(interpreter->state, ENTRY_POINT_METHOD_RENDER, 1, 0) == LUA_OK;
 }
 

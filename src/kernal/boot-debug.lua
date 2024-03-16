@@ -62,6 +62,9 @@ function Boot:__ctor()
           canvas:reset() -- Reset default canvas from the game state.
           me.main = nil
         end,
+      init = function(me)
+          me.main:init()
+        end,
       update = function(me, delta_time)
           me.main:update(delta_time)
         end,
@@ -111,6 +114,8 @@ function Boot:__ctor()
       leave = function(me)
           me.font = nil
         end,
+      init = function(_)
+        end,
       update = function(_, _)
         end,
       render = function(me, _)
@@ -126,6 +131,14 @@ function Boot:__ctor()
   }
   self.queue = {}
   self:switch_to("normal")
+end
+
+function Boot:init()
+  local me = self.state
+  if not me then
+    return
+  end
+  self:call(me.init, me)
 end
 
 function Boot:update(delta_time)
