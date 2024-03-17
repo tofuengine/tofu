@@ -117,6 +117,9 @@ function Main:__ctor()
   self:reset()
 end
 
+function Main:init()
+end
+
 function Main:reset()
   self.length = INITIAL_LENGTH
   self.state = "running"

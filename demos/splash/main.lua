@@ -74,6 +74,9 @@ function Main:__ctor()
   self.music:play()
 end
 
+function Main:init()
+end
+
 function Main:update(delta_time)
   self.pool:update(delta_time)
 

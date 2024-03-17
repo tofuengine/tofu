@@ -68,6 +68,9 @@ function Main:__ctor()
     self.y = math.random() * height
 end
 
+function Main:init()
+end
+
 function Main:update(delta_time)
   self.pool:update(delta_time)
 end

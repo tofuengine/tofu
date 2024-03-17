@@ -86,6 +86,9 @@ function Main:__ctor()
   self.changed = true
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local cursor = Cursor.default()
   local cx, cy = cursor:position()

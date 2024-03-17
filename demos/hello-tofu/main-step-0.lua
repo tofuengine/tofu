@@ -58,6 +58,9 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 end
 
+function Main:init()
+end
+
 function Main:update(_)
   -- Nothing to do, here.
 end

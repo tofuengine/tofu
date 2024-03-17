@@ -74,6 +74,9 @@ function Main:__ctor()
   self.running = true
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local controller <const> = Controller.default()
 

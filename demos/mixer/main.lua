@@ -78,6 +78,9 @@ function Main:__ctor()
   self.current = 1
 end
 
+function Main:init()
+end
+
 local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
 function Main:handle_input()

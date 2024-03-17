@@ -75,6 +75,9 @@ function Main:__ctor()
   self:_change_palette(Palette.default("pico-8"))
 end
 
+function Main:init()
+end
+
 local function _index_of(array, compare, from)
   local length = #array
   for index = from or 1, length do

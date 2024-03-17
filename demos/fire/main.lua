@@ -71,6 +71,9 @@ function Main:__ctor()
   self:reset()
 end
 
+function Main:init()
+end
+
 function Main:reset()
   self.grid:process(function(column, row, _)
     if row == STEPS - 1 then

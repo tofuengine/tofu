@@ -62,6 +62,9 @@ function Main:__ctor()
   self.mode = 0
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then

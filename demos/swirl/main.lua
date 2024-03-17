@@ -71,12 +71,7 @@ function Main:__ctor()
   self.running = true
 end
 
-function Main:on_focus_acquired()
-  self.running = true
-end
-
-function Main:on_focus_lost()
-  self.running = false
+function Main:init()
 end
 
 function Main:handle_input()

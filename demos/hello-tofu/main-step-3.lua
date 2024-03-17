@@ -60,6 +60,9 @@ function Main:__ctor()
   self.font = Font.from_image("assets/font-8x8.png", 8, 8, 0, 15)
 end
 
+function Main:init()
+end
+
 function Main:update(_)
   -- Nothing to do, here.
 end

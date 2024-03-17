@@ -67,6 +67,9 @@ function Main:__ctor()
   self.y = height * 0.25
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("y") then

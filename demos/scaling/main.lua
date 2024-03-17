@@ -64,6 +64,9 @@ function Main:__ctor()
   self.flip_y = false
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local controller = Controller.default()
 

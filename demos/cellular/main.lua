@@ -63,6 +63,9 @@ function Main:__ctor()
   self.dirg = Grid.new(width, height, { 0 })
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local controller <const> = Controller.default()
   if controller:is_pressed("select") then

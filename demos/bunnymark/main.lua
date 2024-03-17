@@ -75,6 +75,9 @@ function Main:__ctor()
   end
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local controller = Controller.default()
 

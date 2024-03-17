@@ -77,6 +77,9 @@ function Main:__ctor()
   self.xform:warp(height, self.factor)
 end
 
+function Main:init()
+end
+
 function Main:handle_input()
   local recompute = false
 
