@@ -41,8 +41,6 @@
 #define CONFIG_H_INCLUDED
 
 // Constant MACROs have no prefix.
-#define FPS_AVERAGE_SAMPLES         128
-
 #define COLOR_MATCH_EUCLIDIAN  0
 #define COLOR_MATCH_WEIGHTED   1
 #define COLOR_MATCH_PERCEPTUAL 2
@@ -179,6 +177,14 @@
 // Controls the period (in seconds) of the aforementioned debug performance
 // statistics.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
+
+// Enables a more costly (but precise) performance average calculation, based
+// upon a moving average.
+#undef  TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE
+
+// When the moving average is enabled this value tells the amount of samples
+// the average is calculated upon.
+#define TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES 128
 
 // ############
 // ### File ###

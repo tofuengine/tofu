@@ -41,6 +41,9 @@
 #include <core/platform.h>
 #define _LOG_TAG "environment"
 #include <libs/log.h>
+#if !defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
+    #include <libs/fmath.h>
+#endif
 #include <libs/stb.h>
 
 #include <malloc.h>
@@ -81,24 +84,38 @@ const Environment_State_t *Environment_get_state(const Environment_t *environmen
     return &environment->state;
 }
 
+static inline float _frame_time_to_fps(float frame_time)
+{
+    return frame_time > __FLT_EPSILON__ ?  1.0f / frame_time : 0.0f;
+}
+
 static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
-    static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
+#if defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
+    static float samples[TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
     static float sum = 0.0f; // We are storing just a small time interval, float is enough...
 
     sum -= samples[index];
     samples[index] = frame_time;
     sum += frame_time;
-    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+    index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
 
-    return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
+    return (size_t)((float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
+#else
+    static float average = 0.0f;
+
+    const float fps = _frame_time_to_fps(frame_time);
+    average = FLERP(average, fps, 0.1); // Smaller values makes the average more "stable".
+    return (size_t)(average + 0.5f);
+#endif
 }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 static inline void _calculate_times(float times[5], const float deltas[5])
 {
-    static float samples[5][FPS_AVERAGE_SAMPLES] = { 0 };
+#if defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
+    static float samples[5][TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
     static float sums[5] = { 0 };
 
@@ -107,9 +124,18 @@ static inline void _calculate_times(float times[5], const float deltas[5])
         sums[i] -= samples[i][index];
         samples[i][index] = t;
         sums[i] += t;
-        times[i] = sums[i] / (float)FPS_AVERAGE_SAMPLES;
+        times[i] = sums[i] / (float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
     }
-    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+    index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
+#else
+    static float averages[5] = { 0 };
+
+    for (size_t i = 0; i < 5; ++i) {
+        const float t = deltas[i] * 1000.0f;
+        averages[i] = FLERP(averages[i], t, 0.1f); // Ditto.
+        times[i] = averages[i];
+    }
+#endif
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
