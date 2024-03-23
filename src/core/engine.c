@@ -422,13 +422,13 @@ void Engine_run(Engine_t *engine)
     for (bool running = true; running && !Display_should_close(engine->display); ) {
         // If the frame delta time exceeds the maximum allowed skippable one (because the system can't
         // keep the pace we want) we forcibly cap the elapsed time.
-        float elapsed = stopwatch_partial(&marker);
+        float frame_time = stopwatch_partial(&marker);
 #if defined(DEBUG)
         // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
         // time to a single frame `delta_time`.
-        if (elapsed >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
-            elapsed = delta_time;
+        if (frame_time >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
+            frame_time = delta_time;
         }
 #endif  /* DEBUG */
 
@@ -437,9 +437,9 @@ void Engine_run(Engine_t *engine)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        Environment_accumulate(engine->environment, elapsed, deltas);
+        Environment_accumulate(engine->environment, frame_time, deltas);
 #else   /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-        Environment_accumulate(engine->environment, elapsed);
+        Environment_accumulate(engine->environment, frame_time);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         glfwPollEvents(); // TODO: move into `Display_render()`?
@@ -451,7 +451,7 @@ void Engine_run(Engine_t *engine)
         // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
         // could make `ratio` fall outside the `[0, 1]` range.
-        lag += elapsed;
+        lag += frame_time;
         if (lag > skippable_time) { // If we accumulated more that we can process just cap...
             lag = skippable_time;
         }
