@@ -39,11 +39,10 @@
 
 #include <core/config.h>
 #include <core/platform.h>
+#include <libs/fmath.h>
+#include <libs/imath.h>
 #define _LOG_TAG "environment"
 #include <libs/log.h>
-#if !defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
-    #include <libs/fmath.h>
-#endif
 #include <libs/stb.h>
 
 #include <malloc.h>
@@ -84,12 +83,12 @@ const Environment_State_t *Environment_get_state(const Environment_t *environmen
     return &environment->state;
 }
 
-static inline float _frame_time_to_fps(float frame_time)
+static inline size_t _frame_time_to_fps(float frame_time)
 {
-    return frame_time > __FLT_EPSILON__ ?  1.0f / frame_time : 0.0f;
+    return frame_time > __FLT_EPSILON__ ?  IROUNDF(1.0f / frame_time) : 0;
 }
 
-static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
+static inline size_t _calculate_fps(float frame_time)
 {
 #if defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
     static float samples[TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
@@ -101,13 +100,12 @@ static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a
     sum += frame_time;
     index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
 
-    return (size_t)((float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
+    return IROUND((float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES / sum);
 #else
     static float average = 0.0f;
 
-    const float fps = _frame_time_to_fps(frame_time);
-    average = FLERP(average, fps, 0.1); // Smaller values makes the average more "stable".
-    return (size_t)(average + 0.5f);
+    average = FLERP(average, frame_time, 0.1); // Smaller values makes the average more "stable".
+    return _frame_time_to_fps(average);
 #endif
 }
 
