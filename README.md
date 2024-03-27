@@ -96,7 +96,7 @@ Although I have been known to take pleasure in reinventing the wheel at every po
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.42, v0.6.38, v0.13.15
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
-* [Glad](https://gen.glad.sh/) v2.0.5
+* [Glad](https://gen.glad.sh/) v2.0.6
 * [GLFW](https://www.glfw.org/) v3.4.0
 * [libspng](https://libspng.org/) v0.7.4
 * [libxmp](https://xmp.sourceforge.net/) v4.6.1
@@ -174,14 +174,17 @@ Along with the game engine source, there are a bunch of (basic) demo projects. T
 
 If **Tofu Engine** appeals you and
 
-* you are experiencing some issue,
-* you are seeing some unexpected behaviour,
-* you have some cool ideas do you want to share, or
+* you are experiencing some issues (hopefully not too much of them!),
+* you are seeing some unexpected behaviour (d'oh!),
+* you have some cool ideas do you want to share,
+* you feel the urge to implement a feature from the "desiderata" below, or
 * you want to write some examples and/or documentation
 
 please don't hold you back and [contribute!](CONTRIBUTING.md) :)
 
 ## Desiderata
+
+Follows a brief (and incomplete) list of additional features somewhen in the future I'd like to implement.
 
 ### Core
 
@@ -198,6 +201,8 @@ please don't hold you back and [contribute!](CONTRIBUTING.md) :)
 
 ### Graphics
 
+* [ ] Move to full GPU use (beware of the diamond-exit-rule and ensure pixel-perfect positioning).
+* [ ] Adopt another (more simple to merge into) pixel font.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
@@ -211,9 +216,9 @@ please don't hold you back and [contribute!](CONTRIBUTING.md) :)
 
 ### Input
 
-* [ ] Better input handling by leveraging an event-driver approach -- this should reduce the current sub-system complexity ( as it polled).
-* [ ] Rumble and force feedback support -- this might be implemented with a specific library as GLFW doesn't support it.
+* [ ] Rumble and force feedback support -- this might be implemented with a specific library as GLFW doesn't support it (perhaps taken from [SDL_syshaptic](https://github.com/libsdl-org/SDL/blob/main/src/haptic/SDL_syshaptic.h)?).
 * [ ] Analogue support for shoulder and trigger axes.
+* [ ] Better input handling by leveraging an event-driver approach -- this should reduce the current sub-system complexity (as it polled).
 * [ ] Apply filtering for the analogs, either with a low pass filter (page 591) or moving average.
 * [ ] Implement buttons state check with XOR (page 594)
 * [ ] chords and gestures detection, for example for Street Fighter II-like combos.
