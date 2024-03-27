@@ -58,6 +58,9 @@ endif
 # The default windowing system is X11.
 #
 # Available values are: `gdi`, `x11`, and `wayland`.
+#
+# Note: for the Wayland build the `generate-wayland-sources.sh` script need to
+#       be executed as a precondition.
 ifeq ($(WINDOWING),)
 	ifeq ($(PLATFORM),windows)
 		WINDOWING=gdi
@@ -299,7 +302,7 @@ DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
 
 all: engine
 
-# Docker develoment container. This enables to build the engine w/o tampering
+# Docker development container. This enables to build the engine w/o tampering
 # with the host (only docker is required). This could also be used to perform
 # a CI build.
 .PHONY: docker-create
@@ -314,6 +317,7 @@ docker-launch: $(DOCKER_FILES)
 docker-clean: $(DOCKER_FILES)
 	@$(DOCKER) image rm -f `$(DOCKER) image ls | grep $(DOCKER_IMAGE) | awk '{print $$3}'`
 
+# Phony target to perform both C and Lua static checks on the code.
 .PHONY: check
 check:
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
