@@ -107,7 +107,7 @@ Although I have been known to take pleasure in reinventing the wheel at every po
 * [sokol](https://github.com/floooh/sokol) libraries
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
-* [stb](https://github.com/nothings/stb) libraries
+* [stb](https://github.com/nothings/stb) revision w/ date `20240213`
 
 ## Inspirations
 
