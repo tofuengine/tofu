@@ -147,29 +147,14 @@ function Main:handle_input()
     return
   end
 
-  if not self.can_move then
-    return
-  end
-  if controller:is_pressed("up") then
-    if self.direction ~= "down" then
-      self.direction = "up"
-      self.can_move = false
-    end
-  elseif controller:is_pressed("down") then
-    if self.direction ~= "up" then
-      self.direction = "down"
-      self.can_move = false
-    end
-  elseif controller:is_pressed("left") then
-    if self.direction ~= "right" then
-      self.direction = "left"
-      self.can_move = false
-    end
-  elseif controller:is_pressed("right") then
-    if self.direction ~= "left" then
-      self.direction = "right"
-      self.can_move = false
-    end
+  if controller:is_pressed("up") and self.direction ~= "down" then
+    self.direction = "up"
+  elseif controller:is_pressed("down") and self.direction ~= "up"then
+    self.direction = "down"
+  elseif controller:is_pressed("left") and self.direction ~= "right" then
+    self.direction = "left"
+  elseif controller:is_pressed("right") and self.direction ~= "left" then
+    self.direction = "right"
   end
 end
 
@@ -205,8 +190,6 @@ function Main:update(delta_time)
 
   self.accumulator = self.accumulator + speed * delta_time
   while self.accumulator >= LIFE do
-    self.can_move = true
-
     self.accumulator = self.accumulator - LIFE
 
     local gw, gh = self.grid:size()
