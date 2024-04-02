@@ -125,7 +125,7 @@ The lovely game-engine logo has been designed by [Blort](https://social.tchncs.d
 
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, although I've been using Ubuntu during the development. One can issue the following commands to install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, although I've been using Ubuntu during the development. One can use the following commands to install all the required dependencies:
 
 ```bash
 sudo apt install build-essential
@@ -140,6 +140,8 @@ sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck
 sudo luarocks --lua-version=5.4 install luazen
 ```
+
+Please note that [MinGW](https://en.wikipedia.org/wiki/MinGW) is required only to obtain the Windows build through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). One can simply use MinGW on Windows to build the engine binary as it is.
 
 Of course, `git` should also be installed to clone the repository.
 
@@ -163,6 +165,45 @@ into a suitable work directory. Move into the `tofu` directory you've just creat
 The build artifacts will be placed in the `build` directory.
 
 > Alternatively, if you prefer not to tamper with your system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder.
+
+# Cross-Compiling
+
+A note about **cross-builds** of the game-engine. The project has been designed with Linux as a development machine, with the distinct platform-dependent build archived through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). As said, the Windows build is obtained thanks to MinGW, which includes all the required dependencies (i.e. development libraries). To obtain the `arm64` through cross-compilation, as well, [Multiarch](https://wiki.debian.org/Multiarch) is to be used. The steps to add support are the following.
+
+First and foremost `arm64` architecture need to be added
+
+```bash
+sudo dpkg --add-architecture arm64
+```
+
+Then, the `apt` sources for this architecture need to be configured, by creating a new file `/etc/apt/sources.list.d/arm64-sources.list` with this content (which mirrors the `sources.list` file, minus the security sources which are not required):
+
+```bash
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs) main restricted" | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-updates main restricted" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs) universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-updates universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs) multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-updates multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+```
+
+At the same time, the current content `/etc/apt/sources.list` file need to be patched so that it refers to the actual host architecture. If it isn't already configured as such you can use the following command to patch the file:
+
+```bash
+sudo sed -i "s/deb http/deb [arch=$(dpkg --print-architecture)] http/" /etc/apt/sources.list
+```
+
+Remember to issue a `sudo apt update` command to refresh the APT database and, finally, install the `arm64` backend for GCC and the library dependencies we need:
+
+```bash
+sudo apt install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+sudo apt install --no-install-recommends libx11-dev:arm64
+```
+
+which will also install any required package.
+
+> Please note that one could potentially add any other platform in a similar way (for example the `armhf` ABI).
 
 ## Sample projects
 
