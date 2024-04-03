@@ -168,24 +168,25 @@ The build artifacts will be placed in the `build` directory.
 
 # Cross-Compiling
 
-A note about **cross-builds** of the game-engine. The project has been designed with Linux as a development machine, with the distinct platform-dependent build archived through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). As said, the Windows build is obtained thanks to MinGW, which includes all the required dependencies (i.e. development libraries). To obtain the `arm64` through cross-compilation, as well, [Multiarch](https://wiki.debian.org/Multiarch) is to be used. The steps to add support are the following.
+A note about **cross-builds** of the game-engine. The project has been designed with Linux as a development machine, with the distinct platform-dependent build archived through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). As said, the Windows build is obtained thanks to MinGW, which includes all the required dependencies (i.e. development libraries). To obtain the ARM builds through cross-compilation, as well, [Multiarch](https://wiki.debian.org/Multiarch) is to be used. The steps to add support are the following.
 
-First and foremost `arm64` architecture need to be added
+First and foremost the `arm64` (for 64-bit ARM) and `armhf` (for 32-bit ARM) architectures need to be added
 
 ```bash
 sudo dpkg --add-architecture arm64
+sudo dpkg --add-architecture armhf
 ```
 
 Then, the `apt` sources for this architecture need to be configured, by creating a new file `/etc/apt/sources.list.d/arm64-sources.list` with this content (which mirrors the `sources.list` file, minus the security sources which are not required):
 
 ```bash
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs) main restricted" | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-updates main restricted" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs) universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-updates universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs) multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-updates multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64] http://ports.ubuntu.com/ $(lsb_release -cs)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs) main restricted" | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-updates main restricted" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs) universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-updates universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs) multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-updates multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
 ```
 
 At the same time, the current content `/etc/apt/sources.list` file need to be patched so that it refers to the actual host architecture. If it isn't already configured as such you can use the following command to patch the file:
@@ -194,16 +195,15 @@ At the same time, the current content `/etc/apt/sources.list` file need to be pa
 sudo sed -i "s/deb http/deb [arch=$(dpkg --print-architecture)] http/" /etc/apt/sources.list
 ```
 
-Remember to issue a `sudo apt update` command to refresh the APT database and, finally, install the `arm64` backend for GCC and the library dependencies we need:
+Remember to issue a `sudo apt update` command to refresh the APT database and, finally, install GCC's backends and the library dependencies we need:
 
 ```bash
 sudo apt install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-sudo apt install --no-install-recommends libx11-dev:arm64
+sudo apt install gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
+sudo apt install --no-install-recommends libx11-dev:arm64 libx11-dev:armhf
 ```
 
 which will also install any required package.
-
-> Please note that one could potentially add any other platform in a similar way (for example the `armhf` ABI).
 
 ## Sample projects
 
