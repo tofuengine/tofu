@@ -322,9 +322,11 @@ int mz_compress2(unsigned char *pDest, mz_ulong *pDest_len, const unsigned char 
     mz_stream stream;
     memset(&stream, 0, sizeof(stream));
 
+#if INTPTR_MAX == INT64_MAX
     /* In case mz_ulong is 64-bits (argh I hate longs). */
     if ((mz_uint64)(source_len | *pDest_len) > 0xFFFFFFFFU)
         return MZ_PARAM_ERROR;
+#endif
 
     stream.next_in = pSource;
     stream.avail_in = (mz_uint32)source_len;
@@ -565,9 +567,11 @@ int mz_uncompress2(unsigned char *pDest, mz_ulong *pDest_len, const unsigned cha
     int status;
     memset(&stream, 0, sizeof(stream));
 
+#if INTPTR_MAX == INT64_MAX
     /* In case mz_ulong is 64-bits (argh I hate longs). */
     if ((mz_uint64)(*pSource_len | *pDest_len) > 0xFFFFFFFFU)
         return MZ_PARAM_ERROR;
+#endif
 
     stream.next_in = pSource;
     stream.avail_in = (mz_uint32)*pSource_len;
@@ -6247,11 +6251,13 @@ mz_bool mz_zip_writer_add_mem_ex_v2(mz_zip_archive *pZip, const char *pArchive_n
             pState->m_zip64 = MZ_TRUE;
             /*return mz_zip_set_error(pZip, MZ_ZIP_TOO_MANY_FILES); */
         }
+#if INTPTR_MAX == INT64_MAX
         if (((mz_uint64)buf_size > 0xFFFFFFFF) || (uncomp_size > 0xFFFFFFFF))
         {
             pState->m_zip64 = MZ_TRUE;
             /*return mz_zip_set_error(pZip, MZ_ZIP_ARCHIVE_TOO_LARGE); */
         }
+#endif
     }
 
     if ((!(level_and_flags & MZ_ZIP_FLAG_COMPRESSED_DATA)) && (uncomp_size))
