@@ -30,7 +30,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
-* Multi-platform support through cross-compilation (Windows, Linux, and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not-so-distant future).
+* Multi-platform support through cross-compilation (Windows, Linux, [Raspberry-Pi](https://www.raspberrypi.org/), and other ARM platforms as long they are running on Linux -- macOS currently not supported, possibly WebAssembly in the not-so-distant future).
 
 For the courious ones, these are the current statistics of the game-engine codebase:
 
@@ -158,9 +158,9 @@ git clone https://github.com/tofuengine/tofu.git
 into a suitable work directory. Move into the `tofu` directory you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
-* `PLATFORM`, can be `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please note that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
-* `WINDOWING`, can be `x11`, `wayland`, `gdi`, or `mesa`. If not specified, the build assumes `gd1` for the **Windows** platform, `x11` otherwise. Please note that `mesa` is not really supported and `wayland` is experimental (but should work).
-* `ARCHITECTURE`, can be either `x64` or `x32`. Please note that this is used only for the **Windows** build as the Linux one is 64-bit only, and the Raspberry-Pi is 32-bit only.
+* `PLATFORM`, can be either `linux` or `windows`. If not specified, the build is assumed for **Linux** platform.
+* `WINDOWING`, can be `x11`, `wayland`, `gdi`, or `mesa`. If not specified, the build assumes `gd1` for the **Windows** platform, `x11` otherwise for the **Linux** one. Please note that `mesa` is not really supported and `wayland` is experimental (but should work).
+* `ARCHITECTURE`, can be `x64`, `x32`, `arm64` or `armhf`. If not specified the current host architecture is used as target.
 
 The build artifacts will be placed in the `build` directory.
 

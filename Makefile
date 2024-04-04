@@ -50,7 +50,7 @@ dockerdir=$(extrasdir)/docker
 
 # The default target platform is Linux.
 #
-# Available values are: `linux`, `window`, and `raspberry-pi`.
+# Available values are: `linux` and `window`.
 ifeq ($(PLATFORM),)
 	PLATFORM=linux
 endif
@@ -66,12 +66,12 @@ ifeq ($(WINDOWING),)
 		WINDOWING=gdi
 	else ifeq ($(PLATFORM),linux)
 		WINDOWING=x11
-	else ifeq ($(PLATFORM),raspberry-pi)
-		WINDOWING=x11
 	endif
 endif
 
 # Define the target executable name, according to the current platform.
+#
+# Available values are: `x32`, `x64`, `armhf`, and `arm64`.
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		TARGET=tofu_x64.exe
@@ -79,9 +79,13 @@ ifeq ($(PLATFORM),windows)
 		TARGET=tofu_x32.exe
 	endif
 else ifeq ($(PLATFORM),linux)
-	TARGET=tofu
-else ifeq ($(PLATFORM),raspberry-pi)
-	TARGET=tofu_pi
+	ifeq ($(ARCHITECTURE),arm64)
+		TARGET=tofu_arm64
+	else ifeq ($(ARCHITECTURE),armhf)
+		TARGET=tofu_armhf
+	else
+		TARGET=tofu
+	endif
 else
 $(error PLATFORM value '$(PLATFORM)' is not recognized)
 endif
@@ -110,8 +114,14 @@ ifeq ($(PLATFORM),windows)
 	else
 		COMPILER=i686-w64-mingw32-gcc
 	endif
-else
-	COMPILER=gcc
+else ifeq ($(PLATFORM),linux)
+	ifeq ($(ARCHITECTURE),arm64)
+		COMPILER=aarch64-linux-gnu-gcc
+	else ifeq ($(ARCHITECTURE),armhf)
+		COMPILER=arm-linux-gnueabihf-gcc
+	else
+		COMPILER=gcc
+	endif
 endif
 
 CWARNINGS=-std=c99 \
@@ -140,8 +150,6 @@ CFLAGS=-D_DEFAULT_SOURCE \
 	-I$(srcdir) \
 	-I$(externaldir)
 ifeq ($(PLATFORM),linux)
-	CFLAGS+=-DLUA_USE_LINUX
-else ifeq ($(PLATFORM),raspberry-pi)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
 ifeq ($(WINDOWING),gdi)
@@ -183,8 +191,6 @@ ifeq ($(PLATFORM),windows)
 	LFLAGS+=-lpsapi
 else ifeq ($(PLATFORM),linux)
 	LFLAGS+=-lm -ldl
-else ifeq ($(PLATFORM),raspberry-pi)
-	LFLAGS+=-lm -ldl -latomic
 endif
 
 ifeq ($(WINDOWING),gdi)
