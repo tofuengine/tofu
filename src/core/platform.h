@@ -51,6 +51,15 @@
 #define PLATFORM_OSX     8
 #define PLATFORM_SOLARIS 9
 
+#include <stdint.h>
+#if INTPTR_MAX == INT64_MAX
+    #define PLATFORM_64_BIT
+#elif INTPTR_MAX == INT32_MAX
+    #define PLATFORM_32_BIT
+#else
+#error Unknown pointer size or missing size macros!
+#endif
+
 #if (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || defined(__BIG_ENDIAN__)
     #define PLATFORM_BIG_ENDIAN
 #else
