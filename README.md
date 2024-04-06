@@ -1,5 +1,7 @@
 <p align="center">
     <a href="https://tofuengine.org"><img src="./extras/images/logo_with_payoff-512x160.png" alt="Tofu Engine"></a>
+    <br />
+    <strong>A 2D GAME ENGINE W/ AN ECO-FRIENDLY PIXEL-ART RETRO-SOUL</strong>
 </p>
 
 <p align="center">
@@ -24,12 +26,12 @@
 
 Welcome to `Tofu Engine`!
 
-Guess what? Yup, that's yet another game engine/framework.
+Make yourself comfortable, and join for a ride through a mixture of old-fashioned and modern game development! :)
 
 ## Highlights
 
 * Carefully crafted C99 code.
-* Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
+* Self-contained, no additional runtime modules/libraries required ("standard" system-wide libraries excluded).
 * Multi-platform support through cross-compilation (Windows, Linux, [Raspberry-Pi](https://www.raspberrypi.org/), and other ARM platforms as long they are running on Linux -- macOS currently not supported, possibly WebAssembly in the not-so-distant future).
 
 For the courious ones, these are the current statistics of the game-engine codebase:
@@ -104,7 +106,6 @@ Although I have been known to take pleasure in reinventing the wheel at every po
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.21
 * [miniz](https://github.com/richgel999/miniz) v3.0.2
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
-* [sokol](https://github.com/floooh/sokol) libraries
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) revision w/ date `20240213`
