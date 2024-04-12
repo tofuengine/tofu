@@ -35,23 +35,25 @@
  * SOFTWARE.
  */
 
-// Protanopia (Red-Green Color Blindness)
-// (https://www.color-blindness.com/protanopia-red-green-color-blindness/)
-//
-//   - most common form of color-blindness (affects ~6% of the male population);
-//   - only GREEN and BLUE cones are present;
-//   - total absence (or heavily reduced) of RED retinal receptors;
-//   - pure reds can't be seen (appear black), purple appears as blue, green/yellow/oranges yellow;
-//   - sexually linked trait, males are more affected (8% males, 0.6% females).
-
-const mat3 m = mat3(
-        // http://mkweb.bcgsc.ca/colorblind/math.mhtml
-        0.170556992, 0.170556991, -0.004517144,
-        0.829443014, 0.829443008,  0.004517144,
-        0.000000000, 0.000000000,  1.000000000
-    );
-
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
-    vec3 pixel = texture2D(texture, texture_coords).rgb;
-    return vec4(m * pixel, 1.0);
-}
+    vec4 pixel = texture2D(texture, texture_coords);
+
+    pixel += texture2D(texture, texture_coords + 0.001);
+    pixel += texture2D(texture, texture_coords + 0.003);
+    pixel += texture2D(texture, texture_coords + 0.005);
+    pixel += texture2D(texture, texture_coords + 0.007);
+    pixel += texture2D(texture, texture_coords + 0.009);
+    pixel += texture2D(texture, texture_coords + 0.011);
+
+    pixel += texture2D(texture, texture_coords - 0.001);
+    pixel += texture2D(texture, texture_coords - 0.003);
+    pixel += texture2D(texture, texture_coords - 0.005);
+    pixel += texture2D(texture, texture_coords - 0.007);
+    pixel += texture2D(texture, texture_coords - 0.009);
+    pixel += texture2D(texture, texture_coords - 0.011);
+
+    pixel.rgb = vec3((pixel.r + pixel.g + pixel.b)/3.0);
+    pixel = pixel/9.5;
+
+    return pixel * color;
+} 

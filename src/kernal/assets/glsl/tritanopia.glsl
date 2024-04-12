@@ -40,7 +40,7 @@
 //
 //   - rare, affects only 0.01% population;
 //   - only RED and GREEN cones are present;
-//   - total absence (or heavily reduced) of blue retinal receptros;
+//   - total absence (or heavily reduced) of blue retinal receptors;
 //   - blues appears greenish, yellow/oranges appear pinkish, purple colors as deep red;
 //   - not sexually linked trait, women and men area equally affected;
 //   - can be acquired, e.g. due to serious front/back head trauma;

@@ -39,10 +39,10 @@
 // (https://www.color-blindness.com/deuteranopia-red-green-color-blindness/)
 //
 //   - similar to protanopia;
-//   - most common form of color-blindness (affects ~6% of the male polulation);
+//   - most common form of color-blindness (affects ~6% of the male population);
 //   - only GREEN and BLUE cones are present, *but* GREEN cones are malfunctioning;
-//   - total absence (or heavily reduced) of RED retinal receptros;
-//   - reds appears as yellowish-orange, purple apperars as blue, green as light yellow;
+//   - total absence (or heavily reduced) of RED retinal receptors;
+//   - reds appears as yellowish-orange, purple appears as blue, green as light yellow;
 //   - sexually linked trait, males are more affected (8% males, 0.6% females).
 
 const mat3 m = mat3(
