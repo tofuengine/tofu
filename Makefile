@@ -230,7 +230,7 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
 	$(wildcard $(srcdir)/systems/storage/*.c)
 # Source files list (external)
-SOURCES+=$(wildcard $(externaldir)/cgml/*.c) \
+SOURCES+=$(wildcard $(externaldir)/cglm/*.c) \
 	$(wildcard $(externaldir)/chipmunk/*.c) \
 	$(wildcard $(externaldir)/dr_libs/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
@@ -253,7 +253,7 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
 	$(wildcard $(srcdir)/systems/storage/*.h)
 # Include files list (external)
-INCLUDES+=$(wildcard $(externaldir)/cgml/*.h) \
+INCLUDES+=$(wildcard $(externaldir)/cglm/*.h) \
 	$(wildcard $(externaldir)/chipmunk/*.h) \
 	$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
