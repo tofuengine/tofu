@@ -128,6 +128,24 @@ static void _error_callback(int error, const char *description)
     LOG_E("%s", description);
 }
 
+/**
+ * void glOrtho(double l, double r, double b, double t, double n, double f);
+ *
+ * produces this matrix
+ *
+ *     | 2 / (r − l)        0              0         - (r + l) / (r - l) |
+ *     |      0        2 / (t − b)         0         - (t + b) / (t - b) |
+ *     |      0             0       - 2 / (f − n)    - (f + n) / (f - n) |
+ *     |      0             0              0                   1         |
+ *
+ * that in our case reduces to
+ *
+ *     | 2 / w      0      0    - 1 |
+ *     |   0    - 2 / h    0      1 |
+ *     |   0        0    - 2    - 1 |
+ *     |   0        0      0      1 |
+ *
+ */
 static void _size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
