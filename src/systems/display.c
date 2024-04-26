@@ -35,8 +35,8 @@
 
 // Value for setting the "zero time" of the engine. This will trick the system
 // and get the consistent precision of an integer, with the convenient units
-// of a double, as the exponent will remain constant for ~136 years (when them
-// time represents seconds).
+// of a double, as the exponent will remain constant for ~136 years (since the
+// time unit is represented in seconds).
 //
 // See: `Four billion dollar question`, here https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
 #define _ENGINE_EPOCH 4294967296.0
