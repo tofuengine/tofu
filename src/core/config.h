@@ -65,10 +65,6 @@
 #define PANNING_LAW_CONSTANT_POWER_SINCOS   1
 #define PANNING_LAW_CONSTANT_POWER_SQRT     2
 
-// Behavioural MACROs use the `__` prefix/suffix.
-#define __GL_VERSION__                      0x0201
-#define __GSLS_VERSION__                    0x0114
-
 // #############
 // ### Audio ###
 // #############
@@ -118,6 +114,12 @@
 // ##############
 // ### Engine ###
 // ##############
+
+// Controls the use of OpenGL/ES for rendering.
+//
+// Note: for the moment being the setting should be used only for "mobile"
+//       builds, but in the future it will be used as common backend.
+#undef  TOFU_ENGINE_OPENGL_ES
 
 // Forces the usage of the (deprecated) POSIX API `usleep()`, instead of the
 // more efficient and supported `nanosleep()`.
