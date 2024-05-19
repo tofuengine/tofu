@@ -195,6 +195,7 @@ void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, s
         case SHADER_UNIFORM_VEC2I: { glUniform2iv(location, (GLsizei)count, value); } break;
         case SHADER_UNIFORM_VEC3I: { glUniform3iv(location, (GLsizei)count, value); } break;
         case SHADER_UNIFORM_VEC4I: { glUniform4iv(location, (GLsizei)count, value); } break;
+        case SHADER_UNIFORM_MAT4: { glUniformMatrix4fv(location, (GLsizei)count, GL_FALSE, value); } break;
         case SHADER_UNIFORM_TEXTURE: { glUniform1iv(location, (GLsizei)count, value); } break;
         default: { } break;
     }

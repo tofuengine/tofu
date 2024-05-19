@@ -58,6 +58,7 @@ typedef enum Shader_Uniforms_e {
     SHADER_UNIFORM_VEC2I,
     SHADER_UNIFORM_VEC3I,
     SHADER_UNIFORM_VEC4I,
+    SHADER_UNIFORM_MAT4,
     SHADER_UNIFORM_TEXTURE
 } Shader_Uniforms_t;
 
