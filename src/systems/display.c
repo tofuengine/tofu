@@ -48,6 +48,7 @@
 #endif
 
 typedef enum Uniforms_t {
+    UNIFORM_MVP,
     UNIFORM_TEXTURE,
     UNIFORM_TEXTURE_SIZE,
     UNIFORM_SCREEN_SIZE,
@@ -63,19 +64,33 @@ typedef enum Uniforms_t {
 // https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.1.20.pdf
 // https://www.khronos.org/opengl/wiki/GLSL_:_common_mistakes
 
+// TODO: move shaders to kernal?
 #define _VERTEX_SHADER \
-    "#version 120\n" \
+    "#version 150 core\n" \
     "\n" \
-    "void main()\n" \
-    "{\n" \
-    "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n" \
-    "   gl_FrontColor = gl_Color; // Pass the vertex drawing color.\n" \
+    "in vec2 i_position;\n" \
+    "in vec4 i_color;\n" \
+    "in vec2 i_texture_coords;\n" \
     "\n" \
-    "   gl_TexCoord[0] = gl_MultiTexCoord0; // Retain texture #0 coordinates.\n" \
+    "out vec4 v_color;\n" \
+    "out vec2 v_texture_coords;\n" \
+    "\n" \
+    "uniform mat4 u_mvp;\n" \
+    "\n" \
+    "void main() {\n" \
+    "   v_color = i_color;\n" \
+    "   v_texture_coords = i_texture_coords;\n" \
+    "\n" \
+    "   gl_Position = u_mvp * vec4(i_position, 0.0, 1.0);\n" \
     "}\n" \
 
 #define _FRAGMENT_SHADER \
-    "#version 120\n" \
+    "#version 150 core\n" \
+    "\n" \
+    "in vec4 v_color;\n" \
+    "in vec2 v_texture_coords;\n" \
+    "\n" \
+    "out vec4 o_color;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
     "uniform vec2 u_texture_size;\n" \
@@ -85,13 +100,13 @@ typedef enum Uniforms_t {
     "\n" \
     "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
-    "void main()\n" \
-    "{\n" \
-    "    gl_FragColor = effect(gl_Color, u_texture0, gl_TexCoord[0].st, gl_FragCoord.xy);\n" \
+    "void main() {\n" \
+    "    o_color = effect(v_color, u_texture0, v_texture_coords, vec2(0.0, 0.0));\n" \
     "}\n" \
     "\n"
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
+    "u_mvp",
     "u_texture0",
     "u_texture_size",
     "u_screen_size",
@@ -109,10 +124,8 @@ static bool _has_errors(void)
             case GL_INVALID_ENUM: { message = "INVALID_ENUM"; } break;
             case GL_INVALID_VALUE: { message = "INVALID_VALUE"; } break;
             case GL_INVALID_OPERATION: { message = "INVALID_OPERATION"; } break;
-            case 0x506: { message = "INVALID_FRAMEBUFFER_OPERATION"; } break;
             case GL_OUT_OF_MEMORY: { message = "OUT_OF_MEMORY"; } break;
-            case GL_STACK_UNDERFLOW: { message = "STACK_UNDERFLOW"; } break;
-            case GL_STACK_OVERFLOW: { message = "STACK_OVERFLOW"; } break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION: { message = "INVALID_FRAMEBUFFER_OPERATION"; } break;
             default: { message = "UNKNOWN"; } break;
         }
         LOG_E("OpenGL error #%04x: `GL_%s`", code, message);
@@ -148,21 +161,31 @@ static void _error_callback(int error, const char *description)
  */
 static void _size_callback(GLFWwindow *window, int width, int height)
 {
+    // Note: the size-callback function is called from within the message-pump loop,
+    //       and for that reason we are safe to assume that everything have been
+    //       set-up. Most notably, the shader that we can send data to.
+    Display_t *display = (Display_t *)glfwGetWindowUserPointer(window);
+
     glViewport(0, 0, width, height); // Viewport matches window
     LOG_D("viewport size set to %dx%d", width, height);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
-    glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
-    glLoadIdentity();
-    LOG_D("projection/model matrix reset, going otho-2D");
+    // With legacy/immediate mode, we used
+    // - an `glOrtho` built matrix as PROJECTION,
+    // - an identity matrix as MODEL-VIEW.
+    //
+    // This translates into an orthographic MVP matrix, which can be calculated with a single call.
+    mat4 mvp;
+    glm_ortho(0.0, (float)width, (float)height, 0.0, 0.0, 1.0, mvp);
+    memcpy(display->mvp, mvp, sizeof(mat4)); // There's no need to store it, we are sending right away to the shader.
+    LOG_D("model/view/projection matrix reset, going otho-2D");
+
+    shader_send(display->shader, UNIFORM_MVP, SHADER_UNIFORM_MAT4, 1, mvp);
+    LOG_D("model/view/projection matrix sent to the shader");
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
     glDisable(GL_STENCIL_TEST); // Ditto.
     glDisable(GL_BLEND); // Blending is disabled.
-    glDisable(GL_ALPHA_TEST);
     LOG_D("optimizing OpenGL features");
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // TODO: configurable?
@@ -179,7 +202,8 @@ static void _size_callback(GLFWwindow *window, int width, int height)
 
 static void _close_callback(GLFWwindow *window)
 {
-    const Display_Configuration_t *configuration = (const Display_Configuration_t *)glfwGetWindowUserPointer(window);
+    const Display_t *display = (const Display_t *)glfwGetWindowUserPointer(window);
+    const Display_Configuration_t *configuration = &display->configuration;
 
     // The close flag has been set before this callback is called, so we can override it.
     glfwSetWindowShouldClose(window, configuration->quit_on_close ? GLFW_TRUE : GLFW_FALSE);
@@ -234,8 +258,10 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     return true;
 }
 
-static GLFWwindow *_window_create(const Display_Configuration_t *configuration, GL_Rectangle_t *present_area, GL_Size_t *canvas_size)
+static GLFWwindow *_window_create(const Display_t *display, GL_Rectangle_t *present_area, GL_Size_t *canvas_size)
 {
+    const Display_Configuration_t *configuration = &display->configuration;
+
     GL_Rectangle_t window_rectangle;
     if (!_compute_size(configuration->window.width, configuration->window.height, configuration->window.scale, configuration->fullscreen, present_area, &window_rectangle, canvas_size)) {
         return NULL;
@@ -273,7 +299,7 @@ static GLFWwindow *_window_create(const Display_Configuration_t *configuration, 
     glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
     LOG_D("window %p created (and made current context)", window);
 
-    glfwSetWindowUserPointer(window, (void *)configuration);
+    glfwSetWindowUserPointer(window, (void *)display);
     // glfwSetWindowFocusCallback(window, window_focus_callback)
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
     glfwSetWindowCloseCallback(window, _close_callback); // Override close button, according to configuration.
@@ -402,7 +428,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_D("time initialized");
 
     GL_Rectangle_t vram_rectangle;
-    display->window = _window_create(&display->configuration, &vram_rectangle, &display->canvas.size);
+    display->window = _window_create(display, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
         LOG_F("can't initialize window");
         goto error_terminate_glfw;
@@ -462,7 +488,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
     LOG_D("texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
 
@@ -484,6 +509,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 #endif
 
     LOG_I("GLFW: %s", glfwGetVersionString());
+    LOG_I("GLFW platform: %d", glfwGetPlatform());
 #if !defined(GLAD_OPTION_GL_ON_DEMAND)
     LOG_I("GLAD: %d.%d", GLAD_VERSION_MAJOR(glad_version), GLAD_VERSION_MINOR(glad_version));
 #endif  /* GLAD_OPTION_GL_ON_DEMAND */
@@ -594,31 +620,51 @@ void Display_present(const Display_t *display)
     const int x1 = x0 + (int)vram_size->width;
     const int y1 = y0 + (int)vram_size->height;
 
-    // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
-    const float vertices[] = { // Inspired to https://github.com/emoon/minifb
-        0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        (float)x0, (float)y0,
-        0.0f, 1.0f,
-        (float)x0, (float)y1,
-        1.0f, 0.0f,
-        (float)x1, (float)y0,
-        1.0f, 1.0f,
-        (float)x1, (float)y1
+    // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+    const float vertices[] = {
+    //  Position              Color                  Texcoords
+        (float)x0, (float)y0, 1.0f, 0.0f, 0.0f, 1.0, 0.0f, 0.0f,
+        (float)x0, (float)y1, 0.0f, 1.0f, 0.0f, 1.0, 0.0f, 1.0f,
+        (float)x1, (float)y0, 0.0f, 0.0f, 1.0f, 1.0, 1.0f, 0.0f,
+        (float)x1, (float)y1, 1.0f, 1.0f, 1.0f, 1.0, 1.0f, 1.0f
     };
 
+    GLuint vbo;
+    glGenBuffers(1, &vbo); // Generate 1 buffer
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    int shader_id = display->shader->id;
+    GLint posAttrib = glGetAttribLocation(shader_id, "i_position");
+    glEnableVertexAttribArray(posAttrib);
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE,
+                        8*sizeof(float), 0);
+    GLint colAttrib = glGetAttribLocation(shader_id, "i_color");
+    glEnableVertexAttribArray(colAttrib);
+    glVertexAttribPointer(colAttrib, 4, GL_FLOAT, GL_FALSE,
+                        8*sizeof(float), (void*)(2*sizeof(float)));
+    GLint texAttrib = glGetAttribLocation(shader_id, "i_texture_coords");
+    glEnableVertexAttribArray(texAttrib);
+    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
+                        8*sizeof(float), (void*)(6*sizeof(float)));
+    glBindFragDataLocation(shader_id, 0, "o_color");
+
+    // glEnable(GL_SCISSOR_TEST);
+    // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.
+
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    // glEnableClientState(GL_VERTEX_ARRAY);
+    // glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
-    glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
-    glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    // glDisableClientState(GL_VERTEX_ARRAY);
+    // glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glBindTexture(GL_TEXTURE_2D, 0);
 #endif
+
+    glDeleteBuffers(1, &vbo);
 
     glfwSwapBuffers(display->window);
 }

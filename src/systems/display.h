@@ -44,6 +44,7 @@
 #include <libs/gl/gl.h>
 #include <libs/shader.h>
 
+#include <cglm/cglm.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
@@ -82,6 +83,8 @@ typedef struct Display_s {
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;
     } vram;
+
+    mat4 mvp;
 
     double time;
 } Display_t;
