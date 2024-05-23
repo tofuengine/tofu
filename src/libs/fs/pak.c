@@ -198,6 +198,10 @@ static bool _linear_search(FILE *stream, size_t entries, const uint8_t id[PAK_ID
 
 static bool _binary_search(FILE *stream, size_t entries, const uint8_t id[PAK_ID_LENGTH], Pak_Entry_Header_t *header)
 {
+    if (entries == 0) {
+        return false;
+    }
+
     size_t l = 0;
     size_t u = entries - 1;
 
@@ -210,6 +214,9 @@ static bool _binary_search(FILE *stream, size_t entries, const uint8_t id[PAK_ID
         }
 
         int ordering = memcmp(header->id, id, PAK_ID_LENGTH);
+        if (l == u) { // Corner-case, leaf node so we have the result! (make the algorithm work with `size_t`).
+            return ordering == 0;
+        } else
         if (ordering < 0) {
             l = m + 1;
         } else
