@@ -69,6 +69,9 @@ typedef struct Display_s {
     GLFWwindow *window;
 
     Shader_t *shader;
+    GLuint vbo;
+    GLuint vao;
+    mat4 mvp;
 
     struct {
         GL_Size_t size;
@@ -83,8 +86,6 @@ typedef struct Display_s {
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;
     } vram;
-
-    mat4 mvp;
 
     double time;
 } Display_t;

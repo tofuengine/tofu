@@ -633,11 +633,15 @@ void Display_present(const Display_t *display)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-    glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
     // glEnable(GL_SCISSOR_TEST);
@@ -647,6 +651,9 @@ void Display_present(const Display_t *display)
     // glEnableClientState(GL_VERTEX_ARRAY);
     // glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
+    glUseProgram(display->shader->id);
+    glBindVertexArray(vao);
+
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
@@ -656,6 +663,7 @@ void Display_present(const Display_t *display)
 #endif
 
     glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
 
     glfwSwapBuffers(display->window);
 }
