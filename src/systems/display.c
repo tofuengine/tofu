@@ -395,6 +395,43 @@ static void *_reallocate(void* block, size_t size, void *user)
     return realloc(block, size);
 }
 
+static void _initialize_vertices(Display_t *display)
+{
+    const GL_Size_t *vram_size = &display->vram.size;
+
+    // Note: x/y offset are passed through the shader!
+    const int x0 = 0;
+    const int y0 = 0;
+    const int x1 = (int)vram_size->width;
+    const int y1 = (int)vram_size->height;
+
+    // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+    const float vertices[] = {
+    //  Position              Color                  Texcoords
+        (float)x0, (float)y0, 0.0f, 0.0f, 0.0f, 1.0, 0.0f, 0.0f,
+        (float)x0, (float)y1, 0.0f, 1.0f, 0.0f, 1.0, 0.0f, 1.0f,
+        (float)x1, (float)y0, 0.0f, 0.0f, 1.0f, 1.0, 1.0f, 0.0f,
+        (float)x1, (float)y1, 1.0f, 1.0f, 1.0f, 1.0, 1.0f, 1.0f
+    };
+
+    glGenBuffers(1, &display->vbo); // Generate 1 buffer
+    glBindBuffer(GL_ARRAY_BUFFER, display->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &display->vao);
+    glBindVertexArray(display->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, display->vbo);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); // These three calls make the VAO (indirectly) store the current VBO!
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+}
+
 Display_t *Display_create(const Display_Configuration_t *configuration)
 {
     Display_t *display = malloc(sizeof(Display_t));
@@ -480,7 +517,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         LOG_F("can't allocate VRAM texture");
         goto error_free_vram;
     }
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
+
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -489,19 +527,21 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
     LOG_D("texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
-
-#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glBindTexture(GL_TEXTURE_2D, 0);
-#else
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
 
     bool shader = _shader_initialize(display, configuration->effect);
     if (!shader) {
         LOG_F("can't initialize shader");
         goto error_delete_buffers;
     }
+
+    _initialize_vertices(display);
+
+#if !defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
+    glUseProgram(display->shader->id);
+    glBindVertexArray(display->vao);
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
+#endif
 
     LOG_I("GLFW: %s", glfwGetVersionString());
     LOG_I("GLFW platform: %d", glfwGetPlatform());
@@ -536,8 +576,16 @@ error_free:
     return NULL;
 }
 
+static void _deinitialize_vertices(Display_t *display)
+{
+    glDeleteBuffers(1, &display->vbo);
+    glDeleteVertexArrays(1, &display->vao);
+}
+
 void Display_destroy(Display_t *display)
 {
+    _deinitialize_vertices(display);
+
     shader_destroy(display->shader);
     LOG_D("shader %p destroyed", display->shader);
 
@@ -585,6 +633,14 @@ bool Display_update(Display_t *display, float delta_time)
     GLfloat time = (GLfloat)display->time;
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
+    // Add x/y offset to implement screen-shaking or similar effects.
+    // const GL_Point_t *vram_position = &display->vram.position;
+    // const GL_Point_t *vram_offset = &display->vram.offset;
+
+    // const int ox = vram_position->x + vram_offset->x;
+    // const int oy = vram_position->y + vram_offset->y;
+    //shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ (GLfloat)ox, (GLfloat)oy });
+
 #if defined(DEBUG)
     _has_errors(); // Display pending OpenGL errors.
 #endif
@@ -605,65 +661,23 @@ void Display_present(const Display_t *display)
     GL_processor_surface_to_rgba(display->canvas.processor, surface, pixels);
 
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
+    glUseProgram(display->shader->id);
+    glBindVertexArray(display->vao);
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 #endif
+
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
-
-    const GL_Point_t *vram_position = &display->vram.position;
-    const GL_Size_t *vram_size = &display->vram.size;
-    const GL_Point_t *vram_offset = &display->vram.offset;
-
-    // Add x/y offset to implement screen-shaking or similar effects.
-    const int x0 = vram_position->x + vram_offset->x;
-    const int y0 = vram_position->y + vram_offset->y;
-    const int x1 = x0 + (int)vram_size->width;
-    const int y1 = y0 + (int)vram_size->height;
-
-    // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-    const float vertices[] = {
-    //  Position              Color                  Texcoords
-        (float)x0, (float)y0, 1.0f, 0.0f, 0.0f, 1.0, 0.0f, 0.0f,
-        (float)x0, (float)y1, 0.0f, 1.0f, 0.0f, 1.0, 0.0f, 1.0f,
-        (float)x1, (float)y0, 0.0f, 0.0f, 1.0f, 1.0, 1.0f, 0.0f,
-        (float)x1, (float)y1, 1.0f, 1.0f, 1.0f, 1.0, 1.0f, 1.0f
-    };
-
-    GLuint vbo;
-    glGenBuffers(1, &vbo); // Generate 1 buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
 
     // glEnable(GL_SCISSOR_TEST);
     // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.
 
-#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-    glUseProgram(display->shader->id);
-    glBindVertexArray(vao);
-
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
-    // glDisableClientState(GL_VERTEX_ARRAY);
-    // glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 #endif
-
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
 
     glfwSwapBuffers(display->window);
 }
