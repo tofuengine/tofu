@@ -66,11 +66,11 @@ typedef enum Uniforms_t {
 
 // TODO: move shaders to kernal?
 #define _VERTEX_SHADER \
-    "#version 150 core\n" \
+    "#version 330 core\n" \
     "\n" \
-    "in vec2 i_position;\n" \
-    "in vec4 i_color;\n" \
-    "in vec2 i_texture_coords;\n" \
+    "layout (location = 0) in vec2 i_position;\n" \
+    "layout (location = 1) in vec4 i_color;\n" \
+    "layout (location = 2) in vec2 i_texture_coords;\n" \
     "\n" \
     "out vec4 v_color;\n" \
     "out vec2 v_texture_coords;\n" \
@@ -85,12 +85,12 @@ typedef enum Uniforms_t {
     "}\n" \
 
 #define _FRAGMENT_SHADER \
-    "#version 150 core\n" \
+    "#version 330 core\n" \
     "\n" \
     "in vec4 v_color;\n" \
     "in vec2 v_texture_coords;\n" \
     "\n" \
-    "out vec4 o_color;\n" \
+    "layout (location = 0) out vec4 o_color;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
     "uniform vec2 u_texture_size;\n" \
@@ -177,12 +177,11 @@ static void _size_callback(GLFWwindow *window, int width, int height)
     mat4 mvp;
     glm_ortho(0.0, (float)width, (float)height, 0.0, 0.0, 1.0, mvp);
     memcpy(display->mvp, mvp, sizeof(mat4)); // There's no need to store it, we are sending right away to the shader.
-    LOG_D("model/view/projection matrix reset, going otho-2D");
-
     shader_send(display->shader, UNIFORM_MVP, SHADER_UNIFORM_MAT4, 1, mvp);
-    LOG_D("model/view/projection matrix sent to the shader");
+    LOG_D("model/view/projection matrix sent to the shader, going otho-2D");
 
-    glEnable(GL_TEXTURE_2D); // Default, always enabled.
+    // On OpenGL core profile `GL_TEXTURE_2D` is not a valid argument to `glEnable()` as it can't be disable. There's
+    // no fixed-function running in the pipeline as the color of the pixel is solely determined by the fragment shader.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
     glDisable(GL_STENCIL_TEST); // Ditto.
     glDisable(GL_BLEND); // Blending is disabled.
@@ -276,8 +275,8 @@ static GLFWwindow *_window_create(const Display_t *display, GL_Rectangle_t *pres
 #else
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2 is the first OpenGL version with "core" profile.
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.3 is the first "version unified" OpenGL.
 #endif
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
@@ -504,10 +503,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         goto error_delete_buffers;
     }
 
-#if defined(DEBUG)
-    _has_errors(); // Display pending OpenGL errors.
-#endif
-
     LOG_I("GLFW: %s", glfwGetVersionString());
     LOG_I("GLFW platform: %d", glfwGetPlatform());
 #if !defined(GLAD_OPTION_GL_ON_DEMAND)
@@ -517,6 +512,10 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_I("renderer: %s", glGetString(GL_RENDERER));
     LOG_I("version: %s", glGetString(GL_VERSION));
     LOG_I("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+#if defined(DEBUG)
+    _has_errors(); // Display pending OpenGL errors.
+#endif
 
     return display;
 
@@ -634,20 +633,12 @@ void Display_present(const Display_t *display)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    int shader_id = display->shader->id;
-    GLint posAttrib = glGetAttribLocation(shader_id, "i_position");
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE,
-                        8*sizeof(float), 0);
-    GLint colAttrib = glGetAttribLocation(shader_id, "i_color");
-    glEnableVertexAttribArray(colAttrib);
-    glVertexAttribPointer(colAttrib, 4, GL_FLOAT, GL_FALSE,
-                        8*sizeof(float), (void*)(2*sizeof(float)));
-    GLint texAttrib = glGetAttribLocation(shader_id, "i_texture_coords");
-    glEnableVertexAttribArray(texAttrib);
-    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
-                        8*sizeof(float), (void*)(6*sizeof(float)));
-    glBindFragDataLocation(shader_id, 0, "o_color");
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // glEnable(GL_SCISSOR_TEST);
     // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.
