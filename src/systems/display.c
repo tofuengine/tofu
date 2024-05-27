@@ -179,7 +179,9 @@ static void _size_callback(GLFWwindow *window, int width, int height)
 #if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     memcpy(display->mvp, mvp, sizeof(mat4)); // There's no need to store it, we are sending right away to the shader.
 #endif
+    shader_use(display->shader);
     shader_send(display->shader, UNIFORM_MVP, SHADER_UNIFORM_MAT4, 1, mvp);
+    shader_use(NULL);
     LOG_D("model/view/projection matrix sent to the shader, going otho-2D");
 
     // On OpenGL core profile `GL_TEXTURE_2D` is not a valid argument to `glEnable()` as it can't be disable. There's
@@ -359,7 +361,6 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     LOG_D("shader %p prepared", display->shader);
 
     shader_use(display->shader);
-    LOG_D("shader %p active", display->shader);
 
     shader_send(display->shader, UNIFORM_TEXTURE, SHADER_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
     shader_send(display->shader, UNIFORM_SCREEN_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
@@ -375,8 +376,10 @@ static bool _shader_initialize(Display_t *display, const char *effect)
             (GLfloat)display->vram.size.height / (GLfloat)display->configuration.window.height
         });
     shader_send(display->shader, UNIFORM_COLOR, SHADER_UNIFORM_VEC4, 1, (const GLfloat[]){ // TODO: configurable?
-            (GLfloat)1.0, (GLfloat)1.0, (GLfloat)1.0, (GLfloat)1.0
+            (GLfloat)1.0f, (GLfloat)1.0f, (GLfloat)1.0f, (GLfloat)1.0f
         });
+
+    shader_use(NULL);
 
     LOG_D("shader %p initialized", display->shader);
 
@@ -543,12 +546,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     _initialize_vertices(display);
 
-#if !defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
-    glUseProgram(display->shader->id);
-    glBindVertexArray(display->vao);
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
-#endif
-
     LOG_I("GLFW: %s", glfwGetVersionString());
     LOG_I("GLFW platform: %d", glfwGetPlatform());
 #if !defined(GLAD_OPTION_GL_ON_DEMAND)
@@ -636,6 +633,8 @@ bool Display_update(Display_t *display, float delta_time)
 {
     display->time += delta_time;
 
+    shader_use(display->shader);
+
     GLfloat time = (GLfloat)display->time;
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
@@ -646,6 +645,8 @@ bool Display_update(Display_t *display, float delta_time)
     // const int ox = vram_position->x + vram_offset->x;
     // const int oy = vram_position->y + vram_offset->y;
     //shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ (GLfloat)ox, (GLfloat)oy });
+
+    shader_use(NULL);
 
 #if defined(DEBUG)
     _has_errors(); // Display pending OpenGL errors.
@@ -666,11 +667,11 @@ void Display_present(const Display_t *display)
 
     GL_processor_surface_to_rgba(display->canvas.processor, surface, pixels);
 
-#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
-    glUseProgram(display->shader->id);
+    // We need to restore the drawing state, which includes (1) the shader program, (2) the vertices attributes, and (3)
+    // the texture to be drawn.
+    shader_use(display->shader);
     glBindVertexArray(display->vao);
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
-#endif
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
@@ -679,11 +680,9 @@ void Display_present(const Display_t *display)
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-#if defined(TOFU_DISPLAY_OPENGL_STATE_CLEANUP)
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
-    glUseProgram(0);
-#endif
+    shader_use(NULL);
 
     glfwSwapBuffers(display->window);
 }

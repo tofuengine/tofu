@@ -88,13 +88,6 @@
 // ### Display ###
 // ###############
 
-// When defined the display sub-system will try and keep OpenGL in a controlled
-// "clean" state over successive iterations. That is, for example, the
-// framebuffer texture will be bound/unbound. Ideally this is "gentler" with
-// OpenGL but with some cost. You can try and `#undef` it and try for
-// yourself. :)
-#define TOFU_DISPLAY_OPENGL_STATE_CLEANUP
-
 // ############
 // ### Core ###
 // ############

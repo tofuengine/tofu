@@ -203,5 +203,5 @@ void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, s
 
 void shader_use(const Shader_t *shader)
 {
-    glUseProgram(shader->id);
+    glUseProgram(shader ? shader->id : 0);
 }
