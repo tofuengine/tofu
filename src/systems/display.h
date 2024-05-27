@@ -71,7 +71,9 @@ typedef struct Display_s {
     Shader_t *shader;
     GLuint vbo;
     GLuint vao;
+#if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     mat4 mvp;
+#endif
 
     struct {
         GL_Size_t size;

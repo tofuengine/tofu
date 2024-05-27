@@ -225,6 +225,11 @@
 // variable.
 #undef  TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
 
+// OpenGL model-view-projection matrix is used only in the projection shader,
+// so we are not required to store a copy of it. Anyway, in some cases it might
+// prove useful, so we could prefer to save it for later uses.
+#undef  TOFU_GRAPHICS_SAVE_MVP_MATRIX
+
 // Controls if the filled-triangle rasterizer algorithm requires the vertices
 // to be passed in clockwise (if defined) or counter-clockwise (if not defined)
 // order.

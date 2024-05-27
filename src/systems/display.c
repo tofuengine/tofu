@@ -176,7 +176,9 @@ static void _size_callback(GLFWwindow *window, int width, int height)
     // This translates into an orthographic MVP matrix, which can be calculated with a single call.
     mat4 mvp;
     glm_ortho(0.0, (float)width, (float)height, 0.0, 0.0, 1.0, mvp);
+#if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     memcpy(display->mvp, mvp, sizeof(mat4)); // There's no need to store it, we are sending right away to the shader.
+#endif
     shader_send(display->shader, UNIFORM_MVP, SHADER_UNIFORM_MAT4, 1, mvp);
     LOG_D("model/view/projection matrix sent to the shader, going otho-2D");
 
