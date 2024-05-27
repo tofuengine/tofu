@@ -35,7 +35,7 @@
  * SOFTWARE.
  */
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec4 pixel = texture2D(texture, texture_coords);
 
     pixel += texture2D(texture, texture_coords + 0.001);
@@ -55,5 +55,5 @@ vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coor
     pixel.rgb = vec3((pixel.r + pixel.g + pixel.b)/3.0);
     pixel = pixel/9.5;
 
-    return pixel * color;
+    return pixel;
 } 

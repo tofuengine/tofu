@@ -1,6 +1,6 @@
 const float thickness = 3.0;
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec2 delta = texture_coords - vec2(0.5, 0.5);
     vec2 uv_r = delta * 0.0250 + texture_coords;
     vec2 uv_g = delta * 0.0075 + texture_coords;

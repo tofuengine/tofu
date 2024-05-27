@@ -98,7 +98,7 @@ typedef enum Uniforms_t {
     "uniform vec2 u_screen_scale;\n" \
     "uniform float u_time;\n" \
     "\n" \
-    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
+    "vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
     "void main() {\n" \
     "    o_color = effect(v_color, u_texture0, v_texture_coords, vec2(0.0, 0.0));\n" \

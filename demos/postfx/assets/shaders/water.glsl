@@ -85,7 +85,7 @@ const vec4 EDGE_COLOR = vec4(0,0,0,0);
 const float EDGE_OF_WATER = 256.0;
 const float ANGLE_RATE = 3.0;
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec2 uv = texture_coords;
 
     float edge = EDGE_OF_WATER / u_screen_size.y;

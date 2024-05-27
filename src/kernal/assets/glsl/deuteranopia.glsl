@@ -52,7 +52,7 @@ const mat3 m = mat3(
         0.00000000, 0.00000000,  1.00000000
     );
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec3 pixel = texture2D(texture, texture_coords).rgb;
     return vec4(m * pixel, 1.0);
 }
