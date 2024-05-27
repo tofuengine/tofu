@@ -53,15 +53,17 @@ typedef enum Uniforms_t {
     UNIFORM_TEXTURE_SIZE,
     UNIFORM_SCREEN_SIZE,
     UNIFORM_SCREEN_SCALE,
+    UNIFORM_COLOR,
     UNIFORM_TIME,
     Uniforms_t_CountOf
 } Uniforms_t;
 
-// https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/hello-world-in-glsl/
-// https://ptgmedia.pearsoncmg.com/images/9780321552624/downloads/0321552628_AppI.pdf
+// https://antongerdelan.net/opengl/vertexbuffers.html
+// https://open.gl/drawing
+// https://learnopengl.com/Getting-started/Hello-Triangle
+// https://paroj.github.io/gltut/
 // https://relativity.net.au/gaming/glsl/Built-inVariables.html
 // https://www.khronos.org/registry/OpenGL/specs/gl/
-// https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.1.20.pdf
 // https://www.khronos.org/opengl/wiki/GLSL_:_common_mistakes
 
 // TODO: move shaders to kernal?
@@ -69,16 +71,13 @@ typedef enum Uniforms_t {
     "#version 330 core\n" \
     "\n" \
     "layout (location = 0) in vec2 i_position;\n" \
-    "layout (location = 1) in vec4 i_color;\n" \
-    "layout (location = 2) in vec2 i_texture_coords;\n" \
+    "layout (location = 1) in vec2 i_texture_coords;\n" \
     "\n" \
-    "out vec4 v_color;\n" \
     "out vec2 v_texture_coords;\n" \
     "\n" \
     "uniform mat4 u_mvp;\n" \
     "\n" \
     "void main() {\n" \
-    "   v_color = i_color;\n" \
     "   v_texture_coords = i_texture_coords;\n" \
     "\n" \
     "   gl_Position = u_mvp * vec4(i_position, 0.0, 1.0);\n" \
@@ -87,7 +86,6 @@ typedef enum Uniforms_t {
 #define _FRAGMENT_SHADER \
     "#version 330 core\n" \
     "\n" \
-    "in vec4 v_color;\n" \
     "in vec2 v_texture_coords;\n" \
     "\n" \
     "layout (location = 0) out vec4 o_color;\n" \
@@ -96,12 +94,13 @@ typedef enum Uniforms_t {
     "uniform vec2 u_texture_size;\n" \
     "uniform vec2 u_screen_size;\n" \
     "uniform vec2 u_screen_scale;\n" \
+    "uniform vec4 u_color;\n" \
     "uniform float u_time;\n" \
     "\n" \
     "vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
     "void main() {\n" \
-    "    o_color = effect(v_color, u_texture0, v_texture_coords, vec2(0.0, 0.0));\n" \
+    "    o_color = effect(u_texture0, v_texture_coords, vec2(0.0, 0.0)) * u_color;\n" \
     "}\n" \
     "\n"
 
@@ -111,6 +110,7 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture_size",
     "u_screen_size",
     "u_screen_scale",
+    "u_color",
     "u_time",
 };
 
@@ -372,6 +372,9 @@ static bool _shader_initialize(Display_t *display, const char *effect)
             (GLfloat)display->vram.size.width / (GLfloat)display->configuration.window.width,
             (GLfloat)display->vram.size.height / (GLfloat)display->configuration.window.height
         });
+    shader_send(display->shader, UNIFORM_COLOR, SHADER_UNIFORM_VEC4, 1, (const GLfloat[]){ // TODO: configurable?
+            (GLfloat)1.0, (GLfloat)1.0, (GLfloat)1.0, (GLfloat)1.0
+        });
 
     LOG_D("shader %p initialized", display->shader);
 
@@ -407,23 +410,24 @@ static void _initialize_vertices(Display_t *display)
 
     // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
     const float vertices[] = {
-    //  Position              Color                  Texcoords
-        (float)x0, (float)y0, 0.0f, 0.0f, 0.0f, 1.0, 0.0f, 0.0f,
-        (float)x0, (float)y1, 0.0f, 1.0f, 0.0f, 1.0, 0.0f, 1.0f,
-        (float)x1, (float)y0, 0.0f, 0.0f, 1.0f, 1.0, 1.0f, 0.0f,
-        (float)x1, (float)y1, 1.0f, 1.0f, 1.0f, 1.0, 1.0f, 1.0f
+    //  Position              Texcoords
+        (float)x0, (float)y0, 0.0f, 0.0f,
+        (float)x0, (float)y1, 0.0f, 1.0f,
+        (float)x1, (float)y0, 1.0f, 0.0f,
+        (float)x1, (float)y1, 1.0f, 1.0f
     };
 
     glGenBuffers(1, &display->vbo); // Generate 1 buffer
+//    if (display->vbo == 0) {
     glBindBuffer(GL_ARRAY_BUFFER, display->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glGenVertexArrays(1, &display->vao);
+//    if (display->vao == 0) {
     glBindVertexArray(display->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, display->vbo);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); // These three calls make the VAO (indirectly) store the current VBO!
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, display->vbo); // Note: this call doesn't change the VAO state, but it's required for the next one to work!
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0); // These three calls make the VAO (indirectly) store the current VBO!
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float))); // (they change the VAO state)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
