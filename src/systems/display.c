@@ -114,6 +114,13 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_time",
 };
 
+// Important Note
+// ==============
+//
+// In order to help OpenGL debugging we purposely keep the global state to an "empty" condition. For this
+// reason we change OpenGL's state only temporarily and revert it back to "blank" when finished to reduce
+// the state dependencies.
+
 #if defined(DEBUG)
 static bool _has_errors(void)
 {
@@ -403,7 +410,33 @@ static void *_reallocate(void* block, size_t size, void *user)
     return realloc(block, size);
 }
 
-static void _initialize_vertices(Display_t *display)
+/*
+ * An OpenGL VAO can be loosely thought as follows:
+ *
+ *     struct VertexAttrib {
+ *       GLint size;           // set by gVertexAttrib(I)Pointer
+ *       GLenum type;          // set by gVertexAttrib(I)Pointer
+ *       GLboolean normalize;  // set by gVertexAttrib(I)Pointer
+ *       GLsizei stride;       // set by gVertexAttrib(I)Pointer
+ *       GLint buffer;         // set by gVertexAttrib(I)Pointer (indirectly)
+ *       void* pointer;        // set by gVertexAttrib(I)Pointer
+ *       GLint divisor;        // set by gVertexAttribDivisor
+ *       GLboolean enabled;    // set by gEnable/DisableVertexAttribArray
+ *     };
+ *     
+ *     struct VertexArrayObject {
+ *       std::vector<VertexAttrib> attribs;
+ *       GLuint element_array_buffer;  // set by glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ..)
+ *     };
+ *
+ * See: https://webgl2fundamentals.org/webgl/lessons/resources/webgl-state-diagram.html
+ */
+typedef struct _Vertex_s {
+    GLfloat position[2];
+    GLfloat texture_coords[2];
+} _Vertex_t;
+
+static bool _initialize_vertices(Display_t *display)
 {
     const GL_Size_t *vram_size = &display->vram.size;
 
@@ -414,31 +447,42 @@ static void _initialize_vertices(Display_t *display)
     const int y1 = (int)vram_size->height;
 
     // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-    const float vertices[] = {
-    //  Position              Texcoords
-        (float)x0, (float)y0, 0.0f, 0.0f,
-        (float)x0, (float)y1, 0.0f, 1.0f,
-        (float)x1, (float)y0, 1.0f, 0.0f,
-        (float)x1, (float)y1, 1.0f, 1.0f
+    const _Vertex_t vertices[] = {
+        { { (GLfloat)x0, (GLfloat)y0 }, { 0.0f, 0.0f } },
+        { { (GLfloat)x0, (GLfloat)y1 }, { 0.0f, 1.0f } },
+        { { (GLfloat)x1, (GLfloat)y0 }, { 1.0f, 0.0f } },
+        { { (GLfloat)x1, (GLfloat)y1 }, { 1.0f, 1.0f } }
     };
 
+    glGenVertexArrays(1, &display->vao);
+    if (display->vao == 0) {
+        goto error_delete_vertex_array;
+    }
+    glBindVertexArray(display->vao);
+
     glGenBuffers(1, &display->vbo); // Generate 1 buffer
-//    if (display->vbo == 0) {
+    if (display->vbo == 0) {
+        goto error_delete_buffer;
+    }
     glBindBuffer(GL_ARRAY_BUFFER, display->vbo);
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &display->vao);
-//    if (display->vao == 0) {
-    glBindVertexArray(display->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, display->vbo); // Note: this call doesn't change the VAO state, but it's required for the next one to work!
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0); // These three calls make the VAO (indirectly) store the current VBO!
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float))); // (they change the VAO state)
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(_Vertex_t), 0); // These two calls make the VAO (indirectly) store the current VBO!
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(_Vertex_t), (void *)(offsetof(_Vertex_t, texture_coords))); // (they change the VAO state)
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    return true;
+
+error_delete_buffer:
+    glDeleteBuffers(1, &display->vbo);
+error_delete_vertex_array:
+    glDeleteVertexArrays(1, &display->vao);
+    return false;
 }
 
 Display_t *Display_create(const Display_Configuration_t *configuration)
@@ -544,7 +588,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         goto error_delete_buffers;
     }
 
-    _initialize_vertices(display);
+    bool vertices = _initialize_vertices(display);
+    if (!vertices) {
+        LOG_F("can't initialize vertices");
+        goto error_destroy_shader;
+    }
 
     LOG_I("GLFW: %s", glfwGetVersionString());
     LOG_I("GLFW platform: %d", glfwGetPlatform());
@@ -562,6 +610,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     return display;
 
+error_destroy_shader:
+    shader_destroy(display->shader);
 error_delete_buffers:
     glDeleteBuffers(1, &display->vram.texture);
 error_free_vram:
@@ -579,15 +629,11 @@ error_free:
     return NULL;
 }
 
-static void _deinitialize_vertices(Display_t *display)
+void Display_destroy(Display_t *display)
 {
     glDeleteBuffers(1, &display->vbo);
     glDeleteVertexArrays(1, &display->vao);
-}
-
-void Display_destroy(Display_t *display)
-{
-    _deinitialize_vertices(display);
+    LOG_D("VAO/VBO deleted");
 
     shader_destroy(display->shader);
     LOG_D("shader %p destroyed", display->shader);
