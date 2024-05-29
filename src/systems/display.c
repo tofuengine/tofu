@@ -53,6 +53,7 @@ typedef enum Uniforms_t {
     UNIFORM_TEXTURE_SIZE,
     UNIFORM_SCREEN_SIZE,
     UNIFORM_SCREEN_SCALE,
+    UNIFORM_SCREEN_OFFSET,
     UNIFORM_COLOR,
     UNIFORM_TIME,
     Uniforms_t_CountOf
@@ -76,9 +77,10 @@ typedef enum Uniforms_t {
     "out vec2 v_texture_coords;\n" \
     "\n" \
     "uniform mat4 u_mvp;\n" \
+    "uniform vec2 u_screen_offset;\n" \
     "\n" \
     "void main() {\n" \
-    "   v_texture_coords = i_texture_coords;\n" \
+    "   v_texture_coords = i_texture_coords - u_screen_offset;\n" \
     "\n" \
     "   gl_Position = u_mvp * vec4(i_position, 0.0, 1.0);\n" \
     "}\n" \
@@ -110,6 +112,7 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture_size",
     "u_screen_size",
     "u_screen_scale",
+    "u_screen_offset",
     "u_color",
     "u_time",
 };
@@ -381,6 +384,9 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     shader_send(display->shader, UNIFORM_SCREEN_SCALE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->vram.size.width / (GLfloat)display->configuration.window.width,
             (GLfloat)display->vram.size.height / (GLfloat)display->configuration.window.height
+        });
+    shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
+            (GLfloat)0.0f, (GLfloat)0.0f
         });
     shader_send(display->shader, UNIFORM_COLOR, SHADER_UNIFORM_VEC4, 1, (const GLfloat[]){ // TODO: configurable?
             (GLfloat)1.0f, (GLfloat)1.0f, (GLfloat)1.0f, (GLfloat)1.0f
@@ -685,12 +691,15 @@ bool Display_update(Display_t *display, float delta_time)
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
     // Add x/y offset to implement screen-shaking or similar effects.
-    // const GL_Point_t *vram_position = &display->vram.position;
-    // const GL_Point_t *vram_offset = &display->vram.offset;
+    //
+    // TODO: send the updated offset only in the `Display_set_offset()` call?
+    const GL_Point_t *vram_position = &display->vram.position;
+    const GL_Point_t *vram_offset = &display->vram.offset;
+    const GL_Size_t *vram_size = &display->vram.size;
 
-    // const int ox = vram_position->x + vram_offset->x;
-    // const int oy = vram_position->y + vram_offset->y;
-    //shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ (GLfloat)ox, (GLfloat)oy });
+    const GLfloat ox = (GLfloat)(vram_position->x + vram_offset->x) / (GLfloat)vram_size->width;
+    const GLfloat oy = (GLfloat)(vram_position->y + vram_offset->y) / (GLfloat)vram_size->height;
+    shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ ox, oy });
 
     shader_use(NULL);
 
