@@ -437,10 +437,12 @@ static void *_reallocate(void* block, size_t size, void *user)
  *
  * See: https://webgl2fundamentals.org/webgl/lessons/resources/webgl-state-diagram.html
  */
+#pragma pack(push, 1)
 typedef struct _Vertex_s {
     GLfloat position[2];
     GLfloat texture_coords[2];
 } _Vertex_t;
+#pragma pack(pop)
 
 static bool _initialize_vertices(Display_t *display)
 {
