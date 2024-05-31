@@ -690,17 +690,6 @@ bool Display_update(Display_t *display, float delta_time)
     GLfloat time = (GLfloat)display->time;
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
-    // Add x/y offset to implement screen-shaking or similar effects.
-    //
-    // TODO: send the updated offset only in the `Display_set_offset()` call?
-    const GL_Point_t *vram_position = &display->vram.position;
-    const GL_Point_t *vram_offset = &display->vram.offset;
-    const GL_Size_t *vram_size = &display->vram.size;
-
-    const GLfloat ox = (GLfloat)(vram_position->x + vram_offset->x) / (GLfloat)vram_size->width;
-    const GLfloat oy = (GLfloat)(vram_position->y + vram_offset->y) / (GLfloat)vram_size->height;
-    shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ ox, oy });
-
     shader_use(NULL);
 
 #if defined(DEBUG)
@@ -744,13 +733,25 @@ void Display_present(const Display_t *display)
 
 void Display_reset(Display_t *display)
 {
-    display->vram.offset = (GL_Point_t){ 0, 0 };
+    Display_set_offset(display, (GL_Point_t){ 0, 0 });
+
     GL_processor_reset(display->canvas.processor);
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+
+    // We update the shader's uniform only on change.
+    const GL_Point_t *vram_offset = &display->vram.offset;
+    const GL_Size_t *vram_size = &display->vram.size;
+
+    const GLfloat ox = (GLfloat)vram_offset->x / (GLfloat)vram_size->width; // We need to normalize the coordinates as they are texture related.
+    const GLfloat oy = (GLfloat)vram_offset->y / (GLfloat)vram_size->height;
+
+    shader_use(display->shader);
+    shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ ox, oy });
+    shader_use(NULL);
 }
 
 void Display_set_palette(Display_t *display, const GL_Color_t *palette)
