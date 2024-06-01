@@ -466,12 +466,13 @@ static bool _initialize_vertices(Display_t *display)
     if (display->vao == 0) {
         goto error_delete_vertex_array;
     }
-    glBindVertexArray(display->vao);
 
-    glGenBuffers(1, &display->vbo); // Generate 1 buffer
+    glGenBuffers(1, &display->vbo);
     if (display->vbo == 0) {
-        goto error_delete_buffer;
+        goto error_delete_vertex_buffer;
     }
+
+    glBindVertexArray(display->vao);
     glBindBuffer(GL_ARRAY_BUFFER, display->vbo);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -486,7 +487,7 @@ static bool _initialize_vertices(Display_t *display)
 
     return true;
 
-error_delete_buffer:
+error_delete_vertex_buffer:
     glDeleteBuffers(1, &display->vbo);
 error_delete_vertex_array:
     glDeleteVertexArrays(1, &display->vao);
