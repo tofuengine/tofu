@@ -449,13 +449,17 @@ typedef struct _Vertex_s {
 
 static bool _initialize_vertices(Display_t *display)
 {
+    const GL_Point_t *vram_position = &display->vram.position;
     const GL_Size_t *vram_size = &display->vram.size;
-
     // Note: x/y offset are passed through the shader!
-    const int x0 = 0;
-    const int y0 = 0;
-    const int x1 = (int)vram_size->width;
-    const int y1 = (int)vram_size->height;
+
+    const int x = vram_position->x;
+    const int y = vram_position->y;
+
+    const int x0 = x;
+    const int y0 = y;
+    const int x1 = x + (int)vram_size->width;
+    const int y1 = y + (int)vram_size->height;
 
     // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
     const _Vertex_t vertices[] = {
