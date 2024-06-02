@@ -102,7 +102,10 @@ typedef enum Uniforms_t {
     "vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
     "void main() {\n" \
-    "    o_color = effect(u_texture0, v_texture_coords, vec2(0.0, 0.0)) * u_color;\n" \
+    "    // We need to invert the fix the Y origin for the screen coordinates.\n" \
+    "    vec2 screen_coords = vec2(gl_FragCoord.x, u_screen_size.y - gl_FragCoord.y);\n" \
+    "\n" \
+    "    o_color = effect(u_texture0, v_texture_coords, screen_coords) * u_color;\n" \
     "}\n" \
     "\n"
 
