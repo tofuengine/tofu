@@ -67,6 +67,11 @@ typedef enum Uniforms_t {
 // https://www.khronos.org/registry/OpenGL/specs/gl/
 // https://www.khronos.org/opengl/wiki/GLSL_:_common_mistakes
 
+#define VERTEX_LOCATION_POSITION        0
+#define VERTEX_LOCATION_TEXTURE_COORDS  1
+
+#define FRAGMENT_LOCATION_COLOR         0
+
 // TODO: move shaders to kernal?
 #define _VERTEX_SHADER \
     "#version 330 core\n" \
@@ -484,10 +489,10 @@ static bool _initialize_vertices(Display_t *display)
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(_Vertex_t), 0); // These two calls make the VAO (indirectly) store the current VBO!
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(_Vertex_t), (void *)(offsetof(_Vertex_t, texture_coords))); // (they change the VAO state)
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(VERTEX_LOCATION_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(_Vertex_t), 0); // These two calls make the VAO (indirectly) store the current VBO!
+    glVertexAttribPointer(VERTEX_LOCATION_TEXTURE_COORDS, 2, GL_FLOAT, GL_FALSE, sizeof(_Vertex_t), (void *)(offsetof(_Vertex_t, texture_coords))); // (they change the VAO state)
+    glEnableVertexAttribArray(VERTEX_LOCATION_POSITION);
+    glEnableVertexAttribArray(VERTEX_LOCATION_TEXTURE_COORDS);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
