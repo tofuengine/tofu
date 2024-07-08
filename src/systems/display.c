@@ -117,8 +117,8 @@ typedef enum Uniforms_t {
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_mvp",
     "u_texture0",
-    "u_texture_size",
-    "u_screen_size",
+    "u_texture_size", // The size of the target (on-screen) area.
+    "u_screen_size", // Represents the size of the pixel canvas (1:1 pixel size).
     "u_screen_scale",
     "u_screen_offset",
     "u_color",
