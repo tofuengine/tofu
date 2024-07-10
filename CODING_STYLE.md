@@ -282,6 +282,45 @@ void object_delete(Object_t *self)
 
 The constructor function is not present in the v-table, but it's defined and used to initialized the object structure.
 
+## OpenGL
+
+We use OpenGL 3.3 *core profile*.
+
+We could have used version 3.2, theoretically, but 3.3 is the first *version unified* OpenGL (that is the one in which the API and shader language match in version). Over the years version 3.3 ended in becoming the *de-facto* common-ground standard for [wide adoption](https://www.reddit.com/r/opengl/comments/sseddz/what_is_the_most_widely_adopted_opengl_version/) across pretty much every every "modern" card (i.e. produced in the last ten years). For this reason we are safe in using it. We could also target version 4.0 but the benefits probably would be few.
+
+> In the not-so-distant future the aim is to move to OpenGL/ES 2.0, which is almost identical to OpenGL 3.3 core in feature but ensure compatibility and ease-of-porting to browsers.
+
+It's unclear whether *OpenGL 3.3 core* is supported on macOS. But then, we aren't interesting in targeting the engine to Apple computers, for the moment being.
+
+## Internal State Policy
+
+We need to (re)initialize OpenGL internal state several times during the composition of a frame. For example, we need to select the current texture, the shader program, the current VAO, etc...
+
+Given the (relatively) simple use we make of OpenGL we could simplify this and select/activate some of them (e.g. the shader program) only once during the whole life of the engine. This would mean that the internal OpenGL rendering state will span over more frames. While this can appear tempting as a mean of optimization, can be source of difficult to trace bugs in the long run.
+
+For this reason whenever we operate on the internal state for some reason, we also "clear it" by setting null/empty references. For example
+
+```c
+    glUseProgram(display->shader);
+    glBindVertexArray(display->vao);
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
+
+    // ... draw everything...
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+```
+
+### Shader Identifiers Naming
+
+Depending to its type, each shader variable has a different prefix:
+
+* `i_` for *INPUT* variables, that is `location` variables that are passed to the vertex shader during the drawing process (e.g. the pixel position);
+* `v_` for *VARYING* variables, that is intermediate (communication) variables between the vertex and the fragment shader (e.g. something that is passed from a VBO to the fragment shader);
+* `o_` for *OUTPUT* variables, that is `location`variables that are returned from the fragments shader (e.g. the final pixel color);
+* `u_` for *UNIFORM* variables, that is configurable shader attributes (e.g. the current time).
+
 ## Binary Files
 
 ### Byte Ordering
