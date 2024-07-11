@@ -84,7 +84,7 @@ typedef struct Display_s {
     struct {
         GLuint texture;
         GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-        GL_Point_t position; // Destination position, scaled to the final screen size.
+        GL_Point_t position; // Destination position, normalized to the final screen size.
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;
     } vram;

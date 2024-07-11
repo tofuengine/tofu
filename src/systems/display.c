@@ -115,11 +115,11 @@ typedef enum Uniforms_t {
     "\n"
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
-    "u_mvp",
-    "u_texture0",
+    "u_mvp", // The model-view-projection matrix, precomputed.
+    "u_texture0", // The current texture ID.
     "u_texture_size", // The size of the target (on-screen) area.
     "u_screen_size", // Represents the size of the pixel canvas (1:1 pixel size).
-    "u_screen_scale",
+    "u_screen_scale", //
     "u_screen_offset", // Normalized in the range [0, 1] during the setting process.
     "u_color",
     "u_time",
