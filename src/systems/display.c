@@ -120,7 +120,7 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture_size", // The size of the target (on-screen) area.
     "u_screen_size", // Represents the size of the pixel canvas (1:1 pixel size).
     "u_screen_scale",
-    "u_screen_offset",
+    "u_screen_offset", // Normalized in the range [0, 1] during the setting process.
     "u_color",
     "u_time",
 };
@@ -180,9 +180,14 @@ static void _error_callback(int error, const char *description)
 static void _size_callback(GLFWwindow *window, int width, int height)
 {
     // Note: the size-callback function is called from within the message-pump loop,
-    //       and for that reason we are safe to assume that everything have been
-    //       set-up. Most notably, the shader that we can send data to.
+    //       and for that reason we are safe to assume that when we reach here (for
+    //       the first time) everything have been initialized. Most notably, the shader
+    //       that we can send data to.
+#if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     Display_t *display = (Display_t *)glfwGetWindowUserPointer(window);
+#else
+    const Display_t *display = (const Display_t *)glfwGetWindowUserPointer(window);
+#endif
 
     glViewport(0, 0, width, height); // Viewport matches window
     LOG_D("viewport size set to %dx%d", width, height);
@@ -194,13 +199,15 @@ static void _size_callback(GLFWwindow *window, int width, int height)
     // This translates into an orthographic MVP matrix, which can be calculated with a single call.
     mat4 mvp;
     glm_ortho(0.0, (float)width, (float)height, 0.0, 0.0, 1.0, mvp);
+    LOG_D("orthographic (2D) model/view/projection matrix generated");
 #if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     memcpy(display->mvp, mvp, sizeof(mat4)); // There's no need to store it, we are sending right away to the shader.
+    LOG_D("model/view/projection matrix stored");
 #endif
     shader_use(display->shader);
     shader_send(display->shader, UNIFORM_MVP, SHADER_UNIFORM_MAT4, 1, mvp);
     shader_use(NULL);
-    LOG_D("model/view/projection matrix sent to the shader, going otho-2D");
+    LOG_D("model/view/projection matrix sent to the shader");
 
     // On OpenGL core profile `GL_TEXTURE_2D` is not a valid argument to `glEnable()` as it can't be disable. There's
     // no fixed-function running in the pipeline as the color of the pixel is solely determined by the fragment shader.
