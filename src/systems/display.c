@@ -93,6 +93,8 @@ typedef enum Uniforms_t {
 #define _FRAGMENT_SHADER \
     "#version 330 core\n" \
     "\n" \
+    "layout (origin_upper_left) in vec4 gl_FragCoord;\n" \
+    "\n" \
     "in vec2 v_texture_coords;\n" \
     "\n" \
     "layout (location = 0) out vec4 o_color;\n" \
@@ -107,8 +109,7 @@ typedef enum Uniforms_t {
     "vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
     "void main() {\n" \
-    "    // We need to invert the fix the Y origin for the screen coordinates.\n" \
-    "    vec2 screen_coords = vec2(gl_FragCoord.x, u_screen_size.y - gl_FragCoord.y);\n" \
+    "    vec2 screen_coords = gl_FragCoord.xy;\n" \
     "\n" \
     "    o_color = effect(u_texture0, v_texture_coords, screen_coords) * u_color;\n" \
     "}\n" \
