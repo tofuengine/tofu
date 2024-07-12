@@ -492,12 +492,12 @@ static bool _initialize_vertices(Display_t *display)
 
     glGenVertexArrays(1, &display->vao);
     if (display->vao == 0) {
-        goto error_delete_vertex_array;
+        return false; // FIXME: define a `error_exit` label to the exit-with-failure case.
     }
 
     glGenBuffers(1, &display->vbo);
     if (display->vbo == 0) {
-        goto error_delete_vertex_buffer;
+        goto error_delete_vertex_array;
     }
 
     glBindVertexArray(display->vao);
@@ -515,8 +515,6 @@ static bool _initialize_vertices(Display_t *display)
 
     return true;
 
-error_delete_vertex_buffer:
-    glDeleteBuffers(1, &display->vbo);
 error_delete_vertex_array:
     glDeleteVertexArrays(1, &display->vao);
     return false;
