@@ -374,13 +374,15 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     const size_t length = strlen(_FRAGMENT_SHADER) + strlen(effect);
     char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
+    if (!code) {
+        goto error_destroy_shader;
+    }
     strcpy(code, _FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
     strcat(code, effect);
 
     if (!shader_attach(display->shader, _VERTEX_SHADER, SHADER_TYPE_VERTEX) ||
         !shader_attach(display->shader, code, SHADER_TYPE_FRAGMENT)) {
-        shader_destroy(display->shader);
-        return false;
+        goto error_free_code;
     }
 
     shader_prepare(display->shader, _uniforms, Uniforms_t_CountOf);
@@ -415,6 +417,12 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     free(code);
 
     return true;
+
+error_free_code:
+    free(code);
+error_destroy_shader:
+    shader_destroy(display->shader);
+    return false;
 }
 
 static void *_allocate(size_t size, void *user)
