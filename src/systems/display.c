@@ -255,7 +255,7 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
         return false;
     }
 
-    const size_t window_scale = scale > max_scale ? max_scale : (scale > 0 ? scale : max_scale);
+    const size_t window_scale = scale > 0 && scale <= max_scale ? scale : max_scale;
     const size_t window_width = canvas_size->width * window_scale;
     const size_t window_height = canvas_size->height * window_scale;
 
