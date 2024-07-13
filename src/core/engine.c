@@ -120,13 +120,13 @@ static Configuration_t *_configure(Storage_t *storage)
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
         LOG_F("configuration file is missing");
-        return NULL;
+        goto error_exit;
     }
 
     Configuration_t *configuration = Configuration_create(SR_SCHARS(resource));
     if (!configuration) {
         LOG_F("can't create configuration");
-        return NULL;
+        goto error_exit;
     }
 
     Log_configure(configuration->system.debug, NULL);
@@ -146,6 +146,7 @@ static Configuration_t *_configure(Storage_t *storage)
 
 error_destroy_configuration:
     Configuration_destroy(configuration);
+error_exit:
     return NULL;
 }
 
@@ -181,7 +182,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     Engine_t *engine = malloc(sizeof(Engine_t));
     if (!engine) {
         LOG_E("can't allocate engine");
-        return NULL;
+        goto error_exit;
     }
 
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
@@ -196,7 +197,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
         });
     if (!engine->storage) {
         LOG_F("can't initialize storage");
-        goto error_free;
+        goto error_free_engine;
     }
     LOG_I("storage ready");
 
@@ -351,8 +352,9 @@ error_destroy_configuration:
     Configuration_destroy(engine->configuration);
 error_destroy_storage:
     Storage_destroy(engine->storage);
-error_free:
+error_free_engine:
     free(engine);
+error_exit:
     return NULL;
 }
 

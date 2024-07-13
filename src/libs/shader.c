@@ -58,13 +58,13 @@ Shader_t *shader_create(void)
     shader->id = glCreateProgram();
     if (shader->id == 0) {
         LOG_E("can't create shader program");
-        goto error_free;
+        goto error_free_shader;
     }
     LOG_D("shader program #%d created", shader->id);
 
     return shader;
 
-error_free:
+error_free_shader:
     free(shader);
 error_exit:
     return NULL;
@@ -126,6 +126,7 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
         glGetShaderInfoLog(shader_id, length, NULL, description);
         LOG_E("shader compile error: %s", description);
     } else {
+        // TODO: what the hell is this logic???
         glAttachShader(shader->id, shader_id);
 
         glLinkProgram(shader->id);

@@ -117,20 +117,21 @@ GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size
     size_t count;
     GL_Rectangle_t *cells = _generate_cells((GL_Size_t){ .width = atlas->width, .height = atlas->height }, cell_size, &count);
     if (!cells) {
-        return NULL;
+        goto error_exit;
     }
 
     GL_Sheet_t *sheet = _allocate(atlas, cells, count);
     if (!sheet) {
-        goto error_free;
+        goto error_free_cells;
     }
 
     LOG_D("sheet %p created (fixed)", sheet);
 
     return sheet;
 
-error_free:
+error_free_cells:
     free(cells);
+error_exit:
     return NULL;
 }
 
@@ -138,20 +139,21 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle32_t *r
 {
     GL_Rectangle_t *cells = _parse_cells(rectangles, count);
     if (!cells) {
-        return NULL;
+        goto error_exit;
     }
 
     GL_Sheet_t *sheet = _allocate(atlas, cells, count);
     if (!sheet) {
-        goto error_free;
+        goto error_free_cells;
     }
 
     LOG_D("sheet %p created", sheet);
 
     return sheet;
 
-error_free:
+error_free_cells:
     free(cells);
+error_exit:
     return NULL;
 }
 

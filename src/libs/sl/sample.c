@@ -116,25 +116,26 @@ SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callba
     SL_Source_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
         LOG_E("can't allocate sample structure");
-        return NULL;
+        goto error_exit;
     }
 
     bool cted = _sample_ctor(sample, context, callbacks);
     if (!cted) {
-        goto error_free;
+        goto error_free_sample;
     }
 
     LOG_D("sample %p created", sample);
     return sample;
 
-error_free:
+error_free_sample:
     free(sample);
+error_exit:
     return NULL;
 }
 
 static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    Sample_t *sample = (Sample_t *)user_data;
+    const Sample_t *sample = (const Sample_t *)user_data;
     const SL_Callbacks_t *callbacks = &sample->callbacks;
 
     return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
@@ -142,7 +143,7 @@ static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
 
 static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
-    Sample_t *sample = (Sample_t *)user_data;
+    const Sample_t *sample = (const Sample_t *)user_data;
     const SL_Callbacks_t *callbacks = &sample->callbacks;
 
     bool sought = false;
@@ -193,7 +194,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
         });
     if (!sample->decoder) {
         LOG_E("can't create sample decoder");
-        return false;
+        goto error_exit;
     }
 
     sample->length_in_frames = sample->decoder->totalPCMFrameCount;
@@ -245,6 +246,7 @@ error_deinitialize_audio_buffer:
     ma_audio_buffer_uninit(&sample->buffer);
 error_close_decoder:
     drflac_close(sample->decoder);
+error_exit:
     return false;
 }
 

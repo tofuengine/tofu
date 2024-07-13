@@ -90,7 +90,7 @@ static void _cache_close(void *stream)
 
 static size_t _cache_size(void *stream)
 {
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+    const Storage_Cache_Stream_t *cache_stream = (const Storage_Cache_Stream_t *)stream;
 
     return cache_stream->size;
 }
@@ -138,14 +138,14 @@ static bool _cache_seek(void *stream, long offset, int whence)
 
 static long _cache_tell(void *stream)
 {
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+    const Storage_Cache_Stream_t *cache_stream = (const Storage_Cache_Stream_t *)stream;
 
     return (long)cache_stream->position;
 }
 
 static bool _cache_eof(void *stream)
 {
-    Storage_Cache_Stream_t *cache_stream = (Storage_Cache_Stream_t *)stream;
+    const Storage_Cache_Stream_t *cache_stream = (const Storage_Cache_Stream_t *)stream;
 
     return cache_stream->position >= cache_stream->size;
 }
@@ -155,7 +155,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
     Storage_Cache_t *cache = malloc(sizeof(Storage_Cache_t));
     if (!cache) {
         LOG_E("can't allocate storage cache");
-        return NULL;
+        goto error_exit;
     }
 
     *cache = (Storage_Cache_t){ 0 };
@@ -163,7 +163,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
     sh_new_arena(cache->entries); // Use `sh_new_arena()` for string hashmaps that you never delete from.
     if (!cache->entries) {
         LOG_E("can't allocate storage cache entries");
-        goto error_free;
+        goto error_free_cache;
     }
 
     bool attached = FS_attach_from_callbacks(context, (FS_Callbacks_t){
@@ -185,8 +185,9 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
 
 error_free_entries:
     shfree(cache->entries);
-error_free:
+error_free_cache:
     free(cache);
+error_exit:
     return NULL;
 }
 

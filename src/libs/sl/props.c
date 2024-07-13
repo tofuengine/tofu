@@ -65,7 +65,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
     SL_Props_t *props = malloc(sizeof(SL_Props_t));
     if (!props) {
         LOG_E("can't allocate properties");
-        return NULL;
+        goto error_exit;
     }
 
     *props = (SL_Props_t){
@@ -88,13 +88,14 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
         }, &props->converter);
     if (result != MA_SUCCESS) {
         LOG_E("failed to create data converter");
-        goto error_free;
+        goto error_free_props;
     }
 
     return props;
 
-error_free:
+error_free_props:
     free(props);
+error_exit:
     return NULL;
 }
 

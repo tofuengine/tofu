@@ -362,12 +362,12 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 {
     if (!effect) {
         LOG_E("shader is null");
-        return false;
+        goto error_exit;
     }
 
     display->shader = shader_create();
     if (!display->shader) {
-        return false;
+        goto error_exit;
     }
 
     LOG_D("loading shader %p", display->shader);
@@ -422,6 +422,7 @@ error_free_code:
     free(code);
 error_destroy_shader:
     shader_destroy(display->shader);
+error_exit:
     return false;
 }
 
@@ -492,7 +493,7 @@ static bool _initialize_vertices(Display_t *display)
 
     glGenVertexArrays(1, &display->vao);
     if (display->vao == 0) {
-        return false; // FIXME: define a `error_exit` label to the exit-with-failure case.
+        goto error_exit;
     }
 
     glGenBuffers(1, &display->vbo);
@@ -517,6 +518,7 @@ static bool _initialize_vertices(Display_t *display)
 
 error_delete_vertex_array:
     glDeleteVertexArrays(1, &display->vao);
+error_exit:
     return false;
 }
 
@@ -525,7 +527,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     Display_t *display = malloc(sizeof(Display_t));
     if (!display) {
         LOG_E("can't allocate display");
-        return NULL;
+        goto error_exit;
     }
 
     *display = (Display_t){
@@ -536,7 +538,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     if (!glfwInit()) {
         LOG_F("can't initialize GLFW");
-        goto error_free;
+        goto error_free_display;
     }
     LOG_D("GLFW initialized");
 
@@ -659,8 +661,9 @@ error_destroy_window:
     _window_destroy(display->window);
 error_terminate_glfw:
     glfwTerminate();
-error_free:
+error_free_display:
     free(display);
+error_exit:
     return NULL;
 }
 

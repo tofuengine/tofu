@@ -235,7 +235,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
         LOG_E("can't access entry `%s`", pak_mount->path);
-        return NULL;
+        goto error_exit;
     }
 
     char id_hex[PAK_ID_LENGTH_SZ];
@@ -245,7 +245,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     Pak_Entry_Header_t header = { 0 };
     bool found = pak_mount->search(stream,  pak_mount->entries, entry->id, &header);
     if (!found) {
-        goto error_close;
+        goto error_close_stream;
     }
 
     // Once read we need to marshal the serialized entry to conform the data size
@@ -258,8 +258,9 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
 
     return stream;
 
-error_close:
+error_close_stream:
     fclose(stream);
+error_exit:
     return NULL;
 }
 
@@ -269,14 +270,14 @@ FS_Mount_t *FS_pak_mount(const char *path)
     FILE *stream = fopen(path, "rb");
     if (!stream) {
         LOG_E("can't access file `%s`", path);
-        return NULL;
+        goto error_exit;
     }
 
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
         LOG_E("can't read header from file `%s`", path);
-        goto error_close;
+        goto error_close_stream;
     }
 
     size_t entries = bytes_ui32le(header.entries);
@@ -285,7 +286,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         LOG_E("can't allocate mount for archive `%s`", path);
-        goto error_close;
+        goto error_close_stream;
     }
 
     fclose(stream);
@@ -294,8 +295,9 @@ FS_Mount_t *FS_pak_mount(const char *path)
 
     return mount;
 
-error_close:
+error_close_stream:
     fclose(stream);
+error_exit:
     return NULL;
 }
 
@@ -357,19 +359,19 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     FILE *stream = _find_entry(pak_mount, name, &entry);
     if (!stream) {
         LOG_E("can't find entry `%s` in mount %p", name, pak_mount);
-        return NULL;
+        goto error_exit;
     }
 
     bool sought = fseek(stream, entry.offset, SEEK_SET) != -1; // Move to the found entry position into the file.
     if (!sought) {
         LOG_E("can't seek entry `%s` at offset %d mount %p", name, entry.offset, pak_mount);
-        goto error_close;
+        goto error_close_stream;
     }
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
         LOG_E("can't allocate handle for entry `%s`", name);
-        goto error_close;
+        goto error_close_stream;
     }
 
     _pak_handle_ctor(handle, stream, entry.offset, entry.size, pak_mount->flags.encrypted, entry.id);
@@ -378,8 +380,9 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 
     return handle;
 
-error_close:
+error_close_stream:
     fclose(stream);
+error_exit:
     return NULL;
 }
 
@@ -411,6 +414,8 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
             .cipher_context = { { 0 } } // Uh! The first member of the structure is an array, need additional braces!
         };
 
+    // TODO: implement a `null_cipher` that will do nothing, so that we can avoid branches.
+
     if (encrypted) { // Encryption is implemented w/ a XOR stream cipher.
         uint8_t key[PAK_KEY_LENGTH];
         _derive_key(key, id, PAK_ID_LENGTH);
@@ -435,7 +440,7 @@ static void _pak_handle_dtor(FS_Handle_t *handle)
 
 static size_t _pak_handle_size(FS_Handle_t *handle)
 {
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+    const Pak_Handle_t *pak_handle = (const Pak_Handle_t *)handle;
 
 #if defined(VERBOSE_DEBUG)
     LOG_D("handle %p is", std_handle);
@@ -521,14 +526,14 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
 static long _pak_handle_tell(FS_Handle_t *handle)
 {
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+    const Pak_Handle_t *pak_handle = (const Pak_Handle_t *)handle;
 
     return ftell(pak_handle->stream) - pak_handle->begin_of_stream;
 }
 
 static bool _pak_handle_eof(FS_Handle_t *handle)
 {
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+    const Pak_Handle_t *pak_handle = (const Pak_Handle_t *)handle;
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {

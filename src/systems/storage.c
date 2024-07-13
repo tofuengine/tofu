@@ -52,7 +52,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     Storage_t *storage = malloc(sizeof(Storage_t));
     if (!storage) {
         LOG_E("can't allocate storage");
-        return NULL;
+        goto error_exit;
     }
 
     *storage = (Storage_t){
@@ -72,7 +72,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     storage->context = FS_create();
     if (!storage->context) {
         LOG_E("can't create file-system context");
-        goto error_free;
+        goto error_free_storage;
     }
     LOG_D("file-system context %p created", storage->context);
 
@@ -122,8 +122,9 @@ error_destroy_cache:
     Storage_Cache_destroy(storage->cache);
 error_destroy_context:
     FS_destroy(storage->context);
-error_free:
+error_free_storage:
     free(storage);
+error_exit:
     return NULL;
 }
 
@@ -384,7 +385,7 @@ static inline size_t _used_cache_slots(Storage_Resource_t **resources)
     // be automatically free on the next update call and are not really going to stay in the cache.
     size_t count = 0;
     for (size_t i = 1; i < length; ++i) {
-        Storage_Resource_t *resource = resources[i];
+        const Storage_Resource_t *resource = resources[i];
         if (resource->age >= TOFU_STORAGE_RESOURCE_MAX_AGE) {
             continue;
         }
@@ -437,7 +438,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 {
     if (path_is_absolute(name) || !path_is_normalized(name)) {
         LOG_E("path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
-        return NULL;
+        goto error_exit;
     }
 
     uint8_t id[STORAGE_RESOURCE_ID_LENGTH];
@@ -455,7 +456,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
         LOG_E("can't allocate resource");
-        return NULL;
+        goto error_exit;
     }
 
     if (_resource_load(resource, name, type, storage->context)) {
@@ -481,6 +482,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
 error_free_resource:
     free(resource);
+error_exit:
     return NULL;
 }
 

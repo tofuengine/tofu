@@ -198,7 +198,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
     module->context = xmp_create_context();
     if (!module->context) {
         LOG_E("can't create module context");
-        return false;
+        goto error_exit;
     }
 
     int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &callbacks);
@@ -237,6 +237,7 @@ error_release_module:
     xmp_release_module(module->context);
 error_free_context:
     xmp_free_context(module->context);
+error_exit:
     return false;
 }
 

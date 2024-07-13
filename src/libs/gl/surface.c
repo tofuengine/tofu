@@ -65,13 +65,13 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
     GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
         LOG_E("can't allocate (%dx%d) pixel-data", width, height);
-        return NULL;
+        goto error_exit;
     }
 
     GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
     if (!surface) {
         LOG_E("can't allocate surface");
-        goto error_free;
+        goto error_free_data;
     }
 
     *surface = (GL_Surface_t){
@@ -86,8 +86,9 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 
     return surface;
 
-error_free:
+error_free_data:
     free(data);
+error_exit:
     return NULL;
 }
 

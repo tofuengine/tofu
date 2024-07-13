@@ -49,7 +49,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
     GL_Queue_t *queue = malloc(sizeof(GL_Queue_t));
     if (!queue) {
         LOG_E("can't allocate queue");
-        return NULL;
+        goto error_exit;
     }
 
     GL_Queue_Sprite_t *sprites = NULL;
@@ -57,7 +57,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
         bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
             LOG_E("can't allocate queue sprites");
-            goto error_free;
+            goto error_free_queue;
         }
     }
 
@@ -69,8 +69,9 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
 
     return queue;
 
-error_free:
+error_free_queue:
     free(queue);
+error_exit:
     return NULL;
 }
 
@@ -122,9 +123,9 @@ void GL_queue_blit(const GL_Queue_t *queue, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = queue->sheet;
 
-    GL_Queue_Sprite_t *current = queue->sprites;
+    const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
-        GL_Queue_Sprite_t *sprite = current++;
+        const GL_Queue_Sprite_t *sprite = current++;
         GL_sheet_blit(sheet, context, sprite->position, sprite->cell_id);
     }
 }
@@ -133,9 +134,9 @@ void GL_queue_blit_s(const GL_Queue_t *queue, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = queue->sheet;
 
-    GL_Queue_Sprite_t *current = queue->sprites;
+    const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
-        GL_Queue_Sprite_t *sprite = current++;
+        const GL_Queue_Sprite_t *sprite = current++;
         GL_sheet_blit_s(sheet, context, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y);
     }
 }
@@ -144,9 +145,9 @@ void GL_queue_blit_sr(const GL_Queue_t *queue, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = queue->sheet;
 
-    GL_Queue_Sprite_t *current = queue->sprites;
+    const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
-        GL_Queue_Sprite_t *sprite = current++;
+        const GL_Queue_Sprite_t *sprite = current++;
         GL_sheet_blit_sr(sheet, context, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->anchor_x, sprite->anchor_y);
     }
 }

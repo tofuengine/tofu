@@ -51,7 +51,7 @@
 #define _MIXING_BUFFER_BYTES_PER_FRAME     (_MIXING_BUFFER_CHANNELS_PER_FRAME * _MIXING_BUFFER_SAMPLES_PER_CHANNEL * _MIXING_BUFFER_BYTES_PER_SAMPLE)
 #define _MIXING_BUFFER_SIZE_IN_BYTES       (_MIXING_BUFFER_SIZE_IN_FRAMES * _MIXING_BUFFER_BYTES_PER_FRAME)
 
-typedef struct Music_s { // FIXME: rename to `_Music_Source_t`.
+typedef struct Music_s { // FIXME: rename to `_Music_Source_s`.
     Source_VTable_t vtable;
 
     SL_Props_t *props;
@@ -162,7 +162,7 @@ SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbac
 
 static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    Music_t *music = (Music_t *)user_data;
+    const Music_t *music = (const Music_t *)user_data;
     const SL_Callbacks_t *callbacks = &music->callbacks;
 
     return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
@@ -170,7 +170,7 @@ static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
 
 static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
-    Music_t *music = (Music_t *)user_data;
+    const Music_t *music = (const Music_t *)user_data;
     const SL_Callbacks_t *callbacks = &music->callbacks;
 
     bool sought = false;
@@ -201,7 +201,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     music->decoder = drflac_open(_music_read, _music_seek, music, NULL);
     if (!music->decoder) {
         LOG_E("can't create music decoder");
-        return false;
+        goto error_exit;
     }
 
     music->length_in_frames = music->decoder->totalPCMFrameCount;
@@ -241,6 +241,7 @@ error_deinitialize_ringbuffer:
     ma_pcm_rb_uninit(&music->buffer);
 error_close_decoder:
     drflac_close(music->decoder);
+error_exit:
     return false;
 }
 

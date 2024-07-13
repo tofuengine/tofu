@@ -153,13 +153,13 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
     FILE *stream = fopen(path, "rb");
     if (!stream) {
         LOG_E("can't access file `%s`", path);
-        return NULL;
+        goto error_exit;
     }
 
     FS_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
         LOG_E("can't allocate handle for file `%s`", name);
-        goto error_close;
+        goto error_close_stream;
     }
 
     _std_handle_ctor(handle, stream, _size(stream));
@@ -168,8 +168,9 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
 
     return handle;
 
-error_close:
+error_close_stream:
     fclose(stream);
+error_exit:
     return NULL;
 }
 
@@ -204,7 +205,7 @@ static void _std_handle_dtor(FS_Handle_t *handle)
 
 static size_t _std_handle_size(FS_Handle_t *handle)
 {
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     return std_handle->size;
 }
@@ -233,14 +234,14 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
 static long _std_handle_tell(FS_Handle_t *handle)
 {
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     return ftell(std_handle->stream);
 }
 
 static bool _std_handle_eof(FS_Handle_t *handle)
 {
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     bool end_of_file = feof(std_handle->stream) != 0;
 #if defined(TOFU_FILE_DEBUG_ENABLED)

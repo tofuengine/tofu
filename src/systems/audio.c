@@ -114,7 +114,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     Audio_t *audio = malloc(sizeof(Audio_t));
     if (!audio) {
         LOG_E("can't allocate audio");
-        return NULL;
+        goto error_exit;
     }
 
     *audio = (Audio_t){
@@ -124,7 +124,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     audio->context = SL_context_create();
     if (!audio->context) {
         LOG_F("can't create the sound context");
-        goto error_free;
+        goto error_free_audio;
     }
     LOG_D("sound context created at %p", audio->context);
 
@@ -229,8 +229,9 @@ error_deinitialize_mutex:
     ma_mutex_uninit(&audio->driver.lock);
 error_destroy_context:
     SL_context_destroy(audio->context);
-error_free:
+error_free_audio:
     free(audio);
+error_exit:
     return NULL;
 }
 
