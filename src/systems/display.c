@@ -385,7 +385,10 @@ static bool _shader_initialize(Display_t *display, const char *effect)
         goto error_free_code;
     }
 
-    shader_prepare(display->shader, _uniforms, Uniforms_t_CountOf);
+    bool prepared = shader_prepare(display->shader, _uniforms, Uniforms_t_CountOf);
+    if (!prepared) {
+        goto error_free_code;
+    }
     LOG_D("shader %p prepared", display->shader);
 
     shader_use(display->shader);

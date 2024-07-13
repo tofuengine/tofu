@@ -72,7 +72,7 @@ typedef enum Shader_Types_e {
 extern Shader_t *shader_create(void);
 extern void shader_destroy(Shader_t *shader);
 extern bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type);
-extern void shader_prepare(Shader_t *shader, const char *ids[], size_t count);
+extern bool shader_prepare(Shader_t *shader, const char *ids[], size_t count);
 extern void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value);
 extern void shader_use(const Shader_t *shader);
 

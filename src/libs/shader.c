@@ -151,7 +151,7 @@ bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type)
     return success;
 }
 
-void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
+bool shader_prepare(Shader_t *shader, const char *ids[], size_t count)
 {
     if (shader->locations) {
         free(shader->locations);
@@ -160,14 +160,19 @@ void shader_prepare(Shader_t *shader, const char *ids[], size_t count)
     }
     if (count == 0) {
         LOG_D("no uniforms to prepare for program #%d", shader->id);
-        return;
+        return true;
     }
     shader->locations = malloc(sizeof(GLuint) * count);
+    if (!shader->locations) {
+        LOG_E("can't allocate shader uniforms LUT for program #%d", shader->id);
+        return false;
+    }
     for (size_t i = 0; i < count; ++i) {
         GLint location = glGetUniformLocation(shader->id, ids[i]);
         LOG_IF_W(location == -1, "uniform `%s` not found for program #%d", ids[i], shader->id);
         shader->locations[i] = location;
     }
+    return true;
 }
 
 // `shader_use` need to be called prior sending data to the program.
