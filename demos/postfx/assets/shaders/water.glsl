@@ -107,7 +107,7 @@ vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
 
     vec4 distorted = getDistortedSample(texture, mirrorCoords, distFromEdge, bumpNormal, false);
 
-    // Water is more trasparent near the wall.
+    // Water is more transparent near the wall.
     float ratio = pow(distFromEdge / edge, 0.75);
     return mix(normal, distorted, ratio);
 }

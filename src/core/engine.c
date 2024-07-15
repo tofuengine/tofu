@@ -473,12 +473,6 @@ void Engine_run(Engine_t *engine)
             }
         }
 
-//        running = running && Input_update_variable(engine->storage, elapsed);
-//        running = running && Display_update_variable(engine->display, elapsed);
-//        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
-//        running = running && Audio_update_variable(&engine->audio, elapsed);
-//        running = running && Storage_update_variable(engine->storage, elapsed);
-
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[1] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */

@@ -36,6 +36,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
+--local Source = require("tofu.sound.source")
 
 local Channel = Class.define()
 

@@ -42,7 +42,7 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-Shader_t *shader_create(void)
+Shader_t *shader_create(const char *codes[], const char *ids[], size_t count)
 {
     Shader_t *shader = malloc(sizeof(Shader_t));
     if (!shader) {
