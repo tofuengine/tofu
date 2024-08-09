@@ -365,31 +365,22 @@ static bool _shader_initialize(Display_t *display, const char *effect)
         goto error_exit;
     }
 
-    display->shader = shader_create();
-    if (!display->shader) {
-        goto error_exit;
-    }
-
-    LOG_D("loading shader %p", display->shader);
-
     const size_t length = strlen(_FRAGMENT_SHADER) + strlen(effect);
     char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
     if (!code) {
-        goto error_destroy_shader;
+        LOG_E("can' allocate memory for fragment shader");
+        goto error_exit;
     }
     strcpy(code, _FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
     strcat(code, effect);
 
-    if (!shader_attach(display->shader, _VERTEX_SHADER, SHADER_TYPE_VERTEX) ||
-        !shader_attach(display->shader, code, SHADER_TYPE_FRAGMENT)) {
+    display->shader = shader_create((const char *[2]){ _VERTEX_SHADER, code }, _uniforms, Uniforms_t_CountOf);
+    if (!display->shader) {
+        LOG_E("can' create shader memory for fragment shader");
         goto error_free_code;
     }
 
-    bool prepared = shader_prepare(display->shader, _uniforms, Uniforms_t_CountOf);
-    if (!prepared) {
-        goto error_free_code;
-    }
-    LOG_D("shader %p prepared", display->shader);
+    LOG_D("shader %p created", display->shader);
 
     shader_use(display->shader);
 
@@ -423,8 +414,6 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
 error_free_code:
     free(code);
-error_destroy_shader:
-    shader_destroy(display->shader);
 error_exit:
     return false;
 }
