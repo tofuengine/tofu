@@ -119,7 +119,7 @@ static GLint *_prepare(GLuint program_id, const char *ids[], size_t count)
     return locations;
 }
 
-Shader_t *shader_create(const char *codes[2], const char *ids[], size_t count)
+Shader_t *shader_create(const char *vertex, const char *fragment, const char *ids[], size_t count)
 {
     Shader_t *shader = malloc(sizeof(Shader_t));
     if (!shader) {
@@ -130,7 +130,7 @@ Shader_t *shader_create(const char *codes[2], const char *ids[], size_t count)
     LOG_D("shader created at %p", shader);
 #endif  /* VERBOSE_DEBUG */
 
-    *shader = (Shader_t){ 0 }; // Initialzed the object structure to clear all the fields.
+    *shader = (Shader_t){ 0 }; // Initialize the object structure to clear all the fields.
 
     GLuint program_id = glCreateProgram();
     if (program_id == 0) {
@@ -139,6 +139,7 @@ Shader_t *shader_create(const char *codes[2], const char *ids[], size_t count)
     }
     LOG_D("shader program #%d created", program_id);
 
+    const char *codes[2] = { vertex, fragment };
     GLuint shader_ids[2] = { 0 };
     for (size_t i = 0; i < 2; ++i) {
         const GLenum type = _index_to_shader_type[i];

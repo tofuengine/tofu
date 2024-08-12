@@ -63,7 +63,7 @@ typedef enum Shader_Uniforms_e {
 } Shader_Uniforms_t;
 
 // TODO: rename to first char uppercase.
-extern Shader_t *shader_create(const char *codes[2], const char *ids[], size_t count);
+extern Shader_t *shader_create(const char *vertex, const char *fragment, const char *ids[], size_t count);
 extern void shader_destroy(Shader_t *shader);
 extern void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value);
 extern void shader_use(const Shader_t *shader);

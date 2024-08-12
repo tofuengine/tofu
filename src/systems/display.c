@@ -360,24 +360,26 @@ static void _window_destroy(GLFWwindow *window)
 
 static bool _shader_initialize(Display_t *display, const char *effect)
 {
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (!effect) {
-        LOG_E("shader is null");
+        LOG_E("shader effect is null");
         goto error_exit;
     }
+#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     const size_t length = strlen(_FRAGMENT_SHADER) + strlen(effect);
-    char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
-    if (!code) {
-        LOG_E("can' allocate memory for fragment shader");
+    char *shader_code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
+    if (!shader_code) {
+        LOG_E("can' allocate memory for the fragment shader code");
         goto error_exit;
     }
-    strcpy(code, _FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
-    strcat(code, effect);
+    strcpy(shader_code, _FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
+    strcat(shader_code, effect);
 
-    display->shader = shader_create((const char *[2]){ _VERTEX_SHADER, code }, _uniforms, Uniforms_t_CountOf);
+    display->shader = shader_create(_VERTEX_SHADER, shader_code, _uniforms, Uniforms_t_CountOf);
     if (!display->shader) {
-        LOG_E("can' create shader memory for fragment shader");
-        goto error_free_code;
+        LOG_E("can' create the shader");
+        goto error_free_shader_code;
     }
 
     LOG_D("shader %p created", display->shader);
@@ -408,12 +410,12 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     LOG_D("shader %p initialized", display->shader);
 
-    free(code);
+    free(shader_code);
 
     return true;
 
-error_free_code:
-    free(code);
+error_free_shader_code:
+    free(shader_code);
 error_exit:
     return false;
 }
