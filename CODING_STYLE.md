@@ -61,10 +61,13 @@ The only exception to this is for the include-guards (see below), which uses the
 
 > Coincidentally this is the same approach used in Lua's codebase.
 
-## Module Debugging
+## Debugging
 
-Every sub-system should use a macro with identifier `TOFU_<module-name>_DEBUG_ENABLED` to control a fine log/debug
-level to be used. The macro should be defined in the `config.h` file.
+Every sub-system should use a macro with identifier `TOFU_<module-name>_DEBUG_ENABLED` to control a fine log/debug level to be used. The macro should be defined in the `config.h` file.
+
+In addition the macro `TOFU_CORE_VERBOSE_DEBUG` is used to wrap the log information for the APIs that are more frequent in use (e.g. the loading system) and when enabled can hinder the performance significantly.
+
+The `TOFU_CORE_DEFENSIVE_CHECKS` macro, otherwise, enables arguments checking in some selected functions. This is something that should be enabled only in the `DEBUG` build as arguments should not need any check once the "contract" between caller and callee is respected (and we tend to prefer that it should be the caller to ensure arguments coherence, for example for pointers).
 
 ## Type Definitions
 
