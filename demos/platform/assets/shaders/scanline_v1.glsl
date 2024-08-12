@@ -7,7 +7,7 @@ float round(float x) {
 }
 
 vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
-    vec4 texel = texture2D(texture, texture_coords) * color;
+    vec4 texel = texture2D(texture, texture_coords);
     if (mod(screen_coords.y, round(thickness + spacing)) < round(spacing)) {
         return vec4(texel.rgb * (1.0 - amount), texel.a);
     }
