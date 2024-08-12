@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include "mix.h"
 
 #include <core/config.h>
+#define _LOG_TAG "sl-props"
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -34,17 +35,15 @@
 
 // Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
-#define MIN_SPEED_VALUE ((float)ma_standard_sample_rate_min / (float)ma_standard_sample_rate_max)
+#define _MIN_SPEED_VALUE ((float)ma_standard_sample_rate_min / (float)ma_standard_sample_rate_max)
 
 #if SL_BYTES_PER_SAMPLE == 2
-  #define INTERNAL_FORMAT   ma_format_s16
+    #define INTERNAL_FORMAT   ma_format_s16
 #elif SL_BYTES_PER_SAMPLE == 4
-  #define INTERNAL_FORMAT   ma_format_f32
+    #define INTERNAL_FORMAT   ma_format_f32
 #else
-  #error "Wrong internal format"
+    #error "Wrong internal format"
 #endif
-
-#define LOG_CONTEXT "sl-props"
 
 static void *_malloc(size_t sz, void *pUserData)
 {
@@ -65,8 +64,8 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
 {
     SL_Props_t *props = malloc(sizeof(SL_Props_t));
     if (!props) {
-        LOG_E(LOG_CONTEXT, "can't allocate properties");
-        return NULL;
+        LOG_E("can't allocate properties");
+        goto error_exit;
     }
 
     *props = (SL_Props_t){
@@ -88,14 +87,15 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
             .onFree = _free
         }, &props->converter);
     if (result != MA_SUCCESS) {
-        LOG_E(LOG_CONTEXT, "failed to create data converter");
-        goto error_free;
+        LOG_E("failed to create data converter");
+        goto error_free_props;
     }
 
     return props;
 
-error_free:
+error_free_props:
     free(props);
+error_exit:
     return NULL;
 }
 
@@ -107,10 +107,10 @@ void SL_props_destroy(SL_Props_t *props)
             .onRealloc = _realloc,
             .onFree = _free
         });
-    LOG_D(LOG_CONTEXT, "data converted uninitialized");
+    LOG_D("data converted uninitialized");
 
     free(props);
-    LOG_D(LOG_CONTEXT, "properties freed");
+    LOG_D("properties freed");
 }
 
 void SL_props_set_group(SL_Props_t *props, size_t group_id)
@@ -189,7 +189,7 @@ void SL_props_set_gain(SL_Props_t *props, float gain)
 
 void SL_props_set_speed(SL_Props_t *props, float speed)
 {
-    props->speed = fmaxf(MIN_SPEED_VALUE, speed);
+    props->speed = fmaxf(_MIN_SPEED_VALUE, speed);
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 

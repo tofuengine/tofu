@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,42 +28,27 @@
 
 #include <core/config.h>
 #include <libs/gl/gl.h>
+#define _LOG_TAG "font"
 #include <libs/log.h>
-#include <libs/path.h>
-#include <systems/storage.h>
 
-#define LOG_CONTEXT "font"
-#define MODULE_NAME "tofu.graphics.font"
-#define META_TABLE  "Tofu_Graphics_Font_mt"
-
-static int font_new_v_1o(lua_State *L);
+static int font_new_2oS_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
 static int font_size_4osNN_2n(lua_State *L);
 
 int font_loader(lua_State *L)
 {
-    char file[PLATFORM_PATH_MAX] = { 0 };
-    path_lua_to_fs(file, MODULE_NAME);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
-            .name = file
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
-            { "new", font_new_v_1o },
+            // -- constructors/destructors --
+            { "new", font_new_2oS_1o },
             { "__gc", font_gc_1o_0 },
+            // -- accessors --
             { "size", font_size_4osNN_2n },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static inline void _generate_alphabet(GL_Cell_t glyphs[256], const char *alphabet)
@@ -83,87 +68,29 @@ static inline void _generate_alphabet(GL_Cell_t glyphs[256], const char *alphabe
     }
 }
 
-static int font_new_3osS_1o(lua_State *L)
+static int font_new_2oS_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
-    const char *cells_file = LUAX_STRING(L, 2);
-    const char *alphabet = LUAX_OPTIONAL_STRING(L, 3, NULL);
+    const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const char *alphabet = LUAX_OPTIONAL_STRING(L, 2, NULL);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-
-    const Storage_Resource_t *cells = Storage_load(storage, cells_file, STORAGE_RESOURCE_BLOB);
-    if (!cells) {
-        return luaL_error(L, "can't load file `%s`", cells_file);
-    }
-
-    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle32_t)); // Calculate the amount of entries on the fly.
-    if (!sheet) {
-        return luaL_error(L, "can't create sheet");
-    }
-
-    Font_Object_t *self = (Font_Object_t *)luaX_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
-            .atlas = {
-                .instance = atlas,
+    Font_Object_t *self = (Font_Object_t *)udt_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
+            .bank = {
+                .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
-            .sheet = sheet,
+            .sheet = bank->sheet, // Shortcut to save later accesses (see `canvas.c`).
             .glyphs = { 0 }
-        }, OBJECT_TYPE_FONT, META_TABLE);
+        }, OBJECT_TYPE_FONT);
     _generate_alphabet(self->glyphs, alphabet);
 
-    LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
-        self, sheet, atlas, self->atlas.reference);
+    LOG_D("font %p allocated w/ bank %p w/ reference #%d",
+        self, bank, self->bank.reference);
 
     return 1;
-}
-
-static int font_new_4onnS_1o(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const Image_Object_t *atlas = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
-    size_t glyph_width = LUAX_UNSIGNED(L, 2);
-    size_t glyph_height = LUAX_UNSIGNED(L, 3);
-    const char *alphabet = LUAX_OPTIONAL_STRING(L, 4, NULL);
-
-    GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->surface, (GL_Size_t){ .width = glyph_width, .height = glyph_height });
-    if (!sheet) {
-        return luaL_error(L, "can't create sheet");
-    }
-
-    Font_Object_t *self = (Font_Object_t *)luaX_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
-            .atlas = {
-                .instance = atlas,
-                .reference = luaX_ref(L, 1)
-            },
-            .sheet = sheet,
-            .glyphs = { 0 }
-        }, OBJECT_TYPE_FONT, META_TABLE);
-    _generate_alphabet(self->glyphs, alphabet);
-
-    LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
-        self, sheet, atlas, self->atlas.reference);
-
-    return 1;
-}
-
-static int font_new_v_1o(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_SIGNATURE(font_new_3osS_1o, LUA_TOBJECT, LUA_TSTRING, LUA_TSTRING)
-        LUAX_OVERLOAD_SIGNATURE(font_new_4onnS_1o, LUA_TOBJECT, LUA_TNUMBER, LUA_TNUMBER)
-        LUAX_OVERLOAD_ARITY(3, font_new_3osS_1o)
-        LUAX_OVERLOAD_ARITY(4, font_new_4onnS_1o)
-    LUAX_OVERLOAD_END
 }
 
 static int font_gc_1o_0(lua_State *L)
@@ -173,13 +100,10 @@ static int font_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Object_t *self = (Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
 
-    GL_sheet_destroy(self->sheet);
-    LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+    luaX_unref(L, self->bank.reference);
+    LOG_D("bank reference #%d released", self->bank.reference);
 
-    luaX_unref(L, self->atlas.reference);
-    LOG_D(LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
-
-    LOG_D(LOG_CONTEXT, "font %p finalized", self);
+    LOG_D("font %p finalized", self);
 
     return 0;
 }
@@ -207,7 +131,7 @@ static int font_size_4osNN_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END

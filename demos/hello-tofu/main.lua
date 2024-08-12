@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -55,8 +68,8 @@ function Main:__ctor()
   -- Please note that, as default, palette colour `0` is set as transparent. This
   -- means that the font background colour won't be drawn.
   self.canvas = Canvas.new(Image.new(width, height))
-  self.font = Font.new(Image.new("assets/font-8x8.png", 0, 15), 8, 8)
-  self.font_digits = Font.new(Image.new("assets/digits.png", 0, 15), 8, 8, "0123456789")
+  self.font = Font.from_image("assets/font-8x8.png", 8, 8, 0, 15)
+  self.font_digits = Font.from_image("assets/digits.png", 8, 8, "0123456789", 0, 15)
 
   self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:wrap("border")
@@ -64,7 +77,10 @@ function Main:__ctor()
   self.xform:warp(height, self.factor)
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local recompute = false
 
   local controller = Controller.default()
@@ -85,6 +101,7 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
 end
 
 function Main:render(_)

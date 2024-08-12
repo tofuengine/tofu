@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +49,6 @@ extern bool path_is_absolute(const char *path);
 extern bool path_is_normalized(const char *path);
 extern void path_split(const char *path, char *folder, char *file);
 extern void path_join(char *path, const char *folder, const char *file);
-extern void path_lua_to_fs(char *path, const char *modname);
+extern const char *path_lua_to_fs(char *fqn, const char *module_name);
 
 #endif  /* TOFU_LIBS_PATH_H */

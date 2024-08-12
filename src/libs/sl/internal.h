@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef TOFU_LIBS_SL_INTERNALS_H
-#define TOFU_LIBS_SL_INTERNALS_H
+#ifndef TOFU_LIBS_SL_INTERNAL_H
+#define TOFU_LIBS_SL_INTERNAL_H
 
 #include "common.h"
 #include "source.h"
@@ -33,11 +33,11 @@
 #include <stddef.h>
 
 #if SL_BYTES_PER_SAMPLE == 2
-  #define INTERNAL_FORMAT   ma_format_s16
+    #define INTERNAL_FORMAT   ma_format_s16
 #elif SL_BYTES_PER_SAMPLE == 4
-  #define INTERNAL_FORMAT   ma_format_f32
+    #define INTERNAL_FORMAT   ma_format_f32
 #else
-  #error "Wrong internal format"
+    #error "Wrong internal format"
 #endif
 
 typedef struct Source_VTable_s {
@@ -53,4 +53,4 @@ struct SL_Source_s {
     SL_Props_t *props;
 };
 
-#endif  /* TOFU_LIBS_SL_INTERNALS_H */
+#endif  /* TOFU_LIBS_SL_INTERNAL_H */

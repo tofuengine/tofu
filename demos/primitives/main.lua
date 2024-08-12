@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +62,10 @@ function Main:__ctor()
   self.mode = 0
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     System.quit()
@@ -61,6 +77,7 @@ function Main:process()
 end
 
 function Main:update(_) -- delta_time
+  self:handle_input()
 end
 
 function Main:render(_) -- ratio
@@ -149,7 +166,7 @@ function Main:render(_) -- ratio
     canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(width, 0, self.font, string.format("mode: %d", self.mode), "right")
 end
 

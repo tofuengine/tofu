@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +87,7 @@ function Main:__ctor()
   end
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     collectgarbage("collect")
@@ -121,6 +134,7 @@ function Main:update_blocks(delta_time)
 end
 
 function Main:update(delta_time)
+  self:handle_input()
   self:update_player(delta_time)
   self:update_blocks(delta_time)
 end
@@ -153,7 +167,7 @@ function Main:render(_)
   self:draw_blocks(canvas)
   self:draw_player(canvas)
 
-  canvas:write(0, 0, FONT, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

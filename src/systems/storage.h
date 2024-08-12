@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,13 +103,14 @@ typedef struct Storage_s {
     Storage_Resource_t **resources;
 } Storage_t;
 
-#define S_SCHARS(r)         ((r)->var.string.chars)
-#define S_SLENTGH(r)        ((r)->var.string.length)
-#define S_BPTR(r)           ((r)->var.blob.ptr)
-#define S_BSIZE(r)          ((r)->var.blob.size)
-#define S_IWIDTH(r)         ((r)->var.image.width)
-#define S_IHEIGHT(r)        ((r)->var.image.height)
-#define S_IPIXELS(r)        ((r)->var.image.pixels)
+// Faster accessors for a storage (S) resource (R) attributes.
+#define SR_SCHARS(r)  ((r)->var.string.chars)
+#define SR_SLENTGH(r) ((r)->var.string.length)
+#define SR_BPTR(r)    ((r)->var.blob.ptr)
+#define SR_BSIZE(r)   ((r)->var.blob.size)
+#define SR_IWIDTH(r)  ((r)->var.image.width)
+#define SR_IHEIGHT(r) ((r)->var.image.height)
+#define SR_IPIXELS(r) ((r)->var.image.pixels)
 
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
@@ -108,6 +122,7 @@ extern bool Storage_inject_raw(Storage_t *storage, const char *name, const void 
 
 extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 
+extern bool Storage_exists(Storage_t *storage, const char *name);
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
 

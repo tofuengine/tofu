@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +40,8 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "log"
 #include <libs/log.h>
-#include <libs/path.h>
-#include <systems/storage.h>
-
-#define LOG_CONTEXT "log"
-#define MODULE_NAME "tofu.core.log"
 
 static int log_info_v_0(lua_State *L);
 static int log_warning_v_0(lua_State *L);
@@ -41,20 +50,9 @@ static int log_fatal_v_0(lua_State *L);
 
 int log_loader(lua_State *L)
 {
-    char file[PLATFORM_PATH_MAX] = { 0 };
-    path_lua_to_fs(file, MODULE_NAME);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
-            .name = file
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- operations --
             { "info", log_info_v_0 },
             { "warning", log_warning_v_0 },
             { "error", log_error_v_0 },
@@ -63,7 +61,7 @@ int log_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int _write(lua_State *L, Log_Levels_t level)
@@ -78,7 +76,7 @@ static int _write(lua_State *L, Log_Levels_t level)
         if (!s) {
             return luaL_error(L, "`tostring` must return a string `log_write`");
         }
-        Log_write(level, LOG_CONTEXT, (i > 1) ? "\t%s" : "%s", s);
+        Log_write(level, _LOG_TAG, (i > 1) ? "\t%s" : "%s", s);
         lua_pop(L, 1); // F R -> F
     }
     lua_pop(L, 1); // F -> <empty>

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,9 @@
 #include <core/config.h>
 #include <libs/fmath.h>
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/sincos.h>
-#include <systems/storage.h>
 
 #include <stdint.h>
-
-#define MODULE_NAME "tofu.core.math"
 
 static int math_lerp_3nnn_1n(lua_State *L);
 static int math_invlerp_3nnn_1n(lua_State *L);
@@ -54,20 +50,9 @@ static int math_rotate_3nnn_2nn(lua_State *L);
 
 int math_loader(lua_State *L)
 {
-    char file[PLATFORM_PATH_MAX] = { 0 };
-    path_lua_to_fs(file, MODULE_NAME);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
-            .name = file
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- operations --
             { "lerp", math_lerp_3nnn_1n },
             { "invlerp", math_invlerp_3nnn_1n },
             { "clamp", math_clamp_v_1n },
@@ -88,7 +73,7 @@ int math_loader(lua_State *L)
             { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
             { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int math_lerp_3nnn_1n(lua_State *L)
@@ -148,8 +133,8 @@ static int math_clamp_3nNN_1n(lua_State *L)
 static int math_clamp_v_1n(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_clamp_3nNN_1n)
-        LUAX_OVERLOAD_ARITY(3, math_clamp_3nNN_1n)
+        LUAX_OVERLOAD_BY_ARITY(math_clamp_3nNN_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(math_clamp_3nNN_1n, 3)
     LUAX_OVERLOAD_END
 }
 

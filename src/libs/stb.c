@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +36,29 @@
  */
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define STB_LEAKCHECK_IMPLEMENTATION
-  #include <stb/stb_leakcheck.h>
+    #define STB_LEAKCHECK_IMPLEMENTATION
+    #include <stb/stb_leakcheck.h>
 #endif
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define STBDS_REALLOC(c,p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
-  #define STBDS_FREE(c,p)      stb_leakcheck_free((p))
+    #define STBDS_REALLOC(c,p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+    #define STBDS_FREE(c,p)      stb_leakcheck_free((p))
 #endif
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define STBI_MALLOC(s)    stb_leakcheck_malloc((s), __FILE__, __LINE__)
-  #define STBI_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
-  #define STBI_FREE(p)      stb_leakcheck_free((p))
+    #define STBI_MALLOC(s)    stb_leakcheck_malloc((s), __FILE__, __LINE__)
+    #define STBI_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+    #define STBI_FREE(p)      stb_leakcheck_free((p))
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #if defined(DEBUG) && !defined(SANITIZE)
-  #define STBIW_MALLOC(s)    stb_leakcheck_malloc((s), __FILE__, __LINE__)
-  #define STBIW_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
-  #define STBIW_FREE(p)      stb_leakcheck_free((p))
+    #define STBIW_MALLOC(s)    stb_leakcheck_malloc((s), __FILE__, __LINE__)
+    #define STBIW_REALLOC(p,s) stb_leakcheck_realloc((p), (s), __FILE__, __LINE__)
+    #define STBIW_FREE(p)      stb_leakcheck_free((p))
 #endif
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>

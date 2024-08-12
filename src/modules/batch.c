@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +41,8 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "batch"
 #include <libs/log.h>
-
-#define LOG_CONTEXT "batch"
-#define META_TABLE  "Tofu_Graphics_Batch_mt"
 
 static int batch_new_2on_1o(lua_State *L);
 static int batch_gc_1o_0(lua_State *L);
@@ -42,12 +53,12 @@ static int batch_add_v_0(lua_State *L);
 
 int batch_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", batch_new_2on_1o },
             { "__gc", batch_gc_1o_0 },
+            // -- mutators --
             { "resize", batch_resize_2on_0 },
             { "grow", batch_grow_2on_0 },
             { "clear", batch_clear_1o_0 },
@@ -56,7 +67,7 @@ int batch_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static int batch_new_2on_1o(lua_State *L)
@@ -72,17 +83,17 @@ static int batch_new_2on_1o(lua_State *L)
     if (!queue) {
         return luaL_error(L, "can't create queue");
     }
-    LOG_D(LOG_CONTEXT, "queue %p created for bank %p w/ %d slots", queue, bank, capacity);
+    LOG_D("queue %p created for bank %p w/ %d slots", queue, bank, capacity);
 
-    Batch_Object_t *self = (Batch_Object_t *)luaX_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
+    Batch_Object_t *self = (Batch_Object_t *)udt_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
             .bank = {
                 .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
             .queue = queue
-        }, OBJECT_TYPE_BATCH, META_TABLE);
+        }, OBJECT_TYPE_BATCH);
 
-    LOG_D(LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
+    LOG_D("batch %p created w/ bank %p", self, bank);
 
     return 1;
 }
@@ -95,12 +106,12 @@ static int batch_gc_1o_0(lua_State *L)
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
 
     luaX_unref(L, self->bank.reference);
-    LOG_D(LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
+    LOG_D("bank reference #%d released", self->bank.reference);
 
     GL_queue_destroy(self->queue);
-    LOG_D(LOG_CONTEXT, "queue %p destroyed", self->queue);
+    LOG_D("queue %p destroyed", self->queue);
 
-    LOG_D(LOG_CONTEXT, "batch %p finalized", self);
+    LOG_D("batch %p finalized", self);
 
     return 0;
 }
@@ -266,11 +277,11 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
 static int batch_add_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, batch_add_4onNN_0)
-        LUAX_OVERLOAD_ARITY(5, batch_add_5onnnn_0)
-        LUAX_OVERLOAD_ARITY(6, batch_add_6onnnnn_0)
-        LUAX_OVERLOAD_ARITY(7, batch_add_9onnnnnNNN_0)
-        LUAX_OVERLOAD_ARITY(8, batch_add_9onnnnnNNN_0)
-        LUAX_OVERLOAD_ARITY(9, batch_add_9onnnnnNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_4onNN_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_5onnnn_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_6onnnnn_0, 6)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_9onnnnnNNN_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_9onnnnnNNN_0, 8)
+        LUAX_OVERLOAD_BY_ARITY(batch_add_9onnnnnNNN_0, 9)
     LUAX_OVERLOAD_END
 }

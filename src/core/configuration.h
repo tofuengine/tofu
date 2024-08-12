@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,25 +44,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MAX_VALUE_LENGTH   128
+#define CONFIGURATION_MAX_LINE_LENGTH      256
+#define CONFIGURATION_MAX_PARAMETER_LENGTH CONFIGURATION_MAX_LINE_LENGTH
+#define CONFIGURATION_MAX_CONTEXT_LENGTH   64
+#define CONFIGURATION_MAX_VALUE_LENGTH     128
 
 typedef struct Configuration_s {
     struct {
-        char identity[MAX_VALUE_LENGTH];
+        char identity[CONFIGURATION_MAX_VALUE_LENGTH];
         struct {
             int major, minor, revision;
         } version;
         bool debug;
-        char icon[MAX_VALUE_LENGTH];
-        char mappings[MAX_VALUE_LENGTH];
+        char icon[CONFIGURATION_MAX_VALUE_LENGTH];
+        char mappings[CONFIGURATION_MAX_VALUE_LENGTH];
         bool quit_on_close;
     } system;
     struct {
-        char title[MAX_VALUE_LENGTH];
+        char title[CONFIGURATION_MAX_VALUE_LENGTH];
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
-        char effect[MAX_VALUE_LENGTH];
+        char effect[CONFIGURATION_MAX_VALUE_LENGTH];
     } display;
     struct {
         int device_index;
@@ -69,6 +85,7 @@ typedef struct Configuration_s {
     } controller;
     struct {
         size_t frames_per_seconds;
+        size_t low_priority_frames_per_seconds;
         size_t skippable_frames;
         size_t frames_limit;
     } engine;

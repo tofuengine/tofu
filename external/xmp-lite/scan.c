@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -148,6 +148,21 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 	/* Allow more complex order reuse only in main sequence */
 	if (ep != 0 && p->sequence_control[ord] != 0xff) {
+	    /* Currently to detect the end of the sequence, the player needs the
+	     * end to be a real position and row, so skip invalid and S3M_SKIP.
+	     * "amazonas-dynomite mix.it" by Skaven has a sequence (9) where an
+	     * S3M_END repeats into an S3M_SKIP.
+	     *
+	     * Two sequences (7 and 8) in "alien incident - leohou2.s3m" by
+	     * Purple Motion share the same S3M_END due to an off-by-one jump,
+	     * so check S3M_END here too.
+		 */
+	    if (pat >= mod->pat) {
+			if (has_marker && pat == S3M_END) {
+				ord = mod->len;
+			}
+			continue;
+	    }
 	    break;
 	}
 	p->sequence_control[ord] = chain;
@@ -243,13 +258,17 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		if (row >= tracks[chn]->rows)
 		    continue;
 
-		//event = &EVENT(mod->xxo[ord], chn, row);
+		/* event = &EVENT(mod->xxo[ord], chn, row); */
 		event = &tracks[chn]->event[row];
 
 		f1 = event->fxt;
 		p1 = event->fxp;
 		f2 = event->f2t;
 		p2 = event->f2p;
+
+		if (f1 == 0 && f2 == 0) {
+			continue;
+		}
 
 		if (f1 == FX_GLOBALVOL || f2 == FX_GLOBALVOL) {
 		    gvl = (f1 == FX_GLOBALVOL) ? p1 : p2;
@@ -478,6 +497,15 @@ end_module:
     return (time + m->time_factor * frame_count * base_time / bpm);
 }
 
+static void reset_scan_data(struct context_data *ctx)
+{
+	int i;
+	for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
+		ctx->m.xxo_info[i].time = -1;
+	}
+	memset(ctx->p.sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
+}
+
 int libxmp_get_sequence(struct context_data *ctx, int ord)
 {
 	struct player_data *p = &ctx->p;
@@ -504,12 +532,9 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	/* Initialize order data to prevent overwrite when a position is used
 	 * multiple times at different starting points (see janosik.xm).
 	 */
-	for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
-		m->xxo_info[i].time = -1;
-	}
+	reset_scan_data(ctx);
 
 	ep = 0;
-	memset(p->sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
 	temp_ep[0] = 0;
 	p->scan[0].time = scan_module(ctx, ep, 0);
 	seq = 1;

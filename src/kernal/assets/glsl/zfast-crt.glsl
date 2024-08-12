@@ -1,21 +1,56 @@
 /*
-    zfast_crt_standard - A simple, fast CRT shader.
-
-    Copyright (C) 2017 Greg Hogan (SoltanGris42)
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by the Free
-    Software Foundation; either version 2 of the License, or (at your option)
-    any later version.
-
-
-Notes:  This shader does scaling with a weighted linear filter for adjustable
-	sharpness on the x and y axes based on the algorithm by Inigo Quilez here:
-	http://http://www.iquilezles.org/www/articles/texture/texture.htm
-	but modified to be somewhat sharper.  Then a scanline effect that varies
-	based on pixel brighness is applied along with a monochrome aperture mask.
-	This shader runs at 60fps on the Raspberry Pi 3 hardware at 2mpix/s
-	resolutions (1920x1080 or 1600x1200).
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
+ * MIT License
+ * 
+ * Copyright (c) 2019-2024 Marco Lizza
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/*
+ * zfast_crt_standard - A simple, fast CRT shader.
+ *
+ * Copyright (C) 2017 Greg Hogan (SoltanGris42)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * Notes: This shader does scaling with a weighted linear filter for adjustable
+ * sharpness on the x and y axes based on the algorithm by Inigo Quilez here:
+ * http://http://www.iquilezles.org/www/articles/texture/texture.htm
+ * but modified to be somewhat sharper.  Then a scanline effect that varies
+ * based on pixel brightness is applied along with a monochrome aperture mask.
+ * This shader runs at 60fps on the Raspberry Pi 3 hardware at 2mpix/s
+ * resolutions (1920x1080 or 1600x1200).
 */
 
 //This can't be an option without slowing the shader down
@@ -45,7 +80,7 @@ Notes:  This shader does scaling with a weighted linear filter for adjustable
 
 const float maskFade = 0.3333 * MASK_FADE;
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
 	//This is just like "Quilez Scaling" but sharper
 	vec2 p = texture_coords * u_texture_size;
 	vec2 i = floor(p) + 0.50;

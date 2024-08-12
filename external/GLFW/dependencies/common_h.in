@@ -1,6 +1,7 @@
-internal.h
-mappings.h
 glfw3.h
 glfw3native.h
-egl_context.h
-osmesa_context.h
+internal.h
+mappings.h
+null_joystick.h
+null_platform.h
+platform.h

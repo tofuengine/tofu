@@ -11,10 +11,10 @@
 extern "C" {
 #endif
 
-#define XMP_VERSION "4.5.1"
-#define XMP_VERCODE 0x040501
+#define XMP_VERSION "4.6.1"
+#define XMP_VERCODE 0x040601
 #define XMP_VER_MAJOR 4
-#define XMP_VER_MINOR 5
+#define XMP_VER_MINOR 6
 #define XMP_VER_RELEASE 1
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -113,7 +113,7 @@ extern "C" {
 #define XMP_SMPCTL_SKIP		(1 << 0) /* Don't load samples */
 
 /* limits */
-#define XMP_MAX_KEYS		120	/* Number of valid keys */
+#define XMP_MAX_KEYS		121	/* Number of valid keys */
 #define XMP_MAX_ENV_POINTS	32	/* Max number of envelope points */
 #define XMP_MAX_MOD_LENGTH	256	/* Max number of patterns in module */
 #define XMP_MAX_CHANNELS	64	/* Max number of channels in module */
@@ -243,6 +243,7 @@ struct xmp_sample {
 #define XMP_SAMPLE_LOOP_FULL	(1 << 4)  /* Play full sample before looping */
 #define XMP_SAMPLE_SLOOP	(1 << 5)  /* Sample has sustain loop */
 #define XMP_SAMPLE_SLOOP_BIDIR	(1 << 6)  /* Bidirectional sustain loop */
+#define XMP_SAMPLE_STEREO	(1 << 7)  /* Interlaced stereo sample */
 #define XMP_SAMPLE_SYNTH	(1 << 15) /* Data contains synth patch */
 	int flg;			/* Flags */
 	unsigned char *data;		/* Sample data */

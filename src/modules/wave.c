@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +40,8 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "wave"
 #include <libs/log.h>
-
-#define LOG_CONTEXT "wave"
-#define META_TABLE  "Tofu_Generators_Wave_mt"
 
 static int wave_new_3eNN_1o(lua_State *L);
 static int wave_gc_1o_0(lua_State *L);
@@ -41,22 +52,24 @@ static int wave_at_2on_1n(lua_State *L);
 
 int wave_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", wave_new_3eNN_1o },
             { "__gc", wave_gc_1o_0 },
-            { "__call", wave_at_2on_1n }, // Call meta-method, mapped to `at(...)`.
+            // -- metamethods --
+            { "__call", wave_at_2on_1n }, // Call metamethod, mapped to `at(...)`.
+            // -- getters/setters --
             { "form", wave_form_v_v },
             { "period", wave_period_v_v },
             { "amplitude", wave_amplitude_v_v },
+            // -- operations --
             { "at", wave_at_2on_1n },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static const char *_forms[Wave_Types_t_CountOf + 1] = {
@@ -85,14 +98,14 @@ static int wave_new_3eNN_1o(lua_State *L)
     float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    Wave_Object_t *self = (Wave_Object_t *)luaX_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
+    Wave_Object_t *self = (Wave_Object_t *)udt_newobject(L, sizeof(Wave_Object_t), &(Wave_Object_t){
             .form = form,
             .function = _functions[form],
             .period = period,
             .amplitude = amplitude
-        }, OBJECT_TYPE_WAVE, META_TABLE);
+        }, OBJECT_TYPE_WAVE);
 
-    LOG_D(LOG_CONTEXT, "wave %p allocated", self);
+    LOG_D("wave %p allocated", self);
 
     return 1;
 }
@@ -106,7 +119,7 @@ static int wave_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    LOG_D(LOG_CONTEXT, "wave %p finalized", self);
+    LOG_D("wave %p finalized", self);
 
     return 0;
 }
@@ -115,7 +128,7 @@ static int wave_gc_1o_0(lua_State *L)
 static int wave_form_1o_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
 
@@ -142,8 +155,8 @@ static int wave_form_2oe_0(lua_State *L)
 static int wave_form_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_form_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, wave_form_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(wave_form_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(wave_form_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -178,8 +191,8 @@ static int wave_period_2on_0(lua_State *L)
 static int wave_period_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_period_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, wave_period_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(wave_period_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(wave_period_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -214,8 +227,8 @@ static int wave_amplitude_2on_0(lua_State *L)
 static int wave_amplitude_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_amplitude_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, wave_amplitude_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(wave_amplitude_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(wave_amplitude_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 

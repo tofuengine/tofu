@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +36,9 @@
  */
 #include "program.h"
 
+#define _LOG_TAG "gl-program"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "gl-program"
 
 static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, const GL_Program_Entry_t entry)
 {
@@ -36,7 +48,10 @@ static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int posit
     if (index < entries) { // Overwrite an existing entry, if present.
         program[index] = entry;
     } else { // Otherwise, fill with `NOP` operations and append (moving the end-of-data marker).
-        const GL_Program_Entry_t nop = (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_NOP, .args = { { 0 } } };
+        const GL_Program_Entry_t nop = (GL_Program_Entry_t){
+                .command = GL_PROGRAM_COMMAND_NOP,
+                .args = { { 0 } }
+            };
         for (int i = entries; i < index; ++i) {
             arrins(program, i, nop);
         }
@@ -49,18 +64,21 @@ GL_Program_t *GL_program_create(void)
 {
     GL_Program_t *program = malloc(sizeof(GL_Program_t));
     if (!program) {
-        LOG_E(LOG_CONTEXT, "can't allocate program");
+        LOG_E("can't allocate program");
         return NULL;
     }
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program created at %p", program);
+    LOG_D("program created at %p", program);
 #endif  /* VERBOSE_DEBUG */
 
     *program = (GL_Program_t){ 0 };
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     // We will be adding the other entries at the end of the array, keeping the `WAIT/max/max` terminator.
-    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } };
+    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
+            .command = GL_PROGRAM_COMMAND_WAIT,
+            .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
+        };
     arrpush(program->entries, end_of_data);
 
     return program;
@@ -70,11 +88,11 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 {
     GL_Program_t *clone = malloc(sizeof(GL_Program_t));
     if (!clone) {
-        LOG_E(LOG_CONTEXT, "can't allocate program");
+        LOG_E("can't allocate program");
         return NULL;
     }
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program created at %p", clone);
+    LOG_D("program created at %p", clone);
 #endif  /* VERBOSE_DEBUG */
 
     *clone = (GL_Program_t){ 0 };
@@ -92,12 +110,12 @@ void GL_program_destroy(GL_Program_t *program)
 {
     arrfree(program->entries);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
+    LOG_D("program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     free(program);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program %p freed", program);
+    LOG_D("program %p freed", program);
 #endif  /* VERBOSE_DEBUG */
 }
 
@@ -112,11 +130,14 @@ void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
+    LOG_D("program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } };
+    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
+            .command = GL_PROGRAM_COMMAND_WAIT,
+            .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
+        };
     arrpush(program->entries, end_of_data);
 }
 
@@ -124,7 +145,7 @@ void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
 {
     arrdeln(program->entries, position, length);
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program entries at %p freed", program->entries);
+    LOG_D("program entries at %p freed", program->entries);
 #endif  /* VERBOSE_DEBUG */
 }
 

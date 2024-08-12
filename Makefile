@@ -1,7 +1,20 @@
 #
+#                 ___________________  _______________ ___
+#                 \__    ___/\_____  \ \_   _____/    |   \
+#                   |    |    /   |   \ |    __) |    |   /
+#                   |    |   /    |    \|     \  |    |  /
+#                   |____|   \_______  /\___  /  |______/
+#                                    \/     \/
+#         ___________ _______    ________.___ _______  ___________
+#         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+#          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+#          |        \/    |    \    \_\  \   /    |    \|        \
+#         /_______  /\____|__  /\______  /___\____|__  /_______  /
+#                 \/         \/        \/            \/        \
+#
 # MIT License
 #
-# Copyright (c) 2019-2023 Marco Lizza
+# Copyright (c) 2019-2024 Marco Lizza
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +50,7 @@ dockerdir=$(extrasdir)/docker
 
 # The default target platform is Linux.
 #
-# Available values are: `linux`, `window`, and `raspberry-pi`.
+# Available values are: `linux` and `window`.
 ifeq ($(PLATFORM),)
 	PLATFORM=linux
 endif
@@ -45,17 +58,20 @@ endif
 # The default windowing system is X11.
 #
 # Available values are: `gdi`, `x11`, and `wayland`.
+#
+# Note: for the Wayland build the `generate-wayland-sources.sh` script need to
+#       be executed as a precondition.
 ifeq ($(WINDOWING),)
 	ifeq ($(PLATFORM),windows)
 		WINDOWING=gdi
 	else ifeq ($(PLATFORM),linux)
 		WINDOWING=x11
-	else ifeq ($(PLATFORM),raspberry-pi)
-		WINDOWING=x11
 	endif
 endif
 
 # Define the target executable name, according to the current platform.
+#
+# Available values are: `x32`, `x64`, `armhf`, and `arm64`.
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		TARGET=tofu_x64.exe
@@ -63,9 +79,13 @@ ifeq ($(PLATFORM),windows)
 		TARGET=tofu_x32.exe
 	endif
 else ifeq ($(PLATFORM),linux)
-	TARGET=tofu
-else ifeq ($(PLATFORM),raspberry-pi)
-	TARGET=tofu_pi
+	ifeq ($(ARCHITECTURE),arm64)
+		TARGET=tofu_arm64
+	else ifeq ($(ARCHITECTURE),armhf)
+		TARGET=tofu_armhf
+	else
+		TARGET=tofu
+	endif
 else
 $(error PLATFORM value '$(PLATFORM)' is not recognized)
 endif
@@ -94,8 +114,14 @@ ifeq ($(PLATFORM),windows)
 	else
 		COMPILER=i686-w64-mingw32-gcc
 	endif
-else
-	COMPILER=gcc
+else ifeq ($(PLATFORM),linux)
+	ifeq ($(ARCHITECTURE),arm64)
+		COMPILER=aarch64-linux-gnu-gcc
+	else ifeq ($(ARCHITECTURE),armhf)
+		COMPILER=arm-linux-gnueabihf-gcc
+	else
+		COMPILER=gcc
+	endif
 endif
 
 CWARNINGS=-std=c99 \
@@ -117,14 +143,13 @@ CFLAGS=-D_DEFAULT_SOURCE \
 	-DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor \
 	-DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
 	-DDR_FLAC_NO_STDIO \
-	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DMA_NO_ENGINE -DMA_NO_RESOURCE_MANAGER \
+	-DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DMA_NO_NODE_GRAPH -DMA_NO_RESOURCE_MANAGER \
 	-DLIBXMP_BUILDING_STATIC \
 	-DLUAX_NO_SYSTEM_LIBRARIES \
+	-DSPNG_USE_MINIZ \
 	-I$(srcdir) \
 	-I$(externaldir)
 ifeq ($(PLATFORM),linux)
-	CFLAGS+=-DLUA_USE_LINUX
-else ifeq ($(PLATFORM),raspberry-pi)
 	CFLAGS+=-DLUA_USE_LINUX
 endif
 ifeq ($(WINDOWING),gdi)
@@ -166,8 +191,6 @@ ifeq ($(PLATFORM),windows)
 	LFLAGS+=-lpsapi
 else ifeq ($(PLATFORM),linux)
 	LFLAGS+=-lm -ldl
-else ifeq ($(PLATFORM),raspberry-pi)
-	LFLAGS+=-lm -ldl -latomic
 endif
 
 ifeq ($(WINDOWING),gdi)
@@ -207,14 +230,17 @@ SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/systems/*.c) \
 	$(wildcard $(srcdir)/systems/storage/*.c)
 # Source files list (external)
-SOURCES+=$(wildcard $(externaldir)/dr_libs/*.c) \
+SOURCES+=$(wildcard $(externaldir)/cglm/*.c) \
+	$(wildcard $(externaldir)/chipmunk/*.c) \
+	$(wildcard $(externaldir)/dr_libs/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
 	$(wildcard $(externaldir)/lua/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
-	$(wildcard $(externaldir)/spleen/*.c) \
-	$(wildcard $(externaldir)/xmp-lite/*.c) \
+	$(wildcard $(externaldir)/miniz/*.c) \
 	$(wildcard $(externaldir)/noise/*.c) \
-	$(wildcard $(externaldir)/chipmunk/*.c)
+	$(wildcard $(externaldir)/spleen/*.c) \
+	$(wildcard $(externaldir)/spng/*.c) \
+	$(wildcard $(externaldir)/xmp-lite/*.c)
 # Include files list (src)
 INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/core/*.h) \
@@ -227,15 +253,18 @@ INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/systems/*.h) \
 	$(wildcard $(srcdir)/systems/storage/*.h)
 # Include files list (external)
-INCLUDES+=$(wildcard $(externaldir)/dr_libs/*.h) \
+INCLUDES+=$(wildcard $(externaldir)/cglm/*.h) \
+	$(wildcard $(externaldir)/chipmunk/*.h) \
+	$(wildcard $(externaldir)/dr_libs/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
-	$(wildcard $(externaldir)/spleen/*.h) \
-	$(wildcard $(externaldir)/stb/*.h) \
-	$(wildcard $(externaldir)/xmp-lite/*.h) \
+	$(wildcard $(externaldir)/miniz/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
-	$(wildcard $(externaldir)/chipmunk/*.h)
+	$(wildcard $(externaldir)/spleen/*.h) \
+	$(wildcard $(externaldir)/spng/*.h) \
+	$(wildcard $(externaldir)/stb/*.h) \
+	$(wildcard $(externaldir)/xmp-lite/*.h)
 
 # Prepare GLFW flags according to the target platform.
 depends_from = $(shell cat $(1) | sed 's|^|$(2)|g' | tr '\n' ' ')
@@ -280,7 +309,7 @@ DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
 
 all: engine
 
-# Docker develoment container. This enables to build the engine w/o tampering
+# Docker development container. This enables to build the engine w/o tampering
 # with the host (only docker is required). This could also be used to perform
 # a CI build.
 .PHONY: docker-create
@@ -295,6 +324,7 @@ docker-launch: $(DOCKER_FILES)
 docker-clean: $(DOCKER_FILES)
 	@$(DOCKER) image rm -f `$(DOCKER) image ls | grep $(DOCKER_IMAGE) | awk '{print $$3}'`
 
+# Phony target to perform both C and Lua static checks on the code.
 .PHONY: check
 check:
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)

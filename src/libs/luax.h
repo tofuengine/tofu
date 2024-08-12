@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +41,10 @@
 #include <lua/lua.h>
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
+
+#if !defined(LUAX_RUNTIME_CHECKS) && defined(DEBUG)
+    #define LUAX_RUNTIME_CHECKS
+#endif
 
 typedef enum luaX_Const_Type_e {
     LUA_CT_NIL,
@@ -68,7 +85,7 @@ typedef struct luaX_String_s {
 #define LUA_TENUM       LUA_TSTRING
 #define LUA_TOBJECT     LUA_TUSERDATA
 
-#if defined(DEBUG)
+#if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_SIGNATURE_BEGIN(L) \
         do { \
             lua_State *_L = (L); \
@@ -101,7 +118,7 @@ typedef struct luaX_String_s {
             lua_State *_L = (L); \
             int _argc = lua_gettop(_L); \
             switch (_argc) {
-    #define LUAX_OVERLOAD_ARITY(n, f) \
+    #define LUAX_OVERLOAD_BY_ARITY(f, n) \
                 case (n): { return (f)(_L); }
     #define LUAX_OVERLOAD_END \
                 default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
@@ -112,16 +129,16 @@ typedef struct luaX_String_s {
         do { \
             lua_State *_L = (L); \
             int _argc = lua_gettop(_L);
-    #define LUAX_OVERLOAD_ARITY(n, f) \
+    #define LUAX_OVERLOAD_BY_ARITY(f, n) \
             if (_argc == (n)) { return (f)(_L); } else
-    #define LUAX_OVERLOAD_SIGNATURE(f, ...) \
-            if (luaX_hassignature(_L, (const int []){ __VA_ARGS__, LUA_TEOD })) { return (f)(_L); } else
+    #define LUAX_OVERLOAD_BY_TYPES(f, ...) \
+            if (luaX_hassignature(_L, (const int[]){ __VA_ARGS__, LUA_TEOD })) { return (f)(_L); } else
     #define LUAX_OVERLOAD_END \
             { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } while (0);
 #endif
 
-#if defined(DEBUG)
+#if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_BOOLEAN(L, idx)                 (!lua_isboolean((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
     #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
@@ -165,9 +182,9 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_OBJECT(l, idx, t, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toobject((L), (idx), (t)))
 #endif
 
-#define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
+#define luaX_dump(L) luaX_stackdump((L), __FILE__, __LINE__)
 
-#define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
+#define luaX_tofunction(L, idx) luaX_ref((L), (idx))
 
 extern luaX_String luaX_tolstring(lua_State *L, int idx);
 

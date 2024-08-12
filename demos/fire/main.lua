@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,6 +71,9 @@ function Main:__ctor()
   self:reset()
 end
 
+function Main:init()
+end
+
 function Main:reset()
   self.grid:process(function(column, row, _)
     if row == STEPS - 1 then
@@ -67,7 +83,7 @@ function Main:reset()
   end)
 end
 
-function Main:process()
+function Main:handle_input()
   local controller <const> = Controller.default()
 
   if controller:is_pressed("select") then
@@ -82,6 +98,8 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
+
   local windy = self.windy
   self.grid:process(function(column, row, value)
       if row == 0 then -- Skip the 1st row entirely.
@@ -125,7 +143,7 @@ function Main:render(_)
       end
     end)
 
-    canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
     canvas:write(width, 0, self.font, string.format("D: %.2f", self.damping), "right")
 end
 

@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +41,10 @@
 #include <core/config.h>
 
 #include <math.h>
+
+#if defined(TOFU_CORE_FAST_MATH) && !defined(FMATH_FAST_OPERATIONS)
+    #define FMATH_FAST_OPERATIONS
+#endif
 
 #define F_E         2.7182818284590452354f
 #define F_LOG2E     1.4426950408889634074f
@@ -64,7 +81,7 @@
 #define FINVLERP(v0, v1, v) (((v) - (v0)) / ((v1) - (v0)))
 #define FSTEP(e, x)         ((x) < (e) ? 0.0f : 1.0f)
 
-#if defined(__FAST_FLOAT_MATH__)
+#if defined(FMATH_FAST_OPERATIONS)
 #define FFLOOR(x)           (ffloor((x)))
 #define FCEIL(x )           (fceil((x)))
 #define FROUND(x)           (ffloor((x) + 0.5f))
@@ -82,7 +99,7 @@ extern float fstep(float edge, float x);
 extern float fsmoothstep(float edge0, float edge1, float x);
 extern float fsmootherstep(float edge0, float edge1, float x);
 
-#if defined(__FAST_INTEGER_MATH__)
+#if defined(FMATH_FAST_OPERATIONS)
 extern float ffloor(float x);
 extern float fceil(float x);
 #endif

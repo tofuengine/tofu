@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +42,10 @@
 
 #include <math.h>
 
+#if defined(TOFU_CORE_FAST_MATH) && !defined(IMATH_FAST_OPERATIONS)
+    #define IMATH_FAST_OPERATIONS
+#endif
+
 #define IABS(v)         ((v) > 0 ? (v) : -(v))
 #define IMOD(a, b)      ((((a) % (b)) + (b)) % (b))
 #define IMIN(a, b)      ((a) < (b) ? (a) : (b))
@@ -42,7 +59,7 @@
 #define ITRUNC(x)       ((int)(x))
 #define INEAREST(x)     ((int)((x) + 0.5f))
 
-#if defined(__FAST_INTEGER_MATH__)
+#if defined(IMATH_FAST_OPERATIONS)
 #define IFLOORF(x)      (ifloor((x)))
 #define ICEILF(x)       (iceil((x)))
 #define IROUNDF(x)      (ifloor((x) + 0.5f))
@@ -57,7 +74,7 @@ extern int imod(int a, int b);
 extern int imin(int a, int b);
 extern int imax(int a, int b);
 
-#if defined(__FAST_INTEGER_MATH__)
+#if defined(IMATH_FAST_OPERATIONS)
 extern int ifloor(float x);
 extern int iceil(float x);
 #endif

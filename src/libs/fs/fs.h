@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +41,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define FS_PATH_SEPARATOR       '/'
-#define FS_PATH_SEPARATOR_SZ    "/"
+#define FS_PATH_SEPARATOR    '/'
+#define FS_PATH_SEPARATOR_SZ "/"
 
-#define FS_ARCHIVE_EXTENSION    ".pak"
+#define FS_ARCHIVE_EXTENSION_SZ ".pak"
 
 typedef struct FS_Mount_s FS_Mount_t;
 typedef struct FS_Handle_s FS_Handle_t;
@@ -57,6 +70,7 @@ extern bool FS_attach_folder(FS_Context_t *context, const char *path);
 extern bool FS_attach_archive(FS_Context_t *context, const char *path);
 extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data);
 
+extern bool FS_exists(const FS_Context_t *context, const char *name);
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);
 extern size_t FS_size(FS_Handle_t *handle);

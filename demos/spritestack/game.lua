@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -73,7 +86,7 @@ end
 -- http://samd.site/2020/04/10/sprite-stacking.html
 -- https://medium.com/@avsnoopy/beginners-guide-to-sprite-stacking-in-gamemaker
 -- -studio-2-and-magica-voxel-part-1-f7a1394569c0
-function Game:process()
+function Game:handle_input()
   self.force = 0
   self.torque = 0
 
@@ -127,7 +140,7 @@ function Game:render(_)
     sprite:render(canvas)
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
 end
 

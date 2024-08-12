@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +27,11 @@
 #include "internal.h"
 #include "mix.h"
 
+#define _LOG_TAG "sl"
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include <math.h>
-
-#define LOG_CONTEXT "sl"
 
 SL_Context_t *SL_context_create(void)
 {
@@ -52,22 +51,22 @@ SL_Context_t *SL_context_create(void)
             };
     }
 
-    LOG_D(LOG_CONTEXT, "context created");
+    LOG_D("context created");
     return context;
 }
 
 void SL_context_destroy(SL_Context_t *context)
 {
     arrfree(context->sources);
-    LOG_D(LOG_CONTEXT, "context sources freed");
+    LOG_D("context sources freed");
 
     free(context);
-    LOG_D(LOG_CONTEXT, "context freed");
+    LOG_D("context freed");
 }
 
 static void _fire_on_group_changed(const SL_Context_t *context, size_t group_id)
 {
-    LOG_T(LOG_CONTEXT, "context group #%d changed, firing event", group_id);
+    LOG_T("context group #%d changed, firing event", group_id);
 
     SL_Source_t **current = context->sources;
     for (size_t count = arrlenu(context->sources); count; --count) {
@@ -119,12 +118,12 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source)
     size_t count = arrlenu(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
-            LOG_W(LOG_CONTEXT, "source %p already tracked for context %p", source, context);
+            LOG_W("source %p already tracked for context %p", source, context);
             return;
         }
     }
     arrpush(context->sources, source);
-    LOG_D(LOG_CONTEXT, "source %p tracked for context %p", source, context);
+    LOG_D("source %p tracked for context %p", source, context);
     SL_source_on_group_changed(source, SL_ANY_GROUP); // Propagate, to the attached source, to precompute the mix matrix.
 }
 
@@ -135,7 +134,7 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
         if (context->sources[i] == source) {
             arrdelswap(context->sources, i);
 
-            LOG_D(LOG_CONTEXT, "source %p untracked from context %p", source, context);
+            LOG_D("source %p untracked from context %p", source, context);
             return;
         }
     }

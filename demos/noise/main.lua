@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +73,10 @@ function Main:__ctor()
   self.frequency = 5
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("right") then
     self.current = (self.current % #NOISES) + 1
@@ -78,6 +94,8 @@ end
 
 -- https://www.redblobgames.com/maps/terrain-from-noise/
 function Main:update(_)
+  self:handle_input()
+
   local canvas = Canvas.default()
   local image = canvas:image()
   local width, height = image:size()

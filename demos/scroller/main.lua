@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -95,13 +108,16 @@ function Main:__ctor()
   end
   Display.program(program)
 
-  self.font = Font.new(Image.new("assets/images/font-8x8.png", 63, FONT_INDEX), FONT_WIDTH, FONT_HEIGHT)
+  self.font = Font.from_image("assets/images/font-8x8.png", FONT_WIDTH, FONT_HEIGHT, 63, FONT_INDEX)
   self.offset = height
   self.current = 1
   self.running = true
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("select") then
     self.running = not self.running
@@ -109,6 +125,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if not self.running then
     return
   end

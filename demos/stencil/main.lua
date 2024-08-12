@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -62,7 +75,10 @@ function Main:__ctor()
   Display.palette(color)
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("select") then
     self.mode = (self.mode + 1) % 2
@@ -78,6 +94,8 @@ function Main:process()
 end
 
 function Main:update(_)
+  self:handle_input()
+
   if self.mode == 1 then
     local t = System.time()
     self.threshold = math.tointeger(((math.sin(t) + 1) * 0.5) * self.limit + 0.5)
@@ -101,7 +119,7 @@ function Main:render(_)
   canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
   local width, _ = image:size()
-  canvas:write(0, 0, self.font, string.format("FPS: %.1f", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
   canvas:write(width, 0, self.font, string.format("M: %d, T: %d", self.mode, self.threshold), "right")
 end
 

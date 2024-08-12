@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,16 +40,13 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "body"
 #include <libs/log.h>
 
 #include <chipmunk/chipmunk.h>
 
-#define LOG_CONTEXT "body"
-#define META_TABLE  "Tofu_Physics_Body_mt"
-
 static int body_new_4ennn_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
-static int body_shape_1o_4snnn(lua_State *L);
 static int body_center_of_gravity_v_v(lua_State *L);
 static int body_type_v_v(lua_State *L);
 static int body_mass_v_v(lua_State *L);
@@ -47,16 +57,16 @@ static int body_angle_v_v(lua_State *L);
 static int body_elasticity_v_v(lua_State *L);
 static int body_density_v_v(lua_State *L);
 static int body_sleep_v_v(lua_State *L);
+static int body_shape_1o_4snnn(lua_State *L);
 
 int body_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", body_new_4ennn_1o },
             { "__gc", body_gc_1o_0 },
-            { "shape", body_shape_1o_4snnn },
+            // -- getters/setters --
             { "center_of_gravity", body_center_of_gravity_v_v },
             { "type", body_type_v_v },
             { "mass", body_mass_v_v },
@@ -67,11 +77,13 @@ int body_loader(lua_State *L)
             { "elasticity", body_elasticity_v_v },
             { "density", body_density_v_v },
             { "sleep", body_sleep_v_v },
+            // -- accessors --
+            { "shape", body_shape_1o_4snnn },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static const char *_kinds[Body_Kinds_t_CountOf + 1] = {
@@ -94,14 +106,14 @@ static int body_new_4ennn_1o(lua_State *L)
     if (!body) {
         return luaL_error(L, "can't create body");
     }
-//    LOG_D(LOG_CONTEXT, "body %p created for world %p", body, physics->world);
+//    LOG_D("body %p created for world %p", body, physics->world);
 
-    Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
+    Body_Object_t *self = (Body_Object_t *)udt_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
             .shape = NULL,
             .kind = kind,
             .size = { { 0 } }
-        }, OBJECT_TYPE_BODY, META_TABLE);
+        }, OBJECT_TYPE_BODY);
 
     if (self->kind == BODY_KIND_BOX) {
         self->size.box.width = (cpFloat)LUAX_NUMBER(L, 2);
@@ -116,7 +128,7 @@ static int body_new_4ennn_1o(lua_State *L)
         self->shape = cpCircleShapeNew(body, self->size.circle.radius, self->size.circle.offset);
     }
 
-    LOG_D(LOG_CONTEXT, "body %p created", self);
+    LOG_D("body %p created", self);
 
     return 1;
 }
@@ -129,37 +141,14 @@ static int body_gc_1o_0(lua_State *L)
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     cpShapeFree(self->shape);
-    LOG_D(LOG_CONTEXT, "shape %p destroyed", self->shape);
+    LOG_D("shape %p destroyed", self->shape);
 
     cpBodyFree(self->body);
-    LOG_D(LOG_CONTEXT, "body %p destroyed", self->body);
+    LOG_D("body %p destroyed", self->body);
 
-    LOG_D(LOG_CONTEXT, "body %p finalized", self);
+    LOG_D("body %p finalized", self);
 
     return 0;
-}
-
-static int body_shape_1o_4snnn(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-
-    if (self->kind == BODY_KIND_BOX) {
-        lua_pushstring(L, "box");
-        lua_pushnumber(L, (lua_Number)self->size.box.width);
-        lua_pushnumber(L, (lua_Number)self->size.box.height);
-        lua_pushnumber(L, (lua_Number)self->size.box.radius);
-    } else
-    if (self->kind == BODY_KIND_CIRCLE) {
-        lua_pushstring(L, "circle");
-        lua_pushnumber(L, (lua_Number)self->size.circle.radius);
-        lua_pushnumber(L, (lua_Number)self->size.circle.offset.x);
-        lua_pushnumber(L, (lua_Number)self->size.circle.offset.y);
-    }
-
-    return 4;
 }
 
 static int body_center_of_gravity_1o_2n(lua_State *L)
@@ -198,8 +187,8 @@ static int body_center_of_gravity_3onn_0(lua_State *L)
 static int body_center_of_gravity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_center_of_gravity_1o_2n)
-        LUAX_OVERLOAD_ARITY(3, body_center_of_gravity_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -243,8 +232,8 @@ static int body_type_2oe_0(lua_State *L)
 static int body_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, body_type_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(body_type_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_type_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -281,8 +270,8 @@ static int body_mass_2on_0(lua_State *L)
 static int body_mass_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_mass_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_mass_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_mass_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_mass_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -327,8 +316,8 @@ static int body_momentum_2on_0(lua_State *L)
 static int body_momentum_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_momentum_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_momentum_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_momentum_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_momentum_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -373,8 +362,8 @@ static int body_position_3onn_0(lua_State *L)
 static int body_position_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_position_1o_2n)
-        LUAX_OVERLOAD_ARITY(3, body_position_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(body_position_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_position_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -414,8 +403,8 @@ static int body_velocity_3onn_0(lua_State *L)
 static int body_velocity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_velocity_1o_2nn)
-        LUAX_OVERLOAD_ARITY(3, body_velocity_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(body_velocity_1o_2nn, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_velocity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -457,8 +446,8 @@ static int body_angle_2on_0(lua_State *L)
 static int body_angle_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_angle_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_angle_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_angle_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_angle_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -495,8 +484,8 @@ static int body_elasticity_2on_0(lua_State *L)
 static int body_elasticity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_elasticity_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_elasticity_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_elasticity_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_elasticity_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -533,8 +522,8 @@ static int body_density_2on_0(lua_State *L)
 static int body_density_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_density_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_density_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(body_density_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_density_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
@@ -576,7 +565,30 @@ static int body_sleep_2ob_0(lua_State *L)
 static int body_sleep_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_sleep_1o_1b)
-        LUAX_OVERLOAD_ARITY(2, body_sleep_2ob_0)
+        LUAX_OVERLOAD_BY_ARITY(body_sleep_1o_1b, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_sleep_2ob_0, 2)
     LUAX_OVERLOAD_END
+}
+
+static int body_shape_1o_4snnn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+
+    if (self->kind == BODY_KIND_BOX) {
+        lua_pushstring(L, "box");
+        lua_pushnumber(L, (lua_Number)self->size.box.width);
+        lua_pushnumber(L, (lua_Number)self->size.box.height);
+        lua_pushnumber(L, (lua_Number)self->size.box.radius);
+    } else
+    if (self->kind == BODY_KIND_CIRCLE) {
+        lua_pushstring(L, "circle");
+        lua_pushnumber(L, (lua_Number)self->size.circle.radius);
+        lua_pushnumber(L, (lua_Number)self->size.circle.offset.x);
+        lua_pushnumber(L, (lua_Number)self->size.circle.offset.y);
+    }
+
+    return 4;
 }

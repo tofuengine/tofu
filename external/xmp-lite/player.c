@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -119,7 +119,7 @@ static int get_envelope(struct xmp_envelope *env, int x, int def)
 
 static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 {
-	int16_t *data = env->data;
+	int16 *data = env->data;
 	int has_loop, has_sus;
 	int lpe, lps, sus;
 
@@ -142,13 +142,11 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	}
 
 	/* If the envelope point is set to somewhere after the sustain point
-	 * or sustain loop, enable release to prevent the envelope point to
-	 * return to the sustain point or loop start. (See Filip Skutela's
+	 * or sustain loop, enable release to prevent the envelope point from
+	 * returning to the sustain point or loop start. (See Filip Skutela's
 	 * farewell_tear.xm.)
 	 */
-	if (has_loop && x > data[lpe] + 1) {
-		release = 1;
-	} else if (has_sus && x > data[sus] + 1) {
+	if (has_sus && x > data[sus] + 1) {
 		release = 1;
 	}
 
@@ -159,8 +157,14 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 		}
 	}
 
-	/* Envelope loops */
-	if (has_loop && x >= data[lpe]) {
+	/* Envelope loops
+	 *
+	 * If the envelope point is set to somewhere after the sustain point
+	 * or sustain loop, the loop point is ignored to prevent the envelope
+	 * point to return to the sustain point or loop start. (See Filip Skutela's
+	 * farewell_tear.xm or Ebony Owl Netsuke.xm.)
+	*/
+	if (has_loop && x == data[lpe]) {
 		if (!(release && has_sus && sus == lpe))
 			x = data[lps];
 	}

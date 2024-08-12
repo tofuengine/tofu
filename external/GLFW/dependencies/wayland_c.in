@@ -1,7 +1,9 @@
+linux_joystick.c
+posix_module.c
+posix_poll.c
+posix_thread.c
+posix_time.c
 wl_init.c
 wl_monitor.c
 wl_window.c
-posix_time.c
-posix_thread.c
 xkb_unicode.c
-linux_joystick.c

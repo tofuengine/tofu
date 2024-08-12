@@ -35,7 +35,7 @@ void get_color_scanline(vec2 uv,inout vec4 c,float time){
 	c.a = 1.0;
 }
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
 	vec2 xy = texture_coords.xy * 2.0 - vec2(1.0, 1.0);
 
 	float d = length(xy);
@@ -53,5 +53,5 @@ vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coor
 	get_color_bleeding(current_color,color_left);
 	vec4 c = current_color+color_left;
 	get_color_scanline(xy,c,u_time);
-	return c * color;
+	return c;
 }

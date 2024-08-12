@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,20 +58,13 @@ typedef enum Shader_Uniforms_e {
     SHADER_UNIFORM_VEC2I,
     SHADER_UNIFORM_VEC3I,
     SHADER_UNIFORM_VEC4I,
+    SHADER_UNIFORM_MAT4,
     SHADER_UNIFORM_TEXTURE
 } Shader_Uniforms_t;
 
-typedef enum Shader_Types_e {
-    SHADER_TYPE_VERTEX,
-    SHADER_TYPE_FRAGMENT,
-    Shader_Types_t_CountOf
-} Shader_Types_t;
-
 // TODO: rename to first char uppercase.
-extern Shader_t *shader_create(void);
+extern Shader_t *shader_create(const char *vertex, const char *fragment, const char *ids[], size_t count);
 extern void shader_destroy(Shader_t *shader);
-extern bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type);
-extern void shader_prepare(Shader_t *shader, const char *ids[], size_t count);
 extern void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value);
 extern void shader_use(const Shader_t *shader);
 

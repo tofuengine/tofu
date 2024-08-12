@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2021 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,16 +40,11 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "canvas"
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/interpreter.h>
-
-#define LOG_CONTEXT "canvas"
-#define MODULE_NAME "tofu.graphics.canvas"
-#define META_TABLE  "Tofu_Graphics_Canvas_mt"
-// FIXME: collapse meta and script name? or desume the meta-table name from the module and try and load always?
 
 static int canvas_new_1o_1o(lua_State *L);
 static int canvas_gc_1o_0(lua_State *L);
@@ -74,25 +82,14 @@ static int canvas_text_v_2nn(lua_State *L);
 
 int canvas_loader(lua_State *L)
 {
-    char file[PLATFORM_PATH_MAX] = { 0 };
-    path_lua_to_fs(file, MODULE_NAME);
-
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
-    Storage_Resource_t *script = Storage_load(storage, file + 1, STORAGE_RESOURCE_STRING);
-
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){
-            .data = S_SCHARS(script),
-            .size = S_SLENTGH(script),
-            .name = file
-        },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", canvas_new_1o_1o },
             { "__gc", canvas_gc_1o_0 },
-            // -- observers --
+            // -- accessors --
             { "image", canvas_image_1o_1o },
-            // -- modifiers --
+            // -- mutators --
             { "push", canvas_push_1o_0 },
             { "pop", canvas_pop_2oN_0 },
             { "reset", canvas_reset_1o_0 },
@@ -125,7 +122,7 @@ int canvas_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static int canvas_new_1o_1o(lua_State *L)
@@ -140,15 +137,15 @@ static int canvas_new_1o_1o(lua_State *L)
         return luaL_error(L, "can't create context");
     }
 
-    Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
+    Canvas_Object_t *self = (Canvas_Object_t *)udt_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .context = context,
             .image = {
                 .instance = image,
                 .reference = luaX_ref(L, 1)
             }
-        }, OBJECT_TYPE_CANVAS, META_TABLE);
+        }, OBJECT_TYPE_CANVAS);
 
-    LOG_D(LOG_CONTEXT, "canvas %p allocated w/ context %p for image %p", self, context, image);
+    LOG_D("canvas %p allocated w/ context %p for image %p", self, context, image);
 
     return 1;
 }
@@ -161,12 +158,12 @@ static int canvas_gc_1o_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
     luaX_unref(L, self->image.reference);
-    LOG_D(LOG_CONTEXT, "image reference #%d released", self->image.reference);
+    LOG_D("image reference #%d released", self->image.reference);
 
     GL_context_destroy(self->context);
-    LOG_D(LOG_CONTEXT, "context %p destroyed", self->context);
+    LOG_D("context %p destroyed", self->context);
 
-    LOG_D(LOG_CONTEXT, "canvas %p finalized", self);
+    LOG_D("canvas %p finalized", self);
 
     return 0;
 }
@@ -256,8 +253,8 @@ static int canvas_clipping_5onnnn_0(lua_State *L)
 static int canvas_clipping_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_clipping_1o_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_clipping_5onnnn_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_clipping_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(canvas_clipping_5onnnn_0, 5)
     LUAX_OVERLOAD_END
 }
 
@@ -320,9 +317,9 @@ static int canvas_shift_3onn_0(lua_State *L)
 static int canvas_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_shift_1o_0)
-        LUAX_OVERLOAD_ARITY(2, canvas_shift_2ot_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_shift_3onn_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_shift_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(canvas_shift_2ot_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_shift_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -385,9 +382,9 @@ static int canvas_transparent_3onb_0(lua_State *L)
 static int canvas_transparent_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_transparent_1o_0)
-        LUAX_OVERLOAD_ARITY(2, canvas_transparent_2ot_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_transparent_3onb_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_transparent_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(canvas_transparent_2ot_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_transparent_3onb_0, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -705,7 +702,7 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 5, self->context->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 6, self->context->surface->height);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     GL_context_scan(self->context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height },
         _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 2 });
@@ -716,8 +713,8 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
 static int canvas_scan_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_scan_6ofNNNN_0)
-        LUAX_OVERLOAD_ARITY(6, canvas_scan_6ofNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_scan_6ofNNNN_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_scan_6ofNNNN_0, 6)
     LUAX_OVERLOAD_END
 }
 
@@ -769,7 +766,7 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, image->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, image->surface->height);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     GL_context_process(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
@@ -781,9 +778,9 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
 static int canvas_process_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_process_9oofNNNNNN_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_process_9oofNNNNNN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_process_9oofNNNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_process_9oofNNNNNN_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(canvas_process_9oofNNNNNN_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_process_9oofNNNNNN_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -832,9 +829,9 @@ static int canvas_copy_8onnoNNNN_0(lua_State *L)
 static int canvas_copy_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_copy_2oo_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_copy_8onnoNNNN_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_copy_8onnoNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_copy_2oo_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_copy_8onnoNNNN_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(canvas_copy_8onnoNNNN_0, 8)
     LUAX_OVERLOAD_END
 }
 
@@ -883,9 +880,9 @@ static int canvas_blit_8onnoNNNN_0(lua_State *L)
 static int canvas_blit_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_blit_2oo_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_blit_8onnoNNNN_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_blit_8onnoNNNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blit_2oo_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blit_8onnoNNNN_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blit_8onnoNNNN_0, 8)
     LUAX_OVERLOAD_END
 }
 
@@ -965,9 +962,9 @@ static int canvas_xform_9onnonnnno_0(lua_State *L)
 static int canvas_xform_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_xform_3ooo_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_xform_5onnoo_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_xform_9onnonnnno_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_xform_3ooo_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(canvas_xform_5onnoo_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_xform_9onnonnnno_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -1068,9 +1065,9 @@ static int canvas_stencil_11onnonnnnoen_0(lua_State *L)
 static int canvas_stencil_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_stencil_5oooen_0)
-        LUAX_OVERLOAD_ARITY(7, canvas_stencil_7onnooen_0)
-        LUAX_OVERLOAD_ARITY(11, canvas_stencil_11onnonnnnoen_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_stencil_5oooen_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_stencil_7onnooen_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(canvas_stencil_11onnonnnnoen_0, 11)
     LUAX_OVERLOAD_END
 }
 
@@ -1162,9 +1159,9 @@ static int canvas_blend_9onnonnnne_0(lua_State *L)
 static int canvas_blend_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_blend_3ooe_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_blend_5onnoe_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_blend_9onnonnnne_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blend_3ooe_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blend_5onnoe_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_blend_9onnonnnne_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -1280,12 +1277,12 @@ static int canvas_sprite_10onnonnnnNN_0(lua_State *L)
 static int canvas_sprite_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_sprite_5onnon_0)
-        LUAX_OVERLOAD_ARITY(6, canvas_sprite_6onnonn_0)
-        LUAX_OVERLOAD_ARITY(7, canvas_sprite_7onnonnn_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_sprite_10onnonnnnNN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_sprite_10onnonnnnNN_0)
-        LUAX_OVERLOAD_ARITY(10, canvas_sprite_10onnonnnnNN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_5onnon_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_6onnonn_0, 6)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_7onnonnn_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_10onnonnnnNN_0, 8)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_10onnonnnnNN_0, 9)
+        LUAX_OVERLOAD_BY_ARITY(canvas_sprite_10onnonnnnNN_0, 10)
     LUAX_OVERLOAD_END
 }
 
@@ -1351,9 +1348,9 @@ static int canvas_tile_9onnonnnnN_0(lua_State *L)
 static int canvas_tile_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(7, canvas_tile_7onnonnn_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_tile_9onnonnnnN_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_tile_9onnonnnnN_0)
+        LUAX_OVERLOAD_BY_ARITY(canvas_tile_7onnonnn_0, 7)
+        LUAX_OVERLOAD_BY_ARITY(canvas_tile_9onnonnnnN_0, 8)
+        LUAX_OVERLOAD_BY_ARITY(canvas_tile_9onnonnnnN_0, 9)
     LUAX_OVERLOAD_END
 }
 
@@ -1474,8 +1471,8 @@ static int canvas_text_7onnosnN_2nn(lua_State *L)
 static int canvas_text_v_2nn(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_text_5onnos_2nn)
-        LUAX_OVERLOAD_ARITY(6, canvas_text_7onnosnN_2nn)
-        LUAX_OVERLOAD_ARITY(7, canvas_text_7onnosnN_2nn)
+        LUAX_OVERLOAD_BY_ARITY(canvas_text_5onnos_2nn, 5)
+        LUAX_OVERLOAD_BY_ARITY(canvas_text_7onnosnN_2nn, 6)
+        LUAX_OVERLOAD_BY_ARITY(canvas_text_7onnosnN_2nn, 7)
     LUAX_OVERLOAD_END
 }

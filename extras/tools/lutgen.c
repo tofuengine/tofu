@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +42,13 @@
 #include <time.h>
 
 #ifndef M_PI
-  #define M_PI      3.14159265358979323846264f
+    #define M_PI      3.14159265358979323846264f
 #endif
 #ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923132f
+    #define M_PI_2    1.57079632679489661923132f
 #endif
 
+// https://jfdube.wordpress.com/2011/12/06/trigonometric-look-up-tables-revisited/
 // http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
 void fsincos(const float lut[], size_t lut_size, float angle, float *sin, float *cos)
@@ -47,10 +61,9 @@ void fsincos(const float lut[], size_t lut_size, float angle, float *sin, float 
     *cos = lut[(index + lut_size_4th) % lut_size]; // cos(a) = sin(a + pi/4)
 }
 
-void generate_lut(float lut[], size_t lut_size)
+void generate_lut(float lut[], size_t lut_length, size_t lut_size)
 {
-    const size_t lut_size_4th = lut_size / 4;
-    for (size_t i = 0; i < lut_size + lut_size_4th; ++i) {
+    for (size_t i = 0; i < lut_length; ++i) {
         float angle = (float)(2.0f * M_PI) * (float)i / (float)lut_size;
         float s = sinf(angle);
         if (fabs(s - 0.0f) <= __FLT_EPSILON__)
@@ -132,20 +145,23 @@ int main(int argc, char *argv[])
 
     const size_t lut_size = strtoul(argv[1], NULL, 0);
     const size_t lut_size_4th = lut_size / 4;
+    const size_t lut_length = lut_size + lut_size_4th;
     const float lut_over_twice_pi = (float)lut_size / (float)(2.0f * M_PI);
 
-    float lut[lut_size + lut_size_4th];
-    generate_lut(lut, lut_size);
+    float lut[lut_length];
+    generate_lut(lut, lut_length, lut_size);
 
     printf("#include <stddef.h>\n");
     printf("\n");
-    printf("static const float _lut[%lu] = {\n", lut_size + lut_size_4th);
-    for (int i = 0; i < lut_size + lut_size_4th; ++i) {
+    printf("#define SINCOS_PERIOD\t%lu\n", lut_size);
+    printf("\n");
+    printf("#define _LUT_LENGTH (SINCOS_PERIOD + (SINCOS_PERIOD / 4))\n");
+    printf("\n");
+    printf("static const float _lut[_LUT_LENGTH] = {\n");
+    for (int i = 0; i < lut_length; ++i) {
         printf("    %.9ff, /* [%d] */\n", lut[i], i);
     }
     printf("};\n");
-    printf("\n");
-    printf("#define SINCOS_PERIOD\t%lu\n", lut_size);
     printf("\n");
     printf("void fsincos(int rotation, float *sin, float *cos)\n");
     printf("{\n");
@@ -159,12 +175,11 @@ int main(int argc, char *argv[])
     printf("    return (int)(angle * %.9ff) & 0x1ff;\n", lut_over_twice_pi);
     printf("}\n");
 
-
     srand(time(NULL));
-    test_trig_sin(10000000);
-    test_lut_sin(10000000, lut, lut_size);
-    test_trig_sincos(10000000);
-    test_lut_sincos(10000000, lut, lut_size);
+    test_trig_sin(100000000);
+    test_lut_sin(100000000, lut, lut_size);
+    test_trig_sincos(100000000);
+    test_lut_sincos(100000000, lut, lut_size);
 
     return 0;
 }

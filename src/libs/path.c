@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +39,7 @@
 
 #include <core/platform.h>
 #include <libs/fs/fs.h>
+#define _LOG_TAG "path"
 #include <libs/log.h>
 
 #include <stdlib.h>
@@ -33,22 +47,20 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #if defined(__USE_OS_NATIVE_API__)
-    #include <shlobj.h>
-  #endif
+    #if defined(PATH_USE_OS_NATIVE_API)
+        #include <shlobj.h>
+    #endif
 #endif
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #define realpath(N,R) _fullpath((R),(N),PLATFORM_PATH_MAX)
+    #define realpath(N,R) _fullpath((R),(N),PLATFORM_PATH_MAX)
 #endif
 
 #if PLATFORM_ID == PLATFORM_LINUX
-  #define createdir(P)  mkdir((P), 0755)
+    #define createdir(P)  mkdir((P), 0755)
 #elif PLATFORM_ID == PLATFORM_WINDOWS
-  #define createdir(P)  mkdir((P))
+    #define createdir(P)  mkdir((P))
 #endif
-
-#define LOG_CONTEXT "path"
 
 static inline bool _path_is_trailed(const char *path)
 {
@@ -70,12 +82,12 @@ void path_expand(const char *path, char *expanded)
         strcat(resolved, path + 1);
 #elif PLATFORM_ID == PLATFORM_WINDOWS
     if (strncasecmp(path, "%AppData%", 9) == 0) {
-  #if defined(__USE_OS_NATIVE_API__)
+    #if defined(PATH_USE_OS_NATIVE_API)
         char appdata[PLATFORM_PATH_MAX] = { 0 };
         SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
-  #else
+    #else
         const char *appdata = getenv("APPDATA"); // https://pureinfotech.com/list-environment-variables-windows-10/
-  #endif
+    #endif
         strcpy(resolved, appdata);
         strcat(resolved, path + 9);
 #endif
@@ -85,7 +97,7 @@ void path_expand(const char *path, char *expanded)
 
     char *ptr = realpath(resolved, expanded);
     if (!ptr) {
-        LOG_E(LOG_CONTEXT, "can't resolve path `%s`", resolved);
+        LOG_E("can't resolve path `%s`", resolved);
         return;
     }
 
@@ -154,7 +166,7 @@ bool path_is_folder(const char *path)
     struct stat path_stat;
     int result = _path_stat(path, &path_stat);
     if (result != 0) {
-        LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
+        LOG_E("can't get stats for file `%s`", path);
         return false;
     }
 
@@ -170,7 +182,7 @@ bool path_is_file(const char *path)
     struct stat path_stat;
     int result = _path_stat(path, &path_stat);
     if (result != 0) {
-        LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
+        LOG_E("can't get stats for file `%s`", path);
         return false;
     }
 
@@ -243,14 +255,15 @@ void path_join(char *path, const char *folder, const char *file)
     }
 }
 
-void path_lua_to_fs(char *path, const char *modname)
+const char *path_lua_to_fs(char *fqn, const char *module_name)
 {
-    strcpy(path, "@"); // Prepend a `@`, required by Lua to track files.
-    strcat(path, modname);
-    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
+    strcpy(fqn, "@"); // Prepend a `@`, required by Lua to track files.
+    strcat(fqn, module_name);
+    for (char *ptr = fqn; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
         if (*ptr == '.') {
             *ptr = FS_PATH_SEPARATOR;
         }
     }
-    strcat(path, ".lua");
+    strcat(fqn, ".lua");
+    return fqn + 1; // Skip the `@` character and return the actual path.
 }

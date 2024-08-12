@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,22 +38,22 @@
 #include "sysinfo.h"
 
 #include <core/platform.h>
+#define _LOG_TAG "sysinfo"
 #include <libs/log.h>
 
 #include <string.h>
 
 /* This file provides an implementation only for the native Windows API.  */
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #include <windows.h>
-  #if !defined(VER_PLATFORM_WIN32_CE)
-    #define VER_PLATFORM_WIN32_CE 3
-  #endif
+    #include <windows.h>
+    #if !defined(VER_PLATFORM_WIN32_CE)
+        #define VER_PLATFORM_WIN32_CE 3
+    #endif
 #elif PLATFORM_ID == PLATFORM_LINUX
-  #include <sys/utsname.h>
+    #include <sys/utsname.h>
 #endif
 
-#define LOG_CONTEXT "sysinfo"
-
+// FIXME: reformat!
 bool SysInfo_inspect(SysInfo_Data_t *si)
 {
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -251,7 +264,7 @@ bool SysInfo_inspect(SysInfo_Data_t *si)
     struct utsname uts;
     int result = uname(&uts);
     if (result == -1) {
-        LOG_E(LOG_CONTEXT, "can't get system information");
+        LOG_E("can't get system information");
         return false;
     }
     strncpy(si->system, uts.sysname, SYSINFO_NAME_LENGTH);

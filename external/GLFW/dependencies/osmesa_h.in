@@ -1,4 +1,4 @@
-null_platform.h
-null_joystick.h
-posix_time.h
+cocoa_joystick.h
+cocoa_platform.h
+cocoa_time.h
 posix_thread.h

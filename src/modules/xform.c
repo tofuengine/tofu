@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +41,10 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
+#define _LOG_TAG "xform"
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
-
-#define LOG_CONTEXT "xform"
-#define META_TABLE  "Tofu_Graphics_XForm_mt"
 
 static int xform_new_1E_1o(lua_State *L);
 static int xform_gc_1o_0(lua_State *L);
@@ -47,23 +58,24 @@ static int xform_warp_3onn_0(lua_State *L);
 
 int xform_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", xform_new_1E_1o },
             { "__gc", xform_gc_1o_0 },
+            // -- mutators --
             { "offset", xform_offset_3onn_0 },
             { "matrix", xform_matrix_v_0 },
             { "wrap", xform_wrap_2oe_0 },
             { "table", xform_table_v_0 },
+            // -- operations --
             { "project", xform_project_4onnn_0 },
             { "warp", xform_warp_3onn_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static const char *_modes[GL_XForm_Wraps_t_CountOf + 1] = {
@@ -88,11 +100,11 @@ static int xform_new_1E_1o(lua_State *L)
         return luaL_error(L, "can't create xform");
     }
 
-    XForm_Object_t *self = (XForm_Object_t *)luaX_newobject(L, sizeof(XForm_Object_t), &(XForm_Object_t){
+    XForm_Object_t *self = (XForm_Object_t *)udt_newobject(L, sizeof(XForm_Object_t), &(XForm_Object_t){
             .xform = xform
-        }, OBJECT_TYPE_XFORM, META_TABLE);
+        }, OBJECT_TYPE_XFORM);
 
-    LOG_D(LOG_CONTEXT, "xform %p allocated", self);
+    LOG_D("xform %p allocated", self);
 
     return 1;
 }
@@ -106,7 +118,7 @@ static int xform_gc_1o_0(lua_State *L)
 
     GL_xform_destroy(self->xform);
 
-    LOG_D(LOG_CONTEXT, "xform %p finalized", self);
+    LOG_D("xform %p finalized", self);
 
     return 0;
 }
@@ -212,9 +224,9 @@ static int xform_matrix_7onnnnnn_0(lua_State *L)
 static int xform_matrix_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, xform_matrix_3onn_0)
-        LUAX_OVERLOAD_ARITY(5, xform_matrix_5onnnn_0)
-        LUAX_OVERLOAD_ARITY(7, xform_matrix_7onnnnnn_0)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_3onn_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_5onnnn_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_7onnnnnn_0, 7)
     LUAX_OVERLOAD_END
 }
 
@@ -277,7 +289,7 @@ static int xform_table_2ot_0(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is a `pairs()` array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                LOG_W(LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
+                LOG_W("too many operations for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
@@ -308,8 +320,8 @@ static int xform_table_2ot_0(lua_State *L)
 static int xform_table_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, xform_table_1o_0)
-        LUAX_OVERLOAD_ARITY(2, xform_table_2ot_0)
+        LUAX_OVERLOAD_BY_ARITY(xform_table_1o_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(xform_table_2ot_0, 2)
     LUAX_OVERLOAD_END
 }
 

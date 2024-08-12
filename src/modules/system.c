@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,7 @@
 
 #include <time.h>
 
-#define LOG_CONTEXT "system"
-
-#define MAX_DATE_LENGTH 64
+#define _MAX_DATE_LENGTH 64
 
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
@@ -50,14 +48,14 @@ static int system_stats_0_4nnnn(lua_State *L);
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static int system_heap_1S_1n(lua_State *L);
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+static int system_active_0_1b(lua_State *L);
 static int system_quit_0_0(lua_State *L);
 
 int system_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- accessors --
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
@@ -70,12 +68,14 @@ int system_loader(lua_State *L)
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
             { "heap", system_heap_1S_1n },
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+            { "active", system_active_0_1b },
+            // -- operations --
             { "quit", system_quit_0_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int system_version_0_3nnn(lua_State *L)
@@ -129,7 +129,7 @@ static int system_time_0_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     lua_pushnumber(L, (lua_Number)state->time);
@@ -149,8 +149,8 @@ static int system_date_2SS_1s(lua_State *L)
     const time_t t = time(NULL);
     const struct tm tm = (timezone[0] == 'g') ? *gmtime(&t) : *localtime(&t); // TODO: use table lookup.
 
-    char date[MAX_DATE_LENGTH] = { 0 };
-    size_t length = strftime(date, MAX_DATE_LENGTH, format, &tm);
+    char date[_MAX_DATE_LENGTH] = { 0 };
+    size_t length = strftime(date, _MAX_DATE_LENGTH, format, &tm);
 
     lua_pushlstring(L, date, length);
 
@@ -162,7 +162,7 @@ static int system_fps_0_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
@@ -177,7 +177,7 @@ static int system_stats_0_4nnnn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
@@ -185,8 +185,9 @@ static int system_stats_0_4nnnn(lua_State *L)
     lua_pushnumber(L, (lua_Number)stats->times[1]);
     lua_pushnumber(L, (lua_Number)stats->times[2]);
     lua_pushnumber(L, (lua_Number)stats->times[3]);
+    lua_pushnumber(L, (lua_Number)stats->times[4]);
 
-    return 4;
+    return 5;
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
@@ -198,7 +199,7 @@ static int system_heap_1S_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const char *unit = LUAX_OPTIONAL_STRING(L, 1, "b");
 
-    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
@@ -214,12 +215,25 @@ static int system_heap_1S_1n(lua_State *L)
 }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 
+static int system_active_0_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
+
+    const Environment_State_t *state = Environment_get_state(environment);
+    lua_pushboolean(L, state->is_active);
+
+    return 1;
+}
+
 static int system_quit_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_close(display);
 

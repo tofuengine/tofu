@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +71,10 @@ function Main:__ctor()
   self.scale = {}
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
 
   for _, id in ipairs(IDS) do
@@ -70,6 +86,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   for _, id in ipairs(IDS) do
     if self.scale[id] and self.scale[id] > 1.0 then
       self.scale[id] = math.max(1.0, self.scale[id] - delta_time * 12.0)
@@ -140,7 +158,7 @@ function Main:render(_)
   canvas:line(mx, my - 3, mx, my - 1, index)
   canvas:line(mx, my + 1, mx, my + 3, index)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
   canvas:write(width, height, self.font, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
     "right", "bottom")
 end

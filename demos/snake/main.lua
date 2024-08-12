@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -104,6 +117,9 @@ function Main:__ctor()
   self:reset()
 end
 
+function Main:init()
+end
+
 function Main:reset()
   self.length = INITIAL_LENGTH
   self.state = "running"
@@ -121,7 +137,7 @@ function Main:reset()
   self:generate_food()
 end
 
-function Main:process()
+function Main:handle_input()
   local controller = Controller.default()
 
   if self.state == "game-over" then
@@ -131,29 +147,14 @@ function Main:process()
     return
   end
 
-  if not self.can_move then
-    return
-  end
-  if controller:is_pressed("up") then
-    if self.direction ~= "down" then
-      self.direction = "up"
-      self.can_move = false
-    end
-  elseif controller:is_pressed("down") then
-    if self.direction ~= "up" then
-      self.direction = "down"
-      self.can_move = false
-    end
-  elseif controller:is_pressed("left") then
-    if self.direction ~= "right" then
-      self.direction = "left"
-      self.can_move = false
-    end
-  elseif controller:is_pressed("right") then
-    if self.direction ~= "left" then
-      self.direction = "right"
-      self.can_move = false
-    end
+  if controller:is_pressed("up") and self.direction ~= "down" then
+    self.direction = "up"
+  elseif controller:is_pressed("down") and self.direction ~= "up"then
+    self.direction = "down"
+  elseif controller:is_pressed("left") and self.direction ~= "right" then
+    self.direction = "left"
+  elseif controller:is_pressed("right") and self.direction ~= "left" then
+    self.direction = "right"
   end
 end
 
@@ -171,6 +172,8 @@ function Main:generate_food()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   if self.state == "game-over" then
     return
   end
@@ -187,8 +190,6 @@ function Main:update(delta_time)
 
   self.accumulator = self.accumulator + speed * delta_time
   while self.accumulator >= LIFE do
-    self.can_move = true
-
     self.accumulator = self.accumulator - LIFE
 
     local gw, gh = self.grid:size()
@@ -241,7 +242,7 @@ function Main:render(_)
         "-- press start --", "center", "middle", 2, 2)
     end
 
-    canvas:write(0, 0, self.font, string.format("FPS: %d", System.fps()))
+    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
 end
 
 return Main

@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,17 +39,21 @@
 
 #include <core/config.h>
 #include <libs/imath.h>
+#define _LOG_TAG "gl-context"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "gl-context"
 
 static void _reset(GL_Context_t *context)
 {
     const GL_Surface_t *surface = context->surface;
 
     GL_State_t state = (GL_State_t){
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width, .y1 = (int)surface->height },
+            .clipping_region = (GL_Quad_t){
+                .x0 = 0,
+                .y0 = 0,
+                .x1 = (int)surface->width,
+                .y1 = (int)surface->height
+            },
             .shifting = { 0 },
             .transparent = { 0 }
         };
@@ -54,7 +71,7 @@ GL_Context_t *GL_context_create(const GL_Surface_t *surface)
 {
     GL_Context_t *context = malloc(sizeof(GL_Context_t));
     if (!context) {
-        LOG_E(LOG_CONTEXT, "can't allocate context");
+        LOG_E("can't allocate context");
         return NULL;
     }
 
@@ -70,10 +87,10 @@ GL_Context_t *GL_context_create(const GL_Surface_t *surface)
 void GL_context_destroy(GL_Context_t *context)
 {
     arrfree(context->state.stack);
-    LOG_D(LOG_CONTEXT, "context stack at %p freed", context->state.stack);
+    LOG_D("context stack at %p freed", context->state.stack);
 
     free(context);
-    LOG_D(LOG_CONTEXT, "context %p freed", context);
+    LOG_D("context %p freed", context);
 }
 
 void GL_context_reset(GL_Context_t *context)
@@ -90,7 +107,7 @@ void GL_context_pop(GL_Context_t *context, size_t levels)
 {
     const size_t length = arrlenu(context->state.stack);
     if (length < 1) {
-        LOG_W(LOG_CONTEXT, "no states to pop from context");
+        LOG_W("no states to pop from context");
         return;
     }
     if (levels > length) {

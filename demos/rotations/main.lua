@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +66,10 @@ function Main:__ctor()
   self.flip_y = false
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
 
   self.scale_speed = 0
@@ -89,6 +105,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.scale = math.max(0, self.scale + self.scale_speed * delta_time)
   self.rotation = self.rotation + self.rotation_speed * delta_time
   self.anchor = math.min(1.0, math.max(0.0, self.anchor + self.anchor_speed * delta_time))
@@ -109,7 +127,7 @@ function Main:render(_)
       self.anchor, self.anchor)
   end
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
   canvas:write(width, height, self.font, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
     "right", "bottom")
 end

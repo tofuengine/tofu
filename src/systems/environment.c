@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,42 +39,35 @@
 
 #include <core/config.h>
 #include <core/platform.h>
+#include <libs/fmath.h>
+#include <libs/imath.h>
+#define _LOG_TAG "environment"
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include <malloc.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #include <windows.h>
-  #include <psapi.h>
+    #include <windows.h>
+    #include <psapi.h>
 #endif
 
-#define LOG_CONTEXT "environment"
-
-// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-
-Environment_t *Environment_create(const Display_t *display, const Input_t *input)
+Environment_t *Environment_create(const Display_t *display)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
-        LOG_E(LOG_CONTEXT, "can't allocate environment");
+        LOG_E("can't allocate environment");
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "environment allocated");
+    LOG_D("environment allocated");
 
     *environment = (Environment_t){
-        .display = display,
-        .input = input,
-        .state = (Environment_State_t){
-#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
-            .active = { .is = false, .was = false },
-#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
-#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
-            .controllers = { .previous = -1, .current = 0 },
-#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
-            .stats = { 0 },
-            .time = 0.0
-        },
-    };
+            .display = display,
+            .state = (Environment_State_t){
+                .is_active = false,
+                .stats = { 0 },
+                .time = 0.0
+            }
+        };
 
     return environment;
 }
@@ -69,7 +75,7 @@ Environment_t *Environment_create(const Display_t *display, const Input_t *input
 void Environment_destroy(Environment_t *environment)
 {
     free(environment);
-    LOG_D(LOG_CONTEXT, "environment freed");
+    LOG_D("environment freed");
 }
 
 const Environment_State_t *Environment_get_state(const Environment_t *environment)
@@ -77,37 +83,94 @@ const Environment_State_t *Environment_get_state(const Environment_t *environmen
     return &environment->state;
 }
 
-static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
+static inline size_t _frame_time_to_fps(float frame_time)
 {
-    static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
+    return frame_time > __FLT_EPSILON__ ?  IROUNDF(1.0f / frame_time) : 0;
+}
+
+static inline size_t _calculate_fps(float frame_time)
+{
+#if defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
+    static float samples[TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
     static float sum = 0.0f; // We are storing just a small time interval, float is enough...
 
     sum -= samples[index];
     samples[index] = frame_time;
     sum += frame_time;
-    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+    index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
 
-    return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
+    return IROUND((float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES / sum);
+#else
+    static float average = 0.0f;
+
+    average = FLERP(average, frame_time, 0.1); // Smaller values makes the average more "stable".
+    return _frame_time_to_fps(average);
+#endif
 }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-static inline void _calculate_times(float times[4], const float deltas[4])
+static inline void _calculate_times(float times[5], const float deltas[5])
 {
-    static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
+#if defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
+    static float samples[5][TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
-    static float sums[4] = { 0 };
+    static float sums[5] = { 0 };
 
-    for (size_t i = 0; i < 4; ++i) {
+    for (size_t i = 0; i < 5; ++i) {
         const float t = deltas[i] * 1000.0f;
         sums[i] -= samples[i][index];
         samples[i][index] = t;
         sums[i] += t;
-        times[i] = sums[i] / (float)FPS_AVERAGE_SAMPLES;
+        times[i] = sums[i] / (float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
     }
-    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+    index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
+#else
+    static float averages[5] = { 0 };
+
+    for (size_t i = 0; i < 5; ++i) {
+        const float t = deltas[i] * 1000.0f;
+        averages[i] = FLERP(averages[i], t, 0.1f); // Ditto.
+        times[i] = averages[i];
+    }
+#endif
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[5])
+#else
+void Environment_accumulate(Environment_t *environment, float frame_time)
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+{
+    Environment_State_t *state = &environment->state;
+
+    Environment_Stats_t *stats = &state->stats;
+    stats->fps = _calculate_fps(frame_time); // We could use `1 / frame_time` but it would be inaccurate due to rounding/representation.
+
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+    _calculate_times(stats->times, deltas);
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG)
+    static float stats_time = TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
+    stats_time += frame_time;
+    while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
+        stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
+        LOG_I("currently running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
+            stats->fps,
+            stats->times[0], stats->times[0] / stats->times[4],
+            stats->times[1], stats->times[1] / stats->times[4],
+            stats->times[2], stats->times[2] / stats->times[4],
+            stats->times[3], stats->times[3] / stats->times[4],
+            stats->times[4]);
+    }
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+}
+
+static inline bool _is_active(const Display_t *display)
+{
+    return glfwGetWindowAttrib(display->window, GLFW_FOCUSED) == GLFW_TRUE;
+}
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static inline size_t _heap_usage(void)
@@ -127,54 +190,26 @@ static inline size_t _heap_usage(void)
 }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 
-#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
-#else
-void Environment_process(Environment_t *environment, float frame_time)
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+bool Environment_update(Environment_t *environment, float delta_time)
 {
     Environment_State_t *state = &environment->state;
-#if defined(TOFU_EVENTS_FOCUS_SUPPORT)
-    state->active.was = state->active.is;
-    state->active.is = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
-#endif  /* TOFU_EVENTS_FOCUS_SUPPORT */
-#if defined(TOFU_EVENTS_CONTROLLER_SUPPORT)
-    state->controllers.previous = state->controllers.current;
-    state->controllers.current = Input_get_controllers_count(environment->input);
-#endif  /* TOFU_EVENTS_CONTROLLER_SUPPORT */
 
-    Environment_Stats_t *stats = &state->stats;
-    stats->fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
+    state->time += delta_time;
 
-#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-    _calculate_times(stats->times, deltas);
-#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG)
-    static float stats_time = TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
-    stats_time += frame_time;
-    while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
-        stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
-        LOG_I(LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
-            stats->fps, stats->times[0], stats->times[1], stats->times[2], stats->times[3]);
-    }
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+    state->is_active = _is_active(environment->display);
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
+    Environment_Stats_t *stats = &state->stats;
     stats->memory_usage = _heap_usage();
 #if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
     static float heap_time = TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
     heap_time += frame_time;
     while (heap_time > TOFU_ENGINE_HEAP_STATISTICS_PERIOD) {
         heap_time -= TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
-        LOG_I(LOG_CONTEXT, "currently using %u byte(s)", stats->memory_usage);
+        LOG_I("currently using %u byte(s)", stats->memory_usage);
     }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
-}
-
-bool Environment_update(Environment_t *environment, float frame_time)
-{
-    environment->state.time += frame_time;
 
     return true;
 }

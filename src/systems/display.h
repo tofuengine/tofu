@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +44,7 @@
 #include <libs/gl/gl.h>
 #include <libs/shader.h>
 
+#include <cglm/cglm.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
@@ -55,6 +69,11 @@ typedef struct Display_s {
     GLFWwindow *window;
 
     Shader_t *shader;
+    GLuint vbo;
+    GLuint vao;
+#if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
+    mat4 mvp;
+#endif
 
     struct {
         GL_Size_t size;
@@ -65,7 +84,7 @@ typedef struct Display_s {
     struct {
         GLuint texture;
         GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-        GL_Point_t position; // Destination position, scaled to the final screen size.
+        GL_Point_t position; // Destination position, normalized to the final screen size.
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;
     } vram;

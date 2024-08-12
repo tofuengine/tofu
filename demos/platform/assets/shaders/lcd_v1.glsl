@@ -1,4 +1,4 @@
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec4 texel = texture2D(texture, texture_coords);
 
     // Default lcd colour (affects brightness)

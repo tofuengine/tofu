@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +54,7 @@
 //   t -> table
 //   u -> userdata
 //   f -> function
-//   e -> enum (i.e. a string from a list of possibile ones)
+//   e -> enum (i.e. a string from a list of possible ones)
 //   o -> object (i.e. userdata with optionally encoded type)
 //
 // Example:
@@ -51,6 +64,7 @@
 //
 
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
+#include "internal/udt.h"
 #include "bank.h"
 #include "batch.h"
 #include "body.h"
@@ -77,36 +91,13 @@
 #include "world.h"
 #include "xform.h"
 
+#define _LOG_TAG "modules"
 #include <libs/log.h>
 #include <libs/luax.h>
 
-#define LOG_CONTEXT "modules"
-
-// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-
-static void _preload_modules(lua_State *L, int nup, const luaL_Reg *modules)
+void modules_initialize(lua_State *L, const void *userdatas[])
 {
-#if defined(INSIST)
-    luaX_insisttable(L, "tofu");
-    for (const luaL_Reg *module = modules; module->func; ++module) {
-        luaX_pushvalues(L, nup);
-        luaX_require(L, module->name, module->func, nup, 1);
-        lua_setfield(L, -1, module->name);
-    }
-    lua_pop(L, nup);
-#else
-    for (const luaL_Reg *module = modules; module->func; ++module) {
-        LOG_D(LOG_CONTEXT, "preloading module `%s`", module->name);
-        luaX_pushvalues(L, nup);
-        luaX_preload(L, module->name, module->func, nup);
-    }
-    lua_pop(L, nup);
-#endif
-}
-
-void modules_initialize(lua_State *L, int nup)
-{
-    _preload_modules(L, nup, (const luaL_Reg[]){
+    udt_preload_modules(L, userdatas, (const luaL_Reg[]){
             { "tofu.core.log", log_loader },
             { "tofu.core.math", math_loader },
             { "tofu.core.system", system_loader },

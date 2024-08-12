@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,10 +51,9 @@ static int storage_flush_0_0(lua_State *L);
 
 int storage_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- operations --
             { "inject", storage_inject_3ssS_0 },
 #if !defined(TOFU_STORAGE_AUTO_COLLECT)
             { "flush", storage_flush_0_0 },
@@ -50,7 +62,7 @@ int storage_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int storage_inject_3ssS_0(lua_State *L)
@@ -64,7 +76,7 @@ static int storage_inject_3ssS_0(lua_State *L)
     luaX_String data = LUAX_LSTRING(L, 2);
     const char *mode = LUAX_OPTIONAL_STRING(L, 3, "base64");
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     bool injected;
     switch (mode[0]) {
@@ -99,7 +111,7 @@ static int storage_flush_0_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     Storage_flush(storage);
 

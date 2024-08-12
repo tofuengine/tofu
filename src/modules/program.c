@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +41,9 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
+#define _LOG_TAG "program"
 #include <libs/log.h>
 #include <systems/display.h>
-
-#define LOG_CONTEXT "program"
-#define META_TABLE  "Tofu_Graphics_Program_mt"
-#define SCRIPT_NAME "@program.lua"
 
 static int program_new_0_1o(lua_State *L);
 static int program_gc_1o_0(lua_State *L);
@@ -53,12 +63,12 @@ static int program_palette_5onntN_0(lua_State *L);
 
 int program_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", program_new_0_1o },
             { "__gc", program_gc_1o_0 },
+            // -- mutators --
             { "clear", program_clear_1o_0 },
             { "erase", program_erase_3oNN_0 },
             { "nop", program_nop_2oN_0 },
@@ -68,13 +78,14 @@ int program_loader(lua_State *L)
             { "offset", program_offset_3onN_0 },
             { "color", program_color_6onnnnN_0 },
             { "shift", program_shift_v_0 },
+            // -- operations --
             { "gradient", program_gradient_4ontN_0 },
             { "palette", program_palette_5onntN_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static int program_new_0_1o(lua_State *L)
@@ -87,12 +98,12 @@ static int program_new_0_1o(lua_State *L)
         return luaL_error(L, "can't create program");
     }
 
-    Program_Object_t *self = (Program_Object_t *)luaX_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
+    Program_Object_t *self = (Program_Object_t *)udt_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
             .program = program
-        }, OBJECT_TYPE_PROGRAM, META_TABLE);
+        }, OBJECT_TYPE_PROGRAM);
 
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program %p allocated", self);
+    LOG_D("program %p allocated", self);
 #else  /* VERBOSE_DEBUG */
     (void)self;
 #endif  /* VERBOSE_DEBUG */
@@ -110,7 +121,7 @@ static int program_gc_1o_0(lua_State *L)
     GL_program_destroy(self->program);
 
 #if defined(VERBOSE_DEBUG)
-    LOG_D(LOG_CONTEXT, "program %p finalized", self);
+    LOG_D("program %p finalized", self);
 #endif  /* VERBOSE_DEBUG */
 
     return 0;
@@ -295,12 +306,12 @@ static int program_shift_4onnN_0(lua_State *L)
 static int program_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, program_shift_3otN_0)
-        LUAX_OVERLOAD_ARITY(3, program_shift_4onnN_0)
+        LUAX_OVERLOAD_BY_ARITY(program_shift_3otN_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(program_shift_4onnN_0, 3)
     LUAX_OVERLOAD_END
 }
 
-#define INC_IF_VALID(x)  ((x) >= 0 ? (x)++ : (x))
+#define _INC_IF_VALID(x) ((x) >= 0 ? (x)++ : (x))
 
 static int program_gradient_4ontN_0(lua_State *L)
 {
@@ -318,16 +329,16 @@ static int program_gradient_4ontN_0(lua_State *L)
     size_t current_y = 0;
     uint8_t current_r = 0, current_g = 0, current_b = 0;
 
-    GL_program_wait(self->program, INC_IF_VALID(position), 0, current_y);
+    GL_program_wait(self->program, _INC_IF_VALID(position), 0, current_y);
 
     lua_pushnil(L); // O N T -> O N T N
     for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
-#if defined(__DEFENSIVE_CHECKS__)
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
         size_t count = lua_rawlen(L, 5);
         if (count != 4) {
             luaL_error(L, "marker #%d has %d components (out of 4 required)", i, count);
         }
-#endif /* __DEFENSIVE_CHECKS__ */
+#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
         lua_rawgeti(L, 5, 1); // O N T N T -> O N T N T I
         lua_rawgeti(L, 5, 2); // O N T N T I -> O N T N T I I
         lua_rawgeti(L, 5, 3); // O N T N T I I -> O N T N T I I I
@@ -346,8 +357,8 @@ static int program_gradient_4ontN_0(lua_State *L)
             const uint8_t g = (uint8_t)FLERP(current_g, wait_g, ratio);
             const uint8_t b = (uint8_t)FLERP(current_b, wait_b, ratio);
             const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-            GL_program_color(self->program, INC_IF_VALID(position), index, color);
-            GL_program_skip(self->program, INC_IF_VALID(position), 0, 1); // Skip to next after changing the color.
+            GL_program_color(self->program, _INC_IF_VALID(position), index, color);
+            GL_program_skip(self->program, _INC_IF_VALID(position), 0, 1); // Skip to next after changing the color.
         }
 
         current_y = wait_y;
@@ -359,7 +370,7 @@ static int program_gradient_4ontN_0(lua_State *L)
     }
 
     const GL_Color_t color = (GL_Color_t){ .r = current_r, .g = current_g, .b = current_b, .a = 255 };
-    GL_program_color(self->program, INC_IF_VALID(position), index, color);
+    GL_program_color(self->program, _INC_IF_VALID(position), index, color);
 
     return 0;
 }
@@ -379,18 +390,18 @@ static int program_palette_5onntN_0(lua_State *L)
     size_t y = LUAX_UNSIGNED(L, 4);
     int position = LUAX_OPTIONAL_INTEGER(L, 5, -1);
 
-    GL_program_wait(self->program, INC_IF_VALID(position), x, y);
+    GL_program_wait(self->program, _INC_IF_VALID(position), x, y);
 
     lua_pushnil(L); // O T N N -> O T N N N
     for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
         const GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
 
-#if defined(__DEFENSIVE_CHECKS__)
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
         size_t count = lua_rawlen(L, 6);
         if (count != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
         }
-#endif /* __DEFENSIVE_CHECKS__ */
+#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
         lua_rawgeti(L, 6, 1); // O T N N N T -> O T N N N T I
         lua_rawgeti(L, 6, 2); // O T N N N T I -> O T N N N T I I
         lua_rawgeti(L, 6, 3); // O T N N N T I I -> O T N N N T I I I
@@ -402,7 +413,7 @@ static int program_palette_5onntN_0(lua_State *L)
         lua_pop(L, 3); // O T N T I I I -> O T N T
 
         const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-        GL_program_color(self->program, INC_IF_VALID(position), index, color);
+        GL_program_color(self->program, _INC_IF_VALID(position), index, color);
 
         lua_pop(L, 1); // O T N N N T -> O T N N N
     }

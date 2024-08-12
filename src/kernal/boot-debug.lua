@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -49,14 +62,8 @@ function Boot:__ctor()
           canvas:reset() -- Reset default canvas from the game state.
           me.main = nil
         end,
-      process = function(me, events)
-          for _, event in ipairs(events) do
-            local callback = me.main[event]
-            if callback then
-              callback(me.main)
-            end
-          end
-          me.main:process()
+      init = function(me)
+          me.main:init()
         end,
       update = function(me, delta_time)
           me.main:update(delta_time)
@@ -107,7 +114,7 @@ function Boot:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      process = function(_, _)
+      init = function(_)
         end,
       update = function(_, _)
         end,
@@ -126,20 +133,29 @@ function Boot:__ctor()
   self:switch_to("normal")
 end
 
-function Boot:process(events)
-  self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
-
+function Boot:init()
   local me = self.state
-  self:call(me.process, me, events)
+  if not me then
+    return
+  end
+  self:call(me.init, me)
 end
 
 function Boot:update(delta_time)
+  self:switch_if_needed() -- Switch state on the update step
+
   local me = self.state
+  if not me then
+    return
+  end
   self:call(me.update, me, delta_time)
 end
 
 function Boot:render(ratio)
   local me = self.state
+  if not me then
+    return
+  end
   self:call(me.render, me, ratio)
 end
 

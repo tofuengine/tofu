@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,13 +52,29 @@
 
 // TODO: rename them as PODs? (Plain-old-Data)
 
-typedef enum UserData_e { // TODO: move to a separate file.
-    USERDATA_STORAGE = 1,
+typedef enum UpValue_e { 
+    UpValue_t_First = 1,
+    UPVALUE_STORAGE = UpValue_t_First,
+    UPVALUE_DISPLAY,
+    UPVALUE_INPUT,
+    UPVALUE_AUDIO,
+    UPVALUE_ENVIRONMENT,
+    UPVALUE_INTERPRETER,
+    UPVALUE_MODULE_NAME,
+    UpValue_t_Last = UPVALUE_MODULE_NAME,
+    UpValue_t_CountOf
+} UpValue_t;
+
+typedef enum UserData_e {
+    UserData_t_First = 1,
+    USERDATA_STORAGE = UserData_t_First,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
-    USERDATA_INTERPRETER
+    USERDATA_INTERPRETER,
+    UserData_t_Last = USERDATA_INTERPRETER,
+    UserData_t_CountOf
 } UserData_t;
 
 typedef enum Object_Types_e {
@@ -90,10 +119,10 @@ typedef struct Bank_Object_s {
 
 typedef struct Font_Object_s {
     struct {
-        const Image_Object_t *instance;
+        const Bank_Object_t *instance;
         luaX_Reference reference;
-    } atlas;
-    GL_Sheet_t *sheet;
+    } bank;
+    GL_Sheet_t *sheet; // This is not allocated, but a shortcut to the bank's sheet.
     GL_Cell_t glyphs[256];
 } Font_Object_t;
 
@@ -173,9 +202,21 @@ typedef enum Easing_Types_e {
     Easing_Types_t_CountOf
 } Easing_Types_t;
 
+typedef enum Clamp_Modes_e {
+    CLAMP_MODE_NONE,
+    CLAMP_MODE_LOWER,
+    CLAMP_MODE_UPPER,
+    CLAMP_MODE_BOTH,
+    Clamp_Modes_t_CountOf
+} Clamp_Modes_t;
+
+typedef float (*Clamp_Function_t)(float value);
+
 typedef struct Tweener_Object_s {
+    Clamp_Modes_t clamp;
+    Clamp_Function_t clamp_function;
     Easing_Types_t easing;
-    Easing_Function_t function;
+    Easing_Function_t easing_function;
     float duration;
     float from;
     float to;
@@ -258,5 +299,10 @@ typedef struct Grid_Object_s {
     Grid_Object_Value_t *data;
     size_t data_size;
 } Grid_Object_t;
+
+extern void udt_preload_modules(lua_State *L, const void *userdatas[], const luaL_Reg *modules);
+extern int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c);
+extern void *udt_newobject(lua_State *L, size_t size, void *state, int type);
+extern void *udt_get_userdata(lua_State *L, UserData_t id);
 
 #endif  /* TOFU_MODULES_INTERNAL_UDT_H */

@@ -76,15 +76,21 @@ typedef signed int int32;
 typedef unsigned char uint8;
 typedef unsigned short int uint16;
 typedef unsigned int uint32;
-#endif
 
 #ifdef _MSC_VER /* MSVC6 has no long long */
 typedef signed __int64 int64;
 typedef unsigned __int64 uint64;
-#elif !(defined(B_BEOS_VERSION) || defined(__amigaos4__))
+#elif defined(_LP64) || defined(__LP64__)
+typedef unsigned long uint64;
+typedef signed long int64;
+#else
 typedef unsigned long long uint64;
 typedef signed long long int64;
+#endif /* [u]int64 */
 #endif
+/* just in case :  */
+typedef int tst_uint32[2 * (4 == sizeof(uint32)) - 1];
+typedef int tst_uint64[2 * (8 == sizeof(uint64)) - 1];
 
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
@@ -165,8 +171,8 @@ static void __inline D_(const char *text, ...) {
 #define D_CRIT "\x1b[31m"
 #define D_WARN "\x1b[36m"
 #define D_(...) do { \
-	printf("\x1b[33m%s \x1b[37m[%s:%d] " D_INFO, LIBXMP_FUNC, \
-		__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
+	printf("\x1b[37m[%s:%d@%s] " D_INFO, \
+		__FILE__, __LINE__, LIBXMP_FUNC); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
 	} while (0)
 #else
 #define D_(...) do {} while (0)
@@ -256,6 +262,7 @@ int libxmp_snprintf (char *, size_t, const char *, ...) LIBXMP_ATTRIB_PRINTF(3,4
 #define QUIRK_NOBPM	(1 << 28)	/* Adjust speed only, no BPM */
 #define QUIRK_ARPMEM	(1 << 29)	/* Arpeggio has memory (S3M_ARPEGGIO) */
 #define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
+#define QUIRK_FT2ENV	(1 << 31)	/* Use FT2-style envelope handling */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 

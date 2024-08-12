@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -817,7 +817,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		mod->xxc[i].pan = 0x80;
 	}
 
-	m->quirk |= QUIRKS_FT2;
+	m->quirk |= QUIRKS_FT2 | QUIRK_FT2ENV;
 	m->read_event_type = READ_EVENT_FT2;
 
 	return 0;

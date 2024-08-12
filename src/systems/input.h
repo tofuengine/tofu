@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -139,8 +152,8 @@ typedef enum Input_Controller_Sticks_e {
 } Input_Controller_Sticks_t;
 
 typedef struct Input_Controller_Stick_s {
-    float x, y;
-    float angle, magnitude;
+    float x, y; // Actual controller's stick stimula.
+    float angle, magnitude; // Calculated from the above two.
 } Input_Controller_Stick_t;
 
 typedef struct Input_Controller_Triggers_s {
@@ -148,15 +161,6 @@ typedef struct Input_Controller_Triggers_s {
 } Input_Controller_Triggers_t;
 
 #define INPUT_CONTROLLERS_COUNT 4
-
-typedef enum Input_Handlers_e {
-    Input_Handlers_t_First = 0,
-    INPUT_HANDLER_KEYBOARD = Input_Handlers_t_First,
-    INPUT_HANDLER_MOUSE,
-    INPUT_HANDLER_GAMEPAD,
-    Input_Handlers_t_Last = INPUT_HANDLER_GAMEPAD,
-    Input_Handlers_t_CountOf
-} Input_Handlers_t;
 
 typedef struct Input_Configuration_s {
     const char *mappings;
@@ -177,6 +181,7 @@ typedef struct Input_Configuration_s {
         float speed;
     } cursor;
     struct {
+        // TODO: adopt separate triggers/sticks deadzones?
         float deadzone; // TODO: what is anti-deadzone?
         float range;
     } controller;
@@ -238,7 +243,6 @@ extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwin
 extern void Input_destroy(Input_t *input);
 
 extern bool Input_update(Input_t *input, float delta_time);
-extern void Input_process(Input_t *input);
 
 extern Input_Keyboard_t *Input_get_keyboard(Input_t *input);
 extern Input_Cursor_t *Input_get_cursor(Input_t *input);
@@ -257,5 +261,7 @@ extern bool Input_controller_is_available(const Input_Controller_t *controller);
 extern Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button);
 extern Input_Controller_Triggers_t Input_controller_get_triggers(const Input_Controller_t *controller);
 extern Input_Controller_Stick_t Input_controller_get_stick(const Input_Controller_t *controller, Input_Controller_Sticks_t stick);
+
+#define INPUT_CONTROLLER_BUTTON_STRENGTH(c, b)  (Input_controller_get_button((c), (b)).down ? 1.0f : 0.0f)
 
 #endif  /* TOFU_SYSTEMS_INPUT_H */

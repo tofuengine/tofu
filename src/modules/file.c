@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,17 +47,16 @@ static int file_store_2ss_0(lua_State *L);
 
 int file_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- operations --
             { "load", file_load_1s_1s },
             { "store", file_store_2ss_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, NULL);
+        });
 }
 
 static int file_load_1s_1s(lua_State *L)
@@ -54,13 +66,13 @@ static int file_load_1s_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     const Storage_Resource_t *resource = Storage_load(storage, name, STORAGE_RESOURCE_BLOB);
     if (!resource) {
         return luaL_error(L, "can't load file `%s`", name);
     }
-    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
+    lua_pushlstring(L, SR_BPTR(resource), SR_BSIZE(resource)); // Lua's strings can contain bytes.
 
     return 1;
 }
@@ -74,7 +86,7 @@ static int file_store_2ss_0(lua_State *L)
     const char *name = LUAX_STRING(L, 1);
     luaX_String data = LUAX_LSTRING(L, 2);
 
-    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     Storage_Resource_t resource = (Storage_Resource_t){
             // .name = name,

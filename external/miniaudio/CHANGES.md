@@ -1,3 +1,109 @@
+v0.11.21 - 2023-11-15
+=====================
+* Add new ma_device_notification_type_unlocked notification. This is used on Web and will be fired after the user has performed a gesture and thus unlocked the ability to play audio.
+* Web: Fix an error where the buffer size is incorrectly calculated.
+* Core Audio: Fix a -Wshadow warning.
+
+
+v0.11.20 - 2023-11-10
+=====================
+* Fix a compilation error with iOS.
+* Fix an error when dynamically linking libraries when forcing the UWP build on desktop.
+
+
+v0.11.19 - 2023-11-04
+=====================
+* Fix a bug where `ma_decoder_init_file()` can incorrectly return successfully.
+* Fix a crash when using a node with more than 2 outputs.
+* Fix a bug where `ma_standard_sample_rate_11025` uses the incorrect rate.
+* Fix a bug in `ma_noise` where only white noise would be generated even when specifying pink or Brownian.
+* Fix an SSE related bug when converting from mono streams.
+* Documentation fixes.
+* Remove the use of some deprecated functions.
+* Improvements to runtime linking on Apple platforms.
+* Web / Emscripten: Audio will no longer attempt to unlock in response to the "touchstart" event. This addresses an issue with iOS and Safari. This results in a change of behavior if you were previously depending on starting audio when the user's finger first touches the screen. Audio will now only unlock when the user's finger is lifted. See this discussion for details: https://github.com/mackron/miniaudio/issues/759
+* Web / Emscripten: Fix an error when using a sample rate of 0 in the device config.
+
+
+v0.11.18 - 2023-08-07
+=====================
+* Fix some AIFF compatibility issues.
+* Fix an error where the cursor of a Vorbis stream is incorrectly incremented.
+* Add support for setting a callback on an `ma_engine` object that get's fired after it processes a chunk of audio. This allows applications to do things such as apply a post-processing effect or output the audio to a file.
+* Add `ma_engine_get_volume()`.
+* Add `ma_sound_get_time_in_milliseconds()`.
+* Decouple `MA_API` and `MA_PRIVATE`. This relaxes applications from needing to define both of them if they're only wanting to redefine one.
+* Decoding backends will now have their onInitFile/W and onInitMemory initialization routines used where appropriate if they're defined.
+* Increase the accuracy of the linear resampler when setting the ratio with `ma_linear_resampler_set_rate_ratio()`.
+* Fix erroneous output with the linear resampler when in/out rates are the same.
+* AAudio: Fix an error where the buffer size is not configured correctly which sometimes results in excessively high latency.
+* ALSA: Fix a possible error when stopping and restarting a device.
+* PulseAudio: Minor changes to stream flags.
+* Win32: Fix an error where `CoUninialize()` is being called when the corresponding `CoInitializeEx()` fails.
+* Web / Emscripten: Add support for AudioWorklets. This is opt-in and can be enabled by defining `MA_ENABLE_AUDIO_WORKLETS`. You must compile with `-sAUDIO_WORKLET=1 -sWASM_WORKERS=1 -sASYNCIFY` for this to work. Requires at least Emscripten v3.1.32.
+
+
+v0.11.17 - 2023-05-27
+=====================
+* Fix compilation errors with MA_USE_STDINT.
+* Fix a possible runtime error with Windows 95/98.
+* Fix a very minor linting warning in VS2022.
+* Add support for AIFF/AIFC decoding.
+* Add support for RIFX decoding.
+* Work around some bad code generation by Clang.
+* Amalgamations of dr_wav, dr_flac, dr_mp3 and c89atomic have been updated so that they're now fully namespaced. This allows each of these libraries to be able to be used alongside miniaudio without any conflicts. In addition, some duplicate code, such as sized type declarations, result codes, etc. has been removed.
+
+
+v0.11.16 - 2023-05-15
+=====================
+* Fix a memory leak with `ma_sound_init_copy()`.
+* Improve performance of `ma_sound_init_*()` when using the `ASYNC | DECODE` flag combination.
+
+
+v0.11.15 - 2023-04-30
+=====================
+* Fix a bug where initialization of a duplex device fails on some backends.
+* Fix a bug in ma_gainer where smoothing isn't applied correctly thus resulting in glitching.
+* Add support for volume smoothing to sounds when changing the volume with `ma_sound_set_volume()`. To use this, you must configure it via the `volumeSmoothTimeInPCMFrames` member of ma_sound_config and use `ma_sound_init_ex()` to initialize your sound. Smoothing is disabled by default.
+* WASAPI: Fix a possible buffer overrun when initializing a device.
+* WASAPI: Make device initialization more robust by improving the handling of the querying of the internal data format.
+
+
+v0.11.14 - 2023-03-29
+=====================
+* Fix some pedantic warnings when compiling with GCC.
+* Fix some crashes with the WAV decoder when loading an invalid file.
+* Fix a channel mapping error with PipeWire which results in no audio being output.
+* Add support for using `ma_pcm_rb` as a data source.
+* Silence some C89 compatibility warnings with Clang.
+* The `pBytesRead` parameter of the VFS onRead callback is now pre-initialized to zero.
+
+
+v0.11.13 - 2023-03-23
+=====================
+* Fix compilation errors with the C++ build.
+* Fix compilation errors when WIN32_LEAN_AND_MEAN is defined.
+
+
+v0.11.12 - 2023-03-19
+=====================
+* Fix a bug with data source ranges which resulted in data being read from outside the range.
+* Fix a crash due to a race condition in the resource manager.
+* Fix a crash with some backends when rerouting the playback side of a duplex device.
+* Fix some bugs with initialization of POSIX threads.
+* Fix a bug where sounds are not resampled when `MA_SOUND_NO_PITCH` is used.
+* Fix a bug where changing the range of a data source would result in no audio being read.
+* Fix a bug where asynchronously loaded data sources via the resources manager would reset ranges and loop points.
+* Fix some Wimplicit-fallthrough warnings.
+* Add support for Windows 95/98.
+* Add support for configuring the stack size of resource manager job threads.
+* Add support for callback notifications when a sound reaches the end.
+* Optimizations to the high level API.
+* Remove the old runtime linking system for pthread. The `MA_USE_RUNTIME_LINKING_FOR_PTHREAD` option is no longer used.
+* WASAPI: Fix a crash when starting a device while it's in the process of rerouting.
+* Windows: Remove the Windows-specific default memcpy(), malloc(), etc.
+
+
 v0.11.11 - 2022-11-04
 =====================
 * Silence an unused variable warning.

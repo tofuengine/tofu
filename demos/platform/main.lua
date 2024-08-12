@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -68,9 +81,9 @@ local function extra_half_brite(palette, target, ratio)
   palette:merge(32, tweaked, 0, 32, false) -- Just append.
 --  local size = palette:size()
 --  for index = 0, size - 1 do
---    local ar, ag, ab = palette:get(index)
+--    local ar, ag, ab = palette:peek(index)
 --    local mr, mg, mb = Palette.mix(r, g, b, ar, ag, ab, ratio)
---    palette:set(size + index, mr, mg, mb)
+--    palette:poke(size + index, mr, mg, mb)
 --  end
   return palette
 end
@@ -122,7 +135,10 @@ function Main:__ctor()
 --  self.pixies:clear(0)
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
   if self.jumps < 2 and controller:is_pressed("up") then
     self.velocity.y = 128
@@ -147,6 +163,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.velocity:add(self.acceleration)
   self.position:fma(self.velocity, delta_time)
 
@@ -300,7 +318,7 @@ function Main:render(_)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
-  canvas:write(0, 0, self.font, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
 
 --  local a, b, c, d = System.stats()
 --  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)

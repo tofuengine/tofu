@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +40,8 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "noise"
 #include <libs/log.h>
-
-#define LOG_CONTEXT "noise"
-#define META_TABLE  "Tofu_Generators_Noise_mt"
 
 static int noise_new_1eNN_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
@@ -41,22 +52,24 @@ static int noise_generate_3onNN_1n(lua_State *L);
 
 int noise_loader(lua_State *L)
 {
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L,
-        (luaX_Script){ 0 },
+    return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
             { "new", noise_new_1eNN_1o },
             { "__gc", noise_gc_1o_0 },
-            { "__call", noise_generate_3onNN_1n }, // Call meta-method, mapped to `generate(...)`.
+            // -- metamethods --
+            { "__call", noise_generate_3onNN_1n }, // Call metamethod, mapped to `generate(...)`.
+            // -- getters/setters --
             { "type", noise_type_v_v },
             { "seed", noise_seed_v_v },
             { "frequency", noise_frequency_v_v },
+            // -- operations --
             { "generate", noise_generate_3onNN_1n },
             { NULL, NULL }
         },
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
-        }, nup, META_TABLE);
+        });
 }
 
 static const char *_types[Noise_Types_t_CountOf + 1] = {
@@ -83,14 +96,14 @@ static int noise_new_1eNN_1o(lua_State *L)
     float seed = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
     float frequency = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
-    Noise_Object_t *self = (Noise_Object_t *)luaX_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
+    Noise_Object_t *self = (Noise_Object_t *)udt_newobject(L, sizeof(Noise_Object_t), &(Noise_Object_t){
             .type = type,
             .function = _functions[type],
             .seed = seed,
             .frequency = frequency
-        }, OBJECT_TYPE_NOISE, META_TABLE);
+        }, OBJECT_TYPE_NOISE);
 
-    LOG_D(LOG_CONTEXT, "noise %p allocated", self);
+    LOG_D("noise %p allocated", self);
 
     return 1;
 }
@@ -104,7 +117,7 @@ static int noise_gc_1o_0(lua_State *L)
 
     // Nothing to dispose.
 
-    LOG_D(LOG_CONTEXT, "noise %p finalized", self);
+    LOG_D("noise %p finalized", self);
 
     return 0;
 }
@@ -139,15 +152,15 @@ static int noise_type_2oe_0(lua_State *L)
 static int noise_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, noise_type_2oe_0)
+        LUAX_OVERLOAD_BY_ARITY(noise_type_1o_1s, 1)
+        LUAX_OVERLOAD_BY_ARITY(noise_type_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
 static int noise_seed_1o_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
@@ -174,15 +187,15 @@ static int noise_seed_2on_0(lua_State *L)
 static int noise_seed_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_seed_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, noise_seed_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(noise_seed_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(noise_seed_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
 static int noise_frequency_1o_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
@@ -209,8 +222,8 @@ static int noise_frequency_2on_0(lua_State *L)
 static int noise_frequency_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, noise_frequency_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, noise_frequency_2on_0)
+        LUAX_OVERLOAD_BY_ARITY(noise_frequency_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(noise_frequency_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 

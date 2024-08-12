@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@
 #include "mix.h"
 
 #include <core/config.h>
+#define _LOG_TAG "sl-module"
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -37,35 +38,25 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-#define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
+#define _STREAMING_BUFFER_SIZE_IN_FRAMES   SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
-#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
+#define _STREAMING_BUFFER_CHUNK_IN_FRAMES  (_STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
 // Modules are generated in stereo mode, which means that we need to handle a stereo source (i.e. we have two channels per frame)
-#define MODULE_OUTPUT_FORMAT                ma_format_s16
-#define MODULE_OUTPUT_BYTES_PER_SAMPLE      2
-#define MODULE_OUTPUT_SAMPLES_PER_CHANNEL   1
-#define MODULE_OUTPUT_CHANNELS_PER_FRAME    2
-#define MODULE_OUTPUT_BYTES_PER_FRAME       (MODULE_OUTPUT_CHANNELS_PER_FRAME * MODULE_OUTPUT_SAMPLES_PER_CHANNEL * MODULE_OUTPUT_BYTES_PER_SAMPLE)
+#define _MODULE_OUTPUT_FORMAT              ma_format_s16
+#define _MODULE_OUTPUT_BYTES_PER_SAMPLE    2
+#define _MODULE_OUTPUT_SAMPLES_PER_CHANNEL 1
+#define _MODULE_OUTPUT_CHANNELS_PER_FRAME  2
+#define _MODULE_OUTPUT_BYTES_PER_FRAME     (_MODULE_OUTPUT_CHANNELS_PER_FRAME * _MODULE_OUTPUT_SAMPLES_PER_CHANNEL * _MODULE_OUTPUT_BYTES_PER_SAMPLE)
 
-#define MIXING_BUFFER_BYTES_PER_SAMPLE      SL_BYTES_PER_SAMPLE
-#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
-#define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
-#define MIXING_BUFFER_SIZE_IN_FRAMES        SL_MIXING_BUFFER_SIZE_IN_FRAMES
+#define _MIXING_BUFFER_BYTES_PER_SAMPLE    SL_BYTES_PER_SAMPLE
+#define _MIXING_BUFFER_SAMPLES_PER_CHANNEL SL_SAMPLES_PER_CHANNEL
+#define _MIXING_BUFFER_CHANNELS_PER_FRAME  SL_CHANNELS_PER_FRAME
+#define _MIXING_BUFFER_SIZE_IN_FRAMES      SL_MIXING_BUFFER_SIZE_IN_FRAMES
 
-#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * MIXING_BUFFER_BYTES_PER_SAMPLE)
-#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
-
-#if MIXING_BUFFER_CHANNELS_PER_FRAME == 1
-  #define mix_additive  mix_1on2_additive
-#elif MIXING_BUFFER_CHANNELS_PER_FRAME == 2
-  #define mix_additive  mix_2on2_additive
-#else
-  #error "Mixing buffer has wrong number of channels"
-#endif
-
-#define LOG_CONTEXT "sl-module"
+#define _MIXING_BUFFER_BYTES_PER_FRAME     (_MIXING_BUFFER_CHANNELS_PER_FRAME * _MIXING_BUFFER_SAMPLES_PER_CHANNEL * _MIXING_BUFFER_BYTES_PER_SAMPLE)
+#define _MIXING_BUFFER_SIZE_IN_BYTES       (_MIXING_BUFFER_SIZE_IN_FRAMES * _MIXING_BUFFER_BYTES_PER_FRAME)
 
 typedef struct Module_s {
     Source_VTable_t vtable;
@@ -86,7 +77,7 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
 static inline bool _rewind(Module_t *module)
 {
-    LOG_T(LOG_CONTEXT, "rewinding module %p", module);
+    LOG_T("rewinding module %p", module);
 
     xmp_restart_module(module->context);
 
@@ -97,7 +88,7 @@ static inline bool _rewind(Module_t *module)
 
 static inline bool _reset(Module_t *module)
 {
-    LOG_T(LOG_CONTEXT, "resetting module %p", module);
+    LOG_T("resetting module %p", module);
 
     ma_pcm_rb *buffer = &module->buffer;
     ma_pcm_rb_reset(buffer);
@@ -114,12 +105,14 @@ static inline bool _produce(Module_t *module)
     ma_pcm_rb *buffer = &module->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
     if (frames_to_produce == 0) {
-        LOG_W(LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", module);
+#if defined(TOFU_MODULE_DEBUG_ENABLED)
+        LOG_T("buffer overrrun for source %p - stalling (waiting for consumer)", module);
+#endif
         return true;
-#if defined(STREAMING_BUFFER_CHUNK_IN_FRAMES)
+#if defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
-    if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
-        frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    if (frames_to_produce > _STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_produce = _STREAMING_BUFFER_CHUNK_IN_FRAMES;
 #endif
     }
 
@@ -129,16 +122,16 @@ static inline bool _produce(Module_t *module)
     // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
     xmp_context context = module->context;
     const int loops = module->props->looped ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looped.
-    int play_result = xmp_play_buffer(context, write_buffer, (int)frames_to_produce * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
+    int play_result = xmp_play_buffer(context, write_buffer, (int)frames_to_produce * _MODULE_OUTPUT_BYTES_PER_FRAME, loops);
 
     ma_pcm_rb_commit_write(buffer, frames_to_produce);
 
     if (play_result == -XMP_END) {
-        LOG_D(LOG_CONTEXT, "module %p reached end, marking as completed", module);
+        LOG_D("module %p reached end, marking as completed", module);
         module->completed = true;
     } else
     if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
-        LOG_E(LOG_CONTEXT, "module %p in error state %d, forcing end-of-data", module, play_result);
+        LOG_E("module %p in error state %d, forcing end-of-data", module, play_result);
         return false;
     }
 
@@ -149,18 +142,18 @@ SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callba
 {
     SL_Source_t *module = malloc(sizeof(Module_t));
     if (!module) {
-        LOG_E(LOG_CONTEXT, "can't allocate module structure");
+        LOG_E("can't allocate module structure");
         return NULL;
     }
 
     bool cted = _module_ctor(module, context, callbacks);
     if (!cted) {
-        LOG_E(LOG_CONTEXT, "can't initialize module structure");
+        LOG_E("can't initialize module structure");
         free(module);
         return NULL;
     }
 
-    LOG_D(LOG_CONTEXT, "module %p created", module);
+    LOG_D("module %p created", module);
     return module;
 }
 
@@ -194,45 +187,45 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 
     *module = (Module_t){
             .vtable = (Source_VTable_t){
-                    .dtor = _module_dtor,
-                    .reset = _module_reset,
-                    .update = _module_update,
-                    .generate = _module_generate
-                },
+                .dtor = _module_dtor,
+                .reset = _module_reset,
+                .update = _module_update,
+                .generate = _module_generate
+            },
             .completed = false
         };
 
     module->context = xmp_create_context();
     if (!module->context) {
-        LOG_E(LOG_CONTEXT, "can't create module context");
-        return false;
+        LOG_E("can't create module context");
+        goto error_exit;
     }
 
     int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &callbacks);
     if (loaded != 0) {
-        LOG_E(LOG_CONTEXT, "can't load module");
+        LOG_E("can't load module");
         goto error_free_context;
     }
 
-    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, MODULE_OUTPUT_CHANNELS_PER_FRAME, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
+    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, _MODULE_OUTPUT_CHANNELS_PER_FRAME, _STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
     if (result != MA_SUCCESS) {
-        LOG_E(LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
+        LOG_E("can't initialize music ring-buffer (%d frames)", _STREAMING_BUFFER_SIZE_IN_FRAMES);
         goto error_release_module;
     }
 
-    module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    module->props = SL_props_create(context, _MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, _MODULE_OUTPUT_CHANNELS_PER_FRAME, _MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!module->props) {
-        LOG_E(LOG_CONTEXT, "can't initialize module properties");
+        LOG_E("can't initialize module properties");
         goto error_deinitialize_ring_buffer;
     }
 
     int started = xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
     if (started != 0) {
-        LOG_E(LOG_CONTEXT, "can't initialize module properties");
+        LOG_E("can't initialize module properties");
         goto error_destroy_properties;
     }
 
-    LOG_D(LOG_CONTEXT, "module player started");
+    LOG_D("module player started");
 
     return true;
 
@@ -244,6 +237,7 @@ error_release_module:
     xmp_release_module(module->context);
 error_free_context:
     xmp_free_context(module->context);
+error_exit:
     return false;
 }
 
@@ -252,17 +246,17 @@ static void _module_dtor(SL_Source_t *source)
     Module_t *module = (Module_t *)source;
 
     xmp_end_player(module->context);
-    LOG_D(LOG_CONTEXT, "module player stopped");
+    LOG_D("module player stopped");
 
     SL_props_destroy(module->props);
-    LOG_D(LOG_CONTEXT, "module properties destroyed");
+    LOG_D("module properties destroyed");
 
     ma_pcm_rb_uninit(&module->buffer);
-    LOG_D(LOG_CONTEXT, "module ring-buffer uninitialized");
+    LOG_D("module ring-buffer uninitialized");
 
     xmp_release_module(module->context);
     xmp_free_context(module->context);
-    LOG_D(LOG_CONTEXT, "module context released");
+    LOG_D("module context released");
 }
 
 static bool _module_reset(SL_Source_t *source)
@@ -271,7 +265,7 @@ static bool _module_reset(SL_Source_t *source)
 
     bool reset = _reset(module);
     if (!reset) {
-        LOG_E(LOG_CONTEXT, "can't reset module %p stream", source);
+        LOG_E("can't reset module %p stream", source);
         return false;
     }
 
@@ -292,7 +286,7 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
     ma_data_converter *converter = &module->props->converter;
     ma_pcm_rb *buffer = &module->buffer;
 
-    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    uint8_t converted_buffer[_MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = module->props->precomputed_mix;
 
@@ -303,15 +297,15 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
             if (!module->completed) {
-                LOG_W(LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
+                LOG_W("buffer underrun for source %p - stalling (waiting for data)", source);
                 return true;
             } else {
-                LOG_D(LOG_CONTEXT, "end-of-data reached for source %p", source);
+                LOG_D("end-of-data reached for source %p", source);
                 return false;
             }
         }
 
-        size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
+        size_t frames_to_generate = frames_remaining > _MIXING_BUFFER_SIZE_IN_FRAMES ? _MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
         ma_uint64 frames_to_consume;
         ma_data_converter_get_required_input_frame_count(converter, frames_to_generate, &frames_to_consume);
@@ -326,7 +320,13 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
         ma_pcm_rb_commit_read(buffer, frames_consumed);
 
-        mix_additive(cursor, converted_buffer, frames_generated, mix);
+#if _MIXING_BUFFER_CHANNELS_PER_FRAME == 1
+        mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
+#elif _MIXING_BUFFER_CHANNELS_PER_FRAME == 2
+        mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
+#else
+    #error "Mixing buffer has wrong number of channels"
+#endif
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }

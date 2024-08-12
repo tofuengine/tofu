@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +42,7 @@
 // Unless RTTI has been explicitly disabled, automaticaly enables it in the
 // DEBUG build. Please note that it can be force-enabled anyway.
 #if !defined(LUAX_NO_RTTI) && defined(DEBUG)
-  #define LUAX_RTTI
+    #define _LUAX_RTTI
 #endif  /* LUAX_NO_RTTI */
 
 /*
@@ -79,30 +92,30 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
 #endif  /* DEBUG */
 }
 
-#if defined(LUAX_RTTI)
+#if defined(_LUAX_RTTI)
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
 #else
 typedef void *luaX_Object;
-#endif  /* LUAX_RTTI */
+#endif  /* _LUAX_RTTI */
 
-#if defined(LUAX_RTTI)
-  #define LUAX_OBJECT_SIZE(s)    (sizeof(luaX_Object) + (s))
-  #define LUAX_OBJECT_SELF(o)    ((void *)((luaX_Object *)(o) + 1))
+#if defined(_LUAX_RTTI)
+    #define LUAX_OBJECT_SIZE(s)     (sizeof(luaX_Object) + (s))
+    #define LUAX_OBJECT_SELF(o)     ((void *)((luaX_Object *)(o) + 1))
 #else
-  #define LUAX_OBJECT_SIZE(s)    (s)
-  #define LUAX_OBJECT_SELF(o)    ((void *)(o))
-#endif  /* LUAX_RTTI */
+    #define LUAX_OBJECT_SIZE(s)     (s)
+    #define LUAX_OBJECT_SELF(o)     ((void *)(o))
+#endif  /* _LUAX_RTTI */
 
 void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
     luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
-#if defined(LUAX_RTTI)
+#if defined(_LUAX_RTTI)
     *object = (luaX_Object){
             .type = type
         };
-#endif  /* LUAX_RTTI */
+#endif  /* _LUAX_RTTI */
     luaL_setmetatable(L, metatable);
     void *self = LUAX_OBJECT_SELF(object);
     memcpy(self, state, size);
@@ -119,11 +132,11 @@ int luaX_isobject(lua_State *L, int idx, int type)
         return 0;
 #endif  /* DEBUG */
     }
-#if defined(LUAX_RTTI)
+#if defined(_LUAX_RTTI)
     return object->type == type;
-#else   /* LUAX_RTTI */
+#else   /* _LUAX_RTTI */
     return 1;
-#endif  /* LUAX_RTTI */
+#endif  /* _LUAX_RTTI */
 }
 
 void *luaX_toobject(lua_State *L, int idx, int type)
@@ -137,7 +150,7 @@ void *luaX_toobject(lua_State *L, int idx, int type)
 #endif  /* DEBUG */
     }
 
-#if defined(LUAX_RTTI)
+#if defined(_LUAX_RTTI)
     if (object->type != type) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
@@ -145,7 +158,7 @@ void *luaX_toobject(lua_State *L, int idx, int type)
         return NULL;
 #endif  /* DEBUG */
     }
-#endif  /* LUAX_RTTI */
+#endif  /* _LUAX_RTTI */
 
     return LUAX_OBJECT_SELF(object);
 }
@@ -241,6 +254,8 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup, int s
     }
 
     lua_pop(L, 2); // Pop the `package` and `searchers` table.
+
+    // Upvalues have already been consumed by `lua_pushcclosure()`. No need to clear the stack.
 }
 
 int luaX_insisttable(lua_State *L, const char *name)
@@ -264,6 +279,8 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
         luaL_loadbuffer(L, script.data, script.size, script.name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
+            // Partially taken from `luaL_newmetatable()` in order to use the script return value (the export table)
+            // as metatable (see https://www.lua.org/pil/28.2.html).
             lua_pushstring(L, name);
             lua_setfield(L, -2, "__name");  /* metatable.__name = tname */
             lua_pushvalue(L, -1);
@@ -285,7 +302,7 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
         lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
     }
 
-    lua_insert(L, -(nup + 1)); // Move the table above the upvalues (to permit them to be consumed while preservig the table).
+    lua_insert(L, -(nup + 1)); // Move the table above the upvalues (to permit them to be consumed while preserving the table).
     luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods.
 
     for (; c->name; c++) {
@@ -331,6 +348,9 @@ void luaX_openlibs(lua_State *L)
     }
 }
 
+// Preloading a Lua module from the FFI API is achieved by storing the a loader
+// function in the `_PRELOAD` registry table. The module is not loaded, yet, but
+// also prepared for later usage.
 void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
@@ -387,7 +407,7 @@ int luaX_hassignature(lua_State *L, const int signature[])
         ++matched;
     }
 
-    return matched == argc; // We need to matched the exact count of actual arguments. Having `countof(signature)` would've be easier.
+    return matched == argc; // We need to match the exact count of actual arguments. Having `countof(signature)` would've be easier.
 }
 
 int luaX_pushupvalues(lua_State *L)

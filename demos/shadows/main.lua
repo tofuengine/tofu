@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +70,10 @@ function Main:__ctor()
   self.cursor = { x = 0, y = 0 }
 end
 
-function Main:process()
+function Main:init()
+end
+
+function Main:handle_input()
   local controller = Controller.default()
   if controller:is_down("up") then
     self.velocity.y = -SPEED
@@ -81,6 +97,8 @@ function Main:process()
 end
 
 function Main:update(delta_time)
+  self:handle_input()
+
   self.position.x = self.position.x + self.velocity.x * delta_time
   self.position.y = self.position.y + self.velocity.y * delta_time
 
@@ -105,7 +123,7 @@ function Main:render(_)
   canvas:push()
     canvas:transparent(255, true)
     canvas:sprite(self.position.x, self.position.y, self.bank, 0)
-    canvas:write(0, 0, self.font, string.format("FPS: %.1f", System.fps()))
+    canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
   canvas:pop()
 
   canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)

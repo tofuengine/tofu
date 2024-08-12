@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,10 +39,10 @@
 // (https://www.color-blindness.com/deuteranopia-red-green-color-blindness/)
 //
 //   - similar to protanopia;
-//   - most common form of color-blindness (affects ~6% of the male polulation);
+//   - most common form of color-blindness (affects ~6% of the male population);
 //   - only GREEN and BLUE cones are present, *but* GREEN cones are malfunctioning;
-//   - total absence (or heavily reduced) of RED retinal receptros;
-//   - reds appears as yellowish-orange, purple apperars as blue, green as light yellow;
+//   - total absence (or heavily reduced) of RED retinal receptors;
+//   - reds appears as yellowish-orange, purple appears as blue, green as light yellow;
 //   - sexually linked trait, males are more affected (8% males, 0.6% females).
 
 const mat3 m = mat3(
@@ -39,7 +52,7 @@ const mat3 m = mat3(
         0.00000000, 0.00000000,  1.00000000
     );
 
-vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec3 pixel = texture2D(texture, texture_coords).rgb;
     return vec4(m * pixel, 1.0);
 }

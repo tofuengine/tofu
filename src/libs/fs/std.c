@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +41,13 @@
 
 #include <core/config.h>
 #include <core/platform.h>
+#define _LOG_TAG "fs-std"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
 
 #include <dirent.h>
 #include <sys/stat.h>
-
-#define LOG_CONTEXT "fs-std"
 
 typedef struct Std_Mount_s {
     Mount_VTable_t vtable; // Matches `FS_Mount_t` structure.
@@ -71,7 +83,7 @@ FS_Mount_t *FS_std_mount(const char *path)
 {
     FS_Mount_t *mount = malloc(sizeof(Std_Mount_t));
     if (!mount) {
-        LOG_E(LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
+        LOG_E("can't allocate mount for folder `%s`", path);
         return NULL;
     }
 
@@ -95,7 +107,7 @@ static void _std_mount_ctor(FS_Mount_t *mount, const char *path)
 
     strncpy(std_mount->path, path, PLATFORM_PATH_MAX - 1);
 
-    LOG_T(LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
+    LOG_T("mount %p initialized at folder `%s`", mount, path);
 }
 
 static void _std_mount_dtor(FS_Mount_t *mount)
@@ -104,7 +116,7 @@ static void _std_mount_dtor(FS_Mount_t *mount)
 
     *std_mount = (Std_Mount_t){ 0 };
 
-    LOG_T(LOG_CONTEXT, "mount %p uninitialized", mount);
+    LOG_T("mount %p uninitialized", mount);
 }
 
 static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
@@ -115,7 +127,7 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
     path_join(path, std_mount->path, name);
 
     bool exists = path_exists(path);
-    LOG_IF_D(exists, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
+    LOG_IF_D(exists, "file `%s` found in mount %p", name, mount);
     return exists;
 }
 
@@ -124,7 +136,7 @@ static size_t _size(FILE *stream)
     fseek(stream, 0L, SEEK_END);
     size_t size = (size_t)ftell(stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_D(LOG_CONTEXT, "stream %p is %d bytes long", stream, size);
+    LOG_D("stream %p is %d bytes long", stream, size);
 #endif
     fseek(stream, 0L, SEEK_SET);
 
@@ -140,24 +152,25 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
 
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
-        return NULL;
+        LOG_E("can't access file `%s`", path);
+        goto error_exit;
     }
 
     FS_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
-        LOG_E(LOG_CONTEXT, "can't allocate handle for file `%s`", name);
-        goto error_close;
+        LOG_E("can't allocate handle for file `%s`", name);
+        goto error_close_stream;
     }
 
     _std_handle_ctor(handle, stream, _size(stream));
 
-    LOG_D(LOG_CONTEXT, "file `%s` opened w/ handle %p", name, handle);
+    LOG_D("file `%s` opened w/ handle %p", name, handle);
 
     return handle;
 
-error_close:
+error_close_stream:
     fclose(stream);
+error_exit:
     return NULL;
 }
 
@@ -178,7 +191,7 @@ static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream, size_t size)
             .size = size
         };
 
-    LOG_T(LOG_CONTEXT, "handle %p initialized (size is %u bytes)", handle, size);
+    LOG_T("handle %p initialized (size is %u bytes)", handle, size);
 }
 
 static void _std_handle_dtor(FS_Handle_t *handle)
@@ -187,12 +200,12 @@ static void _std_handle_dtor(FS_Handle_t *handle)
 
     fclose(std_handle->stream);
 
-    LOG_T(LOG_CONTEXT, "handle %p uninitialized", handle);
+    LOG_T("handle %p uninitialized", handle);
 }
 
 static size_t _std_handle_size(FS_Handle_t *handle)
 {
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     return std_handle->size;
 }
@@ -203,7 +216,7 @@ static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 
     size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    LOG_D("%d bytes read for handle %p", bytes_read, handle);
 #endif
     return bytes_read;
 }
@@ -214,25 +227,25 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
 
     bool sought = fseek(std_handle->stream, offset, whence) == 0;
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_D(LOG_CONTEXT, "%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
+    LOG_D("%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
     return sought;
 }
 
 static long _std_handle_tell(FS_Handle_t *handle)
 {
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     return ftell(std_handle->stream);
 }
 
 static bool _std_handle_eof(FS_Handle_t *handle)
 {
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     bool end_of_file = feof(std_handle->stream) != 0;
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_IF_D(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_IF_D(end_of_file, "end-of-file reached for handle %p", handle);
 #endif
     return end_of_file;
 }

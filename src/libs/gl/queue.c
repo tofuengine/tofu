@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,25 +40,24 @@
 #include "blit.h"
 
 #include <core/config.h>
+#define _LOG_TAG "gl-queue"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#define LOG_CONTEXT "gl-queue"
 
 GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
 {
     GL_Queue_t *queue = malloc(sizeof(GL_Queue_t));
     if (!queue) {
-        LOG_E(LOG_CONTEXT, "can't allocate queue");
-        return NULL;
+        LOG_E("can't allocate queue");
+        goto error_exit;
     }
 
     GL_Queue_Sprite_t *sprites = NULL;
     if (capacity > 0) {
         bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
-            LOG_E(LOG_CONTEXT, "can't allocate queue sprites");
-            goto error_free;
+            LOG_E("can't allocate queue sprites");
+            goto error_free_queue;
         }
     }
 
@@ -53,32 +65,33 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
             .sheet = sheet,
             .sprites = sprites
         };
-    LOG_D(LOG_CONTEXT, "queue %p attached", queue);
+    LOG_D("queue %p attached", queue);
 
     return queue;
 
-error_free:
+error_free_queue:
     free(queue);
+error_exit:
     return NULL;
 }
 
 void GL_queue_destroy(GL_Queue_t *queue)
 {
     arrfree(queue->sprites);
-    LOG_D(LOG_CONTEXT, "queue sprites freed");
+    LOG_D("queue sprites freed");
 
     free(queue);
-    LOG_D(LOG_CONTEXT, "queue %p freed", queue);
+    LOG_D("queue %p freed", queue);
 }
 
 bool GL_queue_resize(GL_Queue_t *queue, size_t capacity)
 {
     bool allocated = arrsetcap(queue->sprites, capacity); // FIXME: should be `!!`?
     if (!allocated) {
-        LOG_E(LOG_CONTEXT, "can't resize queue slots");
+        LOG_E("can't resize queue slots");
         return false;
     }
-    LOG_D(LOG_CONTEXT, "queue %p capacity reset to %d", queue, capacity);
+    LOG_D("queue %p capacity reset to %d", queue, capacity);
     return true;
 }
 
@@ -88,10 +101,10 @@ bool GL_queue_grow(GL_Queue_t *queue, size_t amount)
     capacity += amount;
     bool allocated = arrsetcap(queue->sprites, capacity); // FIXME: should be `!!`?
     if (!allocated) {
-        LOG_E(LOG_CONTEXT, "can't grow queue slots");
+        LOG_E("can't grow queue slots");
         return false;
     }
-    LOG_D(LOG_CONTEXT, "queue %p capacity grown by %d slots to %d", queue, amount, capacity);
+    LOG_D("queue %p capacity grown by %d slots to %d", queue, amount, capacity);
     return true;
 }
 
@@ -110,9 +123,9 @@ void GL_queue_blit(const GL_Queue_t *queue, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = queue->sheet;
 
-    GL_Queue_Sprite_t *current = queue->sprites;
+    const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
-        GL_Queue_Sprite_t *sprite = current++;
+        const GL_Queue_Sprite_t *sprite = current++;
         GL_sheet_blit(sheet, context, sprite->position, sprite->cell_id);
     }
 }
@@ -121,9 +134,9 @@ void GL_queue_blit_s(const GL_Queue_t *queue, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = queue->sheet;
 
-    GL_Queue_Sprite_t *current = queue->sprites;
+    const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
-        GL_Queue_Sprite_t *sprite = current++;
+        const GL_Queue_Sprite_t *sprite = current++;
         GL_sheet_blit_s(sheet, context, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y);
     }
 }
@@ -132,9 +145,9 @@ void GL_queue_blit_sr(const GL_Queue_t *queue, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = queue->sheet;
 
-    GL_Queue_Sprite_t *current = queue->sprites;
+    const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
-        GL_Queue_Sprite_t *sprite = current++;
+        const GL_Queue_Sprite_t *sprite = current++;
         GL_sheet_blit_sr(sheet, context, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->anchor_x, sprite->anchor_y);
     }
 }

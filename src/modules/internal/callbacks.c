@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +47,12 @@ typedef struct rgba_s {
 #pragma pack(pop)
 
 // Given an `MxN` RGBA8888 image, the naive conversion to the color-indexed format requires `MxN` scans to find the
-// nearest-matching color in the palette. This is a computationally demanding operation, since it computes the Euclidian
+// nearest-matching color in the palette. This is a computationally demanding operation, since it computes the Euclidean
 // distance for each palette-entry. Even for small images the load-and-convert times are non negligible.
 //
-// We can get a huge performance boost by adopting a "memoization" technique. Each nearest-matches is stored into an
-// hash-map dynamically populated during the conversion: a color is first first checked if has been already encountered
-// and converted; if not it is converted and stored for later usage.
+// We can get a huge performance boost by adopting a "memoization" technique. Each nearest match is dynamically stored
+// into a hash-map during the conversion: a color is first checked if has been already encountered and converted; if not
+// it is converted and stored for later usage.
 //
 // Since the total amount of distinct colors in a single image is typically small, the additional memory usage is worth
 // the effort.

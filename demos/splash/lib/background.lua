@@ -1,7 +1,20 @@
 --[[
+                ___________________  _______________ ___
+                \__    ___/\_____  \ \_   _____/    |   \
+                  |    |    /   |   \ |    __) |    |   /
+                  |    |   /    |    \|     \  |    |  /
+                  |____|   \_______  /\___  /  |______/
+                                   \/     \/
+        ___________ _______    ________.___ _______  ___________
+        \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+         |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+         |        \/    |    \    \_\  \   /    |    \|        \
+        /_______  /\____|__  /\______  /___\____|__  /_______  /
+                \/         \/        \/            \/        \
+
 MIT License
 
-Copyright (c) 2019-2023 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +37,9 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
-local Program = require("tofu.graphics.program")
 local Font = require("tofu.graphics.font")
+local Program = require("tofu.graphics.program")
 
 local Background = Class.define()
 
@@ -35,17 +47,16 @@ function Background:__ctor(_, height, transparent, palette, pool)
   local half_height = height // 2
   local quarter_height = height // 4
 
-  self.font = Font.new(Image.new("assets/images/font-8x8.png", transparent, palette:match(255, 255, 255)),
-      8, 8)
+  self.font = Font.from_image("assets/images/font-8x8.png", 8, 8, transparent, palette:match(255, 255, 255))
 
   self.timer = pool:spawn(10, 0, function(_)
       local program = Program.new()
       program:gradient(transparent, {
-          { 0, palette:get(math.random(0, transparent)) },
-          { quarter_height - 1, palette:get(math.random(0, transparent)) },
-          { half_height - 1, palette:get(math.random(0, transparent)) },
-          { height - quarter_height - 1, palette:get(math.random(0, transparent)) },
-          { height - 1, palette:get(math.random(0, transparent)) }
+          { 0, palette:peek(math.random(0, transparent)) },
+          { quarter_height - 1, palette:peek(math.random(0, transparent)) },
+          { half_height - 1, palette:peek(math.random(0, transparent)) },
+          { height - quarter_height - 1, palette:peek(math.random(0, transparent)) },
+          { height - 1, palette:peek(math.random(0, transparent)) }
         })
 --      program:wait(0, height - (quarter_height // 2) - 1)
 --      program:modulo(-width * 4)

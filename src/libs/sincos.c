@@ -1,7 +1,20 @@
 /*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
  * MIT License
  * 
- * Copyright (c) 2019-2023 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +35,14 @@
  * SOFTWARE.
  */
 
-// https://jfdube.wordpress.com/2011/12/06/trigonometric-look-up-tables-revisited/
-// http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-
 #include "sincos.h"
 
 // 128 steps per quadrant seems more than enough.
 #include <math.h>
 
-static const float _lut[640] = {
+#define _LUT_LENGTH (SINCOS_PERIOD + (SINCOS_PERIOD / 4))
+
+static const float _lut[_LUT_LENGTH] = {
     0.000000000f, /* [0] */
     0.012271538f, /* [1] */
     0.024541229f, /* [2] */
