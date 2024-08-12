@@ -36,6 +36,7 @@
  */
 #include "program.h"
 
+#include <core/config.h>
 #define _LOG_TAG "gl-program"
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -67,9 +68,9 @@ GL_Program_t *GL_program_create(void)
         LOG_E("can't allocate program");
         return NULL;
     }
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program created at %p", program);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     *program = (GL_Program_t){ 0 };
 
@@ -91,9 +92,9 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
         LOG_E("can't allocate program");
         return NULL;
     }
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program created at %p", clone);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     *clone = (GL_Program_t){ 0 };
 
@@ -109,14 +110,14 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 void GL_program_destroy(GL_Program_t *program)
 {
     arrfree(program->entries);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     free(program);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program %p freed", program);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 
 void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
@@ -129,9 +130,9 @@ void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
 void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
@@ -144,9 +145,9 @@ void GL_program_clear(GL_Program_t *program)
 void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
 {
     arrdeln(program->entries, position, length);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 
 void GL_program_nop(GL_Program_t *program, int position)

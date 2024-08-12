@@ -126,9 +126,9 @@ Shader_t *shader_create(const char *vertex, const char *fragment, const char *id
         LOG_E("can't allocate shader");
         goto error_exit;
     }
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("shader created at %p", shader);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     *shader = (Shader_t){ 0 }; // Initialize the object structure to clear all the fields.
 

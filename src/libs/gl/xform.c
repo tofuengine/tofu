@@ -57,9 +57,9 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
         LOG_E("can't allocate xform");
         return NULL;
     }
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("xform created at %p", xform);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     *xform = (GL_XForm_t){
             .registers = {
@@ -78,15 +78,15 @@ void GL_xform_destroy(GL_XForm_t *xform)
 {
     if (xform->table) {
         arrfree(xform->table);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("xform table at %p freed", xform->table);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
     }
 
     free(xform);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("xform %p freed", xform);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 
 void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap)
@@ -107,9 +107,9 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
 {
     if (xform->table) {
         arrfree(xform->table);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("xform table at %p freed", xform->table);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
     }
 
     const GL_XForm_Table_Entry_t *entry = entries;

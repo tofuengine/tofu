@@ -102,11 +102,11 @@ static int program_new_0_1o(lua_State *L)
             .program = program
         }, OBJECT_TYPE_PROGRAM);
 
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program %p allocated", self);
-#else  /* VERBOSE_DEBUG */
+#else
     (void)self;
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     return 1;
 }
@@ -120,9 +120,9 @@ static int program_gc_1o_0(lua_State *L)
 
     GL_program_destroy(self->program);
 
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program %p finalized", self);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* VERBOSETOFU_CORE_VERBOSE_DEBUG_DEBUG */
 
     return 0;
 }

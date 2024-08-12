@@ -37,6 +37,7 @@
 
 #include "processor.h"
 
+#include <core/config.h>
 #include <libs/imath.h>
 #define _LOG_TAG "gl-processor"
 #include <libs/log.h>
@@ -51,9 +52,9 @@ GL_Processor_t *GL_processor_create(void)
     }
 
     *processor = (GL_Processor_t){ 0 };
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("processor created at %p", processor);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
 #if defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED)
     LOG_W("setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
@@ -86,15 +87,15 @@ void GL_processor_destroy(GL_Processor_t *processor)
 {
     if (processor->state.program) {
         GL_program_destroy(processor->state.program);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program %p destroyed", processor->state.program);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
     }
 
     free(processor);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("processor %p freed", processor);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 
 void GL_processor_reset(GL_Processor_t *processor)
@@ -112,9 +113,9 @@ const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor)
 void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette)
 {
     GL_palette_copy(processor->state.palette, palette);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("palette copied");
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 
 // TODO: change API, accepting a single array with successive from/to pairs.
@@ -276,17 +277,17 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
 {
     if (processor->state.program) { // Deallocate current program, is present.
        GL_program_destroy(processor->state.program);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program %p destroyed", processor->program);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
         processor->state.program = NULL;
     }
 
     if (program) {
         processor->state.program = GL_program_clone(program);
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program at %p copied at %p", program, processor->program);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
     }
     processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
 }

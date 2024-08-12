@@ -442,9 +442,9 @@ static size_t _pak_handle_size(FS_Handle_t *handle)
 {
     const Pak_Handle_t *pak_handle = (const Pak_Handle_t *)handle;
 
-#if defined(VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("handle %p is", std_handle);
-#endif  /* VERBOSE_DEBUG */
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     return pak_handle->stream_size;
 }

@@ -97,6 +97,10 @@
 // only for the `DEBUG` build.
 #define TOFU_CORE_PROFILING_ENABLED
 
+// Includes additional but very performance limiting debug information. This
+// should be left disabled, unless you are tracking some bug.
+#undef  TOFU_CORE_VERBOSE_DEBUG
+
 // Includes checks inside some crucial functions. Could be useful in DEBUG mode.
 #define TOFU_CORE_DEFENSIVE_CHECKS
 
