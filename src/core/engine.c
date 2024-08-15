@@ -376,6 +376,14 @@ void Engine_destroy(Engine_t *engine)
 #endif
 }
 
+static inline void _process(void)
+{
+    // We need to call the `glfwPollEvents()` functions periodically so that the input events are
+    // served. There's no need to call it on every single frame-loop, we could call it at the beginning
+    // of the high priority handling.
+    glfwPollEvents();
+}
+
 static inline bool _high_priority_update(Engine_t *engine, float delta_time)
 {
     return Environment_update(engine->environment, delta_time)
@@ -444,7 +452,7 @@ void Engine_run(Engine_t *engine)
         Environment_accumulate(engine->environment, frame_time);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-        glfwPollEvents(); // TODO: move into `Display_render()`?
+        _process();
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_PROCESS] = stopwatch_partial(&stats_marker);
