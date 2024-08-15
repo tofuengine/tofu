@@ -447,7 +447,7 @@ void Engine_run(Engine_t *engine)
         glfwPollEvents(); // TODO: move into `Display_render()`?
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        deltas[0] = stopwatch_partial(&stats_marker);
+        deltas[ENVIRONMENT_INDEX_PROCESS] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
@@ -480,13 +480,13 @@ void Engine_run(Engine_t *engine)
 //        running = running && Storage_update_variable(engine->storage, elapsed);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        deltas[1] = stopwatch_partial(&stats_marker);
+        deltas[ENVIRONMENT_INDEX_UPDATE] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         running = running && _render(engine, lag / delta_time); // ratio in the range `[0, 1]`
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        deltas[2] = stopwatch_partial(&stats_marker);
+        deltas[ENVIRONMENT_INDEX_RENDER] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
         const float busy_time = stopwatch_elapsed(&marker);
@@ -508,12 +508,12 @@ void Engine_run(Engine_t *engine)
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        deltas[3] = stopwatch_partial(&stats_marker);
+        deltas[ENVIRONMENT_INDEX_WAIT] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-        // The frame-time statistic doesn't take into account of time 
-        deltas[4] = stopwatch_elapsed(&marker);
+        // The frame-time statistic doesn't take into account of time
+        deltas[ENVIRONMENT_INDEX_FRAME] = stopwatch_elapsed(&marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
 }
