@@ -43,10 +43,21 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+typedef enum Environment_Index_e {
+    ENVIRONMENT_INDEX_PROCESS,
+    ENVIRONMENT_INDEX_UPDATE,
+    ENVIRONMENT_INDEX_RENDER,
+    ENVIRONMENT_INDEX_WAIT,
+    ENVIRONMENT_INDEX_FRAME,
+    Environment_Index_t_CountOf
+} Environment_Index_t;
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+
 typedef struct Environment_Stats_s {
     size_t fps;
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-    float times[5];
+    float times[Environment_Index_t_CountOf];
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
     size_t memory_usage;
@@ -70,7 +81,7 @@ extern void Environment_destroy(Environment_t *environment);
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-extern void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[5]);
+extern void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf]);
 #else
 extern void Environment_accumulate(Environment_t *environment, float frame_time);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */

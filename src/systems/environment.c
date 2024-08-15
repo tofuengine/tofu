@@ -85,7 +85,7 @@ const Environment_State_t *Environment_get_state(const Environment_t *environmen
 
 static inline size_t _frame_time_to_fps(float frame_time)
 {
-    return frame_time > __FLT_EPSILON__ ?  IROUNDF(1.0f / frame_time) : 0;
+    return frame_time > __FLT_EPSILON__ ? IROUNDF(1.0f / frame_time) : 0;
 }
 
 static inline size_t _calculate_fps(float frame_time)
@@ -110,14 +110,14 @@ static inline size_t _calculate_fps(float frame_time)
 }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-static inline void _calculate_times(float times[5], const float deltas[5])
+static inline void _calculate_times(float times[Environment_Index_t_CountOf], const float deltas[Environment_Index_t_CountOf])
 {
 #if defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE)
-    static float samples[5][TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
+    static float samples[Environment_Index_t_CountOf][TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
-    static float sums[5] = { 0 };
+    static float sums[Environment_Index_t_CountOf] = { 0 };
 
-    for (size_t i = 0; i < 5; ++i) {
+    for (size_t i = 0; i < Environment_Index_t_CountOf; ++i) {
         const float t = deltas[i] * 1000.0f;
         sums[i] -= samples[i][index];
         samples[i][index] = t;
@@ -126,9 +126,9 @@ static inline void _calculate_times(float times[5], const float deltas[5])
     }
     index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
 #else
-    static float averages[5] = { 0 };
+    static float averages[Environment_Index_t_CountOf] = { 0 };
 
-    for (size_t i = 0; i < 5; ++i) {
+    for (size_t i = 0; i < Environment_Index_t_CountOf; ++i) {
         const float t = deltas[i] * 1000.0f;
         averages[i] = FLERP(averages[i], t, 0.1f); // Ditto.
         times[i] = averages[i];
@@ -138,7 +138,7 @@ static inline void _calculate_times(float times[5], const float deltas[5])
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[5])
+void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf])
 #else
 void Environment_accumulate(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
@@ -157,11 +157,11 @@ void Environment_accumulate(Environment_t *environment, float frame_time)
         stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
         LOG_I("currently running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
             stats->fps,
-            stats->times[0], stats->times[0] / stats->times[4],
-            stats->times[1], stats->times[1] / stats->times[4],
-            stats->times[2], stats->times[2] / stats->times[4],
-            stats->times[3], stats->times[3] / stats->times[4],
-            stats->times[4]);
+            stats->times[ENVIRONMENT_INDEX_PROCESS], stats->times[ENVIRONMENT_INDEX_PROCESS] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_UPDATE ], stats->times[ENVIRONMENT_INDEX_UPDATE ] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_RENDER ], stats->times[ENVIRONMENT_INDEX_RENDER ] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_WAIT   ], stats->times[ENVIRONMENT_INDEX_WAIT   ] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_FRAME  ]);
     }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
