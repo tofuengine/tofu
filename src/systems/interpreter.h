@@ -66,6 +66,7 @@ extern Interpreter_t *Interpreter_create(const Storage_t *storage);
 extern void Interpreter_destroy(Interpreter_t *interpreter);
 
 extern bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[]);
+extern bool Interpreter_shutdown(Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);

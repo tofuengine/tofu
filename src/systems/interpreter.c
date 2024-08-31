@@ -70,6 +70,7 @@ typedef enum Entry_Point_Methods_e {
     ENTRY_POINT_METHOD_INIT,
     ENTRY_POINT_METHOD_UPDATE,
     ENTRY_POINT_METHOD_RENDER,
+    ENTRY_POINT_METHOD_DEINIT,
     Entry_Point_Methods_t_CountOf
 } Entry_Point_Methods_t;
 
@@ -77,6 +78,7 @@ static const char *_methods[] = { // We don't use a compound-literal on purpose 
     "init",
     "update",
     "render",
+    "deinit",
     NULL
 };
 
@@ -353,6 +355,17 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
         return false;
     }
     LOG_D("`init` entry-point called");
+
+    return true;
+}
+
+bool Interpreter_shutdown(Interpreter_t *interpreter)
+{
+    if (_method_call(interpreter->state, ENTRY_POINT_METHOD_DEINIT, 0, 0) != LUA_OK) {
+        LOG_F("can't call `deinit` entry-point");
+        return false;
+    }
+    LOG_D("`deinit` entry-point called");
 
     return true;
 }
