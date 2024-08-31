@@ -48,22 +48,32 @@ local Boot = Class.define() -- To be precise, the class name is irrelevant since
 
 function Boot:__ctor()
   self.states = {
-    -- TODO: add an "splash" state that emulates Amiga's boot.
+    ["splash"] = { -- TODO: implement "splash" state that emulates Amiga's boot.
+      init = function(_)
+        end,
+      deinit = function(_)
+        end,
+      update = function(_, _)
+          self:switch("normal")
+        end,
+      render = function(_, _)
+        end
+    },
     ["normal"] = {
-      enter = function(me)
+      init = function(me)
           local Main = require("main") -- Lazy require, to trap and display errors in the constructor!
           me.main = Main.new()
+
+          me.main:init()
         end,
-      leave = function(me)
+      deinit = function(me)
           Speakers.halt() -- Stop all sounds sources.
           Display.reset()
           local canvas = Canvas.default()
           canvas:pop(0) -- Discard all saved states, if any.
           canvas:reset() -- Reset default canvas from the game state.
+
           me.main = nil
-        end,
-      init = function(me)
-          me.main:init()
         end,
       update = function(me, delta_time)
           me.main:update(delta_time)
@@ -73,8 +83,10 @@ function Boot:__ctor()
         end
     },
     ["error"] = {
-      enter = function(me, message)
-          -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
+      init = function(me)
+          local message = table.unpack(me.extras)
+
+          -- TODO: rename "Display" to "Video" and "Speakers" to "Audio"?
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:image():size()
@@ -111,10 +123,8 @@ function Boot:__ctor()
             end
           end
         end,
-      leave = function(me)
+      deinit = function(me)
           me.font = nil
-        end,
-      init = function(_)
         end,
       update = function(_, _)
         end,
@@ -129,21 +139,17 @@ function Boot:__ctor()
         end
     }
   }
-  self.queue = {}
-  self:switch_to("normal")
 end
 
 function Boot:init()
-  local me = self.state
-  if not me then
-    return
-  end
-  self:call(me.init, me)
+  self:switch("splash")
+end
+
+function Boot:deinit()
+  self:switch(nil)
 end
 
 function Boot:update(delta_time)
-  self:switch_if_needed() -- Switch state on the update step
-
   local me = self.state
   if not me then
     return
@@ -159,34 +165,29 @@ function Boot:render(ratio)
   self:call(me.render, me, ratio)
 end
 
-function Boot:switch_if_needed()
-  if not next(self.queue) then
+-- Note: the `switch()` method can't be called from the `init()` and `deinit()` methods.
+function Boot:switch(id, ...)
+  local exiting = self.state
+  if exiting then
+    self:call(exiting.deinit, exiting)
+  end
+
+  if not id then
+    self.state = nil
     return
   end
 
-  local state = table.remove(self.queue)
-  local entering = self.states[state.id]
-
-  local exiting = self.state
-  if exiting then
-    self:call(exiting.leave, exiting)
-  end
-  self:call(entering.enter, entering, table.unpack(state.args))
+  local entering = self.states[id]
+  entering.extras = {...}
+  self:call(entering.init, entering)
   self.state = entering
 end
 
-function Boot:switch_to(id, ...)
-  table.insert(self.queue, { id = id, args = { ... } })
-end
-
 function Boot:call(func, ...)
-  if next(self.queue) then
-    return
-  end
   local success, message = xpcall(func, debug.traceback, ...)
   if not success then
     Log.error(message) -- Dump to log...
-    self:switch_to("error", message) -- ... and pass to the error-state for visualization.
+    self:switch("error", message) -- ... and pass to the error-state for visualization.
   end
 end
 
