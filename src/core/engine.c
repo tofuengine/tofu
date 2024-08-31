@@ -524,4 +524,6 @@ void Engine_run(Engine_t *engine)
         deltas[ENVIRONMENT_INDEX_FRAME] = stopwatch_elapsed(&marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
+
+    Interpreter_shutdown(engine->interpreter);
 }
