@@ -78,6 +78,9 @@ end
 function Main:init()
 end
 
+function Main:deinit()
+end
+
 local function _index_of(array, compare, from)
   local length = #array
   for index = from or 1, length do

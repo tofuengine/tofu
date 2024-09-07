@@ -61,6 +61,9 @@ end
 function Main:init()
 end
 
+function Main:deinit()
+end
+
 function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("left") then

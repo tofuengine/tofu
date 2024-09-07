@@ -85,6 +85,9 @@ end
 function Main:init()
 end
 
+function Main:deinit()
+end
+
 function Main:update(_)
   local canvas = Canvas.default()
   local image = canvas:image()
