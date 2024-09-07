@@ -35,45 +35,57 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local Log = require("tofu.core.log")
-local System = require("tofu.core.system")
-local Canvas = require("tofu.graphics.canvas")
-local Display = require("tofu.graphics.display")
-local Palette = require("tofu.graphics.palette")
-local Font = require("tofu.graphics.font")
-local Speakers = require("tofu.sound.speakers")
+local Class <const> = require("tofu.core.class")
+local Log <const> = require("tofu.core.log")
+local System <const> = require("tofu.core.system")
+local Canvas <const> = require("tofu.graphics.canvas")
+local Display <const> = require("tofu.graphics.display")
+local Palette <const> = require("tofu.graphics.palette")
+local Font <const> = require("tofu.graphics.font")
+local Speakers <const> = require("tofu.sound.speakers")
 
-local Boot = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+local INITIAL_STATE <const> = "splash"
+
+local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Boot:__ctor()
   self.states = {
     ["splash"] = { -- TODO: implement "splash" state that emulates Amiga's boot.
+      enter = function(_)
+          self:switch("running")
+        end,
+      leave = function(_)
+        end,
       init = function(_)
         end,
       deinit = function(_)
         end,
       update = function(_, _)
-          self:switch("normal")
         end,
       render = function(_, _)
         end
     },
-    ["normal"] = {
-      init = function(me)
-          local Main = require("main") -- Lazy require, to trap and display errors in the constructor!
+    ["running"] = {
+      enter = function(me)
+          local Main <const> = require("main") -- Lazy require, to trap and display errors in the constructor!
           me.main = Main.new()
+        end,
+      leave = function(me)
+        Speakers.halt() -- Stop all sounds sources.
 
+        Display.reset()
+
+        local canvas <const> = Canvas.default()
+        canvas:pop() -- Discard all saved states, if any.
+        canvas:reset() -- Reset default canvas from the game state.
+
+        me.main = nil
+        end,
+      init = function(me)
           me.main:init()
         end,
       deinit = function(me)
-          Speakers.halt() -- Stop all sounds sources.
-          Display.reset()
-          local canvas = Canvas.default()
-          canvas:pop(0) -- Discard all saved states, if any.
-          canvas:reset() -- Reset default canvas from the game state.
-
-          me.main = nil
+          me.main:deinit()
         end,
       update = function(me, delta_time)
           me.main:update(delta_time)
@@ -82,21 +94,25 @@ function Boot:__ctor()
           me.main:render(ratio)
         end
     },
-    ["error"] = {
+    ["failure"] = {
+      enter = function(me, message)
+          me.message = message
+        end,
+      leave = function(me)
+          me.message = nil
+        end,
       init = function(me)
-          local message = table.unpack(me.extras)
-
           -- TODO: rename "Display" to "Video" and "Speakers" to "Audio"?
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
-          local canvas = Canvas.default()
-          local width, _ = canvas:image():size()
+          local canvas <const> = Canvas.default()
+          local width <const>, _ <const> = canvas:image():size()
 
-          local title = {
+          local title <const> = {
               "Software Failure.",
               "Guru Meditation"
             }
-          local errors = {}
-          for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
+          local errors <const> = {}
+          for str in string.gmatch(me.message, "([^\n]+)") do -- Split the error-message into separate lines.
             table.insert(errors, str)
           end
 
@@ -106,7 +122,7 @@ function Boot:__ctor()
           local span <const> = width - 2 * margin
           local y = margin
           for _, text in ipairs(title) do -- Title lines are centered.
-            local lw, lh = me.font:size(text)
+            local lw <const>, lh <const> = me.font:size(text)
             table.insert(me.lines, { text = text, x = (width - lw) * 0.5, y = y })
             y = y + lh
           end
@@ -115,9 +131,9 @@ function Boot:__ctor()
           me.height = y -- The rectangle ends here, message follows.
           y = y + margin
           for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
-            local texts = me.font:wrap(line, span)
+            local texts <const> = me.font:wrap(line, span)
             for _, text in ipairs(texts) do
-              local _, th = me.font:size(text)
+              local _ <const>, th <const> = me.font:size(text)
               table.insert(me.lines, { text = text, x = margin, y = y })
               y = y + th
             end
@@ -129,8 +145,8 @@ function Boot:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local on = (math.floor(System.time()) % 2) == 0
-          local canvas = Canvas.default()
+          local on <const> = (math.floor(System.time()) % 2) == 0
+          local canvas <const> = Canvas.default()
           canvas:image():clear(0)
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
           for _, line in ipairs(me.lines) do
@@ -142,52 +158,47 @@ function Boot:__ctor()
 end
 
 function Boot:init()
-  self:switch("splash")
+  self:switch(INITIAL_STATE)
 end
 
 function Boot:deinit()
+  -- On close we switch to the `nil` state, which will cause the current one to be exited properly
   self:switch(nil)
 end
 
 function Boot:update(delta_time)
-  local me = self.state
-  if not me then
-    return
-  end
+  local me <const> = self.state
   self:call(me.update, me, delta_time)
 end
 
 function Boot:render(ratio)
-  local me = self.state
-  if not me then
-    return
-  end
+  local me <const> = self.state
   self:call(me.render, me, ratio)
 end
 
--- Note: the `switch()` method can't be called from the `init()` and `deinit()` methods.
 function Boot:switch(id, ...)
-  local exiting = self.state
+  local exiting <const> = self.state
   if exiting then
     self:call(exiting.deinit, exiting)
+    self:call(exiting.leave, exiting)
   end
 
   if not id then
     self.state = nil
     return
   end
+  self.state = self.states[id]
 
-  local entering = self.states[id]
-  entering.extras = {...}
+  local entering <const> = self.state
+  self:call(entering.enter, entering, ...)
   self:call(entering.init, entering)
-  self.state = entering
 end
 
 function Boot:call(func, ...)
-  local success, message = xpcall(func, debug.traceback, ...)
+  local success <const>, message <const> = xpcall(func, debug.traceback, ...)
   if not success then
     Log.error(message) -- Dump to log...
-    self:switch("error", message) -- ... and pass to the error-state for visualization.
+    self:switch("failure", message) -- ... and pass to the error-state for visualization.
   end
 end
 
