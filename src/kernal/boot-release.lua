@@ -44,6 +44,6 @@ SOFTWARE.
 -- by kernal overriding. It should be noticed that there's no additional cost
 -- in having it as it called just once.
 
-local Main = require("main")
+local Main <const> = require("main")
 
 return Main.new()
