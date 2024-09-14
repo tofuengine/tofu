@@ -71,14 +71,6 @@ function Boot:__ctor()
           me.main = Main.new()
         end,
       leave = function(me)
-        Speakers.halt() -- Stop all sounds sources.
-
-        Display.reset()
-
-        local canvas <const> = Canvas.default()
-        canvas:pop() -- Discard all saved states, if any.
-        canvas:reset() -- Reset default canvas from the game state.
-
         me.main = nil
         end,
       init = function(me)
@@ -163,6 +155,10 @@ end
 
 function Boot:deinit()
   -- On close we switch to the `nil` state, which will cause the current one to be exited properly
+  --
+  -- Note: the `xpcall()` code doesn't check if the current state is non `nil` (such as when
+  -- we reach this piece of code). This isn't an issue as after the `Boot:deinit()` method is called
+  -- the application is shut down and not other calls are made.
   self:switch(nil)
 end
 
@@ -176,6 +172,16 @@ function Boot:render(ratio)
   self:call(me.render, me, ratio)
 end
 
+local function _reinit_system()
+  Speakers.halt() -- Stop all sounds sources.
+
+  Display.reset()
+
+  local canvas <const> = Canvas.default()
+  canvas:pop() -- Discard all saved states, if any.
+  canvas:reset() -- Reset default canvas from the game state.
+end
+
 function Boot:switch(id, ...)
   local exiting <const> = self.state
   if exiting then
@@ -183,11 +189,13 @@ function Boot:switch(id, ...)
     self:call(exiting.leave, exiting)
   end
 
+  _reinit_system() -- Ensure that everything is neutral, as when booted.
+
   if not id then
     self.state = nil
     return
   end
-  self.state = self.states[id]
+  self.state = self.states[id] -- Store the new state so that `switch()` can work in `enter()` and `init()`.
 
   local entering <const> = self.state
   self:call(entering.enter, entering, ...)
