@@ -212,7 +212,7 @@ bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const
     }
 
     size_t size = base64_decoded_size(encoded_data);
-    LOG_D("Base64 data `%.32s` is %d byte(s) long", encoded_data, size);
+    LOG_D("Base64 data `%.16s` is %d byte(s) long", encoded_data, size);
 
     void *data = malloc(sizeof(char) * size);
     if (!data) {
@@ -232,7 +232,7 @@ bool Storage_Cache_inject_base64(Storage_Cache_t *cache, const char *name, const
 bool Storage_Cache_inject_ascii85(Storage_Cache_t *cache, const char *name, const char *encoded_data, size_t length)
 {
     int32_t max_size = ascii85_get_max_decoded_length(strlen(encoded_data));
-    LOG_D("Ascii85 data `%.32s` is %d byte(s) long", encoded_data, max_size);
+    LOG_D("Ascii85 data `%.16s` is %d byte(s) long", encoded_data, max_size);
 
     void *data = malloc(sizeof(char) * max_size);
     if (!data) {
