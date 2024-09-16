@@ -82,13 +82,12 @@ typedef enum Uniforms_t {
     "out vec2 v_texture_coords;\n" \
     "\n" \
     "uniform mat4 u_mvp;\n" \
-    "uniform vec2 u_screen_offset;\n" \
     "\n" \
     "void main() {\n" \
-    "   v_texture_coords = i_texture_coords - u_screen_offset;\n" \
+    "   v_texture_coords = i_texture_coords;\n" \
     "\n" \
     "   gl_Position = u_mvp * vec4(i_position, 0.0, 1.0);\n" \
-    "}\n" \
+    "}\n"
 
 #define _FRAGMENT_SHADER \
     "#version 330 core\n" \
@@ -104,23 +103,24 @@ typedef enum Uniforms_t {
     "uniform vec2 u_screen_size;\n" \
     "uniform vec2 u_screen_scale;\n" \
     "uniform vec4 u_color;\n" \
+    "uniform vec2 u_screen_offset;\n" \
     "uniform float u_time;\n" \
     "\n" \
     "vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
     "void main() {\n" \
     "    vec2 screen_coords = gl_FragCoord.xy;\n" \
+    "    vec2 texture_coords = v_texture_coords - u_screen_offset * u_screen_scale;\n" \
     "\n" \
-    "    o_color = effect(u_texture0, v_texture_coords, screen_coords) * u_color;\n" \
-    "}\n" \
-    "\n"
+    "    o_color = effect(u_texture0, texture_coords, screen_coords) * u_color;\n" \
+    "}\n"
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_mvp", // The model-view-projection matrix, precomputed.
     "u_texture0", // The current texture ID.
     "u_texture_size", // The size of the target (on-screen) area.
     "u_screen_size", // Represents the size of the pixel canvas (1:1 pixel size).
-    "u_screen_scale", //
+    "u_screen_scale", // The scaling factor between the (offscreen) drawing buffer and the displaying window/screen.
     "u_screen_offset", // Normalized in the range [0, 1] during the setting process.
     "u_color",
     "u_time",
