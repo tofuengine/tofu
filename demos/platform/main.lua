@@ -207,7 +207,7 @@ function Main:update(delta_time)
       Display.offset(0, 0)
     else
       local t = System.time()
-      Display.offset(math.sin(t * 77 + 31) * 16, math.sin(t * 123 + 43) * 16)
+      Display.offset(math.sin(t * 77 + 31) * 3, math.sin(t * 123 + 43) * 3)
     end
   end
 
