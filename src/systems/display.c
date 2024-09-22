@@ -73,6 +73,11 @@ typedef enum Uniforms_t {
 #define FRAGMENT_LOCATION_COLOR         0
 
 // TODO: move shaders to kernal?
+
+// We are implementing the display offset (e.g. to implement shaking) by moving
+// the framebuffer texture destination quad. This requires to calculate the
+// position of only four points, instead of moving every texture pixel in the
+// fragment-shader. Also, this ensure the background to be "black".
 #define _VERTEX_SHADER \
     "#version 330 core\n" \
     "\n" \
@@ -81,12 +86,13 @@ typedef enum Uniforms_t {
     "\n" \
     "out vec2 v_texture_coords;\n" \
     "\n" \
+    "uniform vec2 u_screen_offset;\n" \
     "uniform mat4 u_mvp;\n" \
     "\n" \
     "void main() {\n" \
     "   v_texture_coords = i_texture_coords;\n" \
     "\n" \
-    "   gl_Position = u_mvp * vec4(i_position, 0.0, 1.0);\n" \
+    "   gl_Position = u_mvp * vec4(i_position + u_screen_offset, 0.0, 1.0);\n" \
     "}\n"
 
 #define _FRAGMENT_SHADER \
@@ -103,16 +109,14 @@ typedef enum Uniforms_t {
     "uniform vec2 u_screen_size;\n" \
     "uniform vec2 u_screen_scale;\n" \
     "uniform vec4 u_color;\n" \
-    "uniform vec2 u_screen_offset;\n" \
     "uniform float u_time;\n" \
     "\n" \
     "vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
     "void main() {\n" \
     "    vec2 screen_coords = gl_FragCoord.xy;\n" \
-    "    vec2 texture_coords = v_texture_coords - u_screen_offset * u_screen_scale;\n" \
     "\n" \
-    "    o_color = effect(u_texture0, texture_coords, screen_coords) * u_color;\n" \
+    "    o_color = effect(u_texture0, v_texture_coords, screen_coords) * u_color;\n" \
     "}\n"
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
@@ -121,7 +125,7 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture_size", // The size of the target (on-screen) area.
     "u_screen_size", // Represents the size of the pixel canvas (1:1 pixel size).
     "u_screen_scale", // The scaling factor between the (offscreen) drawing buffer and the displaying window/screen.
-    "u_screen_offset", // Normalized in the range [0, 1] during the setting process.
+    "u_screen_offset", // Expressed in pixels of the drawing QUAD, scaled during the setting process to preserve the original pixels' size.
     "u_color",
     "u_time",
 };
@@ -768,12 +772,12 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
 
-    // We update the shader's uniform only on change.
-    const GL_Point_t *vram_offset = &display->vram.offset;
-    const GL_Size_t *vram_size = &display->vram.size;
+    // We need to scale the offset as it is expressed in pixels of the offscreen canvas, which
+    // can be smaller of the VRAM rendering window (if scaled)!
+    const size_t scale = display->configuration.window.scale;
 
-    const GLfloat ox = (GLfloat)vram_offset->x / (GLfloat)vram_size->width; // We need to normalize the coordinates as they are texture related.
-    const GLfloat oy = (GLfloat)vram_offset->y / (GLfloat)vram_size->height;
+    const GLfloat ox = (GLfloat)offset.x * (GLfloat)scale; // The scale is the same on both axes!
+    const GLfloat oy = (GLfloat)offset.y * (GLfloat)scale;
 
     shader_use(display->shader);
     shader_send(display->shader, UNIFORM_SCREEN_OFFSET, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){ ox, oy });
