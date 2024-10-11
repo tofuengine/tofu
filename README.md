@@ -92,7 +92,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 
 ## Dependencies
 
-Although I have been known to take pleasure in reinventing the wheel at every possible opportunity, Tofu Engine leverages some *awesome* libraries:
+Although I'm used to take pleasure in reinventing the wheel at every possible opportunity, Tofu Engine leverages some *awesome* libraries:
 
 * [cglm](https://github.com/recp/cglm) v0.9.4
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
@@ -126,7 +126,7 @@ The lovely game-engine logo has been designed by [Blort](https://social.tchncs.d
 
 # Compiling
 
-In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, although I've been using Ubuntu during the development. One can use the following commands to install all the required dependencies:
+In order to compile `Tofu Engine`, a Linux machine in required (either physical or virtual). A Debian-based distribution is suggested, as I've been using Ubuntu since the beginning of its development. One can use the following commands to install all the required dependencies:
 
 ```bash
 sudo apt install build-essential
@@ -263,7 +263,7 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 * [ ] Better input handling by leveraging an event-driver approach -- this should reduce the current sub-system complexity (as it polled).
 * [ ] Apply filtering for the analogs, either with a low pass filter (page 591) or moving average.
 * [ ] Implement buttons state check with XOR (page 594)
-* [ ] chords and gestures detection, for example for Street Fighter II-like combos.
+* [ ] Chords and gestures detection, for example for Street Fighter II-like combos.
 
 ## Profiling
 
