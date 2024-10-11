@@ -552,11 +552,16 @@ cellular: engine
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/cellular
 	@$(builddir)/$(TARGET) --data=./demos/cellular
 
+sierpinsky: engine
+	@echo "Launching *sierpinsky* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/sierpinsky
+	@$(builddir)/$(TARGET) --data=./demos/sierpinsky
 
 offset: engine
 	@echo "Launching *offset* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/offset
 	@$(builddir)/$(TARGET) --data=./demos/offset
+
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
