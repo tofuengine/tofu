@@ -154,7 +154,7 @@ static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], const uint8_t id[PAK_ID_LE
     }
 }
 
-static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
+static inline void _name_to_id(const char *name, uint8_t id[PAK_ID_LENGTH], char sz[PAK_ID_LENGTH_SZ])
 {
     md5_hash_sz(id, name, false);
     _to_hex(sz, id);
@@ -239,7 +239,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     }
 
     char id_hex[PAK_ID_LENGTH_SZ];
-    _hash_file(name, entry->id, id_hex);
+    _name_to_id(name, entry->id, id_hex);
     LOG_T("entry `%s` has id `%s`", name, id_hex);
 
     Pak_Entry_Header_t header = { 0 };
@@ -280,9 +280,6 @@ FS_Mount_t *FS_pak_mount(const char *path)
         goto error_close_stream;
     }
 
-    size_t entries = bytes_ui32le(header.entries);
-    LOG_T("archive `%s` contains %d entries", path, entries);
-
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         LOG_E("can't allocate mount for archive `%s`", path);
@@ -291,6 +288,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
 
     fclose(stream);
 
+    size_t entries = bytes_ui32le(header.entries);
     _pak_mount_ctor(mount, path, entries, header.flags.encrypted, header.flags.sorted);
 
     return mount;

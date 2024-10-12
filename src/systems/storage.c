@@ -434,15 +434,22 @@ bool Storage_exists(Storage_t *storage, const char *name)
     return FS_exists(storage->context, name);
 }
 
+static inline void _calculate_id(uint8_t id[STORAGE_RESOURCE_ID_LENGTH], const char *name)
+{
+    // The resources id is a digest of the name in order to have fixed records and
+    // reduce the amount of heap operations and fragmentation.
+    md5_hash_sz(id, name, false); // TODO: move to SHA1?
+}
+
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
     if (path_is_absolute(name) || !path_is_normalized(name)) {
-        LOG_E("path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
+        LOG_E("path `%s` is not allowed (only relative non-parent paths are permitted in sandbox mode)", name);
         goto error_exit;
     }
 
     uint8_t id[STORAGE_RESOURCE_ID_LENGTH];
-    md5_hash_sz(id, name, false);
+    _calculate_id(id, name);
 
     Storage_Resource_t *entry = _lookup(storage->resources, id);
     if (entry) {
@@ -462,10 +469,13 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     if (_resource_load(resource, name, type, storage->context)) {
         LOG_D("resource `%s` loaded from file-system", name);
     } else {
-        LOG_E("can't load resource `%s`", name);
+        // Note: not being able to load a resource could be considered an error
+        //       worth having a proper "logging trace". However, in many cases
+        //       we are trying and load a file, but only the called has the
+        //       right to decide if that's an error!
         goto error_free_resource;
     }
-    md5_hash_sz(resource->id, name, false);
+    _calculate_id(resource->id, name);
 
     arrpush(storage->resources, resource);
 
