@@ -36,11 +36,25 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core.class")
---local Source = require("tofu.sound.source")
 
-local Channel = Class.define()
+local StopWatch = Class.define()
 
-function Channel:__ctor()
+function StopWatch:__ctor()
+  self.age = 0
+  self:reset()
 end
 
-return Channel
+function StopWatch:rate(rate)
+  self.rate = rate or 1.0
+end
+
+function StopWatch:reset()
+  self.age = 0.0
+end
+
+function StopWatch:cancel()
+  self.cancelled = true
+  self.callback("cancelled")
+end
+
+return StopWatch

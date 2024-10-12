@@ -49,7 +49,7 @@ typedef struct GL_Surface_s {
     bool is_power_of_two;
 } GL_Surface_t;
 
-typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
+typedef void (*GL_Surface_Callback_t)(const void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
 
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.

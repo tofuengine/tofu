@@ -402,7 +402,7 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
             ;
 }
 
-static inline bool _render(Engine_t *engine, float ratio)
+static inline bool _render(const Engine_t *engine, float ratio)
 {
     if (!Interpreter_render(engine->interpreter, ratio)) {
         return false;
@@ -480,12 +480,6 @@ void Engine_run(Engine_t *engine)
                 running = running && _low_priority_update(engine, low_priority_delta_time);
             }
         }
-
-//        running = running && Input_update_variable(engine->storage, elapsed);
-//        running = running && Display_update_variable(engine->display, elapsed);
-//        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
-//        running = running && Audio_update_variable(&engine->audio, elapsed);
-//        running = running && Storage_update_variable(engine->storage, elapsed);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_UPDATE] = stopwatch_partial(&stats_marker);

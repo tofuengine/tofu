@@ -97,7 +97,7 @@ int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c)
     const char *file = path_lua_to_fs(name, module_name);
 
     Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
-    Storage_Resource_t *script = Storage_exists(storage, file) ? Storage_load(storage, file, STORAGE_RESOURCE_STRING) : NULL; // Avoid unwanted errors, by checking the file existence, first...
+    const Storage_Resource_t *script = Storage_load(storage, file, STORAGE_RESOURCE_STRING);
     LOG_IF_D(script, "script `%s` found and loaded", file);
 
     int nup = luaX_pushupvalues(L);

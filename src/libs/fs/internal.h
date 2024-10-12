@@ -48,11 +48,11 @@ typedef struct Mount_VTable_s {
 
 typedef struct Handle_VTable_s {
     void   (*dtor)(FS_Handle_t *handle);
-    size_t (*size)(FS_Handle_t *handle);
+    size_t (*size)(const FS_Handle_t *handle);
     size_t (*read)(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
     bool   (*seek)(FS_Handle_t *handle, long offset, int whence);
-    long   (*tell)(FS_Handle_t *handle);
-    bool   (*eof) (FS_Handle_t *handle);
+    long   (*tell)(const FS_Handle_t *handle);
+    bool   (*eof) (const FS_Handle_t *handle);
 } Handle_VTable_t;
 
 struct FS_Mount_s {

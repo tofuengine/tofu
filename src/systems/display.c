@@ -161,7 +161,7 @@ static bool _has_errors(void)
 
 static void _error_callback(int error, const char *description)
 {
-    LOG_E("%s", description);
+    LOG_E("[GLFW error %#d] %s", error, description);
 }
 
 /**
@@ -320,7 +320,7 @@ static GLFWwindow *_window_create(const Display_t *display, GL_Rectangle_t *pres
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
-    // Note: technically starting from GLFW v3.4 we could display the window from the very first moment at the
+    // Note: technically, starting from GLFW v3.4 we could display the window from the very first moment at the
     //       correct position with the correct size. However, we find useful to leverage the "size callback" to set
     //       OpenGL up. Otherwise we would call it directly. Also, we prefer to set everything up (e.g. the icon) and
     //       then display the window.

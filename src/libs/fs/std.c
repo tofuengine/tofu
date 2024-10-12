@@ -67,11 +67,11 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name);
 
 static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream, size_t size);
 static void _std_handle_dtor(FS_Handle_t *handle);
-static size_t _std_handle_size(FS_Handle_t *handle);
+static size_t _std_handle_size(const FS_Handle_t *handle);
 static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
 static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence);
-static long _std_handle_tell(FS_Handle_t *handle);
-static bool _std_handle_eof(FS_Handle_t *handle);
+static long _std_handle_tell(const FS_Handle_t *handle);
+static bool _std_handle_eof(const FS_Handle_t *handle);
 
 bool FS_std_is_valid(const char *path)
 {
@@ -203,7 +203,7 @@ static void _std_handle_dtor(FS_Handle_t *handle)
     LOG_T("handle %p uninitialized", handle);
 }
 
-static size_t _std_handle_size(FS_Handle_t *handle)
+static size_t _std_handle_size(const FS_Handle_t *handle)
 {
     const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
@@ -232,14 +232,14 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
     return sought;
 }
 
-static long _std_handle_tell(FS_Handle_t *handle)
+static long _std_handle_tell(const FS_Handle_t *handle)
 {
     const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 
     return ftell(std_handle->stream);
 }
 
-static bool _std_handle_eof(FS_Handle_t *handle)
+static bool _std_handle_eof(const FS_Handle_t *handle)
 {
     const Std_Handle_t *std_handle = (const Std_Handle_t *)handle;
 

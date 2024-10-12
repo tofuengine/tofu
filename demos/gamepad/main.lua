@@ -152,6 +152,8 @@ function Main:render(_)
   local tl, tr = controller:triggers()
   draw_trigger(canvas, 24, cy + 12, 8, tl)
   draw_trigger(canvas, 232, cy + 12, 8, tr)
+  local vx, vy = controller:vector()
+  canvas:line(16, 16, 16 + vx * 8, 16 + vy * 8, 5)
 
   local cursor = Cursor.default()
   local mx, my = cursor:position()

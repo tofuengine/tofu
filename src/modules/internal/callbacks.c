@@ -56,7 +56,7 @@ typedef struct rgba_s {
 //
 // Since the total amount of distinct colors in a single image is typically small, the additional memory usage is worth
 // the effort.
-void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
+void surface_callback_palette(const void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
 #if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
@@ -98,7 +98,7 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
 #endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 }
 
-void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)
+void surface_callback_indexes(const void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const Callback_Indexes_Closure_t *closure = (const Callback_Indexes_Closure_t *)user_data;
 

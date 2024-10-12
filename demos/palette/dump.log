@@ -1,0 +1,637 @@
+Launching *palette* application!
+Total: 0 warnings / 0 errors in 2 files
+[I/engine] Tofu Engine v0.14.0-dev-debug (Linux build)
+        ___________________  _______________ ___        
+        \__    ___/\_____  \ \_   _____/    |   \       
+          |    |    /   |   \ |    __) |    |   /       
+          |    |   /    |    \|     \  |    |  /        
+          |____|   \_______  /\___  /  |______/         
+                           \/     \/                    
+___________ _______    ________.___ _______  ___________
+\_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_ 
+ |        \/    |    \    \_\  \   /    |    \|        \
+/_______  /\____|__  /\______  /___\____|__  /_______  /
+        \/         \/        \/            \/        \/
+[I/engine] running on Linux x86_64 (6.8.0-40-generic, #40~22.04.3-Ubuntu SMP PREEMPT_DYNAMIC Tue Jul 30 17:30:19 UTC 2)
+[D/storage] user path is `/home/nemo/.local/share/tofuengine`
+[D/storage] file-system context 0x5e1f48cbe398 created
+[T/fs-callbacks] mount 0x5e1f48cbe628 initialized as cache w/ user-data 0x5e1f48cbe3d8
+[D/storage] cache 0x5e1f48cbe3d8 created
+[D/storage] attaching folder/archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] archive `/home/nemo/workspace/projects/tofu/build/kernal.pak` contains 45 entries
+[T/fs-pak] mount 0x5e1f48cbf918 initialized w/ 45 entries (encrypted is 1, sorted is 1) for archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[D/storage] folder/archive attached w/ path `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[D/storage] attaching folder/archive `./demos/palette`
+[T/fs-std] mount 0x5e1f48cc0978 initialized at folder `./demos/palette`
+[D/storage] folder/archive attached w/ path `./demos/palette`
+[I/engine] storage ready
+[D/fs-std] file `tofu.config` found in mount 0x5e1f48cc0978
+[T/fs-std] handle 0x5e1f48cbe978 initialized (size is 139 bytes)
+[D/fs-std] file `tofu.config` opened w/ handle 0x5e1f48cbe978
+[D/storage] loaded a 139 characters long string
+[T/fs-std] handle 0x5e1f48cbe978 uninitialized
+[D/storage] resource `tofu.config` loaded from file-system
+[D/storage] cache is currently holding 0 resources
+[D/storage] resource `tofu.config` stored as 0x5e1f48cbe908
+[D/configuration] configuration allocated
+[I/engine] game identity is `palette`
+[I/engine] configuration ready
+[T/fs-std] mount 0x5e1f48cc19c8 initialized at folder `/home/nemo/.local/share/tofuengine/palette`
+[D/storage] user-dependent path `/home/nemo/.local/share/tofuengine/palette` attached
+[D/engine] identity set to `palette`
+[T/fs-pak] entry `assets/png/icon.png` has id `e0a3f2d3779fa7f424e31bda7efab383`
+[T/fs-pak] entry `assets/png/icon.png` w/ size 10603 located at offset 694114 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `assets/png/icon.png` has id `e0a3f2d3779fa7f424e31bda7efab383`
+[T/fs-pak] entry `assets/png/icon.png` w/ size 10603 located at offset 694114 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f48cbee18 initialized at 694114 (10603 bytes)
+[D/fs-pak] entry `assets/png/icon.png` opened w/ handle 0x5e1f48cbee18
+[D/storage] loaded 128x128 image
+[T/fs-pak] handle 0x5e1f48cbee18 uninitialized
+[D/storage] resource `assets/png/icon.png` loaded from file-system
+[D/storage] cache is currently holding 1 resources
+[D/storage] resource `assets/png/icon.png` stored as 0x5e1f48cbeda8
+[D/engine] icon `assets/png/icon.png` loaded
+[T/fs-pak] entry `assets/glsl/passthru.glsl` has id `bf96580e005f1c267c2abbd1289a8eb4`
+[T/fs-pak] entry `assets/glsl/passthru.glsl` w/ size 2024 located at offset 119935 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `assets/glsl/passthru.glsl` has id `bf96580e005f1c267c2abbd1289a8eb4`
+[T/fs-pak] entry `assets/glsl/passthru.glsl` w/ size 2024 located at offset 119935 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f48cbee18 initialized at 119935 (2024 bytes)
+[D/fs-pak] entry `assets/glsl/passthru.glsl` opened w/ handle 0x5e1f48cbee18
+[D/storage] loaded a 2024 characters long string
+[T/fs-pak] handle 0x5e1f48cbee18 uninitialized
+[D/storage] resource `assets/glsl/passthru.glsl` loaded from file-system
+[D/storage] cache is currently holding 2 resources
+[D/storage] resource `assets/glsl/passthru.glsl` stored as 0x5e1f48cbefb8
+[D/engine] effect `assets/glsl/passthru.glsl` loaded
+[T/fs-pak] entry `assets/txt/gamecontrollerdb.txt` has id `c4074b701b87573865a4ebe9f7ad6342`
+[T/fs-pak] entry `assets/txt/gamecontrollerdb.txt` w/ size 545323 located at offset 129375 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `assets/txt/gamecontrollerdb.txt` has id `c4074b701b87573865a4ebe9f7ad6342`
+[T/fs-pak] entry `assets/txt/gamecontrollerdb.txt` w/ size 545323 located at offset 129375 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f48cbee18 initialized at 129375 (545323 bytes)
+[D/fs-pak] entry `assets/txt/gamecontrollerdb.txt` opened w/ handle 0x5e1f48cbee18
+[D/storage] loaded a 545323 characters long string
+[T/fs-pak] handle 0x5e1f48cbee18 uninitialized
+[D/storage] resource `assets/txt/gamecontrollerdb.txt` loaded from file-system
+[D/storage] cache is currently holding 3 resources
+[D/storage] resource `assets/txt/gamecontrollerdb.txt` stored as 0x5e1f48cbf848
+[I/engine] mappings `assets/txt/gamecontrollerdb.txt` loaded
+[D/display] GLFW initialized
+[D/display] GLFW allocator set
+[D/display] time initialized
+[D/display] display size is 1920x1080
+[D/display] canvas size is 128x128
+[D/display] window size is 512x512 (4x)
+[D/display] window 0x5e1f48d1b6b0 created (and made current context)
+[D/display] disabling vertical synchronization
+[D/display] window position is <704, 284>
+[D/display] window shown
+[D/display] window 0x5e1f48d1b6b0 initialized
+[D/display] GLAD initialized (using generator 2.0.7)
+[D/gl-surface] surface created at 0x5e1f48ea0ed8 (128x128)
+[D/display] graphics surface 0x5e1f48e9c218 created
+[D/display] graphics surface 0x5e1f48e9c218 cleared
+[W/gl-processor] setting default to 256 color(s) greyscale palette
+[D/display] processor 0x5e1f48e9c278 created
+[D/display] 65536 bytes VRAM allocated at 0x5e1f48e83758 (128x128)
+[D/display] texture created w/ id #1 (128x128)
+[D/shader] shader program #1 created
+[T/shader] loading source for shader w/ id 2
+#version 330 core
+
+layout (location = 0) in vec2 i_position;
+layout (location = 1) in vec2 i_texture_coords;
+
+out vec2 v_texture_coords;
+
+uniform mat4 u_mvp;
+uniform vec2 u_screen_offset;
+
+void main() {
+   v_texture_coords = i_texture_coords - u_screen_offset;
+
+   gl_Position = u_mvp * vec4(i_position, 0.0, 1.0);
+}
+
+[T/shader] compiling shader 2
+[T/shader] loading source for shader w/ id 3
+#version 330 core
+
+layout (origin_upper_left) in vec4 gl_FragCoord;
+
+in vec2 v_texture_coords;
+
+layout (location = 0) out vec4 o_color;
+
+uniform sampler2D u_texture0;
+uniform vec2 u_texture_size;
+uniform vec2 u_screen_size;
+uniform vec2 u_screen_scale;
+uniform vec4 u_color;
+uniform float u_time;
+
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords);
+
+void main() {
+    vec2 screen_coords = gl_FragCoord.xy;
+
+    o_color = effect(u_texture0, v_texture_coords, screen_coords) * u_color;
+}
+/*
+ *                 ___________________  _______________ ___
+ *                 \__    ___/\_____  \ \_   _____/    |   \
+ *                   |    |    /   |   \ |    __) |    |   /
+ *                   |    |   /    |    \|     \  |    |  /
+ *                   |____|   \_______  /\___  /  |______/
+ *                                    \/     \/
+ *         ___________ _______    ________.___ _______  ___________
+ *         \_   _____/ \      \  /  _____/|   |\      \ \_   _____/
+ *          |    __)_  /   |   \/   \  ___|   |/   |   \ |    __)_
+ *          |        \/    |    \    \_\  \   /    |    \|        \
+ *         /_______  /\____|__  /\______  /___\____|__  /_______  /
+ *                 \/         \/        \/            \/        \
+ *
+ * MIT License
+ * 
+ * Copyright (c) 2019-2024 Marco Lizza
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
+    return texture2D(texture, texture_coords);
+}
+
+[T/shader] compiling shader 3
+[D/shader] shader 2 attached to program #1
+[D/shader] shader 3 attached to program #1
+[W/shader] uniform `u_texture_size` not found for shader program #1
+[W/shader] uniform `u_screen_size` not found for shader program #1
+[W/shader] uniform `u_screen_scale` not found for shader program #1
+[W/shader] uniform `u_time` not found for shader program #1
+[D/shader] shaders compiled into program #1
+[D/display] shader 0x5e1f48e9fe48 created
+[D/display] shader 0x5e1f48e9fe48 initialized
+[I/display] GLFW: 3.4.0 X11 GLX Null EGL OSMesa monotonic
+[I/display] GLFW platform: 393220
+[I/display] GLAD: 4.6
+[I/display] vendor: Intel
+[I/display] renderer: Mesa Intel(R) UHD Graphics (JSL)
+[I/display] version: 4.6 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.2
+[I/display] GLSL: 4.60
+[I/engine] display ready
+[D/input] input controller mappings updated
+[D/input] controller(s) initialized
+[W/input] no controllers detected
+[D/input] enabling sticky input mode
+[I/engine] input ready
+[D/sl] context created
+[D/audio] sound context created at 0x5e1f48d06048
+[D/audio] audio device mutex initialized
+[D/miniaudio] WASAPI backend is disabled.
+[D/miniaudio] DirectSound backend is disabled.
+[D/miniaudio] WinMM backend is disabled.
+[D/miniaudio] Core Audio backend is disabled.
+[D/miniaudio] sndio backend is disabled.
+[D/miniaudio] audio(4) backend is disabled.
+[D/miniaudio] OSS backend is disabled.
+[D/miniaudio] Attempting to initialize PulseAudio backend...
+[D/miniaudio] Loading library: libpulse.so
+[I/miniaudio] Failed to load library: libpulse.so
+[D/miniaudio] Loading library: libpulse.so.0
+[D/miniaudio] Loading symbol: pa_mainloop_new
+[D/miniaudio] Loading symbol: pa_mainloop_free
+[D/miniaudio] Loading symbol: pa_mainloop_quit
+[D/miniaudio] Loading symbol: pa_mainloop_get_api
+[D/miniaudio] Loading symbol: pa_mainloop_iterate
+[D/miniaudio] Loading symbol: pa_mainloop_wakeup
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_new
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_free
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_start
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_stop
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_lock
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_unlock
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_wait
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_signal
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_accept
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_get_retval
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_get_api
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_in_thread
+[D/miniaudio] Loading symbol: pa_threaded_mainloop_set_name
+[D/miniaudio] Loading symbol: pa_context_new
+[D/miniaudio] Loading symbol: pa_context_unref
+[D/miniaudio] Loading symbol: pa_context_connect
+[D/miniaudio] Loading symbol: pa_context_disconnect
+[D/miniaudio] Loading symbol: pa_context_set_state_callback
+[D/miniaudio] Loading symbol: pa_context_get_state
+[D/miniaudio] Loading symbol: pa_context_get_sink_info_list
+[D/miniaudio] Loading symbol: pa_context_get_source_info_list
+[D/miniaudio] Loading symbol: pa_context_get_sink_info_by_name
+[D/miniaudio] Loading symbol: pa_context_get_source_info_by_name
+[D/miniaudio] Loading symbol: pa_operation_unref
+[D/miniaudio] Loading symbol: pa_operation_get_state
+[D/miniaudio] Loading symbol: pa_channel_map_init_extend
+[D/miniaudio] Loading symbol: pa_channel_map_valid
+[D/miniaudio] Loading symbol: pa_channel_map_compatible
+[D/miniaudio] Loading symbol: pa_stream_new
+[D/miniaudio] Loading symbol: pa_stream_unref
+[D/miniaudio] Loading symbol: pa_stream_connect_playback
+[D/miniaudio] Loading symbol: pa_stream_connect_record
+[D/miniaudio] Loading symbol: pa_stream_disconnect
+[D/miniaudio] Loading symbol: pa_stream_get_state
+[D/miniaudio] Loading symbol: pa_stream_get_sample_spec
+[D/miniaudio] Loading symbol: pa_stream_get_channel_map
+[D/miniaudio] Loading symbol: pa_stream_get_buffer_attr
+[D/miniaudio] Loading symbol: pa_stream_set_buffer_attr
+[D/miniaudio] Loading symbol: pa_stream_get_device_name
+[D/miniaudio] Loading symbol: pa_stream_set_write_callback
+[D/miniaudio] Loading symbol: pa_stream_set_read_callback
+[D/miniaudio] Loading symbol: pa_stream_set_suspended_callback
+[D/miniaudio] Loading symbol: pa_stream_set_moved_callback
+[D/miniaudio] Loading symbol: pa_stream_is_suspended
+[D/miniaudio] Loading symbol: pa_stream_flush
+[D/miniaudio] Loading symbol: pa_stream_drain
+[D/miniaudio] Loading symbol: pa_stream_is_corked
+[D/miniaudio] Loading symbol: pa_stream_cork
+[D/miniaudio] Loading symbol: pa_stream_trigger
+[D/miniaudio] Loading symbol: pa_stream_begin_write
+[D/miniaudio] Loading symbol: pa_stream_write
+[D/miniaudio] Loading symbol: pa_stream_peek
+[D/miniaudio] Loading symbol: pa_stream_drop
+[D/miniaudio] Loading symbol: pa_stream_writable_size
+[D/miniaudio] Loading symbol: pa_stream_readable_size
+[D/miniaudio] System Architecture:
+[D/miniaudio]   Endian: LE
+[D/miniaudio]   SSE2:   YES
+[D/miniaudio]   AVX2:   NO
+[D/miniaudio]   NEON:   NO
+[D/audio] audio driver context created
+[T/audio] device `Dummy Output` w/ type 1
+[D/audio] device #0, `Dummy Output` available
+[T/audio] device `Monitor of Dummy Output` w/ type 2
+[D/audio] using default device for context (nil)
+[I/miniaudio] [PulseAudio] Playback attr: maxlength=6612, tlength=2204, prebuf=-1, minreq=-1, fragsize=2204; periodSizeInFrames=551
+[I/miniaudio] [PulseAudio] Playback sample spec: format=16-bit Signed Integer, channels=2, rate=22050
+[I/miniaudio] [PulseAudio] Playback actual attr: maxlength=6612, tlength=1652, prebuf=1108, minreq=548, fragsize=2204; internalPeriodSizeInFrames=413
+[I/miniaudio] [PulseAudio]
+[I/miniaudio]   Dummy Output (Playback)
+[I/miniaudio]     Format:      16-bit Signed Integer -> 16-bit Signed Integer
+[I/miniaudio]     Channels:    2 -> 2
+[I/miniaudio]     Sample Rate: 22050 -> 22050
+[I/miniaudio]     Buffer Size: 413*4 (1652)
+[I/miniaudio]     Conversion:
+[I/miniaudio]       Pre Format Conversion:  NO
+[I/miniaudio]       Post Format Conversion: NO
+[I/miniaudio]       Channel Routing:        NO
+[I/miniaudio]       Resampling:             NO
+[I/miniaudio]       Passthrough:            YES
+[I/miniaudio]       Channel Map In:         {CHANNEL_FRONT_LEFT CHANNEL_FRONT_RIGHT}
+[I/miniaudio]       Channel Map Out:        {CHANNEL_FRONT_LEFT CHANNEL_FRONT_RIGHT}
+[D/audio] audio device initialized w/ 22050Hz, 2 channel(s), 2 bytes per sample
+[D/audio] audio master-volume set to 1.00
+[I/audio] miniaudio: v0.11.21
+[I/audio] device-name: Dummy Output
+[I/audio] back-end: PulseAudio
+[I/audio] format: 16-bit Signed Integer / 16-bit Signed Integer
+[I/audio] channels: 2 / 2
+[I/audio] sample-rate: 22050 / 22050
+[I/audio] period-in-frames: 413
+[I/engine] audio ready
+[D/environment] environment allocated
+[I/engine] environment ready
+[I/interpreter] Lua: 5.4.7
+[D/interpreter] interpreter VM 0x5e1f495bc8a0 created
+[D/udt] preloading module `tofu.core.log`
+[D/udt] preloading module `tofu.core.math`
+[D/udt] preloading module `tofu.core.system`
+[D/udt] preloading module `tofu.generators.noise`
+[D/udt] preloading module `tofu.generators.tweener`
+[D/udt] preloading module `tofu.generators.wave`
+[D/udt] preloading module `tofu.graphics.bank`
+[D/udt] preloading module `tofu.graphics.batch`
+[D/udt] preloading module `tofu.graphics.canvas`
+[D/udt] preloading module `tofu.graphics.display`
+[D/udt] preloading module `tofu.graphics.font`
+[D/udt] preloading module `tofu.graphics.image`
+[D/udt] preloading module `tofu.graphics.palette`
+[D/udt] preloading module `tofu.graphics.program`
+[D/udt] preloading module `tofu.graphics.xform`
+[D/udt] preloading module `tofu.input.controller`
+[D/udt] preloading module `tofu.input.cursor`
+[D/udt] preloading module `tofu.input.keyboard`
+[D/udt] preloading module `tofu.io.file`
+[D/udt] preloading module `tofu.io.storage`
+[D/udt] preloading module `tofu.physics.body`
+[D/udt] preloading module `tofu.physics.world`
+[D/udt] preloading module `tofu.sound.source`
+[D/udt] preloading module `tofu.sound.speakers`
+[D/udt] preloading module `tofu.util.grid`
+[T/fs-pak] entry `boot-debug.lua` has id `51c1c70707cb51c09551bbef02952b21`
+[T/fs-pak] entry `boot-debug.lua` w/ size 7427 located at offset 1096 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `boot-debug.lua` has id `51c1c70707cb51c09551bbef02952b21`
+[T/fs-pak] entry `boot-debug.lua` w/ size 7427 located at offset 1096 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 1096 (7427 bytes)
+[D/fs-pak] entry `boot-debug.lua` opened w/ handle 0x5e1f495c6508
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[T/fs-pak] entry `tofu/core/class.lua` has id `a8c465537ea94d8a9eecfdad47e3ef2b`
+[T/fs-pak] entry `tofu/core/class.lua` w/ size 2935 located at offset 66197 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/core/class.lua` has id `a8c465537ea94d8a9eecfdad47e3ef2b`
+[T/fs-pak] entry `tofu/core/class.lua` w/ size 2935 located at offset 66197 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 66197 (2935 bytes)
+[D/fs-pak] entry `tofu/core/class.lua` opened w/ handle 0x5e1f495c6508
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/udt] loading module `tofu.core.log`
+[T/fs-pak] entry `tofu/core/log.lua` has id `b70dedac9c01665fab9688a3f1b619ce`
+[T/fs-pak] entry `tofu/core/log.lua` w/ size 3701 located at offset 69132 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/core/log.lua` has id `b70dedac9c01665fab9688a3f1b619ce`
+[T/fs-pak] entry `tofu/core/log.lua` w/ size 3701 located at offset 69132 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/core/log.lua` has id `b70dedac9c01665fab9688a3f1b619ce`
+[T/fs-pak] entry `tofu/core/log.lua` w/ size 3701 located at offset 69132 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 69132 (3701 bytes)
+[D/fs-pak] entry `tofu/core/log.lua` opened w/ handle 0x5e1f495c6508
+[D/storage] loaded a 3701 characters long string
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/storage] resource `tofu/core/log.lua` loaded from file-system
+[D/storage] cache is currently holding 4 resources
+[D/storage] resource `tofu/core/log.lua` stored as 0x5e1f495c56e8
+[D/udt] script `tofu/core/log.lua` found and loaded
+[D/udt] loading module `tofu.core.system`
+[T/fs-pak] entry `tofu/core/system.lua` has id `d521cdd65a6fb0b60979575c8e3fea85`
+[T/fs-pak] entry `tofu/core/system.lua` not found in mount 0x5e1f48cbf918
+[D/udt] loading module `tofu.graphics.canvas`
+[T/fs-pak] entry `tofu/graphics/canvas.lua` has id `d2f37517cd9869bfa182c1026b19ed9b`
+[T/fs-pak] entry `tofu/graphics/canvas.lua` w/ size 3259 located at offset 38067 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/graphics/canvas.lua` has id `d2f37517cd9869bfa182c1026b19ed9b`
+[T/fs-pak] entry `tofu/graphics/canvas.lua` w/ size 3259 located at offset 38067 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/graphics/canvas.lua` has id `d2f37517cd9869bfa182c1026b19ed9b`
+[T/fs-pak] entry `tofu/graphics/canvas.lua` w/ size 3259 located at offset 38067 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 38067 (3259 bytes)
+[D/fs-pak] entry `tofu/graphics/canvas.lua` opened w/ handle 0x5e1f495c6508
+[D/storage] loaded a 3259 characters long string
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/storage] resource `tofu/graphics/canvas.lua` loaded from file-system
+[D/storage] cache is currently holding 5 resources
+[D/storage] resource `tofu/graphics/canvas.lua` stored as 0x5e1f495d4cb8
+[D/udt] script `tofu/graphics/canvas.lua` found and loaded
+[D/udt] loading module `tofu.graphics.image`
+[T/fs-pak] entry `tofu/graphics/image.lua` has id `e50f50d528906b458740a761f154b2f8`
+[T/fs-pak] entry `tofu/graphics/image.lua` not found in mount 0x5e1f48cbf918
+[D/udt] loading module `tofu.graphics.display`
+[T/fs-pak] entry `tofu/graphics/display.lua` has id `957d936d4d45ad84246d0b555f093063`
+[T/fs-pak] entry `tofu/graphics/display.lua` not found in mount 0x5e1f48cbf918
+[D/udt] loading module `tofu.graphics.palette`
+[T/fs-pak] entry `tofu/graphics/palette.lua` has id `930aa70c7f7f1f9e658ef7ada42592e7`
+[T/fs-pak] entry `tofu/graphics/palette.lua` w/ size 1964 located at offset 36103 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/graphics/palette.lua` has id `930aa70c7f7f1f9e658ef7ada42592e7`
+[T/fs-pak] entry `tofu/graphics/palette.lua` w/ size 1964 located at offset 36103 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/graphics/palette.lua` has id `930aa70c7f7f1f9e658ef7ada42592e7`
+[T/fs-pak] entry `tofu/graphics/palette.lua` w/ size 1964 located at offset 36103 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 36103 (1964 bytes)
+[D/fs-pak] entry `tofu/graphics/palette.lua` opened w/ handle 0x5e1f495c6508
+[D/storage] loaded a 1964 characters long string
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/storage] resource `tofu/graphics/palette.lua` loaded from file-system
+[D/storage] cache is currently holding 6 resources
+[D/storage] resource `tofu/graphics/palette.lua` stored as 0x5e1f495da778
+[D/udt] script `tofu/graphics/palette.lua` found and loaded
+[T/fs-pak] entry `assets/lua/palettes.lua` has id `b326b1ffc761ab646010e793d623381d`
+[T/fs-pak] entry `assets/lua/palettes.lua` w/ size 14242 located at offset 674698 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `assets/lua/palettes.lua` has id `b326b1ffc761ab646010e793d623381d`
+[T/fs-pak] entry `assets/lua/palettes.lua` w/ size 14242 located at offset 674698 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 674698 (14242 bytes)
+[D/fs-pak] entry `assets/lua/palettes.lua` opened w/ handle 0x5e1f495c6508
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/udt] loading module `tofu.graphics.font`
+[T/fs-pak] entry `tofu/graphics/font.lua` has id `948da20d422d0f55296a31e1e4015413`
+[T/fs-pak] entry `tofu/graphics/font.lua` w/ size 4726 located at offset 41326 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/graphics/font.lua` has id `948da20d422d0f55296a31e1e4015413`
+[T/fs-pak] entry `tofu/graphics/font.lua` w/ size 4726 located at offset 41326 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/graphics/font.lua` has id `948da20d422d0f55296a31e1e4015413`
+[T/fs-pak] entry `tofu/graphics/font.lua` w/ size 4726 located at offset 41326 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 41326 (4726 bytes)
+[D/fs-pak] entry `tofu/graphics/font.lua` opened w/ handle 0x5e1f495c6508
+[D/storage] loaded a 4726 characters long string
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/storage] resource `tofu/graphics/font.lua` loaded from file-system
+[D/storage] cache is currently holding 7 resources
+[D/storage] resource `tofu/graphics/font.lua` stored as 0x5e1f49600008
+[D/udt] script `tofu/graphics/font.lua` found and loaded
+[D/udt] loading module `tofu.graphics.bank`
+[T/fs-pak] entry `tofu/graphics/bank.lua` has id `1b2242c5b4d18ec36ddebd58e9240808`
+[T/fs-pak] entry `tofu/graphics/bank.lua` not found in mount 0x5e1f48cbf918
+[D/udt] loading module `tofu.sound.speakers`
+[T/fs-pak] entry `tofu/sound/speakers.lua` has id `a2d5bdb286651933fe65065110f21080`
+[T/fs-pak] entry `tofu/sound/speakers.lua` not found in mount 0x5e1f48cbf918
+[D/interpreter] boot script loaded
+[D/interpreter] method `init` found
+[D/interpreter] method `update` found
+[D/interpreter] method `render` found
+[D/interpreter] method `deinit` found
+[D/interpreter] entry-points detected
+[D/audio] halted, no more sources active
+[D/image] default surface 0x5e1f48e9c218 retrieved
+[D/image] image 0x5e1f49606eb4 allocated w/ default surface
+[D/canvas] canvas 0x5e1f49607184 allocated w/ context 0x5e1f49606ef8 for image 0x5e1f49606eb4
+[W/gl-context] no states to pop from context
+[D/audio] halted, no more sources active
+[W/gl-context] no states to pop from context
+[D/fs-std] file `main.lua` found in mount 0x5e1f48cc0978
+[T/fs-std] handle 0x5e1f496073f8 initialized (size is 8047 bytes)
+[D/fs-std] file `main.lua` opened w/ handle 0x5e1f496073f8
+[T/fs-std] handle 0x5e1f496073f8 uninitialized
+[D/udt] loading module `tofu.input.controller`
+[T/fs-pak] entry `tofu/input/controller.lua` has id `ad90555f07603376626faa365dacf0c1`
+[T/fs-pak] entry `tofu/input/controller.lua` w/ size 1985 located at offset 46052 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/input/controller.lua` has id `ad90555f07603376626faa365dacf0c1`
+[T/fs-pak] entry `tofu/input/controller.lua` w/ size 1985 located at offset 46052 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `tofu/input/controller.lua` has id `ad90555f07603376626faa365dacf0c1`
+[T/fs-pak] entry `tofu/input/controller.lua` w/ size 1985 located at offset 46052 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 46052 (1985 bytes)
+[D/fs-pak] entry `tofu/input/controller.lua` opened w/ handle 0x5e1f495c6508
+[D/storage] loaded a 1985 characters long string
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/storage] resource `tofu/input/controller.lua` loaded from file-system
+[D/storage] cache is currently holding 8 resources
+[D/storage] resource `tofu/input/controller.lua` stored as 0x5e1f4960f0e8
+[D/udt] script `tofu/input/controller.lua` found and loaded
+[D/udt] loading module `tofu.generators.noise`
+[T/fs-pak] entry `tofu/generators/noise.lua` has id `c7ed77e696c1b97f15af11fcb66b3f92`
+[T/fs-pak] entry `tofu/generators/noise.lua` not found in mount 0x5e1f48cbf918
+[D/udt] loading module `tofu.generators.wave`
+[T/fs-pak] entry `tofu/generators/wave.lua` has id `045f7bfd0379137ccf00a08aaea55177`
+[T/fs-pak] entry `tofu/generators/wave.lua` not found in mount 0x5e1f48cbf918
+[D/fs-std] file `preload.lua` found in mount 0x5e1f48cc0978
+[T/fs-std] handle 0x5e1f49611818 initialized (size is 1440 bytes)
+[D/fs-std] file `preload.lua` opened w/ handle 0x5e1f49611818
+[T/fs-std] handle 0x5e1f49611818 uninitialized
+[D/udt] loading module `tofu.io.storage`
+[T/fs-pak] entry `tofu/io/storage.lua` has id `0aed37c10e99c278497f4373fb83627a`
+[T/fs-pak] entry `tofu/io/storage.lua` not found in mount 0x5e1f48cbf918
+[D/storage-cache] Base64 data `iVBORw0KGgoAAAAN` is 795 byte(s) long
+[D/storage-cache] Base64 buffer `iVBORw0KGgoAAAAN` w/ size of 795 byte(s) injected
+[I/image] profiling loading and decoding for image `assets/sheet.png`
+[D/fs-std] file `assets/sheet.png` found in mount 0x5e1f48cc0978
+[T/fs-std] handle 0x5e1f49614b78 initialized (size is 795 bytes)
+[D/fs-std] file `assets/sheet.png` opened w/ handle 0x5e1f49614b78
+[D/storage] loaded 256x256 image
+[T/fs-std] handle 0x5e1f49614b78 uninitialized
+[D/storage] resource `assets/sheet.png` loaded from file-system
+[D/storage] cache is currently holding 9 resources
+[D/storage] resource `assets/sheet.png` stored as 0x5e1f49614b08
+[D/gl-surface] surface created at 0x5e1f49614be8 (256x256)
+[D/gl-surface] surface decoded at 0x5e1f49614be8 (256x256)
+[I/image] loading and decoding image `assets/sheet.png` took 0.003s
+[D/image] surface 0x5e1f49624c18 loaded and decoded from file `assets/sheet.png`
+[D/image] image 0x5e1f49624cb4 allocated w/ surface 0x5e1f49624c18
+[D/gl-sheet] sheet 0x5e1f4962ad28 created (fixed)
+[D/bank] bank 0x5e1f496144f4 with 8x8 cells allocated w/ sheet 0x5e1f4962ad28 for atlas 0x5e1f49624cb4 w/ reference #5
+[I/image] profiling loading and decoding for image `assets/png/spleen-5x8.png`
+[T/fs-pak] entry `assets/png/spleen-5x8.png` has id `42dbbd000093bd3c5ed55e0c29de2ad5`
+[T/fs-pak] entry `assets/png/spleen-5x8.png` w/ size 475 located at offset 688940 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] entry `assets/png/spleen-5x8.png` has id `42dbbd000093bd3c5ed55e0c29de2ad5`
+[T/fs-pak] entry `assets/png/spleen-5x8.png` w/ size 475 located at offset 688940 in archive `/home/nemo/workspace/projects/tofu/build/kernal.pak`
+[T/fs-pak] handle 0x5e1f495c6508 initialized at 688940 (475 bytes)
+[D/fs-pak] entry `assets/png/spleen-5x8.png` opened w/ handle 0x5e1f495c6508
+[D/storage] loaded 475x8 image
+[T/fs-pak] handle 0x5e1f495c6508 uninitialized
+[D/storage] resource `assets/png/spleen-5x8.png` loaded from file-system
+[D/storage] cache is currently holding 10 resources
+[D/storage] resource `assets/png/spleen-5x8.png` stored as 0x5e1f4962b048
+[D/gl-surface] surface created at 0x5e1f4962b0b8 (475x8)
+[D/gl-surface] surface decoded at 0x5e1f4962b0b8 (475x8)
+[I/image] loading and decoding image `assets/png/spleen-5x8.png` took 0.000s
+[D/image] surface 0x5e1f4962bfc8 loaded and decoded from file `assets/png/spleen-5x8.png`
+[D/image] image 0x5e1f4962c064 allocated w/ surface 0x5e1f4962bfc8
+[D/gl-sheet] sheet 0x5e1f4962c9c8 created (fixed)
+[D/bank] bank 0x5e1f4962ca54 with 5x8 cells allocated w/ sheet 0x5e1f4962c9c8 for atlas 0x5e1f4962c064 w/ reference #6
+[D/font] font 0x5e1f4962cae4 allocated w/ bank 0x5e1f4962ca54 w/ reference #7
+[D/wave] wave 0x5e1f4962cfd4 allocated
+[D/noise] noise 0x5e1f4962d064 allocated
+[D/palette] setting custom palette of 16 color(s)
+[D/palette] palette 0x5e1f49630ee4 allocated w/ 16 color(s)
+[D/interpreter] `init` entry-point called
+[I/engine] interpreter ready
+[I/engine] engine is up and running
+[I/engine] now running, update-time is 0.016667s w/ 3 skippable frames, reference-time is 0.000000s
+[I/environment] currently running at 0 FPS (P=0.000ms (-nan), U=0.000ms (-nan), R=0.000ms (-nan), W=0.000ms (-nan), F=0.000ms)
+[D/display] viewport size set to 512x512
+[D/display] orthographic (2D) model/view/projection matrix generated
+[D/display] model/view/projection matrix sent to the shader
+[D/display] optimizing OpenGL features
+[D/display] setting OpenGL clear-color
+[D/controller] controller 0x5e1f496581b4 allocated w/ controller 0x5e1f48de79d0 for id `0`
+[D/palette] palette 0x5e1f49630ee4 finalized
+[I/input] exit key pressed
+[D/audio] halted, no more sources active
+[W/gl-context] no states to pop from context
+[D/interpreter] `deinit` entry-point called
+[D/noise] noise 0x5e1f4962d064 finalized
+[D/wave] wave 0x5e1f4962cfd4 finalized
+[D/font] bank reference #7 released
+[D/font] font 0x5e1f4962cae4 finalized
+[D/gl-sheet] sheet cells freed
+[D/gl-sheet] sheet 0x5e1f4962ad28 freed
+[D/bank] sheet 0x5e1f4962ad28 destroyed
+[D/bank] atlas reference #5 released
+[D/bank] bank 0x5e1f496144f4 finalized
+[D/interpreter] interpreter VM 0x5e1f495bc8a0 garbage-collected
+[D/controller] controller 0x5e1f496581b4 finalized
+[D/gl-sheet] sheet cells freed
+[D/gl-sheet] sheet 0x5e1f4962c9c8 freed
+[D/bank] sheet 0x5e1f4962c9c8 destroyed
+[D/bank] atlas reference #6 released
+[D/bank] bank 0x5e1f4962ca54 finalized
+[D/gl-surface] surface data at 0x5e1f4962b0b8 freed
+[D/gl-surface] surface 0x5e1f4962bfc8 freed
+[D/image] surface 0x5e1f4962bfc8 destroyed
+[D/image] image 0x5e1f4962c064 finalized
+[D/gl-surface] surface data at 0x5e1f49614be8 freed
+[D/gl-surface] surface 0x5e1f49624c18 freed
+[D/image] surface 0x5e1f49624c18 destroyed
+[D/image] image 0x5e1f49624cb4 finalized
+[D/canvas] image reference #4 released
+[D/gl-context] context stack at (nil) freed
+[D/gl-context] context 0x5e1f49606ef8 freed
+[D/canvas] context 0x5e1f49606ef8 destroyed
+[D/canvas] canvas 0x5e1f49607184 finalized
+[D/image] image 0x5e1f49606eb4 finalized
+[D/interpreter] interpreter VM 0x5e1f495bc8a0 destroyed
+[D/interpreter] interpreter freed
+[D/environment] environment freed
+[D/audio] audio uninitialized
+[D/sl] context sources freed
+[D/sl] context freed
+[D/audio] sound context destroyed
+[D/audio] audio freed
+[D/input] input freed
+[D/display] VAO/VBO deleted
+[D/shader] shader #2 detached from program #1
+[D/shader] shader #2 detached deleted
+[D/shader] shader #3 detached from program #1
+[D/shader] shader #3 detached deleted
+[D/shader] shader program #1 deleted
+[D/shader] shader uniforms LUT for program #1 freed
+[D/shader] shader 0x5e1f48e9fe48 freed
+[D/display] shader 0x5e1f48e9fe48 destroyed
+[D/display] texture w/ id #1 deleted
+[D/display] VRAM buffer 0x5e1f48e83758 freed
+[D/display] processor 0x5e1f48e9c278 destroyed
+[D/gl-surface] surface data at 0x5e1f48ea0ed8 freed
+[D/gl-surface] surface 0x5e1f48e9c218 freed
+[D/display] graphics surface 0x5e1f48e9c218 destroyed
+[D/display] GLAD unloaded
+[D/display] window 0x5e1f48d1b6b0 destroyed
+[D/display] display terminated
+[D/display] display freed
+[D/configuration] configuration freed
+[D/storage] resource-data 0x5e1f48cbe908 at 0x5e1f48cbe9e8 freed (139 characters string)
+[D/storage] resource 0x5e1f48cbe908 freed
+[D/storage] resource-data 0x5e1f48cbeda8 at 0x5e1f48cd9b38 freed (128x128 image)
+[D/storage] resource 0x5e1f48cbeda8 freed
+[D/storage] resource-data 0x5e1f48cbefb8 at 0x5e1f48cbf028 freed (2024 characters string)
+[D/storage] resource 0x5e1f48cbefb8 freed
+[D/storage] resource-data 0x5e1f48cbf848 at 0x7aec30a46038 freed (545323 characters string)
+[D/storage] resource 0x5e1f48cbf848 freed
+[D/storage] resource-data 0x5e1f495c56e8 at 0x5e1f495d1ec8 freed (3701 characters string)
+[D/storage] resource 0x5e1f495c56e8 freed
+[D/storage] resource-data 0x5e1f495d4cb8 at 0x5e1f495d5d38 freed (3259 characters string)
+[D/storage] resource 0x5e1f495d4cb8 freed
+[D/storage] resource-data 0x5e1f495da778 at 0x5e1f495db7f8 freed (1964 characters string)
+[D/storage] resource 0x5e1f495da778 freed
+[D/storage] resource-data 0x5e1f49600008 at 0x5e1f49601088 freed (4726 characters string)
+[D/storage] resource 0x5e1f49600008 freed
+[D/storage] resource-data 0x5e1f4960f0e8 at 0x5e1f496101d8 freed (1985 characters string)
+[D/storage] resource 0x5e1f4960f0e8 freed
+[D/storage] resource-data 0x5e1f49614b08 at 0x7aec22840038 freed (256x256 image)
+[D/storage] resource 0x5e1f49614b08 freed
+[D/storage] resource-data 0x5e1f4962b048 at 0x5e1f4962d318 freed (475x8 image)
+[D/storage] resource 0x5e1f4962b048 freed
+[D/storage] storage cache emptied
+[D/storage-cache] storage cache entries freed
+[D/storage-cache] storage cache freed
+[D/storage] storage cache destroyed
+[T/fs-callbacks] mount 0x5e1f48cbe628 uninitialized
+[T/fs-pak] mount 0x5e1f48cbf918 uninitialized
+[T/fs-std] mount 0x5e1f48cc0978 uninitialized
+[T/fs-std] mount 0x5e1f48cc19c8 uninitialized
+[D/fs] context mount(s) freed
+[D/fs] context freed
+[D/storage] file-system context destroyed
+[D/storage] storage freed
+[D/engine] engine freed
