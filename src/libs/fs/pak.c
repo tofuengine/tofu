@@ -240,7 +240,9 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
 
     char id_hex[PAK_ID_LENGTH_SZ];
     _name_to_id(name, entry->id, id_hex);
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T("entry `%s` has id `%s`", name, id_hex);
+#endif  /* TOFU_FILE_DEBUG_ENABLED */
 
     Pak_Entry_Header_t header = { 0 };
     bool found = pak_mount->search(stream,  pak_mount->entries, entry->id, &header);
@@ -254,7 +256,9 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     entry->offset = bytes_ui32le(header.offset);
     entry->size = bytes_ui32le(header.size);
 
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T("entry `%s` w/ size %u located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
+#endif  /* TOFU_FILE_DEBUG_ENABLED */
 
     return stream;
 
@@ -440,9 +444,9 @@ static size_t _pak_handle_size(FS_Handle_t *handle)
 {
     const Pak_Handle_t *pak_handle = (const Pak_Handle_t *)handle;
 
-#if defined(TOFU_CORE_VERBOSE_DEBUG)
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("handle %p is", std_handle);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* TOFU_FILE_DEBUG_ENABLED */
 
     return pak_handle->stream_size;
 }
