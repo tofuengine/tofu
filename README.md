@@ -196,6 +196,8 @@ At the same time, the current content `/etc/apt/sources.list` file need to be pa
 sudo sed -i "s/deb http/deb [arch=$(dpkg --print-architecture)] http/" /etc/apt/sources.list
 ```
 
+> Beware! On Ubuntu 24.04 and on systems supporting the [deb822](https://manpages.ubuntu.com/manpages/noble/man5/sources.list.5.html) APT format you need to patch the `/etc/apt/sources.list.d/ubuntu.sources` file and add the `Architectures: amd64` (or similar architecture) instead.
+
 Remember to issue a `sudo apt update` command to refresh the APT database and, finally, install GCC's backends and the library dependencies we need:
 
 ```bash
