@@ -64,11 +64,11 @@ static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *n
 
 static void _callbacks_handle_ctor(FS_Handle_t *handle, FS_Callbacks_t callbacks, void *stream);
 static void _callbacks_handle_dtor(FS_Handle_t *handle);
-static size_t _callbacks_handle_size(FS_Handle_t *handle);
+static size_t _callbacks_handle_size(const FS_Handle_t *handle);
 static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
 static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence);
-static long _callbacks_handle_tell(FS_Handle_t *handle);
-static bool _callbacks_handle_eof(FS_Handle_t *handle);
+static long _callbacks_handle_tell(const FS_Handle_t *handle);
+static bool _callbacks_handle_eof(const FS_Handle_t *handle);
 
 FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data)
 {
@@ -164,9 +164,9 @@ static void _callbacks_handle_dtor(FS_Handle_t *handle)
     LOG_T("handle %p uninitialized", handle);
 }
 
-static size_t _callbacks_handle_size(FS_Handle_t *handle)
+static size_t _callbacks_handle_size(const FS_Handle_t *handle)
 {
-    Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
+    const Cache_Handle_t *cache_handle = (const Cache_Handle_t *)handle;
 
     return cache_handle->callbacks.size(cache_handle->stream);
 }
@@ -193,16 +193,16 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
     return sought;
 }
 
-static long _callbacks_handle_tell(FS_Handle_t *handle)
+static long _callbacks_handle_tell(const FS_Handle_t *handle)
 {
-    Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
+    const Cache_Handle_t *cache_handle = (const Cache_Handle_t *)handle;
 
     return cache_handle->callbacks.tell(cache_handle->stream);
 }
 
-static bool _callbacks_handle_eof(FS_Handle_t *handle)
+static bool _callbacks_handle_eof(const FS_Handle_t *handle)
 {
-    Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
+    const Cache_Handle_t *cache_handle = (const Cache_Handle_t *)handle;
 
     bool end_of_file =  cache_handle->callbacks.eof(cache_handle->stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
