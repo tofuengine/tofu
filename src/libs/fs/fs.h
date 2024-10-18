@@ -73,10 +73,10 @@ extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callb
 extern bool FS_exists(const FS_Context_t *context, const char *name);
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);
-extern size_t FS_size(FS_Handle_t *handle);
+extern size_t FS_size(const FS_Handle_t *handle);
 extern size_t FS_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
 extern bool FS_seek(FS_Handle_t *handle, long offset, int whence);
-extern long FS_tell(FS_Handle_t *handle);
-extern bool FS_eof(FS_Handle_t *handle);
+extern long FS_tell(const FS_Handle_t *handle);
+extern bool FS_eof(const FS_Handle_t *handle);
 
 #endif /* TOFU_LIBS_FS_H */

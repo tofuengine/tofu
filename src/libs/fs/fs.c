@@ -138,7 +138,7 @@ static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)
 #else
     for (int index = 0; index < arrlen(context->mounts); ++index) {
 #endif
-        FS_Mount_t *current = context->mounts[index];
+        const FS_Mount_t *current = context->mounts[index];
         if (current->vtable.contains(current, name)) {
             return current;
         }
@@ -169,7 +169,7 @@ void FS_close(FS_Handle_t *handle)
     free(handle);
 }
 
-size_t FS_size(FS_Handle_t *handle)
+size_t FS_size(const FS_Handle_t *handle)
 {
     return handle->vtable.size(handle);
 }
@@ -184,12 +184,12 @@ bool FS_seek(FS_Handle_t *handle, long offset, int whence)
     return handle->vtable.seek(handle, offset, whence);
 }
 
-long FS_tell(FS_Handle_t *handle)
+long FS_tell(const FS_Handle_t *handle)
 {
     return handle->vtable.tell(handle);
 }
 
-bool FS_eof(FS_Handle_t *handle)
+bool FS_eof(const FS_Handle_t *handle)
 {
     return handle->vtable.eof(handle);
 }
