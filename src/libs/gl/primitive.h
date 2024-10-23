@@ -42,7 +42,7 @@
 #include "context.h"
 
 extern void GL_context_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index);
-extern void GL_context_hline(const GL_Context_t *context, GL_Point_t origin,  size_t w, GL_Pixel_t index);
+extern void GL_context_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index);
 extern void GL_context_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index);
 extern void GL_context_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index);
 

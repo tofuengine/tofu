@@ -254,7 +254,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
 #endif  /* TOFU_FILE_DEBUG_ENABLED */
 
     Pak_Entry_Header_t header = { 0 };
-    bool found = pak_mount->search(stream,  pak_mount->entries, entry->id, &header);
+    bool found = pak_mount->search(stream, pak_mount->entries, entry->id, &header);
     if (!found) {
         goto error_close_stream;
     }
