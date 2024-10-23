@@ -134,9 +134,9 @@ static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)
 {
 #if defined(TOFU_FILE_SUPPORT_MOUNT_OVERRIDE)
     // Backward scan, later mounts gain priority over existing ones.
-    for (int index = arrlen(context->mounts) - 1; index >= 0; --index) {
+    for (ptrdiff_t index = arrlen(context->mounts) - 1; index >= 0; --index) {
 #else
-    for (int index = 0; index < arrlen(context->mounts); ++index) {
+    for (ptrdiff_t index = 0; index < arrlen(context->mounts); ++index) {
 #endif
         const FS_Mount_t *current = context->mounts[index];
         if (current->vtable.contains(current, name)) {

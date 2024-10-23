@@ -179,7 +179,7 @@ void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requ
 {
     // Backward scan, to properly implement the SWAP-AND-POP(tm) idiom along the whole array
     // when removing the to-be-released sources.
-    for (int index = arrlen(context->sources) - 1; index >= 0; --index) {
+    for (ptrdiff_t index = arrlen(context->sources) - 1; index >= 0; --index) {
         SL_Source_t *source = context->sources[index];
         bool still_running = source->vtable.generate(source, output, frames_requested);
         if (still_running) {

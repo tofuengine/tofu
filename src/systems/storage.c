@@ -562,7 +562,7 @@ bool Storage_update(Storage_t *storage, float delta_time)
 {
     // Backward scan, to properly implement the SWAP-AND-POP(tm) idiom along the whole array
     // when removing the to-be-released resources.
-    for (int index = arrlen(storage->resources) - 1; index >= 0; --index) {
+    for (ptrdiff_t index = arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
         resource->age += delta_time;
         if (resource->age < TOFU_STORAGE_RESOURCE_MAX_AGE) {

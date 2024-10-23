@@ -43,9 +43,9 @@
 
 static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, const GL_Program_Entry_t entry)
 {
-    const int length = arrlen(program);
-    const int entries = length - 1;
-    const int index = position >= 0 ? position : length + position;
+    const ptrdiff_t length = arrlen(program);
+    const ptrdiff_t entries = length - 1;
+    const ptrdiff_t index = position >= 0 ? position : length + position;
     if (index < entries) { // Overwrite an existing entry, if present.
         program[index] = entry;
     } else { // Otherwise, fill with `NOP` operations and append (moving the end-of-data marker).
@@ -53,7 +53,7 @@ static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int posit
                 .command = GL_PROGRAM_COMMAND_NOP,
                 .args = { { 0 } }
             };
-        for (int i = entries; i < index; ++i) {
+        for (ptrdiff_t i = entries; i < index; ++i) {
             arrins(program, i, nop);
         }
         arrins(program, index, entry);

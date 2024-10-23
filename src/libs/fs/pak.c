@@ -147,6 +147,7 @@ bool FS_pak_is_valid(const char *path)
     return is_valid;
 }
 
+#if defined(TOFU_FILE_DEBUG_ENABLED)
 static inline void _to_hex(char sz[PAK_ID_LENGTH_SZ], const uint8_t id[PAK_ID_LENGTH])
 {
     for (size_t i = 0; i < PAK_ID_LENGTH; ++i) { // Also convert to string representation.
@@ -159,6 +160,12 @@ static inline void _name_to_id(const char *name, uint8_t id[PAK_ID_LENGTH], char
     md5_hash_sz(id, name, false);
     _to_hex(sz, id);
 }
+#else   /* TOFU_FILE_DEBUG_ENABLED */
+static inline void _name_to_id(const char *name, uint8_t id[PAK_ID_LENGTH])
+{
+    md5_hash_sz(id, name, false);
+}
+#endif  /* TOFU_FILE_DEBUG_ENABLED */
 
 // FIXME: cache some entries into memory in order to avoid repeated seeks?
 static bool _peek_entry(FILE *stream, size_t index, Pak_Entry_Header_t *header)
@@ -238,10 +245,12 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
         goto error_exit;
     }
 
+#if defined(TOFU_FILE_DEBUG_ENABLED)
     char id_hex[PAK_ID_LENGTH_SZ];
     _name_to_id(name, entry->id, id_hex);
-#if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T("entry `%s` has id `%s`", name, id_hex);
+#else   /* TOFU_FILE_DEBUG_ENABLED */
+    _name_to_id(name, entry->id);
 #endif  /* TOFU_FILE_DEBUG_ENABLED */
 
     Pak_Entry_Header_t header = { 0 };
