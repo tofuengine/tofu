@@ -51,7 +51,7 @@ typedef struct Callback_Indexes_Closure_s {
     GL_Pixel_t foreground;
 } Callback_Indexes_Closure_t;
 
-extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels);
-extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels);
+extern void surface_callback_palette(const void *user_data, GL_Surface_t *surface, const void *pixels);
+extern void surface_callback_indexes(const void *user_data, GL_Surface_t *surface, const void *pixels);
 
 #endif  /* TOFU_MODULES_INTERNAL_CALLBACKS_H */

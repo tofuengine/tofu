@@ -402,7 +402,7 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
             ;
 }
 
-static inline bool _render(Engine_t *engine, float ratio)
+static inline bool _render(const Engine_t *engine, float ratio)
 {
     if (!Interpreter_render(engine->interpreter, ratio)) {
         return false;
