@@ -124,6 +124,14 @@ and the source file
 #include <stb/stb_image.h>
 ```
 
+## Folders Usage
+
+According to the "purpose" of the file, it will be places in a specific folder. The rules are the following:
+
+* the `core` folder is used to store the engine internals, pretty much everything will be included here or in a subfolder of it;
+* the `kernal` folder is home of the Lua runtime;
+* the `libs` folder contains reusable piece of code.
+
 ## Source Code Structure
 
 An header file must be constructed as follows:

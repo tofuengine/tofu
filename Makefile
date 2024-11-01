@@ -221,6 +221,7 @@ endif
 # Source files list (src)
 SOURCES:=$(wildcard $(srcdir)/*.c) \
 	$(wildcard $(srcdir)/core/*.c) \
+	$(wildcard $(srcdir)/core/soy/*.c) \
 	$(wildcard $(srcdir)/libs/*.c) \
 	$(wildcard $(srcdir)/libs/fs/*.c) \
 	$(wildcard $(srcdir)/libs/gl/*.c) \
@@ -244,6 +245,7 @@ SOURCES+=$(wildcard $(externaldir)/cglm/*.c) \
 # Include files list (src)
 INCLUDES:=$(wildcard $(srcdir)/*.h) \
 	$(wildcard $(srcdir)/core/*.h) \
+	$(wildcard $(srcdir)/core/soy/*.h) \
 	$(wildcard $(srcdir)/libs/*.h) \
 	$(wildcard $(srcdir)/libs/fs/*.h) \
 	$(wildcard $(srcdir)/libs/gl/*.h) \
