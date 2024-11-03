@@ -27,12 +27,11 @@
 #include <core/config.h>
 #define _LOG_TAG "soy:init"
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #if defined(TOFU_USE_GLFW)
   #include <GLFW/glfw3.h>
 #endif
-
-#include <stdlib.h>
 
 #if defined(TOFU_USE_GLFW)
 static void _error_callback(int error, const char *description)
