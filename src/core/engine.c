@@ -39,6 +39,7 @@
 
 #include <core/config.h>
 #include <core/platform.h>
+#include <core/soy/soy.h>
 #include <core/version.h>
 #define _LOG_TAG "engine"
 #include <libs/log.h>
@@ -60,7 +61,13 @@
     #include <time.h>
 #endif
 
-#define _EVENTS_INITIAL_CAPACITY 8
+// Value for setting the "zero time" of the engine. This will trick the system
+// and get the consistent precision of an integer, with the convenient units
+// of a double, as the exponent will remain constant for ~136 years (since the
+// time unit is represented in seconds).
+//
+// See: `Four billion dollar question`, here https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
+#define _ENGINE_EPOCH 4294967296.0
 
 // This is the lowest amount of time (in milliseconds) that we are willing to
 // suspend the execution (i.e. sleep) in a single loop.
@@ -191,13 +198,19 @@ Engine_t *Engine_create(const Engine_Options_t *options)
 
     _information();
 
+    bool initialized = soy_init(); // Initialize the SOY system as soon as possible!
+    if (!initialized) {
+        LOG_F("can't initialize SOY");
+        goto error_free_engine;
+    }
+
     engine->storage = Storage_create(&(const Storage_Configuration_t){
             .kernal_path = options->kernal_path,
             .data_path = options->data_path
         });
     if (!engine->storage) {
         LOG_F("can't initialize storage");
-        goto error_free_engine;
+        goto error_deinitialize_soy;
     }
     LOG_I("storage ready");
 
@@ -334,6 +347,9 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("interpreter ready");
 
+    soy_set_time(_ENGINE_EPOCH);
+    LOG_D("engine epoch initialized");
+
     LOG_I("engine is up and running");
     return engine;
 
@@ -352,6 +368,8 @@ error_destroy_configuration:
     Configuration_destroy(engine->configuration);
 error_destroy_storage:
     Storage_destroy(engine->storage);
+error_deinitialize_soy:
+    soy_deinit();
 error_free_engine:
     free(engine);
 error_exit:
@@ -367,6 +385,7 @@ void Engine_destroy(Engine_t *engine)
     Display_destroy(engine->display);
     Configuration_destroy(engine->configuration);
     Storage_destroy(engine->storage);
+    soy_deinit();
 
     free(engine);
     LOG_D("engine freed");

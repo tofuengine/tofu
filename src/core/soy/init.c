@@ -25,21 +25,72 @@
 #include "init.h"
 
 #include <core/config.h>
+#define _LOG_TAG "soy:init"
+#include <libs/log.h>
 
 #if defined(TOFU_USE_GLFW)
   #include <GLFW/glfw3.h>
 #endif
 
-void soy_init(void)
+#include <stdlib.h>
+
+#if defined(TOFU_USE_GLFW)
+static void _error_callback(int error, const char *description)
+{
+    LOG_E("[GLFW error %#d] %s", error, description);
+}
+
+static void *_allocate(size_t size, void *user)
+{
+    return malloc(size);
+}
+
+static void _deallocate(void* block, void *user)
+{
+    free(block);
+}
+
+static void *_reallocate(void* block, size_t size, void *user)
+{
+    return realloc(block, size);
+}
+#endif
+
+bool soy_init(void)
 {
 #if defined(TOFU_USE_GLFW)
-    glfwInit();
+    glfwSetErrorCallback(_error_callback);
+
+    bool initialized = glfwInit();
+    if (!initialized) {
+        LOG_F("can't initialize GLFW");
+        goto error_exit;
+    }
+    LOG_D("GLFW initialized");
+
+    glfwInitAllocator(&(GLFWallocator){
+            .allocate = _allocate,
+            .deallocate = _deallocate,
+            .reallocate = _reallocate,
+            .user = NULL
+        });
+    LOG_D("GLFW allocator set");
+
+    return true;
+
+error_exit:
+    return false;
 #else
     // Do nothing.
+    return false;
 #endif
 }
 
 void soy_deinit(void)
 {
+#if defined(TOFU_USE_GLFW)
+    glfwTerminate();
+#else
     // Do nothing.
+#endif
 }

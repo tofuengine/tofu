@@ -33,14 +33,6 @@
 
 #include <time.h>
 
-// Value for setting the "zero time" of the engine. This will trick the system
-// and get the consistent precision of an integer, with the convenient units
-// of a double, as the exponent will remain constant for ~136 years (since the
-// time unit is represented in seconds).
-//
-// See: `Four billion dollar question`, here https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
-#define _ENGINE_EPOCH 4294967296.0
-
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #define _PIXEL_FORMAT GL_BGRA
 #else
@@ -158,11 +150,6 @@ static bool _has_errors(void)
     return result;
 }
 #endif
-
-static void _error_callback(int error, const char *description)
-{
-    LOG_E("%s", description);
-}
 
 /**
  * void glOrtho(double l, double r, double b, double t, double n, double f);
@@ -424,21 +411,6 @@ error_exit:
     return false;
 }
 
-static void *_allocate(size_t size, void *user)
-{
-    return malloc(size);
-}
-
-static void _deallocate(void* block, void *user)
-{
-    free(block);
-}
-
-static void *_reallocate(void* block, size_t size, void *user)
-{
-    return realloc(block, size);
-}
-
 /*
  * An OpenGL VAO can be loosely thought as follows:
  *
@@ -532,30 +504,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    glfwSetErrorCallback(_error_callback);
-
-    if (!glfwInit()) {
-        LOG_F("can't initialize GLFW");
-        goto error_free_display;
-    }
-    LOG_D("GLFW initialized");
-
-    glfwInitAllocator(&(GLFWallocator){
-            .allocate = _allocate,
-            .deallocate = _deallocate,
-            .reallocate = _reallocate,
-            .user = NULL
-        });
-    LOG_D("GLFW allocator set");
-
-    glfwSetTime(_ENGINE_EPOCH);
-    LOG_D("time initialized");
-
     GL_Rectangle_t vram_rectangle;
     display->window = _window_create(display, &vram_rectangle, &display->canvas.size);
     if (!display->window) {
         LOG_F("can't initialize window");
-        goto error_terminate_glfw;
+        goto error_free_display;
     }
     LOG_D("window %p initialized", display->window);
 
@@ -657,8 +610,6 @@ error_destroy_surface:
     GL_surface_destroy(display->canvas.surface);
 error_destroy_window:
     _window_destroy(display->window);
-error_terminate_glfw:
-    glfwTerminate();
 error_free_display:
     free(display);
 error_exit:

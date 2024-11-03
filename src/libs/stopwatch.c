@@ -37,7 +37,7 @@
 
 #include "stopwatch.h"
 
-#include <GLFW/glfw3.h>
+#include <core/soy/soy.h>
 
 // Track time using `double` to keep the min resolution consistent over time!
 // For intervals (i.e. deltas), `float` is sufficient.
@@ -46,7 +46,7 @@
 StopWatch_t stopwatch_init(void)
 {
     return (StopWatch_t){
-            .marker = glfwGetTime()
+            .marker = soy_get_time()
         };
 }
 
@@ -59,7 +59,7 @@ StopWatch_t stopwatch_clone(const StopWatch_t *stopwatch)
 
 void stopwatch_reset(StopWatch_t *stopwatch)
 {
-    stopwatch->marker = glfwGetTime();
+    stopwatch->marker = soy_get_time();
 }
 
 void stopwatch_delta(StopWatch_t *stopwatch, double delta)
@@ -69,7 +69,7 @@ void stopwatch_delta(StopWatch_t *stopwatch, double delta)
 
 float stopwatch_partial(StopWatch_t *stopwatch)
 {
-    const double now = glfwGetTime();
+    const double now = soy_get_time();
     const float delta = (float)(now - stopwatch->marker);
     stopwatch->marker = now;
     return delta;
@@ -77,6 +77,6 @@ float stopwatch_partial(StopWatch_t *stopwatch)
 
 float stopwatch_elapsed(const StopWatch_t *stopwatch)
 {
-    const double now = glfwGetTime();
+    const double now = soy_get_time();
     return (float)(now - stopwatch->marker);
 }

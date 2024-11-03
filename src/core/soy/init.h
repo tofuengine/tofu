@@ -25,7 +25,9 @@
 #ifndef TOFU_CORE_SOY_INIT_H
 #define TOFU_CORE_SOY_INIT_H
 
-extern void soy_init(void);
+#include <stdbool.h>
+
+extern bool soy_init(void);
 extern void soy_deinit(void);
 
 #endif  /* TOFU_CORE_SOY_INIT_H */
