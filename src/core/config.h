@@ -41,6 +41,10 @@
 #define CONFIG_H_INCLUDED
 
 // Constant MACROs have no prefix.
+#define BACKEND_GLFW 0
+#define BACKEND_RGFW 1
+#define BACKEND_SDL3 2
+
 #define COLOR_MATCH_EUCLIDIAN  0
 #define COLOR_MATCH_WEIGHTED   1
 #define COLOR_MATCH_PERCEPTUAL 2
@@ -92,6 +96,12 @@
 // ### Core ###
 // ############
 
+// Configures the multi-plaform backend to be used. Valid choices are:
+//
+//   - BACKEND_GLFW
+//   - BACKEND_RGFW (to be done)
+//   - BACKEND_SDL3 (to be done)
+#define TOFU_CORE_BACKEND BACKEND_GLFW
 // Define if you want the I/O and processing profiling to be enabled
 // regardless of the build mode. Otherwise, it will be automatically enabled
 // only for the `DEBUG` build.

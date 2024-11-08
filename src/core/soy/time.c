@@ -28,13 +28,13 @@
 #define _LOG_TAG "soy:time"
 #include <libs/log.h>
 
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
   #include <GLFW/glfw3.h>
 #endif
 
 double soy_get_time(void)
 {
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
     return glfwGetTime();
 #else
     return 0.0;
@@ -43,7 +43,7 @@ double soy_get_time(void)
 
 void soy_set_time(double seconds)
 {
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
     glfwSetTime(seconds);
 #else
     // Do nothing.

@@ -29,11 +29,11 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
   #include <GLFW/glfw3.h>
 #endif
 
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
 static void _error_callback(int error, const char *description)
 {
     LOG_E("[GLFW error %#d] %s", error, description);
@@ -57,7 +57,7 @@ static void *_reallocate(void* block, size_t size, void *user)
 
 bool soy_init(void)
 {
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
     glfwSetErrorCallback(_error_callback);
 
     bool initialized = glfwInit();
@@ -87,7 +87,7 @@ error_exit:
 
 void soy_deinit(void)
 {
-#if defined(TOFU_USE_GLFW)
+#if TOFU_CORE_BACKEND == BACKEND_GLFW
     glfwTerminate();
 #else
     // Do nothing.
