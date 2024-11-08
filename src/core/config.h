@@ -102,6 +102,19 @@
 //   - BACKEND_RGFW (to be done)
 //   - BACKEND_SDL3 (to be done)
 #define TOFU_CORE_BACKEND BACKEND_GLFW
+
+// Controls the use of OpenGL/ES for rendering.
+//
+// Note: for the moment being the setting should be used only for "mobile"
+//       builds, but in the future it will be used as common backend.
+#undef  TOFU_CORE_OPENGL_ES
+
+// Forces the usage of the (deprecated) POSIX API `usleep()`, instead of the
+// more efficient and supported `nanosleep()`.
+//
+// Note: this is valid only for the Linux build.
+#undef  TOFU_CORE_USE_USLEEP
+
 // Define if you want the I/O and processing profiling to be enabled
 // regardless of the build mode. Otherwise, it will be automatically enabled
 // only for the `DEBUG` build.
@@ -121,18 +134,6 @@
 // ##############
 // ### Engine ###
 // ##############
-
-// Controls the use of OpenGL/ES for rendering.
-//
-// Note: for the moment being the setting should be used only for "mobile"
-//       builds, but in the future it will be used as common backend.
-#undef  TOFU_ENGINE_OPENGL_ES
-
-// Forces the usage of the (deprecated) POSIX API `usleep()`, instead of the
-// more efficient and supported `nanosleep()`.
-//
-// Note: this is valid only for the Linux build.
-#undef  TOFU_ENGINE_USE_USLEEP
 
 // Takes into account the actual wait time, during the frame capping, and
 // compensate (in the next frame) if the wait is longer than the requested

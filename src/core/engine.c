@@ -47,7 +47,7 @@
 #include <libs/stopwatch.h>
 #include <libs/sysinfo.h>
 
-#if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_ENGINE_USE_USLEEP)
+#if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_CORE_USE_USLEEP)
     #define _USE_USLEEP
 #endif
 

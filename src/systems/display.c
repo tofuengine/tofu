@@ -288,7 +288,7 @@ static GLFWwindow *_window_create(const Display_t *display, GL_Rectangle_t *pres
     }
 
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API); // On Wayland it's the same as `GLFW_EGL_CONTEXT_API`.
-#if defined(TOFU_ENGINE_OPENGL_ES)
+#if defined(TOFU_CORE_OPENGL_ES)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
