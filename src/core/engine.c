@@ -47,20 +47,6 @@
 #include <libs/stopwatch.h>
 #include <libs/sysinfo.h>
 
-#if PLATFORM_ID == PLATFORM_LINUX && defined(TOFU_CORE_USE_USLEEP)
-    #define _USE_USLEEP
-#endif
-
-#if PLATFORM_ID == PLATFORM_WINDOWS
-    #include <windows.h>
-#elif defined(_USE_USLEEP)
-    #include <sched.h>
-    #include <unistd.h>
-#else
-    #include <sched.h>
-    #include <time.h>
-#endif
-
 // Value for setting the "zero time" of the engine. This will trick the system
 // and get the consistent precision of an integer, with the convenient units
 // of a double, as the exponent will remain constant for ~136 years (since the
@@ -68,59 +54,6 @@
 //
 // See: `Four billion dollar question`, here https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
 #define _ENGINE_EPOCH 4294967296.0
-
-// This is the lowest amount of time (in milliseconds) that we are willing to
-// suspend the execution (i.e. sleep) in a single loop.
-//
-// We set it to `1` as the actual sleep call will almost certainly (overall)
-// consume a bit more than the requested amount (due to the call overhead). This
-// way we are reasonably sure not to oversleep, at the cost of burning with a
-// "semi-busy wait" the last millisecond (at most).
-//
-// See: https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-//      https://github.com/urho3d/urho3d/blob/master/Source/Urho3D/Engine/Engine.cpp#L750
-#define _WAIT_SLOT  1
-
-static inline void _wait_for(float seconds)
-{
-    StopWatch_t now = stopwatch_init();
-
-    for (;;) {
-        const double elapsed = stopwatch_elapsed(&now);
-        if (elapsed >= seconds) { // The requested time has passed, bail out!
-            break;
-        }
-        long millis = (long)((seconds - elapsed) * 1000.0); // The delta time is expressed in seconds...
-        if (millis > _WAIT_SLOT) {
-            // If more than a the wait-slot is left to wait then suspend the execution
-            // for that amount of time...
-            long millis_to_wait = millis - _WAIT_SLOT;
-#if PLATFORM_ID == PLATFORM_WINDOWS
-            Sleep(millis_to_wait);
-#elif defined(_USE_USLEEP)
-            usleep(millis_to_wait * 1000L); // usleep takes sleep time in us (1 millionth of a second)
-#else
-            struct timespec ts = (struct timespec){
-                    .tv_sec = (time_t)(millis_to_wait / 1000L),
-                    .tv_nsec = (time_t)((millis_to_wait % 1000L) * 1000000L)
-                };
-#if !defined(_USE_CLOCK_NANOSLEEP)
-            nanosleep(&ts, NULL);
-#else
-            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
-#endif
-#endif
-        } else {
-            // ... otherwise adopt as semi-busy wait, yielding the processor
-            // usage to avoid "clogging" the system and successive "sleep spikes".
-#if PLATFORM_ID == PLATFORM_WINDOWS
-            YieldProcessor();
-#else
-            sched_yield();
-#endif
-        }
-    }
-}
 
 static Configuration_t *_configure(Storage_t *storage)
 {
@@ -500,12 +433,6 @@ void Engine_run(Engine_t *engine)
             }
         }
 
-//        running = running && Input_update_variable(engine->storage, elapsed);
-//        running = running && Display_update_variable(engine->display, elapsed);
-//        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
-//        running = running && Audio_update_variable(&engine->audio, elapsed);
-//        running = running && Storage_update_variable(engine->storage, elapsed);
-
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_UPDATE] = stopwatch_partial(&stats_marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
@@ -526,7 +453,7 @@ void Engine_run(Engine_t *engine)
             // yield time and makes the application wait more than expected.
             StopWatch_t wait_marker = stopwatch_init();
 #endif  /* TOFU_ENGINE_WAIT_SKID_COMPENSATION */
-            _wait_for(wait_time);
+            soy_wait_for(wait_time);
 #if defined(TOFU_ENGINE_WAIT_SKID_COMPENSATION)
             const float actual_wait_time = stopwatch_elapsed(&wait_marker);
             const float skid = actual_wait_time - wait_time; // Positive values means the wait has been longer than expected...

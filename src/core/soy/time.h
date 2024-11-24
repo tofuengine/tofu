@@ -28,4 +28,6 @@
 extern double soy_get_time(void);
 extern void soy_set_time(double seconds);
 
+extern void soy_wait_for(float seconds);
+
 #endif  /* TOFU_CORE_SOY_TIMER_H */

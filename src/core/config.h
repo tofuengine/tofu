@@ -112,8 +112,14 @@
 // Forces the usage of the (deprecated) POSIX API `usleep()`, instead of the
 // more efficient and supported `nanosleep()`.
 //
-// Note: this is valid only for the Linux build.
+// Note: this is not valid for the Windows build.
 #undef  TOFU_CORE_USE_USLEEP
+
+// Uses the preferred `clock_nanosleep()` function over `nanosleep()` for
+// a more consistent (micro) wait, as a monotonic times is used.
+//
+// Note: this is not valid for the Windows build.
+#undef  TOFU_CORE_USE_CLOCK_NANOSLEEP
 
 // Define if you want the I/O and processing profiling to be enabled
 // regardless of the build mode. Otherwise, it will be automatically enabled
