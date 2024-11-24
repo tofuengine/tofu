@@ -86,6 +86,9 @@ end
 function Main:init()
 end
 
+function Main:deinit()
+end
+
 function Main:update(_)
 end
 

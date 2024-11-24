@@ -77,6 +77,9 @@ end
 function Main:init()
 end
 
+function Main:deinit()
+end
+
 function Main:update(delta_time)
   self.pool:update(delta_time)
 
