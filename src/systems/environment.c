@@ -155,7 +155,8 @@ void Environment_accumulate(Environment_t *environment, float frame_time)
     stats_time += frame_time;
     while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
         stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
-        LOG_I("currently running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
+        LOG_I("uptime is %0.2fs, running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
+            state->time,
             stats->fps,
             stats->times[ENVIRONMENT_INDEX_PROCESS], stats->times[ENVIRONMENT_INDEX_PROCESS] / stats->times[ENVIRONMENT_INDEX_FRAME],
             stats->times[ENVIRONMENT_INDEX_UPDATE ], stats->times[ENVIRONMENT_INDEX_UPDATE ] / stats->times[ENVIRONMENT_INDEX_FRAME],

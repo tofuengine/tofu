@@ -263,32 +263,12 @@ Engine_t *Engine_create(const Engine_Options_t *options)
         LOG_F("can't initialize interpreter");
         goto error_destroy_environment;
     }
-
-    // Initialize the VM now that all the sub-systems are ready.
-    bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
-            engine->storage,
-            engine->display,
-            engine->input,
-            engine->audio,
-            engine->environment,
-            engine->interpreter,
-            NULL
-        });
-    if (!booted) {
-        LOG_F("can't boot interpreter");
-        goto error_destroy_interpreter;
-    }
     LOG_I("interpreter ready");
 
-    soy_set_time(_ENGINE_EPOCH);
-    LOG_D("engine epoch initialized");
-
-    LOG_I("engine is up and running");
+    LOG_I("engine ready to boot");
     return engine;
 
     // Goto clean-up section.
-error_destroy_interpreter:
-    Interpreter_destroy(engine->interpreter);
 error_destroy_environment:
     Environment_destroy(engine->environment);
 error_destroy_audio:
@@ -326,6 +306,40 @@ void Engine_destroy(Engine_t *engine)
 #if defined(STB_LEAKCHECK_INCLUDED)
     stb_leakcheck_dumpmem();
 #endif
+}
+
+bool Engine_boot(Engine_t *engine)
+{
+    // Initialize the VM, all the sub-systems are ready.
+    bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
+            engine->storage,
+            engine->display,
+            engine->input,
+            engine->audio,
+            engine->environment,
+            engine->interpreter,
+            NULL
+        });
+    if (!booted) {
+        LOG_F("can't boot engine");
+        goto error_exit;
+    }
+
+    soy_set_time(_ENGINE_EPOCH);
+    LOG_D("engine epoch initialized");
+
+    LOG_I("engine is up and running");
+    return true;
+
+error_exit:
+    return false;
+}
+
+void Engine_shutdown(Engine_t *engine)
+{
+    Interpreter_shutdown(engine->interpreter);
+
+    LOG_I("total uptime is %.3f second(s)", engine->environment->state.time);
 }
 
 static inline void _process(void)
@@ -470,6 +484,4 @@ void Engine_run(Engine_t *engine)
         deltas[ENVIRONMENT_INDEX_FRAME] = stopwatch_elapsed(&marker);
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     }
-
-    Interpreter_shutdown(engine->interpreter);
 }

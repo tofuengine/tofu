@@ -112,15 +112,28 @@ int main(int argc, const char *argv[])
     Engine_Options_t options = { 0 };
     bool parsed = _parse_command_line(argc, argv, &options);
     if (!parsed) {
-        return EXIT_FAILURE;
+        goto error_exit;
     }
 
     Engine_t *engine = Engine_create(&options);
     if (!engine) {
-        return EXIT_FAILURE;
+        goto error_exit;
     }
+
+    bool booted = Engine_boot(engine);
+    if (!booted) {
+        goto error_destroy;
+    }
+
     Engine_run(engine);
+
+    Engine_shutdown(engine);
     Engine_destroy(engine);
 
     return EXIT_SUCCESS;
+
+error_destroy:
+    Engine_destroy(engine);
+error_exit:
+    return EXIT_FAILURE;
 }

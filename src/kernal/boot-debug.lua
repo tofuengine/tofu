@@ -71,7 +71,7 @@ function Boot:__ctor()
           me.main = Main.new()
         end,
       leave = function(me)
-        me.main = nil
+          me.main = nil
         end,
       init = function(me)
           me.main:init()

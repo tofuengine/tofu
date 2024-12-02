@@ -65,6 +65,9 @@ typedef struct Engine_s {
 extern Engine_t *Engine_create(const Engine_Options_t *options);
 extern void Engine_destroy(Engine_t *engine);
 
+extern bool Engine_boot(Engine_t *engine);
+extern void Engine_shutdown(Engine_t *engine);
+
 extern void Engine_run(Engine_t *engine);
 
 #endif  /* TOFU_CORE_ENGINE_H */
