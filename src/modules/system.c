@@ -39,7 +39,7 @@
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
-static int system_time_0_1n(lua_State *L);
+static int system_time_1S_1n(lua_State *L);
 static int system_date_2SS_1s(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
@@ -59,7 +59,7 @@ int system_loader(lua_State *L)
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
-            { "time", system_time_0_1n },
+            { "time", system_time_1S_1n },
             { "date", system_date_2SS_1s },
             { "fps", system_fps_0_1n },
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
@@ -124,15 +124,23 @@ static int system_clock_0_1n(lua_State *L)
     return 1;
 }
 
-static int system_time_0_1n(lua_State *L)
+static int system_time_1S_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
+    const char *unit = LUAX_OPTIONAL_STRING(L, 1, "s");
 
     const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
-    lua_pushnumber(L, (lua_Number)state->time);
+    float time = 0.0f;
+    switch (unit[0]) {
+        case 'h': { time = (float)state->time / (60.0f * 60.0f); } break;
+        case 'm': { time = (float)state->time / 60.0f; } break;
+        case 's': { time = (float)state->time; } break;
+    }
+    lua_pushnumber(L, (lua_Number)time);
 
     return 1;
 }
