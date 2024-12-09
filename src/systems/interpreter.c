@@ -275,7 +275,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
     if (!interpreter) {
         LOG_E("can't allocate interpreter");
-        return NULL;
+        goto error_exit;
     }
 
     *interpreter = (Interpreter_t){ 0 };
@@ -285,8 +285,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
         LOG_F("can't create interpreter VM");
-        free(interpreter);
-        return NULL;
+        goto error_free_interpreter;
     }
     LOG_D("interpreter VM %p created", interpreter->state);
 
@@ -325,6 +324,11 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
 #endif  /* TOFU_INTERPRETER_PROTECTED_CALLS */
 
     return interpreter;
+
+error_free_interpreter:
+    free(interpreter);
+error_exit:
+    return NULL;
 }
 
 void Interpreter_destroy(Interpreter_t *interpreter)
@@ -348,23 +352,26 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     int result = _raw_call(interpreter->state, 0, 1);
     if (result != LUA_OK) {
         LOG_F("can't load boot script");
-        return false;
+        goto error_exit;
     }
     LOG_D("boot script loaded");
 
     if (!_detect(interpreter->state, _methods)) {
         LOG_F("can't detect entry-points");
-        return false;
+        goto error_exit;
     }
     LOG_D("entry-points detected");
 
     if (_method_call(interpreter->state, ENTRY_POINT_METHOD_INIT, 0, 0) != LUA_OK) {
         LOG_F("can't call `init` entry-point");
-        return false;
+        goto error_exit;
     }
     LOG_D("`init` entry-point called");
 
     return true;
+
+error_exit:
+    return false;
 }
 
 bool Interpreter_shutdown(Interpreter_t *interpreter)
