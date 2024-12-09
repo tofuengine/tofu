@@ -308,13 +308,21 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1, true);
 
-#if defined(TOFU_INTERPRETER_PROTECTED_CALLS) && defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
+    // If protected calls are enabled we need to have, at index `1` of the stack, the error
+    // handling function. This could be either our custom traceback *OR* Lua default one.
+    //
+    // Note: The `luaX_openlibs()` doesn't load the `debug` module for the `RELEASE` build
+    //       so we need to make sure we are accessing it only if presente, or we would end
+    //       with an improper stack layout.
+#if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
+#if defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
     lua_pushcfunction(interpreter->state, _error_handler);
-#else
+#else   /* TOFU_INTERPRETER_CUSTOM_TRACEBACK */
     lua_getglobal(interpreter->state, "debug");
     lua_getfield(interpreter->state, -1, "traceback");
     lua_remove(interpreter->state, -2);
-#endif
+#endif  /* TOFU_INTERPRETER_CUSTOM_TRACEBACK */
+#endif  /* TOFU_INTERPRETER_PROTECTED_CALLS */
 
     return interpreter;
 }
