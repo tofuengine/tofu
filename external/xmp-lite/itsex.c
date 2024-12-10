@@ -182,7 +182,7 @@ int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, int len,
 int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, int len,
 		       uint8_t *tmp, int tmplen, int it215)
 {
-	struct it_stream in;
+	struct it_stream in = { 0 };
 	uint32_t block_count = 0;
 	uint8_t left = 0;
 	int16_t temp = 0, temp2 = 0;

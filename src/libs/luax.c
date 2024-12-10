@@ -329,6 +329,7 @@ void luaX_openlibs(lua_State *L)
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
 #if !defined(LUAX_NO_SYSTEM_LIBRARIES)
+        // System libraries can be disabled to have a proper "sandbox" environment.
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
 #endif  /* LUAX_NO_SYSTEM_LIBRARIES */
@@ -336,6 +337,7 @@ void luaX_openlibs(lua_State *L)
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
 #if defined(DEBUG)
+        // Debug module is loaded only for the `DEBUG` build, of course.
         { LUA_DBLIBNAME, luaopen_debug },
 #endif  /* DEBUG */
         { NULL, NULL }
