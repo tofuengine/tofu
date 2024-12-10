@@ -37,9 +37,10 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 
-local Vector = Class.define()
+local _abs = math.abs
+local _cos, _sin, _atan = math.cos, math.sin, math.atan
 
--- TODO: optimize by using `{ x, y }` over `{ x = x, y = y }`.
+local Vector = Class.define()
 
 function Vector:__ctor(...)
   local args = { ... }
@@ -63,16 +64,33 @@ function Vector:__tostring()
 	return string.format("<%.5f, %.5f>", self.x, self.y)
 end
 
+function Vector:assign(v_or_x, y)
+  if not y then
+    self.x, self.y = v_or_x.x, v_or_x.y
+  else
+    self.x, self.y = v_or_x, y
+  end
+end
+
+function Vector.assign_points(a, b)
+  return b.x - a.x, b.y - a.y
+end
+
+function Vector.assign_polar(a, l, ox, oy)
+  return _cos(a) * l + (ox or 0), _sin(a) * l + (oy or 0)
+end
+
 function Vector.from_points(a, b)
   return Vector.new(b.x - a.x, b.y - a.y)
 end
 
 function Vector.from_polar(a, l, ox, oy)
-  return Vector.new(math.cos(a) * l + (ox and ox or 0), math.sin(a) * l + (oy and oy or 0))
+  return Vector.new(_cos(a) * l + (ox or 0), _sin(a) * l + (oy or 0))
 end
 
-function Vector:to_polar()
-  return math.atan(self.y, self.x), self:magnitude()
+-- This is a synonym for sake of simplicity.
+function Vector:clone()
+  return Vector.new(self)
 end
 
 -- The pairs `{ p0, v0 }` and `{ p1, v1 }` represent the two rays we are going to
@@ -90,7 +108,7 @@ function Vector.intersect(p0, v0, p1, v1)
   if det == 0.0 then
     return nil, nil
   end
-  local v = Vector.from_points(p0, p1)
+  local v = Vector.new(Vector.from_points(p0, p1))
   local t0 = v:perp_dot(v1) / det -- ratio for the first ray
   local t1 = v:perp_dot(v0) / det -- ratio for the second ray
   return t0, t1
@@ -107,7 +125,7 @@ end
 local EPSILON <const> = 1.19209290e-7
 
 function Vector:is_almost_zero()
-  return math.abs(self.x) <= EPSILON and math.abs(self.y) <= EPSILON
+  return _abs(self.x) <= EPSILON and _abs(self.y) <= EPSILON
 end
 
 function Vector:is_zero()
@@ -115,7 +133,7 @@ function Vector:is_zero()
 end
 
 function Vector:is_almost_equal(v)
-  return math.abs(self.x - v.x) <= EPSILON and math.abs(self.y - v.y) <= EPSILON
+  return _abs(self.x - v.x) <= EPSILON and _abs(self.y - v.y) <= EPSILON
 end
 
 function Vector:is_equal(v)
@@ -158,7 +176,7 @@ end
 -- |                 | |   | = |    |
 -- | sin(a)   cos(a) | | y |   | y' |
 function Vector:rotate(angle)
-  local cos, sin = math.cos(angle), math.sin(angle)
+  local cos, sin = _cos(angle), _sin(angle)
   local x, y = self.x, self.y
   self.x, self.y = cos * x - sin * y, sin * x + cos * y
 end
@@ -275,13 +293,17 @@ end
 
 function Vector:angle_to(v)
   if v then
-    return math.atan(v.y - self.y, v.x - self.x)
+    return _atan(v.y - self.y, v.x - self.x)
   end
-  return math.atan(self.y, self.x)
+  return _atan(self.y, self.x)
 end
 
 function Vector:angle_between(v)
-  return math.atan(self.y, self.x) - math.atan(v.y, v.x)
+  return _atan(self.y, self.x) - _atan(v.y, v.x)
+end
+
+function Vector:polar()
+  return _atan(self.y, self.x), self:magnitude()
 end
 
 Vector.ZERO = Vector.new(0, 0)
