@@ -84,6 +84,7 @@ typedef struct luaX_String_s {
 #define LUA_TEOD        (-3)
 #define LUA_TENUM       LUA_TSTRING
 #define LUA_TOBJECT     LUA_TUSERDATA
+#define LUA_TLOBJECT    LUA_TTABLE
 
 #if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_SIGNATURE_BEGIN(L) \
