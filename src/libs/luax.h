@@ -183,6 +183,8 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_OBJECT(l, idx, t, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toobject((L), (idx), (t)))
 #endif
 
+#define LUAX_UNUSED(x)   (void)(x)
+
 #define luaX_dump(L) luaX_stackdump((L), __FILE__, __LINE__)
 
 #define luaX_tofunction(L, idx) luaX_ref((L), (idx))

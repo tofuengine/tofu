@@ -87,6 +87,7 @@
 #include "storage.h"
 #include "system.h"
 #include "tweener.h"
+#include "vector2d.h"
 #include "wave.h"
 #include "world.h"
 #include "xform.h"
@@ -123,6 +124,7 @@ void modules_initialize(lua_State *L, const void *userdatas[])
             { "tofu.sound.source", source_loader },
             { "tofu.sound.speakers", speakers_loader }, // FIXME: find a better name.
             { "tofu.util.grid", grid_loader },
+            { "tofu.util.vector2d", vector2d_loader },
             { NULL, NULL }
         });
 }

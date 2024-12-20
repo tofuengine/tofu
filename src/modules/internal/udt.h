@@ -101,7 +101,8 @@ typedef enum Object_Types_e {
     // Sound
     OBJECT_TYPE_SOURCE,
     // Util
-    OBJECT_TYPE_GRID
+    OBJECT_TYPE_GRID,
+    OBJECT_TYPE_VECTOR2D
 } Object_Types_t;
 
 typedef struct Image_Object_s {
@@ -299,6 +300,10 @@ typedef struct Grid_Object_s {
     Grid_Object_Value_t *data;
     size_t data_size;
 } Grid_Object_t;
+
+typedef struct Vector2D_Object_s {
+    float x, y;
+} Vector2D_Object_t;
 
 extern void udt_preload_modules(lua_State *L, const void *userdatas[], const luaL_Reg *modules);
 extern int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c);
