@@ -318,6 +318,13 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
 
     // Upvalues have already been consumed by `luaL_setfuncs()`. No need to clear the stack.
 
+    lua_getfield(L, -1, "__init");
+    if (!lua_isnil(L, -1)) {
+        lua_call(L, 0, 0);
+    } else {
+        lua_pop(L, 1);
+    }
+
     return 1;
 }
 
