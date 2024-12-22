@@ -47,6 +47,8 @@ static int vector2d_new_v_1o(lua_State *L);
 static int vector2d_gc_1o_0(lua_State *L);
 static int vector2d_eq_1o_1b(lua_State *L);
 static int vector2d_tostring_1o_1s(lua_State *L);
+static int vector2d_x_v_v(lua_State *L);
+static int vector2d_y_v_v(lua_State *L);
 static int vector2d_is_zero_1o_1b(lua_State *L);
 static int vector2d_is_almost_zero_1o_1b(lua_State *L);
 static int vector2d_is_equal_2oo_1b(lua_State *L);
@@ -90,6 +92,9 @@ int vector2d_loader(lua_State *L)
             // -- metamethods --
             { "__eq", vector2d_eq_1o_1b },
             { "__tostring", vector2d_tostring_1o_1s },
+            // -- getters/setters --
+            { "x", vector2d_x_v_v },
+            { "y", vector2d_y_v_v },
             // -- accessors --
             { "is_zero", vector2d_is_zero_1o_1b },
             { "is_almost_zero", vector2d_is_almost_zero_1o_1b },
@@ -223,10 +228,10 @@ static int vector2d_eq_1o_1b(lua_State *L)
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
-    bool equal = self == other
+    const bool is_equal = self == other
         || (self->x == other->x && self->y == other->y);
 
-    lua_pushboolean(L, equal);
+    lua_pushboolean(L, is_equal);
 
     return 1;
 }
@@ -243,6 +248,74 @@ static int vector2d_tostring_1o_1s(lua_State *L)
     return 1;
 }
 
+static int vector2d_x_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
+
+    lua_pushnumber(L, self->x);
+
+    return 1;
+}
+
+static int vector2d_x_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Vector2D_Object_t *self = (Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
+    const float x = LUAX_NUMBER(L, 2);
+
+    self->x = x;
+
+    return 0;
+}
+
+static int vector2d_x_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_BY_ARITY(vector2d_x_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(vector2d_x_2on_0, 2)
+    LUAX_OVERLOAD_END
+}
+
+static int vector2d_y_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
+
+    lua_pushnumber(L, self->y);
+
+    return 1;
+}
+
+static int vector2d_y_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Vector2D_Object_t *self = (Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
+    const float y = LUAX_NUMBER(L, 2);
+
+    self->y = y;
+
+    return 0;
+}
+
+static int vector2d_y_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_BY_ARITY(vector2d_y_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(vector2d_y_2on_0, 2)
+    LUAX_OVERLOAD_END
+}
+
 static int vector2d_is_zero_1o_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -250,9 +323,9 @@ static int vector2d_is_zero_1o_1b(lua_State *L)
     LUAX_SIGNATURE_END
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
 
-    bool zero = self->x == 0.0f && self->y == 0.0f;
+    const bool is_zero = self->x == 0.0f && self->y == 0.0f;
 
-    lua_pushboolean(L, zero);
+    lua_pushboolean(L, is_zero);
 
     return 1;
 }
@@ -264,9 +337,9 @@ static int vector2d_is_almost_zero_1o_1b(lua_State *L)
     LUAX_SIGNATURE_END
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
 
-    bool almost_zero = fabsf(self->x) <= FLT_EPSILON && fabsf(self->y) <= FLT_EPSILON;
+    const bool is_almost_zero = fabsf(self->x) <= FLT_EPSILON && fabsf(self->y) <= FLT_EPSILON;
 
-    lua_pushboolean(L, almost_zero);
+    lua_pushboolean(L, is_almost_zero);
 
     return 1;
 }
@@ -280,9 +353,9 @@ static int vector2d_is_equal_2oo_1b(lua_State *L)
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
-    bool equal = self->x == other->x && self->y == other->y;
+    const bool is_equal = self->x == other->x && self->y == other->y;
 
-    lua_pushboolean(L, equal);
+    lua_pushboolean(L, is_equal);
 
     return 1;
 }
@@ -296,9 +369,9 @@ static int vector2d_is_almost_equal_2oo_1b(lua_State *L)
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
-    bool almost_equal = fabsf(self->x - other->x) <= FLT_EPSILON && fabsf(self->y - other->y) <= FLT_EPSILON;
+    const bool is_almost_equal = fabsf(self->x - other->x) <= FLT_EPSILON && fabsf(self->y - other->y) <= FLT_EPSILON;
 
-    lua_pushboolean(L, almost_equal);
+    lua_pushboolean(L, is_almost_equal);
 
     return 1;
 }
@@ -748,6 +821,7 @@ static int vector2d_dot_2oo_1n(lua_State *L)
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
     const float dot = self->x * other->x + self->y * other->y;
+
     lua_pushnumber(L, dot);
 
     return 1;
@@ -780,6 +854,7 @@ static int vector2d_perp_dot_2oo_1n(lua_State *L)
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
     const float perp_dot = self->x * other->y - self->y * other->x;
+
     lua_pushnumber(L, perp_dot);
 
     return 1;
@@ -883,6 +958,7 @@ static int vector2d_angle_to_2oo_1n(lua_State *L)
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
     const float angle = atan2f(other->y - self->y, other->x - self->x);
+
     lua_pushnumber(L, angle);
 
     return 1;
