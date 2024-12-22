@@ -301,7 +301,7 @@ We could have used version 3.2, theoretically, but 3.3 is the first *version uni
 
 > In the not-so-distant future the aim is to move to OpenGL/ES 2.0, which is almost identical to OpenGL 3.3 core in feature but ensure compatibility and ease-of-porting to browsers.
 
-It's unclear whether *OpenGL 3.3 core* is supported on macOS. But then, we aren't interesting in targeting the engine to Apple computers, for the moment being.
+It's unclear whether *OpenGL 3.3 core* is supported on macOS. But then, we aren't interested in targeting the engine to Apple computers, for the moment being.
 
 ## Internal State Policy
 
@@ -352,7 +352,7 @@ When a function exposes in its signature the idiomatic `int nup` argument to ind
     process_words(L, 4);
 ```
 
-when the `process_words()` function returns the stack will be cleared of the four items that where pushed. This corresponds to the `__stdcall` calling convention and has the practical benefit that less boilerplate code (to clear the stack) is spread throught the codebase, especially when a function is called in more that one point.
+when the `process_words()` function returns the stack will be cleared of the four items that where pushed. This corresponds to the `__stdcall` calling convention and has the practical benefit that less boilerplate code (to clear the stack) is spread throughout the codebase, especially when a function is called in more that one point.
 
 ### Functions Naming
 
@@ -398,3 +398,15 @@ static const char *_sticks[Input_Controller_Sticks_t_CountOf + 1] = {
 This need a special care and attention, but permits to avoid an intermediate int-to-enum decoupling array. This is both an optimization in (code) space and (execution) time.
 
 > This, of course, requires that the enumeration starts from `0` and proceeds incrementally w/o any "hole".
+
+### Hybrid Modules
+
+Since it's inception it has been possible to define Lua modules in an "hybrid" fashion, i.e. there could be a Lua file defining part of the module along with a C99 counterpart.
+
+This had some limitations, 'thought, because the Lua code could only extend what the C99 code was implementing (for example with an additional method, see `canvas.lua`).
+
+We have extended the support for this kind of "split implementation", however, and now it is possible also to implement the "core" module in Lua and selectively implement some methods natively. For this purpose in the C99 code the object need to be signature tested as `LUA_TLOBJECT`, which basically means that it is a Lua tables. Please note that there isn't a `LUAX_LOBJECT(...)` macro, because the object/table is manipulated through the stack and not by marshalling it to a C99 variable.
+
+> Beware! Accessing a Lua table from C is a potential performance hazard. Use this approach sparingly!
+
+Another commodity for the hybrid module design is the *post-load initialization method*. Imaging you are creating an object with some userdata/metatable pair. Since the Lua module part is loaded and interpreted *before* the userdata and metatable are created, you won't be able to reference anything natively defined (for example, to create a method alias). The solution for that is the `Module.__init()` method, which is called (if present) at the end of the module loading process to enable some Lua-side initialization.

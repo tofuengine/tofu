@@ -316,7 +316,8 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
         lua_setfield(L, -2, c->name);
     }
 
-    // Upvalues have already been consumed by `luaL_setfuncs()`. No need to clear the stack.
+    // Note: upvalues have already been consumed by `luaL_setfuncs()`. No need to clear the stack.
+    //       Now the top of the stack contains the table of the module.
 
     lua_getfield(L, -1, "__init");
     if (!lua_isnil(L, -1)) {
