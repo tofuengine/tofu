@@ -105,9 +105,9 @@ function Vector2D:mirror(v)
   self:sub(s * vx, s * vy)
 end
 
--- Note: we can't define pseudo-constants instances (e.g. `Vector2D.ZERO = Vector2D.new(0, 0)`) or aliases
---       (e.g. `Vector2D.perp = Vector2D.rotate90_ccw`) as the Lua code is loaded and interpreted *before*
---       the C module is fully initialized (and the C functions bound). We would end in having an exception
---       (for the former) or an assignment to `nil` (for the latter). We need to make the aliases in C.
+function Vector2D.__init()
+  -- Defining some pseudo-constants.
+  Vector2D.ZERO = Vector2D.new(0, 0)
+end
 
 return Vector2D
