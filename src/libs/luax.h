@@ -194,7 +194,7 @@ extern luaX_String luaX_tolstring(lua_State *L, int idx);
 extern int luaX_isenum(lua_State *L, int idx);
 extern int luaX_toenum(lua_State *L, int idx, const char **ids);
 
-extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable);
+extern void *luaX_newobject(lua_State *L, size_t size, const void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);
 extern void *luaX_toobject(lua_State *L, int idx, int type);
 

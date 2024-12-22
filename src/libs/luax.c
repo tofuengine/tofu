@@ -108,7 +108,7 @@ typedef void *luaX_Object;
     #define LUAX_OBJECT_SELF(o)     ((void *)(o))
 #endif  /* _LUAX_RTTI */
 
-void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
+void *luaX_newobject(lua_State *L, size_t size, const void *state, int type, const char *metatable)
 {
     luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
 #if defined(_LUAX_RTTI)
@@ -124,7 +124,7 @@ void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const cha
 
 int luaX_isobject(lua_State *L, int idx, int type)
 {
-    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx); // `lua_touserdata` returns NULL if not userdata!
+    const luaX_Object *object = (const luaX_Object *)lua_touserdata(L, idx); // `lua_touserdata` returns NULL if not userdata!
     if (!object) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d is null", idx), 0;

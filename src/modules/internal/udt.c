@@ -113,7 +113,7 @@ int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c)
 
 // This one pairs with `udt_newmodule()`, in the sense that it's merely a wrapping function that passes along to the
 // `luaX_newobject()` function the metatable name fetched as an upvalue.
-void *udt_newobject(lua_State *L, size_t size, void *state, int type)
+void *udt_newobject(lua_State *L, size_t size, const void *state, int type)
 {
     return luaX_newobject(L, size, state, type, _get_metatable_name(L));
 }
