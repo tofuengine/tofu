@@ -103,29 +103,34 @@ function Main:render(_)
 
   local t = self.time
 
+  local mx, my = m:unpack()
+
   for _ = 1, 250 do
-    local p = Vector.new(math.random(0, m.x), math.random(0, m.y))
-    local v = Vector.from_points(c, p)
+    local p = Vector2D.new(math.random(0, mx), math.random(0, my))
+    local v = Vector2D.from_points(c, p)
     v:div(c) -- Normalize and center in [-1, 1]
     local d = 1.0 - v:magnitude()
     local angle = t * 3 + d * math.pi -- Angle increase as we reach the center.
     v:rotate(angle)
 
+    local px, py = p:unpack()
+
     if self.fan then
-      local rad = v:angle_to() + math.pi -- Find the octant of the rotated point to pick the color.
+      local rad = v:angle() + math.pi -- Find the octant of the rotated point to pick the color.
       local deg = math.floor(rad * (180.0 / math.pi)) % 180
       if deg > 3 and deg < 87 then
-        square(canvas, p.x, p.y, 5, 0.0, 0.5, 1.0)
+        square(canvas, px, py, 5, 0.0, 0.5, 1.0)
       elseif deg > 93 and deg < 177 then
-        square(canvas, p.x, p.y, 5, 0.0, 1.0, 0.0)
+        square(canvas, px, py, 5, 0.0, 1.0, 0.0)
       else
-        square(canvas, p.x, p.y, 5, 0.0, 0.0, 0.0)
+        square(canvas, px, py, 5, 0.0, 0.0, 0.0)
       end
     else
       local l = math.min(1.0, v:magnitude())
       l = 1.0 - l * l -- Tweak to smooth the color change differently.
 
-      square(canvas, p.x, p.y, 5, v.x, v.y, l)
+      local vx, vy = v:unpack()
+      square(canvas, px, py, 5, vx, vy, l)
     end
   end
 

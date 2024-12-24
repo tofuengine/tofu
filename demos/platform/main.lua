@@ -46,7 +46,7 @@ local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
-local Vector = require("tofu.util.vector")
+local Vector2D = require("tofu.util.vector2d")
 
 local Animation = require("lib/animation")
 
@@ -119,9 +119,9 @@ function Main:__ctor()
   self.map = generate_map(50)
   self.shake_time = 5
 
-  self.position = Vector.new(25 * 15 * 16, 0)
-  self.velocity = Vector.new(0, 0)
-  self.acceleration = Vector.new(0, -9.81 * 0.75)
+  self.position = Vector2D.new(25 * 15 * 16, 0)
+  self.velocity = Vector2D.new(0, 0)
+  self.acceleration = Vector2D.new(0, -9.81 * 0.75)
   self.jumps = 0
 
   self.snow = {}
@@ -143,22 +143,25 @@ end
 
 function Main:handle_input()
   local controller = Controller.default()
+
+  local vx, vy = self.velocity:unpack()
   if self.jumps < 2 and controller:is_pressed("up") then
-    self.velocity.y = 128
+    vy = 128
     self.jumps = self.jumps + 1
     self.idle_time = nil
   elseif controller:is_down("right") then
     self.facing = "right"
-    self.velocity.x = 64
+    vx = 64
     self.idle_time = nil
   elseif controller:is_down("left") then
     self.facing = "left"
-    self.velocity.x = -64
+    vx = -64
     self.idle_time = nil
   elseif controller:is_released("right") or controller:is_released("left") then
-    self.velocity.x = 0
+    vx = 0
     self.idle_time = 0
   end
+  self.velocity:assign(vx, vy)
   if controller:is_pressed("start") then
     self.map = generate_map(50)
     self.shake_time = 5
@@ -171,18 +174,24 @@ function Main:update(delta_time)
   self.velocity:add(self.acceleration)
   self.position:fma(self.velocity, delta_time)
 
-  if self.position.y <= 0 then
-    self.position.y = 0
-    self.velocity.y = 0
+  local px, py = self.position:unpack()
+  local vx, vy = self.velocity:unpack()
+
+  if py <= 0 then
+    py = 0
+    vy = 0
     self.jumps = 0
   end
 
+  self.position:assign(px, py)
+  self.velocity:assign(vx, vy)
+
   local animation
-  if self.velocity.y > 0 then
+  if vy > 0 then
     animation = self.animations["jumping-" .. self.facing]
-  elseif self.velocity.y < 0 then
+  elseif vy < 0 then
     animation = self.animations["falling-" .. self.facing]
-  elseif self.velocity.x ~= 0 then
+  elseif vx ~= 0 then
     animation = self.animations["running-" .. self.facing]
   elseif self.idle_time and self.idle_time >= 15 then
     animation = self.animations["sleeping-" .. self.facing]
@@ -258,7 +267,7 @@ function Main:update(delta_time)
     end
   end
 
-  local delta_y = self.position.y * 0.75
+  local delta_y = py * 0.75
   local y = height * 0.5 + delta_y + 32
 
   local t = System.time()
@@ -284,14 +293,16 @@ function Main:render(_)
 
   local x, y = (width - 16) * 0.5, height * 0.5
 
-  self.animation:render(canvas, x, y - self.position.y)
+  local px, py = self.position:unpack()
 
-  local delta_y = self.position.y * 0.75
+  self.animation:render(canvas, x, y - py)
+
+  local delta_y = py * 0.75
 
   y = y + delta_y
 
-  local ox = self.position.x // 16
-  local dx = self.position.x % 16
+  local ox = px // 16
+  local dx = px % 16
   for i = 1, 5 do
     for j = 1, 15 + 1 do
       local cell_id = self.map[i][ox + j]

@@ -48,6 +48,9 @@ end
 function Main:init()
 end
 
+function Main:deinit()
+end
+
 function Main:update(delta_time)
   self.game:handle_input()
   self.game:update(delta_time)

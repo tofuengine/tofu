@@ -37,7 +37,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
-local Vector = require("tofu.util.vector")
+local Vector2D = require("tofu.util.vector2d")
 
 local Sprite = Class.define()
 
@@ -52,21 +52,21 @@ function Sprite:__ctor(bank, from, to, scale, palette)
   self.mass = 1.0
   self.inertia = 1.0
 
-  self.position = Vector.new(0, 0)
-  self.velocity = Vector.new(0, 0)
+  self.position = Vector2D.new(0, 0)
+  self.velocity = Vector2D.new(0, 0)
   self.acceleration = 0
   self.angular_velocity = 0
   self.angle = 0
 end
 
 function Sprite:move(x, y)
-  self.position = Vector.new(x, y)
+  self.position = Vector2D.new(x, y)
 end
 
 function Sprite:rotate(torque)
   -- When updating the angular velocity we should also take into account
   -- that steering is easier at higher speeds.
---  local dampening = Vector.new(self.velocity):trim_if_not_zero(1):magnitude()
+--  local dampening = Vector2D.new(self.velocity):trim_if_not_zero(1):magnitude()
   local dampening = 1.0
   self.angular_velocity = self.angular_velocity + dampening * torque / self.inertia
 end
@@ -79,15 +79,15 @@ function Sprite:update(delta_time)
   self.angle = self.angle + self.angular_velocity * delta_time
   self.angular_velocity = self.angular_velocity * 0.90
 
-  self.velocity:add(Vector.from_polar(self.angle, self.acceleration * delta_time))
+  self.velocity:add(Vector2D.from_polar(self.angle, self.acceleration * delta_time))
   self.acceleration = self.acceleration * 0.90
 
   self.position:fma(self.velocity, delta_time)
-  self.velocity:scale(0.95)
+  self.velocity:smul(0.95)
 end
 
 function Sprite:render(canvas)
-  local x, y = self.position.x, self.position.y
+  local x, y = self.position:unpack()
   local rotation = Math.angle_to_rotation(self.angle)
   for id = self.from, self.to, self.step do
     local i = math.abs((id - self.from)) * self.scale
@@ -96,9 +96,11 @@ function Sprite:render(canvas)
     end
   end
 
-  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, self.palette:match(0x88, 0x88, 0xFF))
-  local direction = Vector.from_polar(self.angle, 48)
-  canvas:line(x, y, x + direction.x, y + direction.y, self.palette:match(0x88, 0xFF, 0x88))
+  local vx, vy = self.velocity:unpack()
+  canvas:line(x, y, x + vx, y + vy, self.palette:match(0x88, 0x88, 0xFF))
+  local direction = Vector2D.from_polar(self.angle, 48, x, y)
+  local dx, dy = direction:unpack()
+  canvas:line(x, y, dx, dy, self.palette:match(0x88, 0xFF, 0x88))
 end
 
 return Sprite
