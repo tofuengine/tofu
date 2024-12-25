@@ -79,9 +79,8 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
         return -1;
 #endif  /* DEBUG */
     }
-    size_t length = strlen(value) + 1; // The length of the string doesn't, we can use it!
     for (int i = 0; ids[i]; ++i) {
-        if (memcmp(value, ids[i], length) == 0) { // Use `memcmp()` to optimized for speed.
+        if (strcmp(value, ids[i]) == 0) {
             return i;
         }
     }
