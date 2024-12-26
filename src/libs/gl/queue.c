@@ -56,7 +56,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
     if (capacity > 0) {
         bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
-            LOG_E("can't allocate queue sprites");
+            LOG_E("can't allocate sprites for queue %p", queue);
             goto error_free_queue;
         }
     }
@@ -65,7 +65,7 @@ GL_Queue_t *GL_queue_create(const GL_Sheet_t *sheet, size_t capacity)
             .sheet = sheet,
             .sprites = sprites
         };
-    LOG_D("queue %p attached", queue);
+    LOG_D("queue %p attached for sheet %p w/ sprites %p", queue, sheet, sprites);
 
     return queue;
 
@@ -77,11 +77,13 @@ error_exit:
 
 void GL_queue_destroy(GL_Queue_t *queue)
 {
+    LOG_D("destroying queue %p", queue);
+
     arrfree(queue->sprites);
-    LOG_D("queue sprites freed");
+    LOG_D("queue sprites %p freed", queue->sprites);
 
     free(queue);
-    LOG_D("queue %p freed", queue);
+    LOG_D("queue freed");
 }
 
 bool GL_queue_resize(GL_Queue_t *queue, size_t capacity)

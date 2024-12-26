@@ -109,6 +109,8 @@ static const float RAND_VECS_3D[] = {
     -0.7870349638f, 0.03447489231f, 0.6159443543f, 0, -0.2015596421f, 0.6859872284f, 0.6991389226f, 0, -0.08581082512f, -0.10920836f, -0.9903080513f, 0, 0.5532693395f, 0.7325250401f, -0.396610771f, 0, -0.1842489331f, -0.9777375055f, -0.1004076743f, 0, 0.0775473789f, -0.9111505856f, 0.4047110257f, 0, 0.1399838409f, 0.7601631212f, -0.6344734459f, 0, 0.4484419361f, -0.845289248f, 0.2904925424f, 0
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 float cellular3(float x, float y, float z, int seed, float jitter)
 {
     int xr = _fnlFastRound(x);
@@ -254,3 +256,4 @@ float cellular3(float x, float y, float z, int seed, float jitter)
     return distance0 / distance1 - 1;
 #endif
 }
+#pragma GCC diagnostic pop

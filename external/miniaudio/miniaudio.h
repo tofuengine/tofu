@@ -28077,12 +28077,16 @@ static ma_result ma_device_stop__alsa(ma_device* pDevice)
             ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_DEBUG, "[ALSA] Preparing capture device successful.\n");
         }
 
-    /* Clear the wakeupfd. */
-    resultPoll = poll((struct pollfd*)pDevice->alsa.pPollDescriptorsCapture, 1, 0);
-    if (resultPoll > 0) {
-        ma_uint64 t;
-        read(((struct pollfd*)pDevice->alsa.pPollDescriptorsCapture)[0].fd, &t, sizeof(t));
-    }
+        /* Clear the wakeupfd. */
+        resultPoll = poll((struct pollfd*)pDevice->alsa.pPollDescriptorsCapture, 1, 0);
+        if (resultPoll > 0) {
+            ma_uint64 t;
+            int resultRead = read(((struct pollfd*)pDevice->alsa.pPollDescriptorsCapture)[0].fd, &t, sizeof(t));
+            if (resultRead < 0) {
+                ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[ALSA] read() failed.\n");
+                return ma_result_from_errno(errno);
+            }
+        }
     }
 
     if (pDevice->type == ma_device_type_playback || pDevice->type == ma_device_type_duplex) {
@@ -28099,12 +28103,15 @@ static ma_result ma_device_stop__alsa(ma_device* pDevice)
         }
 
         /* Clear the wakeupfd. */
-    resultPoll = poll((struct pollfd*)pDevice->alsa.pPollDescriptorsPlayback, 1, 0);
-    if (resultPoll > 0) {
-        ma_uint64 t;
-        read(((struct pollfd*)pDevice->alsa.pPollDescriptorsPlayback)[0].fd, &t, sizeof(t));
-    }
-
+        resultPoll = poll((struct pollfd*)pDevice->alsa.pPollDescriptorsPlayback, 1, 0);
+        if (resultPoll > 0) {
+            ma_uint64 t;
+            int resultRead = read(((struct pollfd*)pDevice->alsa.pPollDescriptorsPlayback)[0].fd, &t, sizeof(t));
+            if (resultRead < 0) {
+                ma_log_post(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[ALSA] read() failed.\n");
+                return ma_result_from_errno(errno);
+            }
+        }
     }
 
     return MA_SUCCESS;

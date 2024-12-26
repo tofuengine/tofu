@@ -85,6 +85,10 @@ GL_Processor_t *GL_processor_create(void)
 
 void GL_processor_destroy(GL_Processor_t *processor)
 {
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
+    LOG_D("destroying processor %p", processor);
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+
     if (processor->state.program) {
         GL_program_destroy(processor->state.program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
@@ -94,7 +98,7 @@ void GL_processor_destroy(GL_Processor_t *processor)
 
     free(processor);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("processor %p freed", processor);
+    LOG_D("processor freed");
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 

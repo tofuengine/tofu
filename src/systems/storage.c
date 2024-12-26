@@ -100,7 +100,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             if (index == -1) {
                 strcpy(archive_path, path);
             } else {
-                sprintf(archive_path, "%s.%d", path, index);
+                sprintf(archive_path, "%s.%d", path, index); // Bail out at the first not-existing "indexed" path.
                 if (!path_exists(archive_path)) {
                     break;
                 }
@@ -116,6 +116,8 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         }
     }
 
+    LOG_D("storage %p created", storage);
+
     return storage;
 
 error_destroy_cache:
@@ -130,6 +132,8 @@ error_exit:
 
 static void _release(Storage_Resource_t *resource)
 {
+    LOG_D("releasing resource %p", resource);
+
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
         LOG_D("resource-data %p at %p freed (%d characters string)",
@@ -146,24 +150,27 @@ static void _release(Storage_Resource_t *resource)
             resource, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
     free(resource);
-    LOG_D("resource %p freed", resource);
+    LOG_D("resource freed");
 }
 
 void Storage_destroy(Storage_t *storage)
 {
+    LOG_D("destroying storage %p", storage);
+
+    LOG_D("releasing %d resources for storage %p", arrlenu(storage->resources), storage);
     Storage_Resource_t **current = storage->resources;
     for (size_t count = arrlenu(storage->resources); count; --count) {
         Storage_Resource_t *resource = *(current++);
         _release(resource);
     }
     arrfree(storage->resources);
-    LOG_D("storage cache emptied");
+    LOG_D("storage cache %p emptied", storage->resources);
 
     Storage_Cache_destroy(storage->cache);
-    LOG_D("storage cache destroyed");
+    LOG_D("storage cache %p destroyed", storage->cache);
 
     FS_destroy(storage->context);
-    LOG_D("file-system context destroyed");
+    LOG_D("file-system context %p destroyed", storage->context);
 
     free(storage);
     LOG_D("storage freed");

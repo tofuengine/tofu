@@ -81,16 +81,20 @@ GL_Context_t *GL_context_create(const GL_Surface_t *surface)
 
     _reset(context);
 
+    LOG_D("context %p created", context);
+
     return context;
 }
 
 void GL_context_destroy(GL_Context_t *context)
 {
+    LOG_D("destroying context %p", context);
+
     arrfree(context->state.stack);
     LOG_D("context stack at %p freed", context->state.stack);
 
     free(context);
-    LOG_D("context %p freed", context);
+    LOG_D("context freed");
 }
 
 void GL_context_reset(GL_Context_t *context)
@@ -107,7 +111,7 @@ void GL_context_pop(GL_Context_t *context, size_t levels)
 {
     const size_t length = arrlenu(context->state.stack);
     if (length < 1) {
-        LOG_W("no states to pop from context");
+        LOG_W("no states to pop from context %p", context);
         return;
     }
     if (levels > length) {

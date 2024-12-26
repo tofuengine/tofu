@@ -757,7 +757,10 @@ partitionNodes(cpBBTree *tree, Node **nodes, int count)
 	cpBool splitWidth = (bb.r - bb.l > bb.t - bb.b);
 	
 	// Sort the bounds and use the median as the splitting point
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wno-alloc-size-larger-than"
 	cpFloat *bounds = (cpFloat *)cpcalloc(count*2, sizeof(cpFloat));
+#pragma GCC diagnostic pop
 	if(splitWidth){
 		for(int i=0; i<count; i++){
 			bounds[2*i + 0] = nodes[i]->bb.l;

@@ -93,7 +93,7 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
         return NULL;
     }
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("program created at %p", clone);
+    LOG_D("program cloned at %p", clone);
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     *clone = (GL_Program_t){ 0 };
@@ -109,6 +109,10 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 
 void GL_program_destroy(GL_Program_t *program)
 {
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
+    LOG_D("destroying program %p", program);
+#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+
     arrfree(program->entries);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
@@ -116,7 +120,7 @@ void GL_program_destroy(GL_Program_t *program)
 
     free(program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("program %p freed", program);
+    LOG_D("program freed");
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 

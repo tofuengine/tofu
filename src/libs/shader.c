@@ -81,7 +81,7 @@ error_exit:
     return 0;
 }
 
-static bool _link_shader_program(GLuint program_id)
+static bool _link_program(GLuint program_id)
 {
     glLinkProgram(program_id);
 
@@ -96,7 +96,7 @@ static bool _link_shader_program(GLuint program_id)
 
     GLchar description[length];
     glGetProgramInfoLog(program_id, length, NULL, description);
-    LOG_E("program link error: %s", description);
+    LOG_E("link error for program #%d: %s", program_id, description);
     return false;
 }
 
@@ -146,7 +146,7 @@ Shader_t *shader_create(const char *vertex, const char *fragment, const char *id
 
         shader_ids[i] = _compile_shader(type, codes[i]);
         if (shader_ids[i] == 0) {
-            LOG_E("can't compile shader w/ type %d", type);
+            LOG_E("can't compile shader w/ type %d for program #%d", type, program_id);
             goto error_delete_shaders;
         }
     }
@@ -156,21 +156,21 @@ Shader_t *shader_create(const char *vertex, const char *fragment, const char *id
         LOG_D("shader %d attached to program #%d", shader_ids[i], program_id);
     }
 
-    bool linked = _link_shader_program(program_id);
+    bool linked = _link_program(program_id);
     if (!linked) {
-        LOG_E("can't link shader program");
+        LOG_E("can't link program #%d", program_id);
         goto error_detach_shaders;
     }
 
     GLint *locations = _prepare(program_id, ids, count);
     if (!locations) {
-        LOG_E("can't prepare shader program");
+        LOG_E("can't prepare program #%d", program_id);
         goto error_detach_shaders;
     }
 
     shader->id = program_id;
     shader->locations = locations;
-    LOG_D("shaders compiled into program #%d", program_id);
+    LOG_D("shader %p compiled as program #%d", shader, program_id);
 
     return shader;
 
@@ -198,6 +198,8 @@ error_exit:
 
 void shader_destroy(Shader_t *shader)
 {
+    LOG_D("destroying shader %p", shader);
+
     GLint count = 0;
     glGetProgramiv(shader->id, GL_ATTACHED_SHADERS, &count);
     if (count > 0) {
@@ -218,7 +220,7 @@ void shader_destroy(Shader_t *shader)
     LOG_D("shader uniforms LUT for program #%d freed", shader->id);
 
     free(shader);
-    LOG_D("shader %p freed", shader);
+    LOG_D("shader freed");
 }
 
 // `shader_use` need to be called prior sending data to the program.

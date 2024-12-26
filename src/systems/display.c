@@ -596,6 +596,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
+    LOG_D("display %p created", display);
+
     return display;
 
 error_destroy_shader:
@@ -618,6 +620,8 @@ error_exit:
 
 void Display_destroy(Display_t *display)
 {
+    LOG_D("destroying display %p", display);
+
     glDeleteBuffers(1, &display->vbo);
     glDeleteVertexArrays(1, &display->vao);
     LOG_D("VAO/VBO deleted");

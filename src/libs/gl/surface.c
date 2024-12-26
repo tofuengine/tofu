@@ -64,7 +64,7 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
-        LOG_E("can't allocate (%dx%d) pixel-data", width, height);
+        LOG_E("can't allocate `%dx%d` pixel-data", width, height);
         goto error_exit;
     }
 
@@ -82,7 +82,7 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .is_power_of_two = _is_power_of_two((int)width) && _is_power_of_two((int)height)
         };
 
-    LOG_D("surface created at %p (%dx%d)", data, width, height);
+    LOG_D("surface %p created with size `%dx%d`", data, width, height);
 
     return surface;
 
@@ -94,11 +94,13 @@ error_exit:
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
+    LOG_D("destroying surface %p", surface);
+
     free(surface->data);
     LOG_D("surface data at %p freed", surface->data);
 
     free(surface);
-    LOG_D("surface %p freed", surface);
+    LOG_D("surface freed");
 }
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)

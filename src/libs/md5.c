@@ -86,7 +86,7 @@
 #define S43 15
 #define S44 21
 
-static void _transform(uint32_t state[4], const uint8_t block[64]);
+static void _transform(uint32_t *state/*[4]*/, const uint8_t *block/*[64]*/);
 static void _encode(uint8_t *output, const uint32_t *input, uint32_t len);
 static void _decode(uint32_t *output, const uint8_t *input, uint32_t len);
 
@@ -205,7 +205,7 @@ void md5_hash_sz(uint8_t digest[MD5_SIZE], const char *string, bool case_sensiti
     md5_final(&context, digest);
 }
 
-static void _transform(uint32_t state[4], const uint8_t block[64])
+static void _transform(uint32_t *state/*[4]*/, const uint8_t *block/*[64]*/)
 {
     uint32_t a = state[0], b = state[1], c = state[2], d = state[3], x[MD5_SIZE];
 

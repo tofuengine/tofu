@@ -49,18 +49,22 @@ FS_Context_t *FS_create(void)
 
     *context = (FS_Context_t){ 0 };
 
+    LOG_D("context %p allocated", context);
+
     return context;
 }
 
 void FS_destroy(FS_Context_t *context)
 {
+    LOG_D("destroying context %p", context);
+
+    LOG_D("freeing %d mounts for context %p", arrlenu(context->mounts), context);
     FS_Mount_t **current = context->mounts;
     for (size_t count = arrlenu(context->mounts); count; --count) {
         FS_Mount_t *mount = *(current++);
         mount->vtable.dtor(mount);
         free(mount);
     }
-
     arrfree(context->mounts);
     LOG_D("context mount(s) freed");
 

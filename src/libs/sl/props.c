@@ -107,7 +107,7 @@ void SL_props_destroy(SL_Props_t *props)
             .onRealloc = _realloc,
             .onFree = _free
         });
-    LOG_D("data converted uninitialized");
+    LOG_D("data converter uninitialized");
 
     free(props);
     LOG_D("properties freed");
