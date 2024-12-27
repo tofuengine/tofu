@@ -62,6 +62,7 @@ typedef struct Storage_Cache_Stream_s {
 
 typedef struct Storage_Cache_s {
     FS_Context_t *context;
+    int mount_id;
 
     Storage_Cache_Entry_t *entries;
 } Storage_Cache_t;

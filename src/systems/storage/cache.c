@@ -158,7 +158,9 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
         goto error_exit;
     }
 
-    *cache = (Storage_Cache_t){ 0 };
+    *cache = (Storage_Cache_t){
+            .context = context
+        };
 
     sh_new_arena(cache->entries); // Use `sh_new_arena()` for string hashmaps that you never delete from.
     if (!cache->entries) {
@@ -175,11 +177,13 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
             .seek = _cache_seek,
             .tell = _cache_tell,
             .eof = _cache_eof
-        }, cache);
+        }, cache, &cache->mount_id);
     if (!attached) {
         LOG_E("can't attach storage cache callbacks");
         goto error_free_entries;
     }
+
+    LOG_D("storage cache %p created w/ mount-id #%d", cache, cache->mount_id);
 
     return cache;
 
@@ -193,6 +197,11 @@ error_exit:
 
 void Storage_Cache_destroy(Storage_Cache_t *cache)
 {
+    LOG_D("destroying storage cache %p", cache);
+
+    FS_detach(cache->context, cache->mount_id);
+    LOG_D("storage cache detached");
+
     for (size_t i = 0; i < shlenu(cache->entries); ++i) {
         free(cache->entries[i].value.data);
     }

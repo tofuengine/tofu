@@ -65,10 +65,12 @@ typedef struct FS_Context_s FS_Context_t;
 extern FS_Context_t *FS_create(void);
 extern void FS_destroy(FS_Context_t *context);
 
-extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path);
-extern bool FS_attach_folder(FS_Context_t *context, const char *path);
-extern bool FS_attach_archive(FS_Context_t *context, const char *path);
-extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data);
+extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int *mount_id);
+extern bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id);
+extern bool FS_attach_archive(FS_Context_t *context, const char *path, int *mount_id);
+extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int *mount_id);
+
+extern bool FS_detach(FS_Context_t *context, int mount_id);
 
 extern bool FS_exists(const FS_Context_t *context, const char *name);
 extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);

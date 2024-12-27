@@ -72,20 +72,20 @@ void FS_destroy(FS_Context_t *context)
     LOG_D("context freed");
 }
 
-bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path)
+bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int *mount_id)
 {
     if (FS_std_is_valid(path)) {
-        return FS_attach_folder(context, path);
+        return FS_attach_folder(context, path, mount_id);
     } else 
     if (FS_pak_is_valid(path)) {
-        return FS_attach_archive(context, path);
+        return FS_attach_archive(context, path, mount_id);
     } else {
         LOG_E("path `%s` is neither a folder nor an archive", path);
         return false;
     }
 }
 
-bool FS_attach_folder(FS_Context_t *context, const char *path)
+bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id)
 {
     if (!FS_std_is_valid(path)) {
         LOG_D("path `%s` is not a folder", path);
@@ -100,10 +100,14 @@ bool FS_attach_folder(FS_Context_t *context, const char *path)
 
     arrpush(context->mounts, mount);
 
+    if (mount_id) {
+        *mount_id = mount->id;
+    }
+
     return true;
 }
 
-bool FS_attach_archive(FS_Context_t *context, const char *path)
+bool FS_attach_archive(FS_Context_t *context, const char *path, int *mount_id)
 {
     if (!FS_pak_is_valid(path)) {
         LOG_D("path `%s` is not an archive", path);
@@ -118,10 +122,14 @@ bool FS_attach_archive(FS_Context_t *context, const char *path)
 
     arrpush(context->mounts, mount);
 
+    if (mount_id) {
+        *mount_id = mount->id;
+    }
+
     return true;
 }
 
-bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data)
+bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int *mount_id)
 {
     FS_Mount_t *mount = FS_callbacks_mount(callbacks, user_data);
     if (!mount) {
@@ -131,7 +139,36 @@ bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, v
 
     arrpush(context->mounts, mount);
 
+    if (mount_id) {
+        *mount_id = mount->id;
+    }
+
     return true;
+}
+
+bool FS_detach(FS_Context_t *context, int mount_id)
+{
+    LOG_D("detaching mount w/ id #%d from context %p", mount_id, context);
+
+    for (size_t i = 0; i < arrlenu(context->mounts); ++i) {
+        FS_Mount_t *mount = context->mounts[i];
+
+        if (mount->id == mount_id) {
+            LOG_D("mount w/ id #%d found in context %p", mount_id, context);
+
+            mount->vtable.dtor(mount);
+            free(mount);
+            LOG_D("mount w/ id #%d released", mount_id);
+
+            arrdel(context->mounts, i);
+            LOG_D("mount w/ id #%d detached", mount_id);
+
+            return true;
+        }
+    }
+
+    LOG_E("mount w/ id #%d not found in context %p", mount_id, context);
+    return false;
 }
 
 static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)

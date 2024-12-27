@@ -35,35 +35,11 @@
  * SOFTWARE.
  */
 
-#ifndef TOFU_LIBS_FS_INTERNAL_H
-#define TOFU_LIBS_FS_INTERNAL_H
+#include "internal.h"
 
-#include "fs.h"
+static int _last_id = 0;
 
-typedef struct Mount_VTable_s {
-    void         (*dtor)    (FS_Mount_t *mount);
-    bool         (*contains)(const FS_Mount_t *mount, const char *name);
-    FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *name);
-} Mount_VTable_t;
-
-typedef struct Handle_VTable_s {
-    void   (*dtor)(FS_Handle_t *handle);
-    size_t (*size)(const FS_Handle_t *handle);
-    size_t (*read)(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
-    bool   (*seek)(FS_Handle_t *handle, long offset, int whence);
-    long   (*tell)(const FS_Handle_t *handle);
-    bool   (*eof) (const FS_Handle_t *handle);
-} Handle_VTable_t;
-
-struct FS_Mount_s {
-    Mount_VTable_t vtable;
-    int id;
-};
-
-struct FS_Handle_s {
-    Handle_VTable_t vtable;
-};
-
-extern int fs_internal_next_id(void);
-
-#endif /* TOFU_LIBS_FS_INTERNAL_H */
+int fs_internal_next_id(void)
+{
+    return ++_last_id;
+}

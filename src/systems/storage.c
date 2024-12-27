@@ -107,12 +107,13 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             }
             LOG_D("attaching folder/archive `%s`", archive_path);
 
-            bool archive_attached = FS_attach_folder_or_archive(storage->context, archive_path);
+            int mount_id;
+            bool archive_attached = FS_attach_folder_or_archive(storage->context, archive_path, &mount_id);
             if (!archive_attached) {
                 LOG_E("can't attach folder/archive at `%s`", archive_path);
                 goto error_destroy_cache;
             }
-            LOG_D("folder/archive attached w/ path `%s`", archive_path);
+            LOG_D("folder/archive attached w/ path `%s` (mount-id is #%d)", archive_path, mount_id);
         }
     }
 
@@ -206,13 +207,14 @@ bool Storage_set_identity(Storage_t *storage, const char *identity)
         return false;
     }
 
-    bool attached = FS_attach_folder(storage->context, storage->path.local);
+    int mount_id;
+    bool attached = FS_attach_folder(storage->context, storage->path.local, &mount_id);
     if (!attached) {
         LOG_E("can't attach user-dependent path path `%s`", storage->path.local);
         return false;
     }
 
-    LOG_D("user-dependent path `%s` attached", storage->path.local);
+    LOG_D("user-dependent path `%s` attached (mount-id is #%d)", storage->path.local, mount_id);
     return true;
 }
 
