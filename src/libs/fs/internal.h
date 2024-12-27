@@ -57,7 +57,6 @@ typedef struct Handle_VTable_s {
 
 struct FS_Mount_s {
     Mount_VTable_t vtable;
-    int id;
 };
 
 struct FS_Handle_s {

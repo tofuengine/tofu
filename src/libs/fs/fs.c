@@ -35,8 +35,16 @@
 #include <libs/path.h>
 #include <libs/stb.h>
 
+// Basically a key/value pair to store along with the `mount` pointer an
+// identifier. This is crucial to enable opaque handling of the mount-point
+// in the API, most notably to attach/detach it.
+typedef struct _mount_point_s {
+    int id;
+    FS_Mount_t *mount;
+} _mount_point_t;
+
 struct FS_Context_s {
-    FS_Mount_t **mounts;
+    _mount_point_t *mount_points;
 };
 
 FS_Context_t *FS_create(void)
@@ -58,15 +66,17 @@ void FS_destroy(FS_Context_t *context)
 {
     LOG_D("destroying context %p", context);
 
-    LOG_D("freeing %d mounts for context %p", arrlenu(context->mounts), context);
-    FS_Mount_t **current = context->mounts;
-    for (size_t count = arrlenu(context->mounts); count; --count) {
-        FS_Mount_t *mount = *(current++);
+    LOG_D("freeing %d mounts for context %p", arrlenu(context->mount_points), context);
+    const _mount_point_t *current = context->mount_points;
+    for (size_t count = arrlenu(context->mount_points); count; --count) {
+        _mount_point_t mount_point = *(current++);
+
+        FS_Mount_t *mount = mount_point.mount;
         mount->vtable.dtor(mount);
         free(mount);
     }
-    arrfree(context->mounts);
-    LOG_D("context mount(s) freed");
+    arrfree(context->mount_points);
+    LOG_D("context mount-points(s) freed");
 
     free(context);
     LOG_D("context freed");
@@ -85,6 +95,20 @@ bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int *m
     }
 }
 
+// The mount-point id is a monotonically increasing integer.
+static int _last_mount_id = 0;
+
+static inline int _push_mount(FS_Context_t *context, FS_Mount_t *mount)
+{
+    _mount_point_t mount_point = (_mount_point_t){
+            .id = ++_last_mount_id,
+            .mount = mount
+        };
+    arrpush(context->mount_points, mount_point);
+
+    return mount_point.id;
+}
+
 bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id)
 {
     if (!FS_std_is_valid(path)) {
@@ -98,11 +122,7 @@ bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id)
         return false;
     }
 
-    arrpush(context->mounts, mount);
-
-    if (mount_id) {
-        *mount_id = mount->id;
-    }
+    *mount_id = _push_mount(context, mount);
 
     return true;
 }
@@ -120,11 +140,7 @@ bool FS_attach_archive(FS_Context_t *context, const char *path, int *mount_id)
         return false;
     }
 
-    arrpush(context->mounts, mount);
-
-    if (mount_id) {
-        *mount_id = mount->id;
-    }
+    *mount_id = _push_mount(context, mount);
 
     return true;
 }
@@ -137,11 +153,7 @@ bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, v
         return false;
     }
 
-    arrpush(context->mounts, mount);
-
-    if (mount_id) {
-        *mount_id = mount->id;
-    }
+    *mount_id = _push_mount(context, mount);
 
     return true;
 }
@@ -150,17 +162,18 @@ bool FS_detach(FS_Context_t *context, int mount_id)
 {
     LOG_D("detaching mount w/ id #%d from context %p", mount_id, context);
 
-    for (size_t i = 0; i < arrlenu(context->mounts); ++i) {
-        FS_Mount_t *mount = context->mounts[i];
+    for (size_t i = 0; i < arrlenu(context->mount_points); ++i) {
+        _mount_point_t mount_point = context->mount_points[i];
 
-        if (mount->id == mount_id) {
+        if (mount_point.id == mount_id) {
             LOG_D("mount w/ id #%d found in context %p", mount_id, context);
 
+            FS_Mount_t *mount = mount_point.mount;
             mount->vtable.dtor(mount);
             free(mount);
             LOG_D("mount w/ id #%d released", mount_id);
 
-            arrdel(context->mounts, i);
+            arrdel(context->mount_points, i);
             LOG_D("mount w/ id #%d detached", mount_id);
 
             return true;
@@ -175,11 +188,13 @@ static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)
 {
 #if defined(TOFU_FILE_SUPPORT_MOUNT_OVERRIDE)
     // Backward scan, later mounts gain priority over existing ones.
-    for (ptrdiff_t index = arrlen(context->mounts) - 1; index >= 0; --index) {
+    for (ptrdiff_t index = arrlen(context->mount_points) - 1; index >= 0; --index) {
 #else
-    for (ptrdiff_t index = 0; index < arrlen(context->mounts); ++index) {
+    for (ptrdiff_t index = 0; index < arrlen(context->mount_points); ++index) {
 #endif
-        const FS_Mount_t *current = context->mounts[index];
+        _mount_point_t mount_point = context->mount_points[index];
+
+        const FS_Mount_t *current = mount_point.mount;
         if (current->vtable.contains(current, name)) {
             return current;
         }

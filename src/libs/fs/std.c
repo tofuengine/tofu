@@ -52,7 +52,6 @@
 typedef struct Std_Mount_s {
     // The struct need to match `FS_Mount_t`, initially.
     Mount_VTable_t vtable;
-    int id;
     // Structure specific fields follows.
     char path[PLATFORM_PATH_MAX];
 } Std_Mount_t;
@@ -107,7 +106,6 @@ static void _std_mount_ctor(FS_Mount_t *mount, const char *path)
                 .contains = _std_mount_contains,
                 .open = _std_mount_open
             },
-            .id = fs_internal_next_id(),
             .path = { 0 }
         };
 

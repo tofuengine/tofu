@@ -78,7 +78,6 @@ typedef bool (*Pak_Search_Function_t)(FILE *stream, size_t entries, const uint8_
 typedef struct Pak_Mount_s {
     // The struct need to match `FS_Mount_t`, initially.
     Mount_VTable_t vtable;
-    int id;
     // Structure specific fields follows.
     char path[PLATFORM_PATH_MAX];
     size_t entries;
@@ -327,7 +326,6 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
                 .contains = _pak_mount_contains,
                 .open = _pak_mount_open
             },
-            .id = fs_internal_next_id(),
             .path = { 0 },
             .entries = entries,
             .search = sorted ? _binary_search : _linear_search,

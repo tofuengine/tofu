@@ -48,7 +48,6 @@
 typedef struct Cache_Mount_s {
     // The struct need to match `FS_Mount_t`, initially.
     Mount_VTable_t vtable;
-    int id;
     // Structure specific fields follows.
     FS_Callbacks_t callbacks;
     void *user_data;
@@ -98,7 +97,6 @@ static void _callbacks_mount_ctor(FS_Mount_t *mount, FS_Callbacks_t callbacks, v
                 .contains = _callbacks_mount_contains,
                 .open = _callbacks_mount_open
             },
-            .id = fs_internal_next_id(),
             .callbacks = callbacks,
             .user_data = user_data
         };
