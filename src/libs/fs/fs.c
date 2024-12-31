@@ -41,6 +41,7 @@
 typedef struct _mount_point_s {
     int id;
     FS_Mount_t *mount;
+    int priority;
 } _mount_point_t;
 
 struct FS_Context_s {
@@ -82,13 +83,13 @@ void FS_destroy(FS_Context_t *context)
     LOG_D("context freed");
 }
 
-bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int *mount_id)
+bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int priority, int *mount_id)
 {
     if (FS_std_is_valid(path)) {
-        return FS_attach_folder(context, path, mount_id);
+        return FS_attach_folder(context, path, priority, mount_id);
     } else 
     if (FS_pak_is_valid(path)) {
-        return FS_attach_archive(context, path, mount_id);
+        return FS_attach_archive(context, path, priority, mount_id);
     } else {
         LOG_E("path `%s` is neither a folder nor an archive", path);
         return false;
@@ -98,18 +99,46 @@ bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int *m
 // The mount-point id is a monotonically increasing integer.
 static int _last_mount_id = 0;
 
-static inline int _push_mount(FS_Context_t *context, FS_Mount_t *mount)
+// Used to compare and sort in increasing order of priority OR identifier.
+//
+// This means that mount-points with the same priority will be preserved in
+// "attach" order.
+//
+// The `File` sub-system supports multiple mount-points. When scanning for a
+// file, the file instance present in "highest priority mount" is used.We call
+// this "mount-override" as it enables a file to be present in more than an
+// archive/folder, with only one instance to be used.
+//
+// In the context of the game-engine, it means that a file in the `data`
+// archive/folder can have the same name of a `kernal` counterpart *and*
+// override/redefine its implementation.
+static int _compare_mount_points(const void *first, const void *second)
+{
+    const _mount_point_t *first_mount_point = first;
+    const _mount_point_t *second_mount_point = second;
+
+    int delta = first_mount_point->priority - second_mount_point->priority;
+    if (delta == 0) {
+        delta = first_mount_point->id - second_mount_point->id;
+    }
+    return delta;
+}
+
+static inline int _push_mount(FS_Context_t *context, FS_Mount_t *mount, int priority)
 {
     _mount_point_t mount_point = (_mount_point_t){
             .id = ++_last_mount_id,
-            .mount = mount
+            .mount = mount,
+            .priority = priority
         };
     arrpush(context->mount_points, mount_point);
+
+    qsort(context->mount_points, arrlenu(context->mount_points), sizeof(_mount_point_t), _compare_mount_points);
 
     return mount_point.id;
 }
 
-bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id)
+bool FS_attach_folder(FS_Context_t *context, const char *path, int priority, int *mount_id)
 {
     if (!FS_std_is_valid(path)) {
         LOG_D("path `%s` is not a folder", path);
@@ -122,12 +151,12 @@ bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id)
         return false;
     }
 
-    *mount_id = _push_mount(context, mount);
+    *mount_id = _push_mount(context, mount, priority);
 
     return true;
 }
 
-bool FS_attach_archive(FS_Context_t *context, const char *path, int *mount_id)
+bool FS_attach_archive(FS_Context_t *context, const char *path, int priority, int *mount_id)
 {
     if (!FS_pak_is_valid(path)) {
         LOG_D("path `%s` is not an archive", path);
@@ -140,12 +169,12 @@ bool FS_attach_archive(FS_Context_t *context, const char *path, int *mount_id)
         return false;
     }
 
-    *mount_id = _push_mount(context, mount);
+    *mount_id = _push_mount(context, mount, priority);
 
     return true;
 }
 
-bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int *mount_id)
+bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int priority, int *mount_id)
 {
     FS_Mount_t *mount = FS_callbacks_mount(callbacks, user_data);
     if (!mount) {
@@ -153,7 +182,7 @@ bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, v
         return false;
     }
 
-    *mount_id = _push_mount(context, mount);
+    *mount_id = _push_mount(context, mount, priority);
 
     return true;
 }
@@ -186,12 +215,7 @@ bool FS_detach(FS_Context_t *context, int mount_id)
 
 static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)
 {
-#if defined(TOFU_FILE_SUPPORT_MOUNT_OVERRIDE)
-    // Backward scan, later mounts gain priority over existing ones.
-    for (ptrdiff_t index = arrlen(context->mount_points) - 1; index >= 0; --index) {
-#else
     for (ptrdiff_t index = 0; index < arrlen(context->mount_points); ++index) {
-#endif
         _mount_point_t mount_point = context->mount_points[index];
 
         const FS_Mount_t *current = mount_point.mount;

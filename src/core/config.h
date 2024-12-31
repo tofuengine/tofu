@@ -212,18 +212,6 @@
 // could be hindered.
 #undef  TOFU_FILE_DEBUG_ENABLED
 
-// The `File` sub-system supports multiple mount-points. This macro controls
-// the behaviour when scanning for a file and, if defined, the file instance
-// present in "last to be mounted" (with the `FS_attach_folder_or_archive()`
-// function) archive/folder will be accessed. We call this "mount-override" as
-// it enables a file to be present in more than an archive/folder, with only
-// one instance to be used.
-//
-// In the context of the game-engine, it means that a file in the `data`
-// archive/folder can have the same name of a `kernal` counterpart *and*
-// override/redefine its implementation.
-#define TOFU_FILE_SUPPORT_MOUNT_OVERRIDE
-
 // ################
 // ### Graphics ###
 // ################

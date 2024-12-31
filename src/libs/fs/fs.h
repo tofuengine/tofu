@@ -46,6 +46,11 @@
 
 #define FS_ARCHIVE_EXTENSION_SZ ".pak"
 
+#define FS_PRIORITY_DEFAULT 0
+#define FS_PRIORITY_HIGH 100
+#define FS_PRIORITY_HIGHER 200
+#define FS_PRIORITY_HIGHEST 300
+
 typedef struct FS_Mount_s FS_Mount_t;
 typedef struct FS_Handle_s FS_Handle_t;
 
@@ -65,10 +70,10 @@ typedef struct FS_Context_s FS_Context_t;
 extern FS_Context_t *FS_create(void);
 extern void FS_destroy(FS_Context_t *context);
 
-extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int *mount_id);
-extern bool FS_attach_folder(FS_Context_t *context, const char *path, int *mount_id);
-extern bool FS_attach_archive(FS_Context_t *context, const char *path, int *mount_id);
-extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int *mount_id);
+extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int priority, int *mount_id);
+extern bool FS_attach_folder(FS_Context_t *context, const char *path, int priority, int *mount_id);
+extern bool FS_attach_archive(FS_Context_t *context, const char *path, int priority, int *mount_id);
+extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int priority, int *mount_id);
 
 extern bool FS_detach(FS_Context_t *context, int mount_id);
 

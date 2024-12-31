@@ -82,6 +82,7 @@ typedef struct Storage_Resource_s {
 } Storage_Resource_t;
 
 typedef struct Storage_Configuration_s {
+    // TODO: implement a list of generic paths?
     const char *kernal_path;
     const char *data_path;
 } Storage_Configuration_t;

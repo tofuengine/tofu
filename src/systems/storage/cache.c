@@ -177,7 +177,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
             .seek = _cache_seek,
             .tell = _cache_tell,
             .eof = _cache_eof
-        }, cache, &cache->mount_id);
+        }, cache, FS_PRIORITY_DEFAULT, &cache->mount_id);
     if (!attached) {
         LOG_E("can't attach storage cache callbacks");
         goto error_free_entries;
