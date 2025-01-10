@@ -333,12 +333,19 @@ check:
 	@cppcheck --force --enable=all $(srcdir) > /dev/null
 	@echo "Checking complete!"
 
-# Geneartes the code statistics for the project. Ideally this should be
+# Generates the code statistics for the project. Ideally this should be
 # performed right before a new release, and the output included in the release
 # data.
 .PHONY: stats
 stats:
 	@cloc $(srcdir) > $(builddir)/stats.txt
+
+# Generates compile commands JSON file used by SonarQube to perform the static
+# analisys of the code. This should be performed periodically to respect the
+# codebase status.
+.PHONY: outline
+outline:
+	@bear -- make -j8
 
 engine: $(builddir) $(builddir)/$(TARGET) $(builddir)/$(KERNAL)
 
@@ -346,7 +353,7 @@ $(builddir):
 	mkdir -p $(builddir)
 
 # The `kernal.pak` archive contains all the Lua scripts that constitue (part of)
-# and runtime. It's required for the engine to work and it's repacked each time
+# the runtime. It's required for the engine to work and it's repacked each time
 # a file is changed.
 #
 # In case we want to embed pre-compiled scripts
@@ -572,6 +579,4 @@ demo: engine
 # Use software renderer to use VALGRIND
 valgrind: engine
 	@echo "Valgrind *$(DEMO)* application!"
-	@export LIBGL_ALWAYS_SOFTWARE=1
-	@(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --data=./demos/$(DEMO)
-	@export LIBGL_ALWAYS_SOFTWARE=0
+	@LIBGL_ALWAYS_SOFTWARE=1 $(VALGRIND) $(VALGRINDFLAGS) $(builddir)/$(TARGET) --data=./demos/$(DEMO)

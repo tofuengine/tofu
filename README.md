@@ -134,6 +134,8 @@ sudo apt install mingw-w64
 
 sudo apt install xorg-dev libx11-dev libwayland-dev libxkbcommon-dev wayland-protocols mesa-common-dev libgles2-mesa-dev
 
+sudo apt install valgrind cloc bear
+
 sudo apt install lua5.4 liblua5.4-dev luarocks
 
 sudo luarocks --lua-version=5.4 install argparse
@@ -158,7 +160,7 @@ git clone https://github.com/tofuengine/tofu.git
 
 into a suitable work directory. Move into the `tofu` directory you've just created and use `make` to build the executable. You can use the following command-line parameters to control the build process:
 
-* `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
+* `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode. Other useful (development) values are `sanitize-address`, `sanitize-leak` and `profile`.
 * `PLATFORM`, can be either `linux` or `windows`. If not specified, the build is assumed for **Linux** platform.
 * `WINDOWING`, can be `x11`, `wayland`, `gdi`, or `mesa`. If not specified, the build assumes `gd1` for the **Windows** platform, `x11` otherwise for the **Linux** one. Please note that `mesa` is not really supported and `wayland` is experimental (but should work).
 * `ARCHITECTURE`, can be `x64`, `x32`, `arm64` or `armhf`. If not specified the current host architecture is used as target.
@@ -207,6 +209,16 @@ sudo apt install --no-install-recommends libx11-dev:arm64 libx11-dev:armhf
 ```
 
 which will also install any required package.
+
+## Diagnostics
+
+A number of additional `make` targets are provided to perform various diagnostic and analysis on both the codebase and the runtime behaviour of the game-engine.
+
+* `DEMO=<target> make valgrind` executes the selected `<target>` demo application through Valdring. This is useful to track illegal memory accesses.
+* `make stats` create a snapshot of the current codebase status, detailing the amount of code that composes it.
+* `make outline` generates the `compile_commands.json` file, used by (for example) [SonarQube](https://www.sonarsource.com/products/sonarlint/)'s linter. Please, remind to execute this target regularly to reflect the actual codebase status. 
+
+Also, it is advised to download and install [RenderDoc](https://renderdoc.org/) (either in the `/opt` folder or to `~/.local/share`).
 
 ## Sample projects
 
