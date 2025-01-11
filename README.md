@@ -180,16 +180,16 @@ sudo dpkg --add-architecture arm64
 sudo dpkg --add-architecture armhf
 ```
 
-Then, the `apt` sources for this architecture need to be configured, by creating a new file `/etc/apt/sources.list.d/arm64-sources.list` with this content (which mirrors the `sources.list` file, minus the security sources which are not required):
+Then, the `apt` sources for this architecture need to be configured, by creating a new file `/etc/apt/sources.list.d/arm64_armhf-sources.list` with this content (which mirrors the `sources.list` file, minus the security sources which are not required):
 
 ```bash
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs) main restricted" | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-updates main restricted" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs) universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-updates universe" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs) multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-updates multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
-echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list >> /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null) main restricted" | sudo tee /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null)-updates main restricted" | sudo tee -a /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null) universe" | sudo tee -a /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null)-updates universe" | sudo tee -a /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null) multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null)-updates multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
+echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ $(lsb_release -cs 2>/dev/null)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64_armhf-sources.list > /dev/null
 ```
 
 At the same time, the current content `/etc/apt/sources.list` file need to be patched so that it refers to the actual host architecture. If it isn't already configured as such you can use the following command to patch the file:
