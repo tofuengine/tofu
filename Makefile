@@ -315,7 +315,7 @@ all: engine
 # a CI build.
 .PHONY: docker-create
 docker-create: $(DOCKER_FILES)
-	@$(DOCKER) build --force-rm -t $(DOCKER_IMAGE) -f $(DOCKER_FILES)
+	@$(DOCKER) build --no-cache --progress=plain --force-rm -t $(DOCKER_IMAGE) -f $(DOCKER_FILES)
 
 .PHONY: docker-launch
 docker-launch: $(DOCKER_FILES)

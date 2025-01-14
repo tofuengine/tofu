@@ -167,7 +167,7 @@ into a suitable work directory. Move into the `tofu` directory you've just creat
 
 The build artifacts will be placed in the `build` directory.
 
-> Alternatively, if you prefer not to tamper with your system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder.
+> Alternatively, if you prefer not to tamper with your system, you can use a [Docker](https://docker.io) container for the build process. For that purpose, a ready-to-use *Dockerfile* can be found in the `extras/docker` directory. Use the `make docker-create` command to build the container and `make docker-launch` to start it in the current folder. The container support cross-compiling out-of-the-box.
 
 # Cross-Compiling
 
