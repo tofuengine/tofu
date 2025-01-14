@@ -328,35 +328,6 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
     return 1;
 }
 
-void luaX_openlibs(lua_State *L)
-{
-    static const luaL_Reg libraries[] = {
-        { LUA_GNAME, luaopen_base },
-        { LUA_LOADLIBNAME, luaopen_package },
-        { LUA_COLIBNAME, luaopen_coroutine },
-        { LUA_TABLIBNAME, luaopen_table },
-#if !defined(LUAX_NO_SYSTEM_LIBRARIES)
-        // System libraries can be disabled to have a proper "sandbox" environment.
-        { LUA_IOLIBNAME, luaopen_io },
-        { LUA_OSLIBNAME, luaopen_os },
-#endif  /* LUAX_NO_SYSTEM_LIBRARIES */
-        { LUA_STRLIBNAME, luaopen_string },
-        { LUA_MATHLIBNAME, luaopen_math },
-        { LUA_UTF8LIBNAME, luaopen_utf8 },
-#if defined(DEBUG)
-        // Debug module is loaded only for the `DEBUG` build, of course.
-        { LUA_DBLIBNAME, luaopen_debug },
-#endif  /* DEBUG */
-        { NULL, NULL }
-    };
-    // "require" is different from preload in the sense that is also make the
-    // library-module ready to be used (i.e. defined in the global space).
-    for (const luaL_Reg *library = libraries; library->func; ++library) {
-        luaL_requiref(L, library->name, library->func, 1);
-        lua_pop(L, 1); // Remove the library (table) from the stack.
-    }
-}
-
 // Preloading a Lua module from the FFI API is achieved by storing the a loader
 // function in the `_PRELOAD` registry table. The module is not loaded, yet, but
 // also prepared for later usage.

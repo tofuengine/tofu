@@ -38,6 +38,7 @@ static void checkstack (lua_State *L, lua_State *L1, int n) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int db_getregistry (lua_State *L) {
   lua_pushvalue(L, LUA_REGISTRYINDEX);
   return 1;
@@ -83,6 +84,7 @@ static int db_setuservalue (lua_State *L) {
     luaL_pushfail(L);
   return 1;
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 /*
@@ -200,6 +202,7 @@ static int db_getinfo (lua_State *L) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int db_getlocal (lua_State *L) {
   int arg;
   lua_State *L1 = getthread(L, &arg);
@@ -314,6 +317,7 @@ static int db_upvaluejoin (lua_State *L) {
   lua_upvaluejoin(L, 1, n1, 3, n2);
   return 0;
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 /*
@@ -349,6 +353,7 @@ static int makemask (const char *smask, int count) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 /*
 ** Convert a bit mask (for 'gethook') into a string mask
 */
@@ -360,6 +365,7 @@ static char *unmakemask (int mask, char *smask) {
   smask[i] = '\0';
   return smask;
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 static int db_sethook (lua_State *L) {
@@ -392,6 +398,7 @@ static int db_sethook (lua_State *L) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int db_gethook (lua_State *L) {
   int arg;
   lua_State *L1 = getthread(L, &arg);
@@ -430,6 +437,7 @@ static int db_debug (lua_State *L) {
     lua_settop(L, 0);  /* remove eventual returns */
   }
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 static int db_traceback (lua_State *L) {
@@ -446,19 +454,24 @@ static int db_traceback (lua_State *L) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int db_setcstacklimit (lua_State *L) {
   int limit = (int)luaL_checkinteger(L, 1);
   int res = lua_setcstacklimit(L, limit);
   lua_pushinteger(L, res);
   return 1;
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 static const luaL_Reg dblib[] = {
+#if !defined(LUA_SANDBOX_MODE)
   {"debug", db_debug},
   {"getuservalue", db_getuservalue},
   {"gethook", db_gethook},
+#endif  /* LUA_SANDBOX_MODE */
   {"getinfo", db_getinfo},
+#if !defined(LUA_SANDBOX_MODE)
   {"getlocal", db_getlocal},
   {"getregistry", db_getregistry},
   {"getmetatable", db_getmetatable},
@@ -466,12 +479,17 @@ static const luaL_Reg dblib[] = {
   {"upvaluejoin", db_upvaluejoin},
   {"upvalueid", db_upvalueid},
   {"setuservalue", db_setuservalue},
+#endif  /* LUA_SANDBOX_MODE */
   {"sethook", db_sethook},
+#if !defined(LUA_SANDBOX_MODE)
   {"setlocal", db_setlocal},
   {"setmetatable", db_setmetatable},
   {"setupvalue", db_setupvalue},
+#endif  /* LUA_SANDBOX_MODE */
   {"traceback", db_traceback},
+#if !defined(LUA_SANDBOX_MODE)
   {"setcstacklimit", db_setcstacklimit},
+#endif  /* LUA_SANDBOX_MODE */
   {NULL, NULL}
 };
 

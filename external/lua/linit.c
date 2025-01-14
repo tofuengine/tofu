@@ -44,7 +44,9 @@ static const luaL_Reg loadedlibs[] = {
   {LUA_LOADLIBNAME, luaopen_package},
   {LUA_COLIBNAME, luaopen_coroutine},
   {LUA_TABLIBNAME, luaopen_table},
+#if !defined(LUA_SANDBOX_MODE)
   {LUA_IOLIBNAME, luaopen_io},
+#endif  /* LUA_SANDBOX_MODE */
   {LUA_OSLIBNAME, luaopen_os},
   {LUA_STRLIBNAME, luaopen_string},
   {LUA_MATHLIBNAME, luaopen_math},

@@ -399,6 +399,7 @@ static int lookforfunc (lua_State *L, const char *path, const char *sym) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int ll_loadlib (lua_State *L) {
   const char *path = luaL_checkstring(L, 1);
   const char *init = luaL_checkstring(L, 2);
@@ -412,6 +413,7 @@ static int ll_loadlib (lua_State *L) {
     return 3;  /* return fail, error message, and where */
   }
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 
@@ -496,6 +498,7 @@ static const char *searchpath (lua_State *L, const char *name,
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int ll_searchpath (lua_State *L) {
   const char *f = searchpath(L, luaL_checkstring(L, 1),
                                 luaL_checkstring(L, 2),
@@ -508,6 +511,7 @@ static int ll_searchpath (lua_State *L) {
     return 2;  /* return fail + error message */
   }
 }
+#endif  /* LUA_SANDBOX_MODE */
 
 
 static const char *findfile (lua_State *L, const char *name,
@@ -680,14 +684,18 @@ static int ll_require (lua_State *L) {
 
 
 static const luaL_Reg pk_funcs[] = {
+#if !defined(LUA_SANDBOX_MODE)
   {"loadlib", ll_loadlib},
   {"searchpath", ll_searchpath},
   /* placeholders */
   {"preload", NULL},
   {"cpath", NULL},
   {"path", NULL},
+#endif  /* LUA_SANDBOX_MODE */
   {"searchers", NULL},
+#if !defined(LUA_SANDBOX_MODE)
   {"loaded", NULL},
+#endif  /* LUA_SANDBOX_MODE */
   {NULL, NULL}
 };
 
