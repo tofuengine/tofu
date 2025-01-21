@@ -74,7 +74,7 @@
 #include "display.h"
 #include "file.h"
 #include "font.h"
-#include "grid.h"
+#include "grid2d.h"
 #include "image.h"
 #include "keyboard.h"
 #include "log.h"
@@ -123,7 +123,7 @@ void modules_initialize(lua_State *L, const void *userdatas[])
             { "tofu.physics.world", world_loader },
             { "tofu.sound.source", source_loader },
             { "tofu.sound.speakers", speakers_loader }, // FIXME: find a better name.
-            { "tofu.util.grid", grid_loader },
+            { "tofu.util.grid2d", grid2d_loader },
             { "tofu.util.vector2d", vector2d_loader },
             { NULL, NULL }
         });

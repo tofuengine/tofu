@@ -43,7 +43,7 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
-local Grid = require("tofu.util.grid")
+local Grid2D = require("tofu.util.grid2d")
 
 local Main = Class.define()
 
@@ -59,8 +59,8 @@ function Main:__ctor()
   local width, height = image:size()
 
   self.font = Font.default(0, 15)
-  self.grid = Grid.new(width, height, { 0 })
-  self.dirg = Grid.new(width, height, { 0 })
+  self.grid = Grid2D.new(width, height, { 0 })
+  self.dirg = Grid2D.new(width, height, { 0 })
 end
 
 function Main:init()

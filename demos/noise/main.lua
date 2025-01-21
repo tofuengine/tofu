@@ -43,7 +43,7 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
-local Grid = require("tofu.util.grid")
+local Grid2D = require("tofu.util.grid2d")
 
 local Main = Class.define()
 
@@ -66,7 +66,7 @@ function Main:__ctor()
 
   self.font = Font.default(0, COLORS - 1)
   self.noise = Noise.new(NOISES[self.current])
-  self.grid = Grid.new(width, height)
+  self.grid = Grid2D.new(width, height)
 
   self.min = 0
   self.max = 1

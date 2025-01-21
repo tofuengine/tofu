@@ -43,7 +43,7 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Controller = require("tofu.input.controller")
 local Source = require("tofu.sound.source")
-local Grid = require("tofu.util.grid")
+local Grid2D = require("tofu.util.grid2d")
 
 local INITIAL_LENGTH <const> = 5
 local SPEED_RATIO <const> = 5
@@ -106,7 +106,7 @@ function Main:__ctor()
   local width, height = image:size()
 
   self.font = Font.default(palette:match(0, 0, 0), palette:match(255, 255, 255))
-  self.grid = Grid.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
+  self.grid = Grid2D.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
 
   self.sources = {}
   for _, source in ipairs(SOURCES) do
@@ -127,7 +127,7 @@ function Main:reset()
   self.length = INITIAL_LENGTH
   self.state = "running"
 
-  self.grid = Grid.parse(MAP)
+  self.grid = Grid2D.parse(MAP)
 
   local gw, gh = self.grid:size()
   self.position = { x = gw / 2, y = gh / 2 }

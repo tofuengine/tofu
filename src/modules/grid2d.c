@@ -14,7 +14,7 @@
  *
  * MIT License
  * 
- * Copyright (c) 2019-2025 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@
  * SOFTWARE.
  */
 
-#include "grid.h"
+#include "grid2d.h"
 
 #include "internal/udt.h"
 
@@ -45,35 +45,35 @@
 #include <libs/stb.h>
 #include <systems/interpreter.h>
 
-static int grid_new_3nnT_1o(lua_State *L);
-static int grid_gc_1o_0(lua_State *L);
-static int grid_size_1o_2nn(lua_State *L);
-static int grid_fill_2ot_0(lua_State *L);
-static int grid_copy_2oo_0(lua_State *L);
-static int grid_peek_v_1n(lua_State *L);
-static int grid_poke_v_0(lua_State *L);
-static int grid_scan_2of_0(lua_State *L);
-static int grid_process_2of_0(lua_State *L);
-static int grid_path_5onnnn_1t(lua_State *L);
+static int grid2d_new_3nnT_1o(lua_State *L);
+static int grid2d_gc_1o_0(lua_State *L);
+static int grid2d_size_1o_2nn(lua_State *L);
+static int grid2d_fill_2ot_0(lua_State *L);
+static int grid2d_copy_2oo_0(lua_State *L);
+static int grid2d_peek_v_1n(lua_State *L);
+static int grid2d_poke_v_0(lua_State *L);
+static int grid2d_scan_2of_0(lua_State *L);
+static int grid2d_process_2of_0(lua_State *L);
+static int grid2d_path_5onnnn_1t(lua_State *L);
 
-int grid_loader(lua_State *L)
+int grid2d_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
-            { "new", grid_new_3nnT_1o },
-            { "__gc", grid_gc_1o_0 },
+            { "new", grid2d_new_3nnT_1o },
+            { "__gc", grid2d_gc_1o_0 },
             // -- accessors --
-            { "size", grid_size_1o_2nn },
+            { "size", grid2d_size_1o_2nn },
             // -- mutators --
-            { "fill", grid_fill_2ot_0 },
-            { "copy", grid_copy_2oo_0 },
-            { "peek", grid_peek_v_1n },
-            { "poke", grid_poke_v_0 },
+            { "fill", grid2d_fill_2ot_0 },
+            { "copy", grid2d_copy_2oo_0 },
+            { "peek", grid2d_peek_v_1n },
+            { "poke", grid2d_poke_v_0 },
             // -- operations --
-            { "scan", grid_scan_2of_0 },
-            { "process", grid_process_2of_0 },
-            { "path", grid_path_5onnnn_1t },
+            { "scan", grid2d_scan_2of_0 },
+            { "process", grid2d_process_2of_0 },
+            { "path", grid2d_path_5onnnn_1t },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -81,7 +81,7 @@ int grid_loader(lua_State *L)
         });
 }
 
-static int grid_new_3nnT_1o(lua_State *L)
+static int grid2d_new_3nnT_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -125,7 +125,7 @@ static int grid_new_3nnT_1o(lua_State *L)
     return 1;
 }
 
-static int grid_gc_1o_0(lua_State *L)
+static int grid2d_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -140,7 +140,7 @@ static int grid_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static int grid_size_1o_2nn(lua_State *L)
+static int grid2d_size_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -153,7 +153,7 @@ static int grid_size_1o_2nn(lua_State *L)
     return 2;
 }
 
-static int grid_fill_2ot_0(lua_State *L)
+static int grid2d_fill_2ot_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -182,7 +182,7 @@ static int grid_fill_2ot_0(lua_State *L)
     return 0;
 }
 
-static int grid_copy_2oo_0(lua_State *L)
+static int grid2d_copy_2oo_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -205,7 +205,7 @@ static int grid_copy_2oo_0(lua_State *L)
     return 0;
 }
 
-static int grid_peek_2on_1n(lua_State *L)
+static int grid2d_peek_2on_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -226,7 +226,7 @@ static int grid_peek_2on_1n(lua_State *L)
     return 1;
 }
 
-static int grid_peek_3onn_1n(lua_State *L)
+static int grid2d_peek_3onn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -252,15 +252,15 @@ static int grid_peek_3onn_1n(lua_State *L)
     return 1;
 }
 
-static int grid_peek_v_1n(lua_State *L)
+static int grid2d_peek_v_1n(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(grid_peek_2on_1n, 2)
-        LUAX_OVERLOAD_BY_ARITY(grid_peek_3onn_1n, 3)
+        LUAX_OVERLOAD_BY_ARITY(grid2d_peek_2on_1n, 2)
+        LUAX_OVERLOAD_BY_ARITY(grid2d_peek_3onn_1n, 3)
     LUAX_OVERLOAD_END
 }
 
-static int grid_poke_3onn_0(lua_State *L)
+static int grid2d_poke_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -281,7 +281,7 @@ static int grid_poke_3onn_0(lua_State *L)
     return 0;
 }
 
-static int grid_poke_4onnn_0(lua_State *L)
+static int grid2d_poke_4onnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -307,15 +307,15 @@ static int grid_poke_4onnn_0(lua_State *L)
     return 0;
 }
 
-static int grid_poke_v_0(lua_State *L)
+static int grid2d_poke_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(grid_poke_3onn_0, 3)
-        LUAX_OVERLOAD_BY_ARITY(grid_poke_4onnn_0, 4)
+        LUAX_OVERLOAD_BY_ARITY(grid2d_poke_3onn_0, 3)
+        LUAX_OVERLOAD_BY_ARITY(grid2d_poke_4onnn_0, 4)
     LUAX_OVERLOAD_END
 }
 
-static int grid_scan_2of_0(lua_State *L)
+static int grid2d_scan_2of_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -341,7 +341,7 @@ static int grid_scan_2of_0(lua_State *L)
     return 0;
 }
 
-static int grid_process_2of_0(lua_State *L)
+static int grid2d_process_2of_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -380,7 +380,7 @@ static int grid_process_2of_0(lua_State *L)
 }
 
 // TODO: implmement Dijkstra/A* path-finding.
-static int grid_path_5onnnn_1t(lua_State *L)
+static int grid2d_path_5onnnn_1t(lua_State *L)
 {
     return 0;
 }

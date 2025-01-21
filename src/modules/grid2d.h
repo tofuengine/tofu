@@ -14,7 +14,7 @@
  *
  * MIT License
  * 
- * Copyright (c) 2019-2025 Marco Lizza
+ * Copyright (c) 2019-2024 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,11 +35,11 @@
  * SOFTWARE.
  */
 
-#ifndef TOFU_MODULES_GRID_H
-#define TOFU_MODULES_GRID_H
+#ifndef TOFU_MODULES_GRID2D_H
+#define TOFU_MODULES_GRID2D_H
 
 #include <lua/lua.h>
 
-extern int grid_loader(lua_State *L);
+extern int grid2d_loader(lua_State *L);
 
-#endif  /* TOFU_MODULES_GRID_H */
+#endif  /* TOFU_MODULES_GRID2D_H */

@@ -35,12 +35,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Grid = {}
-
---Grid.__index = Grid
+local Grid2D = {}
 
 -- <width>|<height>|<amount>:<value>|<amount>:<value>|<amount>:<value>
-function Grid.parse(content)
+function Grid2D.parse(content)
   local columns, rows, data = string.match(content, "^(%d+)|(%d+)|(.+)$")
   if not columns or not rows or not data then
     error("grid content is malformed")
@@ -52,7 +50,7 @@ function Grid.parse(content)
     error("grid dimensions must be positive")
   end
 
-  local grid = Grid.new(width, height, {})
+  local grid = Grid2D.new(width, height, {})
 
   local offset = 0
   for amount, value in string.gmatch(data, "(%d+):([+-]?%d+%.?%d*)") do -- Matches any number (not only integer).
@@ -65,7 +63,7 @@ function Grid.parse(content)
   return grid
 end
 
-function Grid:to_string()
+function Grid2D:to_string()
   local width, height = self:size()
   local size = width * height
 
@@ -94,4 +92,4 @@ function Grid:to_string()
   return table.concat(content, "|")
 end
 
-return Grid
+return Grid2D
