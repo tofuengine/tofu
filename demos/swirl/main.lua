@@ -42,7 +42,7 @@ local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
-local Vector = require("tofu.util.vector")
+local Vector2D = require("tofu.util.vector2d")
 
 local function square(canvas, x, y, s, r, g, b)
 --  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
@@ -60,9 +60,9 @@ function Main:__ctor()
 
   local image = canvas:image()
   local width, height = image:size()
-  self.m = Vector.new(width - 1, height - 1)
-  self.c = Vector.new(self.m)
-  self.c:scale(0.5)
+  self.m = Vector2D.new(width - 1, height - 1)
+  self.c = Vector2D.new(self.m)
+  self.c:smul(0.5)
   self.fan = false
 
   self.font = Font.default(0, 15)
