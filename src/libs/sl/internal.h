@@ -56,7 +56,7 @@ struct SL_Source_s {
 // This struct is used to pass to the XMP loader both the user-provided
 // callbacks (using our FS library) and the user-data (point to a handle).
 typedef struct SL_Callbacks_Closure_s {
-    SL_Callbacks_t *callbacks;
+    const SL_Callbacks_t *callbacks;
     void *user_data;
 } SL_Callbacks_Closure_t;
 

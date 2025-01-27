@@ -150,6 +150,17 @@ static bool _cache_eof(void *stream)
     return cache_stream->position >= cache_stream->size;
 }
 
+static const FS_Callbacks_t _io_callbacks = {
+    .contains = _cache_contains,
+    .open = _cache_open,
+    .close = _cache_close,
+    .size = _cache_size,
+    .read = _cache_read,
+    .seek = _cache_seek,
+    .tell = _cache_tell,
+    .eof = _cache_eof
+};
+
 Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
 {
     Storage_Cache_t *cache = malloc(sizeof(Storage_Cache_t));
@@ -168,16 +179,7 @@ Storage_Cache_t *Storage_Cache_create(FS_Context_t *context)
         goto error_free_cache;
     }
 
-    bool attached = FS_attach_from_callbacks(context, (FS_Callbacks_t){
-            .contains = _cache_contains,
-            .open = _cache_open,
-            .close = _cache_close,
-            .size = _cache_size,
-            .read = _cache_read,
-            .seek = _cache_seek,
-            .tell = _cache_tell,
-            .eof = _cache_eof
-        }, cache, FS_PRIORITY_DEFAULT, &cache->mount_id);
+    bool attached = FS_attach_from_callbacks(context, &_io_callbacks, cache, FS_PRIORITY_DEFAULT, &cache->mount_id);
     if (!attached) {
         LOG_E("can't attach storage cache callbacks");
         goto error_free_entries;

@@ -73,7 +73,7 @@ extern void FS_destroy(FS_Context_t *context);
 extern bool FS_attach_folder_or_archive(FS_Context_t *context, const char *path, int priority, int *mount_id);
 extern bool FS_attach_folder(FS_Context_t *context, const char *path, int priority, int *mount_id);
 extern bool FS_attach_archive(FS_Context_t *context, const char *path, int priority, int *mount_id);
-extern bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int priority, int *mount_id);
+extern bool FS_attach_from_callbacks(FS_Context_t *context, const FS_Callbacks_t *callbacks, void *user_data, int priority, int *mount_id);
 
 extern bool FS_detach(FS_Context_t *context, int mount_id);
 

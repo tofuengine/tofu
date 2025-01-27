@@ -174,7 +174,7 @@ bool FS_attach_archive(FS_Context_t *context, const char *path, int priority, in
     return true;
 }
 
-bool FS_attach_from_callbacks(FS_Context_t *context, FS_Callbacks_t callbacks, void *user_data, int priority, int *mount_id)
+bool FS_attach_from_callbacks(FS_Context_t *context, const FS_Callbacks_t *callbacks, void *user_data, int priority, int *mount_id)
 {
     FS_Mount_t *mount = FS_callbacks_mount(callbacks, user_data);
     if (!mount) {

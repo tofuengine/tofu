@@ -40,6 +40,6 @@
 
 #include "fs.h"
 
-extern FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data);
+extern FS_Mount_t *FS_callbacks_mount(const FS_Callbacks_t *callbacks, void *user_data);
 
 #endif /* TOFU_LIBS_FS_CALLBACKS_H */

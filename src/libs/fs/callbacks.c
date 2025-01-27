@@ -49,7 +49,7 @@ typedef struct Cache_Mount_s {
     // The struct need to match `FS_Mount_t`, initially.
     Mount_VTable_t vtable;
     // Structure specific fields follows.
-    FS_Callbacks_t callbacks;
+    const FS_Callbacks_t *callbacks;
     void *user_data;
 } Cache_Mount_t;
 
@@ -57,16 +57,16 @@ typedef struct Cache_Handle_s {
     // The struct need to match `FS_Handle_t`, initially.
     Handle_VTable_t vtable;
     // Structure specific fields follows.
-    FS_Callbacks_t callbacks;
+    const FS_Callbacks_t *callbacks;
     void *stream;
 } Cache_Handle_t;
 
-static void _callbacks_mount_ctor(FS_Mount_t *mount, FS_Callbacks_t callbacks, void *user_data);
+static void _callbacks_mount_ctor(FS_Mount_t *mount, const FS_Callbacks_t *callbacks, void *user_data);
 static void _callbacks_mount_dtor(FS_Mount_t *mount);
 static bool _callbacks_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *name);
 
-static void _callbacks_handle_ctor(FS_Handle_t *handle, FS_Callbacks_t callbacks, void *stream);
+static void _callbacks_handle_ctor(FS_Handle_t *handle, const FS_Callbacks_t *callbacks, void *stream);
 static void _callbacks_handle_dtor(FS_Handle_t *handle);
 static size_t _callbacks_handle_size(const FS_Handle_t *handle);
 static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -74,7 +74,7 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
 static long _callbacks_handle_tell(const FS_Handle_t *handle);
 static bool _callbacks_handle_eof(const FS_Handle_t *handle);
 
-FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data)
+FS_Mount_t *FS_callbacks_mount(const FS_Callbacks_t *callbacks, void *user_data)
 {
     FS_Mount_t *mount = malloc(sizeof(Cache_Mount_t));
     if (!mount) {
@@ -87,7 +87,7 @@ FS_Mount_t *FS_callbacks_mount(FS_Callbacks_t callbacks, void *user_data)
     return mount;
 }
 
-static void _callbacks_mount_ctor(FS_Mount_t *mount, FS_Callbacks_t callbacks, void *user_data)
+static void _callbacks_mount_ctor(FS_Mount_t *mount, const FS_Callbacks_t *callbacks, void *user_data)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
@@ -117,7 +117,7 @@ static bool _callbacks_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     Cache_Mount_t *cache_mount = (Cache_Mount_t *)mount;
 
-    return cache_mount->callbacks.contains(cache_mount->user_data, name);
+    return cache_mount->callbacks->contains(cache_mount->user_data, name);
 }
 
 static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *name)
@@ -130,14 +130,14 @@ static FS_Handle_t *_callbacks_mount_open(const FS_Mount_t *mount, const char *n
         return NULL;
     }
 
-    void *stream = cache_mount->callbacks.open(cache_mount->user_data, name);
+    void *stream = cache_mount->callbacks->open(cache_mount->user_data, name);
 
     _callbacks_handle_ctor(handle, cache_mount->callbacks, stream);
 
     return handle;
 }
 
-static void _callbacks_handle_ctor(FS_Handle_t *handle, FS_Callbacks_t callbacks, void *stream)
+static void _callbacks_handle_ctor(FS_Handle_t *handle, const FS_Callbacks_t *callbacks, void *stream)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
@@ -161,7 +161,7 @@ static void _callbacks_handle_dtor(FS_Handle_t *handle)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
-    cache_handle->callbacks.close(cache_handle->stream);
+    cache_handle->callbacks->close(cache_handle->stream);
 
     *cache_handle = (Cache_Handle_t){ 0 };
 
@@ -172,14 +172,14 @@ static size_t _callbacks_handle_size(const FS_Handle_t *handle)
 {
     const Cache_Handle_t *cache_handle = (const Cache_Handle_t *)handle;
 
-    return cache_handle->callbacks.size(cache_handle->stream);
+    return cache_handle->callbacks->size(cache_handle->stream);
 }
 
 static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
-    size_t bytes_read = cache_handle->callbacks.read(cache_handle->stream, buffer, bytes_requested);
+    size_t bytes_read = cache_handle->callbacks->read(cache_handle->stream, buffer, bytes_requested);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("%d bytes read for handle %p", bytes_read, handle);
 #endif
@@ -190,7 +190,7 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
 {
     Cache_Handle_t *cache_handle = (Cache_Handle_t *)handle;
 
-    bool sought = cache_handle->callbacks.seek(cache_handle->stream, offset, whence);
+    bool sought = cache_handle->callbacks->seek(cache_handle->stream, offset, whence);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
 #endif
@@ -201,14 +201,14 @@ static long _callbacks_handle_tell(const FS_Handle_t *handle)
 {
     const Cache_Handle_t *cache_handle = (const Cache_Handle_t *)handle;
 
-    return cache_handle->callbacks.tell(cache_handle->stream);
+    return cache_handle->callbacks->tell(cache_handle->stream);
 }
 
 static bool _callbacks_handle_eof(const FS_Handle_t *handle)
 {
     const Cache_Handle_t *cache_handle = (const Cache_Handle_t *)handle;
 
-    bool end_of_file =  cache_handle->callbacks.eof(cache_handle->stream);
+    bool end_of_file =  cache_handle->callbacks->eof(cache_handle->stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_IF_D(end_of_file, "end-of-file reached for handle %p", handle);
 #endif

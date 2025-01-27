@@ -32,8 +32,6 @@
 
 typedef struct SL_Source_s SL_Source_t;
 
-typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
-
 extern void SL_source_destroy(SL_Source_t *source);
 
 extern void SL_source_set_group(SL_Source_t *source, size_t group_id);
