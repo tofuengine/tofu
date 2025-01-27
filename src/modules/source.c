@@ -52,7 +52,7 @@ typedef enum Source_Types_e {
     Source_Type_t_CountOf
 } Source_Type_t;
 
-typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL_Callbacks_t callbacks);
+typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data);
 
 static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
@@ -155,9 +155,8 @@ static int source_new_2sE_1o(lua_State *L)
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,
-            .eof = _handle_eof,
-            .user_data = (void *)handle
-        });
+            .eof = _handle_eof
+        }, (void *)handle);
     if (!source) {
         FS_close(handle);
         return luaL_error(L, "can't create source");
