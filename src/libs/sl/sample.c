@@ -65,7 +65,7 @@ typedef struct Sample_s {
     size_t frames_completed;
 } Sample_t;
 
-static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data);
+static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
@@ -111,7 +111,7 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data)
+SL_Source_t *SL_sample_create(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
 {
     SL_Source_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
@@ -137,7 +137,7 @@ static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     const SL_Callbacks_Closure_t *closure = (const SL_Callbacks_Closure_t *)user_data;
 
-    return closure->callbacks.read(closure->user_data, buffer, bytes_to_read);
+    return closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
 }
 
 static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origin origin)
@@ -146,10 +146,10 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
 
     bool sought = false;
     if (origin == drflac_seek_origin_start) {
-        sought = closure->callbacks.seek(closure->user_data, offset, SEEK_SET);
+        sought = closure->callbacks->seek(closure->user_data, offset, SEEK_SET);
     } else
     if (origin == drflac_seek_origin_current) {
-        sought = closure->callbacks.seek(closure->user_data, offset, SEEK_CUR);
+        sought = closure->callbacks->seek(closure->user_data, offset, SEEK_CUR);
     }
     return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
@@ -170,6 +170,7 @@ static void  _free(void *ptr, void *pUserData)
 }
 
 static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data)
+static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
 {
     Sample_t *sample = (Sample_t *)source;
 

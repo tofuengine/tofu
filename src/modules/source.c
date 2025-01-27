@@ -52,8 +52,6 @@ typedef enum Source_Types_e {
     Source_Type_t_CountOf
 } Source_Type_t;
 
-typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data);
-
 static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
 static int source_looped_v_v(lua_State *L);
@@ -120,6 +118,13 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
+static const SL_Callbacks_t _io_callbacks = (SL_Callbacks_t){
+    .read = _handle_read,
+    .seek = _handle_seek,
+    .tell = _handle_tell,
+    .eof = _handle_eof
+};
+
 static const char *_types[Source_Type_t_CountOf + 1] = {
     "music",
     "sample",
@@ -151,12 +156,7 @@ static int source_new_2sE_1o(lua_State *L)
     }
     LOG_D("handle %p opened for file `%s`", handle, name);
 
-    SL_Source_t *source = _create_functions[type](audio->context, (SL_Callbacks_t){
-            .read = _handle_read,
-            .seek = _handle_seek,
-            .tell = _handle_tell,
-            .eof = _handle_eof
-        }, (void *)handle);
+    SL_Source_t *source = _create_functions[type](audio->context, &_io_callbacks, (void *)handle);
     if (!source) {
         FS_close(handle);
         return luaL_error(L, "can't create source");

@@ -29,6 +29,6 @@
 #include "context.h"
 #include "source.h"
 
-extern SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data);
+extern SL_Source_t *SL_module_create(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
 
 #endif  /* TOFU_LIBS_SL_MODULE_H */
