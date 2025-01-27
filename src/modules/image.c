@@ -140,7 +140,7 @@ static int image_new_3sNO_1o(lua_State *L)
     Callback_Palette_Closure_t closure = (Callback_Palette_Closure_t){
             .palette = palette ? palette->palette : Display_get_palette(display), // Use current display's if not passed.
             .transparent = transparent_index,
-            .threshold = 0
+            .threshold = TOFU_GRAPHICS_PALETTE_TRANSPARENCY_THRESHOLD
         };
 
 #if defined(TOFU_CORE_PROFILING_ENABLED)
