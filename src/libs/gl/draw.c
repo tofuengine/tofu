@@ -129,7 +129,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, GL_Context_Scan_Callback_t callback, void *user_data)
+void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_Context_Scan_Callback_t callback, void *user_data)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -188,7 +188,7 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, GL_Contex
     }
 }
 
-void GL_context_process(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Context_Process_Callback_t callback, void *user_data)
+void GL_context_process(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, const GL_Context_Process_Callback_t callback, void *user_data)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;

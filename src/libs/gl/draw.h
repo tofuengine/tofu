@@ -48,9 +48,9 @@ typedef GL_Pixel_t (*GL_Context_Process_Callback_t)(void *user_data, GL_Point_t 
 
 extern void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transparency);
 extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index, bool transparency);
-extern void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, GL_Context_Scan_Callback_t callback, void *user_data);
+extern void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_Context_Scan_Callback_t callback, void *user_data);
 
-extern void GL_context_process(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Context_Process_Callback_t callback, void *user_data);
+extern void GL_context_process(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, const GL_Context_Process_Callback_t callback, void *user_data);
 extern void GL_context_copy(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
 extern void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold);
 extern void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Functions_t function);

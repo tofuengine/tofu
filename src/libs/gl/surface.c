@@ -71,8 +71,7 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-// TODO: pass `callback` by pointer, as well!!!
-GL_Surface_t *GL_surface_decode_from_callbacks(const GL_Callbacks_t *io_callbacks, void *io_user_data, GL_Surface_Callback_t callback, void *user_data)
+GL_Surface_t *GL_surface_decode_from_callbacks(const GL_Callbacks_t *io_callbacks, void *io_user_data, const GL_Surface_Callback_t callback, void *user_data)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks,
