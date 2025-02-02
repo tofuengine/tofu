@@ -40,8 +40,21 @@
 
 #include <core/platform.h>
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+typedef struct GL_Callbacks_s {
+    size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
+    bool   (*seek)(void *user_data, long offset, int whence);
+    long   (*tell)(void *user_data);
+    int    (*eof)(void *user_data);
+} GL_Callbacks_t;
+
+typedef struct GL_Callbacks_Closure_s {
+    const GL_Callbacks_t *callbacks;
+    void *user_data;
+} GL_Callbacks_Closure_t;
 
 typedef uint8_t GL_Pixel_t;
 

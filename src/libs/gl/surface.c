@@ -47,17 +47,61 @@ static inline bool _is_power_of_two(int n)
     return n && !(n & (n - 1));
 }
 
-GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, GL_Surface_Callback_t callback, void *user_data)
+static int _stbi_io_read(void *user_data, char *data, int size)
 {
+    GL_Callbacks_Closure_t *closure = (GL_Callbacks_Closure_t *)user_data;
+    return (int)closure->callbacks->read(closure->user_data, data, size);
+}
+
+static void _stbi_io_skip(void *user_data, int n)
+{
+    GL_Callbacks_Closure_t *closure = (GL_Callbacks_Closure_t *)user_data;
+    closure->callbacks->seek(closure->user_data, n, SEEK_CUR);
+}
+
+static int _stbi_io_eof(void *user_data)
+{
+    GL_Callbacks_Closure_t *closure = (GL_Callbacks_Closure_t *)user_data;
+    return closure->callbacks->eof(closure->user_data);
+}
+
+static const stbi_io_callbacks _stbi_io_callbacks = {
+    _stbi_io_read,
+    _stbi_io_skip,
+    _stbi_io_eof,
+};
+
+// TODO: pass `callback` by pointer, as well!!!
+GL_Surface_t *GL_surface_decode_from_callbacks(const GL_Callbacks_t *io_callbacks, void *io_user_data, GL_Surface_Callback_t callback, void *user_data)
+{
+    int width, height, components;
+    void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks,
+        &(GL_Callbacks_Closure_t){
+            .callbacks = io_callbacks,
+            .user_data = io_user_data
+        }, &width, &height, &components, STBI_rgb_alpha);
+    if (!pixels) {
+        LOG_E("can't decode surface (%s)", stbi_failure_reason());
+        goto error_exit;
+    }
+    LOG_D("loaded %dx%d image", width, height);
+
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
-        return NULL;
+        goto error_free_pixels;
     }
 
     callback(user_data, surface, pixels);
     LOG_D("surface decoded at %p (%dx%d)", surface->data, width, height);
 
+    free(pixels);
+
     return surface;
+
+error_free_pixels:
+    free(pixels);
+error_exit:
+    return NULL;
 }
 
 GL_Surface_t *GL_surface_create(size_t width, size_t height)

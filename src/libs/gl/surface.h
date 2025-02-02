@@ -53,7 +53,8 @@ typedef void (*GL_Surface_Callback_t)(const void *user_data, GL_Surface_t *surfa
 
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.
-extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, GL_Surface_Callback_t callback, void *user_data);
+extern GL_Surface_t *GL_surface_decode_from_callbacks(const GL_Callbacks_t *io_callbacks, void *io_user_data, GL_Surface_Callback_t callback, void *user_data);
+
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 

@@ -123,6 +123,37 @@ static int image_new_2nn_1o(lua_State *L)
     return 1;
 }
 
+static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
+{
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    return FS_read(handle, buffer, bytes_to_read);
+}
+
+static bool _handle_seek(void *user_data, long offset, int whence)
+{
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    return FS_seek(handle, offset, whence);
+}
+
+static long _handle_tell(void *user_data)
+{
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    return FS_tell(handle);
+}
+
+static int _handle_eof(void *user_data)
+{
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    return FS_eof(handle) ? 1 : 0;
+}
+
+static const GL_Callbacks_t _io_callbacks = {
+    .read = _handle_read,
+    .seek = _handle_seek,
+    .tell = _handle_tell,
+    .eof = _handle_eof,
+};
+
 static int image_new_3sNO_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -147,14 +178,19 @@ static int image_new_3sNO_1o(lua_State *L)
     StopWatch_t stopwatch = stopwatch_init();
     LOG_I("profiling loading and decoding for image `%s`", name);
 #endif
-    const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
-    if (!image) {
-        return luaL_error(L, "can't load file `%s`", name);
+    FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
+    if (!handle) {
+        return luaL_error(L, "can't access file `%s`", name);
     }
-    GL_Surface_t *surface = GL_surface_decode(SR_IWIDTH(image), SR_IHEIGHT(image), SR_IPIXELS(image), surface_callback_palette, (void *)&closure);
+    LOG_D("handle %p opened for file `%s`", handle, name);
+
+    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_palette, (void *)&closure);
     if (!surface) {
+        FS_close(handle);
         return luaL_error(L, "can't decode file `%s`", name);
     }
+
+    FS_close(handle);
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
 #endif
@@ -192,14 +228,19 @@ static int image_new_3snn_1o(lua_State *L)
     StopWatch_t stopwatch = stopwatch_init();
     LOG_I("profiling loading and decoding for image `%s`", name);
 #endif
-    const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
-    if (!image) {
-        return luaL_error(L, "can't load file `%s`", name);
+    FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
+    if (!handle) {
+        return luaL_error(L, "can't access file `%s`", name);
     }
-    GL_Surface_t *surface = GL_surface_decode(SR_IWIDTH(image), SR_IHEIGHT(image), SR_IPIXELS(image), surface_callback_indexes, (void *)&closure);
+    LOG_D("handle %p opened for file `%s`", handle, name);
+
+    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_indexes, (void *)&closure);
     if (!surface) {
+        FS_close(handle);
         return luaL_error(L, "can't decode file `%s`", name);
     }
+
+    FS_close(handle);
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
 #endif

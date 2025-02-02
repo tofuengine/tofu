@@ -140,6 +140,8 @@ More precisely we avoid to either
 - pass the callbacks structure by value (occupies the stack more than it's necessary),
 - pack the functions pointers AND the user-data into the same function (which might appear clever, but it's really just messy).
 
+> As a general advice we should *always* provide (or for better saying, favour) callback-driven I/O routines. At the price of a (small) boilerplate code addition we can support seamlessly **every** type of source for the data. Instead of having a `XXX_from_file()`, `XXX_from_memory()`, and so on we can have a single `XXX_from_callbacks()` that supports all of them.
+
 ## Folders Usage
 
 According to the "purpose" of the file, it will be places in a specific folder. The rules are the following:
