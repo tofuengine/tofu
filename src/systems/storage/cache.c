@@ -60,7 +60,7 @@ static void *_cache_open(void *user_data, const char *name)
     Storage_Cache_t *cache = (Storage_Cache_t *)user_data;
     Storage_Cache_Entry_t *entries = cache->entries;
 
-    int index = shgeti(entries, name);
+    ptrdiff_t index = shgeti(entries, name);
     if (index == -1) {
         return NULL;
     }

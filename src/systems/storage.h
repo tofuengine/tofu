@@ -49,7 +49,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define STORAGE_RESOURCE_ID_LENGTH  MD5_SIZE
+#define STORAGE_RESOURCE_ID_LENGTH MD5_SIZE
 
 typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
