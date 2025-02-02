@@ -137,17 +137,17 @@ static bool _handle_seek(void *user_data, long offset, int whence)
 
 static long _handle_tell(void *user_data)
 {
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
     return FS_tell(handle);
 }
 
 static int _handle_eof(void *user_data)
 {
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const GL_Callbacks_t _io_callbacks = {
+static const GL_IO_Callbacks_t _io_callbacks = {
     .read = _handle_read,
     .seek = _handle_seek,
     .tell = _handle_tell,

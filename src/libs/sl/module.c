@@ -63,7 +63,7 @@ typedef struct Module_s {
 
     SL_Props_t *props;
 
-    SL_Callbacks_Closure_t callbacks_closure;
+    SL_IO_Callbacks_Closure_t io_callbacks_closure;
 
     xmp_context context;
 
@@ -71,7 +71,7 @@ typedef struct Module_s {
     bool completed;
 } Module_t;
 
-static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
+static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data);
 static void _module_dtor(SL_Source_t *source);
 static bool _module_reset(SL_Source_t *source);
 static bool _module_update(SL_Source_t *source, float delta_time);
@@ -140,7 +140,7 @@ static inline bool _produce(Module_t *module)
     return true;
 }
 
-SL_Source_t *SL_module_create(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
+SL_Source_t *SL_module_create(const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
     SL_Source_t *module = malloc(sizeof(Module_t));
     if (!module) {
@@ -161,29 +161,29 @@ SL_Source_t *SL_module_create(const SL_Context_t *context, const SL_Callbacks_t 
 
 static size_t _xmp_read(void *buffer, size_t size, size_t amount, void *user_data)
 {
-    SL_Callbacks_Closure_t *closure = (SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
     return closure->callbacks->read(closure->user_data, buffer, size * amount) / size; // Convert from and to `fread()` values.
 }
 
 static int _xmp_seek(void *user_data, long offset, int whence)
 {
-    SL_Callbacks_Closure_t *closure = (SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
     return closure->callbacks->seek(closure->user_data, offset, whence) ? 0 : -1; // Convert to `fseek()` return values.
 }
 
 static long _xmp_tell(void *user_data)
 {
-    SL_Callbacks_Closure_t *closure = (SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
     return closure->callbacks->tell(closure->user_data);
 }
 
 static int _xmp_eof(void *user_data)
 {
-    SL_Callbacks_Closure_t *closure = (SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
     return closure->callbacks->eof(closure->user_data);
 }
 
-static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
+static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
     Module_t *module = (Module_t *)source;
 
@@ -194,7 +194,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, const
                 .update = _module_update,
                 .generate = _module_generate
             },
-            .callbacks_closure = (SL_Callbacks_Closure_t){
+            .io_callbacks_closure = (SL_IO_Callbacks_Closure_t){
                 .callbacks = callbacks,
                 .user_data = user_data
             },
@@ -207,7 +207,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, const
         goto error_exit;
     }
 
-    int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &module->callbacks_closure);
+    int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &module->io_callbacks_closure);
     if (loaded != 0) {
         LOG_E("can't load module");
         goto error_free_context;

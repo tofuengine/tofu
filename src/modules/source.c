@@ -52,7 +52,7 @@ typedef enum Source_Types_e {
     Source_Type_t_CountOf
 } Source_Type_t;
 
-typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
+typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data);
 
 static int source_new_2sE_1o(lua_State *L);
 static int source_gc_1o_0(lua_State *L);
@@ -110,17 +110,17 @@ static bool _handle_seek(void *user_data, long offset, int whence)
 
 static long _handle_tell(void *user_data)
 {
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
     return FS_tell(handle);
 }
 
 static int _handle_eof(void *user_data)
 {
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
     return FS_eof(handle) ? 1 : 0;
 }
 
-static const SL_Callbacks_t _io_callbacks = {
+static const SL_IO_Callbacks_t _io_callbacks = {
     .read = _handle_read,
     .seek = _handle_seek,
     .tell = _handle_tell,

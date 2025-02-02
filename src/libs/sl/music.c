@@ -56,7 +56,7 @@ typedef struct Music_s { // FIXME: rename to `_Music_Source_s`.
 
     SL_Props_t *props;
 
-    SL_Callbacks_Closure_t callbacks_closure;
+    SL_IO_Callbacks_Closure_t io_callbacks_closure;
 
     drflac *decoder;
     size_t length_in_frames;
@@ -65,7 +65,7 @@ typedef struct Music_s { // FIXME: rename to `_Music_Source_s`.
     size_t frames_completed;
 } Music_t;
 
-static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
+static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data);
 static void _music_dtor(SL_Source_t *source);
 static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
@@ -141,7 +141,7 @@ static inline bool _produce(Music_t *music)
     return true;
 }
 
-SL_Source_t *SL_music_create(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
+SL_Source_t *SL_music_create(const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
     SL_Source_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -162,14 +162,14 @@ SL_Source_t *SL_music_create(const SL_Context_t *context, const SL_Callbacks_t *
 
 static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    const SL_Callbacks_Closure_t *closure = (const SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     return closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
 }
 
 static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
-    const SL_Callbacks_Closure_t *closure = (const SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     bool sought = false;
     if (origin == drflac_seek_origin_start) {
@@ -181,7 +181,7 @@ static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin
     return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
-static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
+static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
     Music_t *music = (Music_t *)source;
 
@@ -192,14 +192,14 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
                 .update = _music_update,
                 .generate = _music_generate
             },
-            .callbacks_closure = (SL_Callbacks_Closure_t){
+            .io_callbacks_closure = (SL_IO_Callbacks_Closure_t){
                 .callbacks = callbacks,
                 .user_data = user_data
             },
             .frames_completed = 0
         };
 
-    music->decoder = drflac_open(_music_read, _music_seek, &music->callbacks_closure, NULL);
+    music->decoder = drflac_open(_music_read, _music_seek, &music->io_callbacks_closure, NULL);
     if (!music->decoder) {
         LOG_E("can't create music decoder");
         goto error_exit;

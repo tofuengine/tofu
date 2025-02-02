@@ -54,7 +54,7 @@ typedef struct Sample_s {
 
     SL_Props_t *props;
 
-    SL_Callbacks_Closure_t callbacks_closure;
+    SL_IO_Callbacks_Closure_t io_callbacks_closure;
 
     drflac *decoder;
     size_t length_in_frames;
@@ -65,7 +65,7 @@ typedef struct Sample_s {
     size_t frames_completed;
 } Sample_t;
 
-static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data);
+static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data);
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
@@ -111,7 +111,7 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-SL_Source_t *SL_sample_create(const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
+SL_Source_t *SL_sample_create(const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
     SL_Source_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
@@ -135,14 +135,14 @@ error_exit:
 
 static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    const SL_Callbacks_Closure_t *closure = (const SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     return closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
 }
 
 static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
-    const SL_Callbacks_Closure_t *closure = (const SL_Callbacks_Closure_t *)user_data;
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     bool sought = false;
     if (origin == drflac_seek_origin_start) {
@@ -154,23 +154,7 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
-static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.
-{
-    return malloc(sz);
-}
-
-static void *_realloc(void *ptr, size_t sz, void *pUserData)
-{
-    return realloc(ptr, sz);
-}
-
-static void  _free(void *ptr, void *pUserData)
-{
-    free(ptr);
-}
-
-static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks, void *user_data)
-static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_Callbacks_t *callbacks, void *user_data)
+static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
     Sample_t *sample = (Sample_t *)source;
 
@@ -181,19 +165,14 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const
                 .update = _sample_update,
                 .generate = _sample_generate
             },
-            .callbacks_closure = (SL_Callbacks_Closure_t){
+            .io_callbacks_closure = (SL_IO_Callbacks_Closure_t){
                 .callbacks = callbacks,
                 .user_data = user_data
             },
             .frames_completed = 0
         };
 
-    sample->decoder = drflac_open(_sample_read, _sample_seek, &sample->callbacks_closure, &(drflac_allocation_callbacks){
-            .pUserData = NULL,
-            .onMalloc  = _malloc,
-            .onRealloc = _realloc,
-            .onFree    = _free
-        });
+    sample->decoder = drflac_open(_sample_read, _sample_seek, &sample->io_callbacks_closure, NULL);
     if (!sample->decoder) {
         LOG_E("can't create sample decoder");
         goto error_exit;

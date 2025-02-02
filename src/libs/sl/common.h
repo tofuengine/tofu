@@ -64,14 +64,14 @@ typedef struct SL_Callbacks_s {
     bool   (*seek)(void *user_data, long offset, int whence);
     long   (*tell)(void *user_data);
     int    (*eof)(void *user_data);
-} SL_Callbacks_t;
+} SL_IO_Callbacks_t;
 
 // Used to wrap both the I/O callbacks and the userdata on a single structure,
 // for example to pass to the XMP loader both the user-provided callbacks
 // (using our FS library) and the user-data (point to a handle).
-typedef struct SL_Callbacks_Closure_s {
-    const SL_Callbacks_t *callbacks;
+typedef struct SL_IO_Callbacks_Closure_s {
+    const SL_IO_Callbacks_t *callbacks;
     void *user_data;
-} SL_Callbacks_Closure_t;
+} SL_IO_Callbacks_Closure_t;
 
 #endif  /* TOFU_LIBS_SL_COMMON_H */
