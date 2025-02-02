@@ -124,6 +124,22 @@ and the source file
 #include <stb/stb_image.h>
 ```
 
+## Callbacks and Userdata
+
+In C one can implement a "dependency injection" of some sort by mean of function pointers.
+
+A typical usage is for I/O, as a way to provide some custom implementation for non-standard I/O functions. In such a scenario, the API requires to pass one or more functions pointers and a (optional) user-data. The former are very ofter packed into a structure and passed as pointer, while the latter is a generic `void *`.
+
+We stick to this pattern in our code.
+
+Having the two separated permits to pre-define the structure once for all and reuse it (which isn't technically an issue with C99's compound literals but, nonetheless, represents a way to both optimize and keep the code cleaner).
+
+More precisely we avoid to either
+
+- pass each single callback as a different argument (which would confuse the code a lot),
+- pass the callbacks structure by value (occupies the stack more than it's necessary),
+- pack the functions pointers AND the user-data into the same function (which might appear clever, but it's really just messy).
+
 ## Folders Usage
 
 According to the "purpose" of the file, it will be places in a specific folder. The rules are the following:
