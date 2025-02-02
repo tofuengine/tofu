@@ -49,13 +49,6 @@
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 #define SL_ANY_GROUP            (SL_LAST_GROUP + 1)
 
-typedef struct SL_Callbacks_s {
-    size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
-    bool   (*seek)(void *user_data, long offset, int whence);
-    long   (*tell)(void *user_data);
-    int    (*eof)(void *user_data);
-} SL_Callbacks_t;
-
 typedef struct SL_Mix_s {
     float left_to_left, left_to_right;
     float right_to_left, right_to_right;
@@ -65,5 +58,20 @@ typedef struct SL_Group_s {
     SL_Mix_t mix;
     float gain;
 } SL_Group_t;
+
+typedef struct SL_Callbacks_s {
+    size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
+    bool   (*seek)(void *user_data, long offset, int whence);
+    long   (*tell)(void *user_data);
+    int    (*eof)(void *user_data);
+} SL_Callbacks_t;
+
+// Used to wrap both the I/O callbacks and the userdata on a single structure,
+// for example to pass to the XMP loader both the user-provided callbacks
+// (using our FS library) and the user-data (point to a handle).
+typedef struct SL_Callbacks_Closure_s {
+    const SL_Callbacks_t *callbacks;
+    void *user_data;
+} SL_Callbacks_Closure_t;
 
 #endif  /* TOFU_LIBS_SL_COMMON_H */

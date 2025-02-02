@@ -53,11 +53,4 @@ struct SL_Source_s {
     SL_Props_t *props;
 };
 
-// This struct is used to pass to the XMP loader both the user-provided
-// callbacks (using our FS library) and the user-data (point to a handle).
-typedef struct SL_Callbacks_Closure_s {
-    const SL_Callbacks_t *callbacks;
-    void *user_data;
-} SL_Callbacks_Closure_t;
-
 #endif  /* TOFU_LIBS_SL_INTERNAL_H */
