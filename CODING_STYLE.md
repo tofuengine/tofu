@@ -130,6 +130,8 @@ In C one can implement a "dependency injection" of some sort by mean of function
 
 A typical usage is for I/O, as a way to provide some custom implementation for non-standard I/O functions. In such a scenario, the API requires to pass one or more functions pointers and a (optional) user-data. The former are very ofter packed into a structure and passed as pointer, while the latter is a generic `void *`.
 
+> Please note that we adopt the convention of passing the user-data as a NON CONST `void *`. While there are definitely chances that the pointer is actually treated as constant (and never accessed in write mode), is a more "general purpose" approach to leave it non-constant.
+
 We stick to this pattern in our code.
 
 Having the two separated permits to pre-define the structure once for all and reuse it (which isn't technically an issue with C99's compound literals but, nonetheless, represents a way to both optimize and keep the code cleaner).
