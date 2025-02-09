@@ -47,9 +47,9 @@
 #define FS_ARCHIVE_EXTENSION_SZ ".pak"
 
 #define FS_PRIORITY_DEFAULT 0
-#define FS_PRIORITY_HIGH 100
-#define FS_PRIORITY_HIGHER 200
-#define FS_PRIORITY_HIGHEST 300
+#define FS_PRIORITY_HIGH 128
+#define FS_PRIORITY_HIGHER 256
+#define FS_PRIORITY_HIGHEST 512
 
 typedef struct FS_Mount_s FS_Mount_t;
 typedef struct FS_Handle_s FS_Handle_t;

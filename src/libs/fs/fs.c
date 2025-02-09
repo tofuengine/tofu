@@ -105,7 +105,7 @@ static int _last_mount_id = 0;
 // "attach" order.
 //
 // The `File` sub-system supports multiple mount-points. When scanning for a
-// file, the file instance present in "highest priority mount" is used.We call
+// file, the file instance present in "highest priority mount" is used. We call
 // this "mount-override" as it enables a file to be present in more than an
 // archive/folder, with only one instance to be used.
 //
@@ -114,8 +114,12 @@ static int _last_mount_id = 0;
 // override/redefine its implementation.
 static int _compare_mount_points(const void *first, const void *second)
 {
-    const _mount_point_t *first_mount_point = first;
-    const _mount_point_t *second_mount_point = second;
+    // Note: we *invert* the the comparison terms so that a *reversed* ordering
+    //       is applied. This ensures that a linear first-to-last scan of the
+    //       mount-points array will correctly find higher priority (overriden)
+    //       ones first!
+    const _mount_point_t *first_mount_point = second;
+    const _mount_point_t *second_mount_point = first;
 
     int delta = first_mount_point->priority - second_mount_point->priority;
     if (delta == 0) {
@@ -215,15 +219,15 @@ bool FS_detach(FS_Context_t *context, int mount_id)
 
 static const FS_Mount_t *_locate(const FS_Context_t *context, const char *name)
 {
-    for (ptrdiff_t index = 0; index < arrlen(context->mount_points); ++index) {
-        _mount_point_t mount_point = context->mount_points[index];
+    const _mount_point_t *current = context->mount_points;
+    for (size_t count = arrlenu(context->mount_points); count; --count) {
+        _mount_point_t mount_point = *(current++);
 
-        const FS_Mount_t *current = mount_point.mount;
-        if (current->vtable.contains(current, name)) {
-            return current;
+        const FS_Mount_t *mount = mount_point.mount;
+        if (mount->vtable.contains(mount, name)) {
+            return mount;
         }
     }
-
     return NULL;
 }
 
