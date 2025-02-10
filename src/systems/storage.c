@@ -158,14 +158,17 @@ void Storage_destroy(Storage_t *storage)
 {
     LOG_D("destroying storage %p", storage);
 
-    LOG_D("releasing %d resources for storage %p", arrlenu(storage->resources), storage);
-    Storage_Resource_t **current = storage->resources;
-    for (size_t count = arrlenu(storage->resources); count; --count) {
-        Storage_Resource_t *resource = *(current++);
-        _release(resource);
+    if (arrlenu(storage->resources) > 0) {
+        LOG_I("releasing %d resources for storage %p", arrlenu(storage->resources), storage);
+        Storage_Resource_t **current = storage->resources;
+        for (size_t count = arrlenu(storage->resources); count; --count) {
+            Storage_Resource_t *resource = *(current++);
+            _release(resource);
+        }
+        LOG_D("storage cache %p emptied", storage->resources);
     }
     arrfree(storage->resources);
-    LOG_D("storage cache %p emptied", storage->resources);
+    LOG_D("storage cache %p freed", storage->resources);
 
     Storage_Cache_destroy(storage->cache);
     LOG_D("storage cache %p destroyed", storage->cache);
