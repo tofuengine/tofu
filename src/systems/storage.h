@@ -98,6 +98,9 @@ typedef struct Storage_s {
     } path;
 
     FS_Context_t *context;
+#if defined(TOFU_STORAGE_LEAK_CHECK)
+    FS_Handle_t **handles; // Used for leak-access checking.
+#endif
 
     Storage_Cache_t *cache;
 
@@ -127,7 +130,8 @@ extern bool Storage_exists(Storage_t *storage, const char *name);
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
 
-extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
+extern FS_Handle_t *Storage_open(Storage_t *storage, const char *name); // Use `FS` API to control it.
+extern void Storage_close(Storage_t *storage, FS_Handle_t *handle);
 
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
 extern bool Storage_update(Storage_t *storage, float delta_time);

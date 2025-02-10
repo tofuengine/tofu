@@ -176,6 +176,14 @@ void Storage_destroy(Storage_t *storage)
     FS_destroy(storage->context);
     LOG_D("file-system context %p destroyed", storage->context);
 
+#if defined(TOFU_STORAGE_LEAK_CHECK)
+    if (arrlenu(storage->handles) > 0) {
+        LOG_E("%u handle(s) were still in use!", arrlenu(storage->handles));
+    }
+    arrfree(storage->handles);
+    LOG_D("file-system handles %p freed", storage->handles);
+#endif
+
     free(storage);
     LOG_D("storage freed");
 }
@@ -564,9 +572,31 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
     return result;
 }
 
-FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
+FS_Handle_t *Storage_open(Storage_t *storage, const char *name)
 {
-    return FS_open(storage->context, name);
+    FS_Handle_t *handle = FS_open(storage->context, name);
+    if (!handle) {
+        return NULL;
+    }
+#if defined(TOFU_STORAGE_LEAK_CHECK)
+    arrpush(storage->handles, handle);
+#endif
+    return handle;
+}
+
+void Storage_close(Storage_t *storage, FS_Handle_t *handle)
+{
+#if defined(TOFU_STORAGE_LEAK_CHECK)
+    // Backward scan, to properly implement the SWAP-AND-POP(tm) idiom along the whole array
+    // when removing the handle reference.
+    for (ptrdiff_t index = arrlen(storage->handles) - 1; index >= 0; --index) {
+        if (storage->handles[index] != handle) {
+            continue;
+        }
+        arrdelswap(storage->handles, index);
+    }
+#endif
+    FS_close(handle);
 }
 
 #if defined(TOFU_STORAGE_AUTO_COLLECT)

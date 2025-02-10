@@ -186,11 +186,11 @@ static int image_new_3sNO_1o(lua_State *L)
 
     GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_palette, (void *)&closure);
     if (!surface) {
-        FS_close(handle);
+        Storage_close(storage, handle);
         return luaL_error(L, "can't decode file `%s`", name);
     }
 
-    FS_close(handle);
+    Storage_close(storage, handle);
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
 #endif
@@ -236,11 +236,11 @@ static int image_new_3snn_1o(lua_State *L)
 
     GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_indexes, (void *)&closure);
     if (!surface) {
-        FS_close(handle);
+        Storage_close(storage, handle);
         return luaL_error(L, "can't decode file `%s`", name);
     }
 
-    FS_close(handle);
+    Storage_close(storage, handle);
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
 #endif

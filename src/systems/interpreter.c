@@ -172,14 +172,14 @@ static const char *_reader(lua_State *L, void *data, size_t *size)
 
 static int _searcher(lua_State *L)
 {
-    const Storage_t *storage = (const Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *module_name = lua_tostring(L, 1);
 
     char name[PLATFORM_PATH_MAX] = { 0 };
     const char *file = path_lua_to_fs(name, module_name);
 
-    FS_Handle_t *handle = Storage_open(storage, file); // Don't waste storage cache! The module will be cached by Lua!
+    FS_Handle_t *handle = Storage_open(storage, file); // Raw access, not as a resource! Don't waste storage cache! The module will be cached by Lua!
     if (!handle) {
         lua_pushfstring(L, "file `%s` can't be found into the storage", file);
         return 1;
@@ -187,7 +187,7 @@ static int _searcher(lua_State *L)
 
     int result = lua_load(L, _reader, &(lua_Reader_Context_t){ .handle = handle }, name, NULL); // Set `mode` to `NULL`. Autodetect format to support both `text` and `binary` sources.
 
-    FS_close(handle);
+    Storage_close(storage, handle);
 
     if (result != LUA_OK) {
         lua_pushfstring(L, "failed w/ error #%d while loading file `%s`", result, file);

@@ -149,7 +149,7 @@ static int source_new_2sE_1o(lua_State *L)
     const char *name = LUAX_STRING(L, 1);
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_ENUM(L, 2, _types, SOURCE_TYPE_MUSIC);
 
-    const Storage_t *storage = (const Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
     Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
@@ -160,7 +160,7 @@ static int source_new_2sE_1o(lua_State *L)
 
     SL_Source_t *source = _create_functions[type](audio->context, &_io_callbacks, (void *)handle);
     if (!source) {
-        FS_close(handle);
+        Storage_close(storage, handle);
         return luaL_error(L, "can't create source");
     }
     LOG_D("source %p created, type #%d", source, type);
@@ -182,6 +182,7 @@ static int source_gc_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
     Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
     Audio_untrack(audio, self->source); // Make sure we aren't leaving dangling pointers...
@@ -189,7 +190,7 @@ static int source_gc_1o_0(lua_State *L)
     SL_source_destroy(self->source);
     LOG_D("source %p destroyed", self->source);
 
-    FS_close(self->handle);
+    Storage_close(storage, self->handle);
     LOG_D("handle %p closed", self->handle);
 
     LOG_D("source %p finalized", self);
