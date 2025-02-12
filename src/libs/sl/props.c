@@ -45,6 +45,7 @@
     #error "Wrong internal format"
 #endif
 
+#if defined(DEBUG) && !defined(SANITIZE)
 static void *_malloc(size_t sz, void *pUserData)
 {
     return malloc(sz);
@@ -59,6 +60,7 @@ static void  _free(void *ptr, void *pUserData)
 {
     free(ptr);
 }
+#endif
 
 SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
@@ -80,12 +82,16 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
 
     ma_data_converter_config config = ma_data_converter_config_init(format, INTERNAL_FORMAT, channels_in, channels_out, sample_rate, SL_FRAMES_PER_SECOND);
     config.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
+#if defined(DEBUG) && !defined(SANITIZE)
     ma_result result = ma_data_converter_init(&config, &(ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
             .onRealloc = _realloc,
             .onFree = _free
         }, &props->converter);
+#else
+    ma_result result = ma_data_converter_init(&config, NULL, &props->converter);
+#endif
     if (result != MA_SUCCESS) {
         LOG_E("failed to create data converter");
         goto error_free_props;
@@ -101,12 +107,16 @@ error_exit:
 
 void SL_props_destroy(SL_Props_t *props)
 {
+#if defined(DEBUG) && !defined(SANITIZE)
     ma_data_converter_uninit(&props->converter, &(ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
             .onRealloc = _realloc,
             .onFree = _free
         });
+#else
+    ma_data_converter_uninit(&props->converter, NULL);
+#endif
     LOG_D("data converter uninitialized");
 
     free(props);

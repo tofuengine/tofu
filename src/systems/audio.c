@@ -94,6 +94,7 @@ static void _notification_callback(const ma_device_notification *notification)
     LOG_D("device %p notified for event `%s`", notification->pDevice, types[notification->type]);
 }
 
+#if defined(DEBUG) && !defined(SANITIZE)
 static void *_malloc(size_t sz, void *pUserData)
 {
     return malloc(sz);
@@ -108,6 +109,7 @@ static void  _free(void *ptr, void *pUserData)
 {
     free(ptr);
 }
+#endif
 
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 {
@@ -135,12 +137,16 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     LOG_D("audio device mutex initialized");
 
+#if defined(DEBUG) && !defined(SANITIZE)
     ma_log_init(&(ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
             .onRealloc = _realloc,
             .onFree = _free
         }, &audio->driver.log);
+#else
+    ma_log_init(NULL, &audio->driver.log);
+#endif
     ma_log_callback log_callback = ma_log_callback_init(_log_callback, (void *)audio);
     result = ma_log_register_callback(&audio->driver.log, log_callback);
     if (result != MA_SUCCESS) {
@@ -150,12 +156,14 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 
     ma_context_config context_config = ma_context_config_init();
     context_config.pLog = &audio->driver.log;
+#if defined(DEBUG) && !defined(SANITIZE)
     context_config.allocationCallbacks = (ma_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc = _malloc,
             .onRealloc = _realloc,
             .onFree = _free
         };
+#endif
 
     result = ma_context_init(NULL, 0, &context_config, &audio->driver.context);
     if (result != MA_SUCCESS) {
