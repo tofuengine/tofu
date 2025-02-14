@@ -57,7 +57,6 @@
    CGLM_INLINE void  glm_vec4_clamp(vec4 v, float minVal, float maxVal);
    CGLM_INLINE void  glm_vec4_lerp(vec4 from, vec4 to, float t, vec4 dest);
    CGLM_INLINE void  glm_vec4_lerpc(vec4 from, vec4 to, float t, vec4 dest);
-   CGLM_INLINE void  glm_vec4_step_uni(float edge, vec4 x, vec4 dest);
    CGLM_INLINE void  glm_vec4_step(vec4 edge, vec4 x, vec4 dest);
    CGLM_INLINE void  glm_vec4_smoothstep_uni(float edge0, float edge1, vec4 x, vec4 dest);
    CGLM_INLINE void  glm_vec4_smoothstep(vec4 edge0, vec4 edge1, vec4 x, vec4 dest);
@@ -75,6 +74,7 @@
    glm_vec4_inv
    glm_vec4_inv_to
    glm_vec4_mulv
+   glm_vec4_step_uni  --> use glm_vec4_steps
  */
 
 #ifndef cglm_vec4_h
@@ -92,6 +92,7 @@
 #define glm_vec4_inv(v)                glm_vec4_negate(v)
 #define glm_vec4_inv_to(v, dest)       glm_vec4_negate_to(v, dest)
 #define glm_vec4_mulv(a, b, d)         glm_vec4_mul(a, b, d)
+#define glm_vec4_step_uni(edge, x, dest) glm_vec4_steps(edge, x, dest)
 
 #define GLM_VEC4_ONE_INIT   {1.0f, 1.0f, 1.0f, 1.0f}
 #define GLM_VEC4_BLACK_INIT {0.0f, 0.0f, 0.0f, 1.0f}
@@ -215,7 +216,7 @@ glm_vec4_one(vec4 v) {
 #if defined(__wasm__) && defined(__wasm_simd128__)
   glmm_store(v, wasm_f32x4_const_splat(1.0f));
 #elif defined( __SSE__ ) || defined( __SSE2__ )
-  glmm_store(v, _mm_set1_ps(1.0f));
+  glmm_store(v, glmm_set1_rval(1.0f));
 #elif defined(CGLM_NEON_FP)
   vst1q_f32(v, vdupq_n_f32(1.0f));
 #else
@@ -367,7 +368,7 @@ glm_vec4_adds(vec4 v, float s, vec4 dest) {
 #if defined(__wasm__) && defined(__wasm_simd128__)
   glmm_store(dest, wasm_f32x4_add(glmm_load(v), wasm_f32x4_splat(s)));
 #elif defined( __SSE__ ) || defined( __SSE2__ )
-  glmm_store(dest, _mm_add_ps(glmm_load(v), _mm_set1_ps(s)));
+  glmm_store(dest, _mm_add_ps(glmm_load(v), glmm_set1(s)));
 #elif defined(CGLM_NEON_FP)
   vst1q_f32(dest, vaddq_f32(vld1q_f32(v), vdupq_n_f32(s)));
 #else
@@ -415,7 +416,7 @@ glm_vec4_subs(vec4 v, float s, vec4 dest) {
 #if defined(__wasm__) && defined(__wasm_simd128__)
   glmm_store(dest, wasm_f32x4_sub(glmm_load(v), wasm_f32x4_splat(s)));
 #elif defined( __SSE__ ) || defined( __SSE2__ )
-  glmm_store(dest, _mm_sub_ps(glmm_load(v), _mm_set1_ps(s)));
+  glmm_store(dest, _mm_sub_ps(glmm_load(v), glmm_set1(s)));
 #elif defined(CGLM_NEON_FP)
   vst1q_f32(dest, vsubq_f32(vld1q_f32(v), vdupq_n_f32(s)));
 #else
@@ -463,7 +464,7 @@ glm_vec4_scale(vec4 v, float s, vec4 dest) {
 #if defined(__wasm__) && defined(__wasm_simd128__)
   glmm_store(dest, wasm_f32x4_mul(glmm_load(v), wasm_f32x4_splat(s)));
 #elif defined( __SSE__ ) || defined( __SSE2__ )
-  glmm_store(dest, _mm_mul_ps(glmm_load(v), _mm_set1_ps(s)));
+  glmm_store(dest, _mm_mul_ps(glmm_load(v), glmm_set1(s)));
 #elif defined(CGLM_NEON_FP)
   vst1q_f32(dest, vmulq_f32(vld1q_f32(v), vdupq_n_f32(s)));
 #else
@@ -525,10 +526,8 @@ glm_vec4_div(vec4 a, vec4 b, vec4 dest) {
 CGLM_INLINE
 void
 glm_vec4_divs(vec4 v, float s, vec4 dest) {
-#if defined(__wasm__) && defined(__wasm_simd128__)
-  glmm_store(dest, wasm_f32x4_div(glmm_load(v), wasm_f32x4_splat(s)));
-#elif defined( __SSE__ ) || defined( __SSE2__ )
-  glmm_store(dest, _mm_div_ps(glmm_load(v), _mm_set1_ps(s)));
+#if defined(CGLM_SIMD)
+  glmm_store(dest, glmm_div(glmm_load(v), glmm_set1(s)));
 #else
   glm_vec4_scale(v, 1.0f / s, dest);
 #endif
@@ -923,7 +922,7 @@ glm_vec4_normalize_to(vec4 v, vec4 dest) {
     return;
   }
 
-  glmm_store(dest, wasm_f32x4_div(x0, wasm_f32x4_sqrt(xdot)));
+  glmm_store(dest, glmm_div(x0, wasm_f32x4_sqrt(xdot)));
 #elif defined( __SSE__ ) || defined( __SSE2__ )
   __m128 xdot, x0;
   float  dot;
@@ -937,7 +936,7 @@ glm_vec4_normalize_to(vec4 v, vec4 dest) {
     return;
   }
 
-  glmm_store(dest, _mm_div_ps(x0, _mm_sqrt_ps(xdot)));
+  glmm_store(dest, glmm_div(x0, _mm_sqrt_ps(xdot)));
 #else
   float norm;
 
@@ -1065,8 +1064,8 @@ glm_vec4_clamp(vec4 v, float minVal, float maxVal) {
   glmm_store(v, glmm_min(glmm_max(glmm_load(v), wasm_f32x4_splat(minVal)),
                          wasm_f32x4_splat(maxVal)));
 #elif defined( __SSE__ ) || defined( __SSE2__ )
-  glmm_store(v, glmm_min(glmm_max(glmm_load(v), _mm_set1_ps(minVal)),
-                         _mm_set1_ps(maxVal)));
+  glmm_store(v, glmm_min(glmm_max(glmm_load(v), glmm_set1(minVal)),
+                         glmm_set1(maxVal)));
 #elif defined(CGLM_NEON_FP)
   glmm_store(v, glmm_min(glmm_max(vld1q_f32(v), vdupq_n_f32(minVal)),
                          vdupq_n_f32(maxVal)));
@@ -1146,22 +1145,6 @@ CGLM_INLINE
 void
 glm_vec4_mixc(vec4 from, vec4 to, float t, vec4 dest) {
   glm_vec4_lerpc(from, to, t, dest);
-}
-
-/*!
- * @brief threshold function (unidimensional)
- *
- * @param[in]   edge    threshold
- * @param[in]   x       value to test against threshold
- * @param[out]  dest    destination
- */
-CGLM_INLINE
-void
-glm_vec4_step_uni(float edge, vec4 x, vec4 dest) {
-  dest[0] = glm_step(edge, x[0]);
-  dest[1] = glm_step(edge, x[1]);
-  dest[2] = glm_step(edge, x[2]);
-  dest[3] = glm_step(edge, x[3]);
 }
 
 /*!
@@ -1350,7 +1333,7 @@ glm_vec4_refract(vec4 v, vec4 n, float eta, vec4 dest) {
 
   ndi = glm_vec4_dot(n, v);
   eni = eta * ndi;
-  k   = 1.0f + eta * eta - eni * eni;
+  k   = 1.0f - eta * eta + eni * eni;
 
   if (k < 0.0f) {
     glm_vec4_zero(dest);
