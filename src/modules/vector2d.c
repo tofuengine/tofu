@@ -749,6 +749,11 @@ static int vector2d_lerp_3oon_0(lua_State *L)
     return 0;
 }
 
+// The 2D counter-clockwise rotation matrix is the following:
+//
+//   |  cos(a)  -sin(a) | | x |   | x' |
+//   |                  | |   | = |    |
+//   |  sin(a)   cos(a) | | y |   | y' |
 static int vector2d_rotate_ccw_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -761,12 +766,19 @@ static int vector2d_rotate_ccw_2on_0(lua_State *L)
     const float c = cosf(angle);
     const float s = sinf(angle);
 
-    self->x = self->x * c + self->y * s;
-    self->y = self->y * c - self->x * s;
+    // x' = x *  c + y * -s
+    // y' = x *  s + y *  c
+    self->x = self->x * c - self->y * s;
+    self->y = self->x * s + self->y * c;
 
     return 0;
 }
 
+// The 2D clockwise rotation matrix is the following:
+//
+//   |  cos(a)   sin(a) | | x |   | x' |
+//   |                  | |   | = |    |
+//   | -sin(a)   cos(a) | | y |   | y' |
 static int vector2d_rotate_cw_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -779,8 +791,10 @@ static int vector2d_rotate_cw_2on_0(lua_State *L)
     const float c = cosf(angle);
     const float s = sinf(angle);
 
-    self->x = self->x * c - self->y * s;
-    self->y = self->x * s + self->y * c;
+    // x' = x *  c + y *  s
+    // y' = x * -s + y *  c
+    self->x = self->x * c + self->y * s;
+    self->y = self->y * c - self->x * s;
 
     return 0;
 }
