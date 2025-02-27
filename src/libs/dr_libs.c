@@ -56,5 +56,3 @@
         #define MA_FREE(p)        stb_leakcheck_free((p))
     #endif  /* SANITIZE */
 #endif  /* DEBUG */
-#define MINIAUDIO_IMPLEMENTATION
-#include <miniaudio/miniaudio.h>

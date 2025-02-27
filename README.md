@@ -103,7 +103,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [libspng](https://libspng.org/) v0.7.4
 * [libxmp](https://xmp.sourceforge.net/) v4.6.1
 * [Lua](https://lua.org/) v5.4.7
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.21
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.22
 * [miniz](https://github.com/richgel999/miniz) v3.0.2
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
