@@ -58,12 +58,21 @@ typedef struct rgba_s {
 // the effort.
 void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
 {
-    const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
 #if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
-    struct {
-        GL_Color_t key;
-        GL_Pixel_t value;
-    } *cache = NULL; // Stores past executed colors matches.
+    Callback_Palette_Closure_t *closure = (Callback_Palette_Closure_t *)user_data;
+#else   /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
+    const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
+
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
+    if (row == GL_SURFACE_CALLBACK_START_OF_DATA) {
+        closure->cache = NULL;
+        return;
+    } else
+    if (row == GL_SURFACE_CALLBACK_END_OF_DATA) {
+        hmfree(closure->cache);
+        return;
+    }
 #endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 
     const rgba_t *src = (const rgba_t *)pixels;
@@ -77,9 +86,9 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, c
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
 
 #if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
-            const int position = hmgeti(cache, color);
+            const int position = hmgeti(closure->cache, color);
             if (position != -1) {
-                const GL_Pixel_t index = cache[position].value;
+                const GL_Pixel_t index = closure->cache[position].value;
                 *(dst++) = index;
                 continue;
             }
@@ -88,19 +97,19 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, c
             const GL_Pixel_t index = GL_palette_find_nearest_color(closure->palette, color);
             *(dst++) = index;
 #if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
-            hmput(cache, color, index);
+            hmput(closure->cache, color, index);
 #endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
         }
     }
-
-#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
-    hmfree(cache);
-#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 }
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
 {
     const Callback_Indexes_Closure_t *closure = (const Callback_Indexes_Closure_t *)user_data;
+
+    if (row < 0) {
+        return; // Nothing to do.
+    }
 
     const uint32_t *src = (const uint32_t *)pixels; // Faster than the `rgba_t` struct, we don't need to unpack components.
     GL_Pixel_t *dst = surface->data + row * surface->width;
