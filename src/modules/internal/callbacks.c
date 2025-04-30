@@ -56,7 +56,7 @@ typedef struct rgba_s {
 //
 // Since the total amount of distinct colors in a single image is typically small, the additional memory usage is worth
 // the effort.
-void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
+void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
 #if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
@@ -67,9 +67,9 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
 #endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 
     const rgba_t *src = (const rgba_t *)pixels;
-    GL_Pixel_t *dst = surface->data;
+    GL_Pixel_t *dst = surface->data + row * surface->width;
 
-    for (size_t i = surface->data_size; i; --i) {
+    for (size_t i = surface->width; i; --i) {
         rgba_t rgba = *(src++);
         if (rgba.a <= closure->threshold) { // Colors is transparent if not above threshold (can't disable it).
             *(dst++) = closure->transparent;
@@ -98,16 +98,16 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
 #endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 }
 
-void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)
+void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
 {
     const Callback_Indexes_Closure_t *closure = (const Callback_Indexes_Closure_t *)user_data;
 
     const uint32_t *src = (const uint32_t *)pixels; // Faster than the `rgba_t` struct, we don't need to unpack components.
-    GL_Pixel_t *dst = surface->data;
+    GL_Pixel_t *dst = surface->data + row * surface->width;
 
     const uint32_t background = *src; // The top-left pixel color defines the background.
 
-    for (size_t i = surface->data_size; i; --i) {
+    for (size_t i = surface->width; i; --i) {
         uint32_t rgba = *(src++);
         *(dst++) = rgba == background ? closure->background : closure->foreground;
     }
