@@ -144,6 +144,8 @@ GL_Surface_t *GL_surface_decode_from_callbacks(const GL_IO_Callbacks_t *io_callb
         goto error_free_row_buffer;
     }
 
+    callback(user_data, surface, GL_SURFACE_CALLBACK_START_OF_DATA, NULL);
+
     spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
     do {
         struct spng_row_info row_info = { 0 };
@@ -158,6 +160,8 @@ GL_Surface_t *GL_surface_decode_from_callbacks(const GL_IO_Callbacks_t *io_callb
         callback(user_data, surface, row_info.row_num, row_buffer);
     } while (!result);
     // LOG_D("surface decoded at %p (%dx%d)", surface->data, width, height);
+
+    callback(user_data, surface, GL_SURFACE_CALLBACK_END_OF_DATA, NULL);
 
     if (result != SPNG_EOI) {
         LOG_E("can't read surface (%s)", spng_strerror(result));

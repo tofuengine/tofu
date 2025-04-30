@@ -49,7 +49,14 @@ typedef struct GL_Surface_s {
     bool is_power_of_two;
 } GL_Surface_t;
 
+// Note: the `row` parameter is the row number of the image, starting from `0`. It is also
+//       used to signal the start and end of the data stream, using the special values
+//       `GL_SURFACE_CALLBACK_START_OF_DATA` and `GL_SURFACE_CALLBACK_END_OF_DATA`.
 typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, int row, const void *pixels); // RGBA888 format.
+
+// Special values for the `row` parameter in the `GL_Surface_Callback_t` callback.
+#define GL_SURFACE_CALLBACK_START_OF_DATA -1
+#define GL_SURFACE_CALLBACK_END_OF_DATA   -2
 
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.
