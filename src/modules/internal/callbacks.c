@@ -105,7 +105,7 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, c
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
 {
-    const Callback_Indexes_Closure_t *closure = (const Callback_Indexes_Closure_t *)user_data;
+    Callback_Indexes_Closure_t *closure = (Callback_Indexes_Closure_t *)user_data;
 
     if (row < 0) {
         return; // Nothing to do.
@@ -114,7 +114,10 @@ void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, c
     const uint32_t *src = (const uint32_t *)pixels; // Faster than the `rgba_t` struct, we don't need to unpack components.
     GL_Pixel_t *dst = surface->data + row * surface->width;
 
-    const uint32_t background = *src; // The top-left pixel color defines the background.
+    if (row == 0) { // We need to set the background color only once, when the first row is processed.
+        closure->background_color = *src; // The top-left pixel color defines the background.
+    }
+    const uint32_t background = closure->background_color;
 
     for (size_t i = surface->width; i; --i) {
         uint32_t rgba = *(src++);

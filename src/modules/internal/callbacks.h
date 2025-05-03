@@ -55,6 +55,7 @@ typedef struct Callback_Palette_Closure_s {
 typedef struct Callback_Indexes_Closure_s {
     GL_Pixel_t background;
     GL_Pixel_t foreground;
+    uint32_t background_color; // Updated by the code when the first row is processed.
 } Callback_Indexes_Closure_t;
 
 extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels);
