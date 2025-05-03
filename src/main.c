@@ -44,7 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static struct option _long_options[] = {
+static const struct option _long_options[] = {
     { "help", no_argument, NULL, 'h' },
     { "kernal", optional_argument, NULL, 'k' },
     { "data", optional_argument, NULL, 'd' },
