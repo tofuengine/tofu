@@ -40,6 +40,7 @@
 #include <core/config.h>
 #define _LOG_TAG "gl-surface"
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include <spng/spng.h>
 
@@ -91,7 +92,7 @@ static void _spng_free(void *ptr)
     free(ptr);
 }
 
-static struct spng_alloc _spng_alloc = {
+static struct spng_alloc _spng_alloc = { // Can't declare this struct as `const` due to SPNG API.
     .malloc_fn = _spng_malloc,
     .realloc_fn = _spng_realloc,
     .calloc_fn = _spng_calloc,
