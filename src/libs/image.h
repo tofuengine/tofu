@@ -28,22 +28,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct image_decode_callbacks_s {
+typedef struct image_io_callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
     bool   (*seek)(void *user_data, long offset, int whence);
     long   (*tell)(void *user_data);
     int    (*eof)(void *user_data);
+} image_io_callbacks_t;
 
+typedef struct image_decode_callbacks_s {
     bool (*on_allocate)(void *user_data, size_t width, size_t height);
     bool (*on_scanline)(void *user_data, size_t index, const void *pixels);
     void (*on_free)(void *user_data, bool success);
 } image_decode_callbacks_t;
 
-typedef struct image_decode_callbacks_closure_s {
-    const image_decode_callbacks_t *callbacks;
-    void *user_data;
-} image_decode_callbacks_closure_t;
-
-extern bool image_decode_from_callbacks(const image_decode_callbacks_t *callbacks, void *user_data);
+extern bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                                        const image_decode_callbacks_t *decode_callbacks, void *decode_user_data);
 
 #endif  /* TOFU_LIBS_IMAGE_H */

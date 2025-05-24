@@ -38,150 +38,123 @@
 #include "surface.h"
 
 #include <core/config.h>
+#include <libs/image.h>
 #define _LOG_TAG "gl-surface"
 #include <libs/log.h>
-#include <libs/stb.h>
-
-#include <spng/spng.h>
 
 #include <memory.h>
+#include <stdlib.h>
 
-static inline bool _is_power_of_two(int n)
+static size_t _read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    return n && !(n & (n - 1));
+    GL_IO_Callbacks_Closure_t *closure = (GL_IO_Callbacks_Closure_t *)user_data;
+    return closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
 }
 
-static int _spng_read(spng_ctx *ctx, void *user, void *buffer, size_t bytes_to_read)
+static bool _seek(void *user_data, long offset, int whence)
 {
-    GL_IO_Callbacks_Closure_t *closure = (GL_IO_Callbacks_Closure_t *)user;
-
-    size_t bytes_read = closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
-
-    if (bytes_read != bytes_to_read) {
-        if (closure->callbacks->eof(closure->user_data)) {
-            return SPNG_IO_EOF;
-        }
-        return SPNG_IO_ERROR;
-    }
-
-    return 0;
+    GL_IO_Callbacks_Closure_t *closure = (GL_IO_Callbacks_Closure_t *)user_data;
+    return closure->callbacks->seek(closure->user_data, offset, whence);
 }
 
-#if defined(DEBUG) && !defined(SANITIZE)
-static void *_spng_malloc(size_t size)
+static long _tell(void *user_data)
 {
-    return malloc(size);
+    GL_IO_Callbacks_Closure_t *closure = (GL_IO_Callbacks_Closure_t *)user_data;
+    return closure->callbacks->tell(closure->user_data);
 }
 
-static void *_spng_realloc(void* ptr, size_t size)
+static int _eof(void *user_data)
 {
-    return realloc(ptr, size);
+    GL_IO_Callbacks_Closure_t *closure = (GL_IO_Callbacks_Closure_t *)user_data;
+    return closure->callbacks->eof(closure->user_data);
 }
 
-static void *_spng_calloc(size_t count, size_t size)
-{
-    void *ptr = malloc(count * size);
-    if (ptr) {
-        memset(ptr, 0x00, count * size);
-    }
-    return ptr;
-}
-
-static void _spng_free(void *ptr)
-{
-    free(ptr);
-}
-
-static struct spng_alloc _spng_alloc = { // Can't declare this struct as `const` due to SPNG API.
-    .malloc_fn = _spng_malloc,
-    .realloc_fn = _spng_realloc,
-    .calloc_fn = _spng_calloc,
-    .free_fn = _spng_free
+static const image_io_callbacks_t _image_io_callbacks = {
+    .read = _read,
+    .seek = _seek,
+    .tell = _tell,
+    .eof  = _eof
 };
-#endif
+
+typedef struct _decode_callbacks_closure_s {
+    GL_Surface_t *surface;
+    const GL_Surface_Callback_t callback;
+    void *user_data;
+} _decode_callbacks_closure_t;
+
+static bool _on_allocate(void *user_data, size_t width, size_t height)
+{
+    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+
+    GL_Surface_t *surface = GL_surface_create(width, height);
+    if (!surface) {
+        LOG_E("can't allocate surface");
+        return false;
+    }
+    LOG_D("surface %p allocated with size `%dx%d`", surface, width, height);
+
+    closure->surface = surface;
+
+    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_START_OF_DATA, NULL);
+
+    return true;
+}
+
+static bool _on_scanline(void *user_data, size_t index, const void *pixels)
+{
+    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+
+    closure->callback(closure->user_data, closure->surface, (int)index, pixels);
+
+    return true; // Continue decoding.
+}
+
+static void _on_free(void *user_data, bool success)
+{
+    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+
+    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_END_OF_DATA, NULL);
+
+    if (!success) {
+        LOG_E("decoding failed, destroying surface");
+        GL_surface_destroy(closure->surface);
+    } else {
+        LOG_D("surface %p decoded", closure->surface);
+    }
+}
+
+static const image_decode_callbacks_t _image_decode_callbacks = {
+    .on_allocate = _on_allocate,
+    .on_scanline = _on_scanline,
+    .on_free     = _on_free
+};
 
 GL_Surface_t *GL_surface_decode_from_callbacks(const GL_IO_Callbacks_t *io_callbacks, void *io_user_data,
                                                const GL_Surface_Callback_t callback, void *user_data)
 {
-#if defined(DEBUG) && !defined(SANITIZE)
-    spng_ctx *ctx = spng_ctx_new2(&_spng_alloc, 0);
-#else
-    spng_ctx *ctx = spng_ctx_new(0);
-#endif
-    if (!ctx) {
-        LOG_E("can't allocate context");
-        goto error_exit;
-    }
+    _decode_callbacks_closure_t decode_callbacks_closure = {
+        .surface = NULL,
+        .callback = callback,
+        .user_data = user_data
+    };
 
-    spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
-    spng_set_png_stream(ctx, _spng_read, &(GL_IO_Callbacks_Closure_t){
+    bool decoded = image_decode_from_callbacks(&_image_io_callbacks, &(GL_IO_Callbacks_Closure_t){
             .callbacks = io_callbacks,
             .user_data = io_user_data
-        });
-    size_t limit = 1024 * 1024 * 64;
-    spng_set_chunk_limits(ctx, limit, limit);
+        },
+        &_image_decode_callbacks, &decode_callbacks_closure);
 
-    struct spng_ihdr ihdr;
-    int result = spng_get_ihdr(ctx, &ihdr);
-    if (result) {
-        LOG_E("can't decode surface (%s)", spng_strerror(result));
-        goto error_free_context;
-    }
-    LOG_D("surface is a %dx%d image", ihdr.width, ihdr.height);
-
-    GL_Surface_t *surface = GL_surface_create(ihdr.width, ihdr.height);
-    if (!surface) {
-        LOG_E("can't allocate surface");
-        goto error_free_pixels;
+    if (!decoded) {
+        LOG_E("can't decode image from callbacks");
+        return NULL;
     }
 
-    size_t image_size;
-    spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
-    size_t row_buffer_size = image_size / ihdr.height;
+    return decode_callbacks_closure.surface;
+}
 
-    void *row_buffer = malloc(row_buffer_size);
-    if (!row_buffer) {
-        LOG_E("can't allocate row buffer");
-        goto error_free_row_buffer;
-    }
-
-    callback(user_data, surface, GL_SURFACE_CALLBACK_START_OF_DATA, NULL);
-
-    spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
-    do {
-        struct spng_row_info row_info = { 0 };
-
-        // image + row_info.row_num * image_width
-        result = spng_get_row_info(ctx, &row_info);
-        if (result) {
-            break;
-        }
-
-        result = spng_decode_row(ctx, row_buffer, row_buffer_size);
-        callback(user_data, surface, row_info.row_num, row_buffer);
-    } while (!result);
-    // LOG_D("surface decoded at %p (%dx%d)", surface->data, width, height);
-
-    callback(user_data, surface, GL_SURFACE_CALLBACK_END_OF_DATA, NULL);
-
-    if (result != SPNG_EOI) {
-        LOG_E("can't read surface (%s)", spng_strerror(result));
-        goto error_free_row_buffer;
-    }
-
-    free(row_buffer);
-    spng_ctx_free(ctx);
-
-    return surface;
-
-error_free_row_buffer:
-    free(row_buffer);
-error_free_pixels:
-    GL_surface_destroy(surface);
-error_free_context:
-    spng_ctx_free(ctx);
-error_exit:
-    return NULL;
+static inline bool _is_power_of_two(int n)
+{
+    return n && !(n & (n - 1));
 }
 
 GL_Surface_t *GL_surface_create(size_t width, size_t height)

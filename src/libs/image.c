@@ -33,9 +33,14 @@
 
 #include <memory.h>
 
+typedef struct _io_callbacks_closure_s {
+    const image_io_callbacks_t *callbacks;
+    void *user_data;
+} _io_callbacks_closure_t;
+
 static int _spng_read(spng_ctx *ctx, void *user, void *buffer, size_t bytes_to_read)
 {
-    image_decode_callbacks_closure_t *closure = (image_decode_callbacks_closure_t *)user;
+    _io_callbacks_closure_t *closure = (_io_callbacks_closure_t *)user;
 
     size_t bytes_read = closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
     if (bytes_read != bytes_to_read) {
@@ -45,7 +50,7 @@ static int _spng_read(spng_ctx *ctx, void *user, void *buffer, size_t bytes_to_r
         return SPNG_IO_ERROR;
     }
 
-    return 0;
+    return SPNG_OK;
 }
 
 #if defined(DEBUG) && !defined(SANITIZE)
@@ -81,9 +86,10 @@ static struct spng_alloc _spng_alloc = { // Can't declare this struct as `const`
 };
 #endif
 
-bool image_decode_from_callbacks(const image_decode_callbacks_t *callbacks, void *user_data)
+bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                                 const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
 {
-    #if defined(DEBUG) && !defined(SANITIZE)
+#if defined(DEBUG) && !defined(SANITIZE)
     spng_ctx *ctx = spng_ctx_new2(&_spng_alloc, 0);
 #else
     spng_ctx *ctx = spng_ctx_new(0);
@@ -94,12 +100,10 @@ bool image_decode_from_callbacks(const image_decode_callbacks_t *callbacks, void
     }
 
     spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
-    spng_set_png_stream(ctx, _spng_read, &(image_decode_callbacks_closure_t){
-            .callbacks = callbacks,
-            .user_data = user_data
+    spng_set_png_stream(ctx, _spng_read, &(_io_callbacks_closure_t){
+            .callbacks = io_callbacks,
+            .user_data = io_user_data
         });
-    size_t limit = 1024 * 1024 * 64;
-    spng_set_chunk_limits(ctx, limit, limit);
 
     struct spng_ihdr ihdr;
     int result = spng_get_ihdr(ctx, &ihdr);
@@ -116,13 +120,13 @@ bool image_decode_from_callbacks(const image_decode_callbacks_t *callbacks, void
     void *row_buffer = malloc(row_buffer_size);
     if (!row_buffer) {
         LOG_E("can't allocate row buffer");
-        goto error_free_row_buffer;
+        goto error_free_context;
     }
 
-    bool allocated = callbacks->on_allocate(user_data, ihdr.width, ihdr.height);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
-        goto error_free_context;
+        goto error_free_row_buffer;
     }
 
     spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
@@ -135,13 +139,13 @@ bool image_decode_from_callbacks(const image_decode_callbacks_t *callbacks, void
         }
 
         result = spng_decode_row(ctx, row_buffer, row_buffer_size);
-        callbacks->on_scanline(user_data, row_info.row_num, row_buffer);
+        decode_callbacks->on_scanline(decode_user_data, row_info.row_num, row_buffer);
     } while (!result);
 
     bool success = result == SPNG_EOI;
     LOG_IF_D(success, "image decoded");
 
-    callbacks->on_free(user_data, success);
+    decode_callbacks->on_free(decode_user_data, success);
 
     if (!success) {
         LOG_E("can't decode image (%s)", spng_strerror(result));
