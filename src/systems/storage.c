@@ -583,15 +583,15 @@ error_exit:
     return NULL;
 }
 
-static void _stbi_write_func(void *context, void *data, int size)
-{
-    FILE *stream = (FILE *)context;
-    size_t bytes_to_write = (size_t)size;
-    size_t bytes_written = fwrite(data, sizeof(uint8_t), bytes_to_write, stream);
-    if (bytes_written != bytes_to_write) {
-        LOG_E("can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
-    }
-}
+// static void _stbi_write_func(void *context, void *data, int size)
+// {
+//     FILE *stream = (FILE *)context;
+//     size_t bytes_to_write = (size_t)size;
+//     size_t bytes_written = fwrite(data, sizeof(uint8_t), bytes_to_write, stream);
+//     if (bytes_written != bytes_to_write) {
+//         LOG_E("can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
+//     }
+// }
 
 // This function saves a file into the local user-dependent storage. The mount points aren't modified.
 bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource)
@@ -621,7 +621,8 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
             break;
         }
         case STORAGE_RESOURCE_IMAGE: {
-            int done = stbi_write_png_to_func(_stbi_write_func, (void *)stream, SR_IWIDTH(resource), SR_IHEIGHT(resource), 4, SR_IPIXELS(resource), SR_IWIDTH(resource) * 4);
+//            int done = stbi_write_png_to_func(_stbi_write_func, (void *)stream, SR_IWIDTH(resource), SR_IHEIGHT(resource), 4, SR_IPIXELS(resource), SR_IWIDTH(resource) * 4);
+            int done = 0;
             result = done != 0;
             break;
         }
