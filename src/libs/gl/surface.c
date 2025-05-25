@@ -41,6 +41,7 @@
 #include <libs/image.h>
 #define _LOG_TAG "gl-surface"
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include <memory.h>
 #include <stdlib.h>
