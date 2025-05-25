@@ -56,7 +56,7 @@ typedef struct GL_IO_Callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
     bool   (*seek)(void *user_data, long offset, int whence);
     long   (*tell)(void *user_data);
-    int    (*eof)(void *user_data);
+    bool   (*eof)(void *user_data);
 } GL_IO_Callbacks_t;
 
 typedef struct GL_IO_Callbacks_Closure_s {

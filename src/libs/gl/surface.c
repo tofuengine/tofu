@@ -63,7 +63,7 @@ static long _tell(void *user_data)
     return closure->callbacks->tell(closure->user_data);
 }
 
-static int _eof(void *user_data)
+static bool _eof(void *user_data)
 {
     GL_IO_Callbacks_Closure_t *closure = (GL_IO_Callbacks_Closure_t *)user_data;
     return closure->callbacks->eof(closure->user_data);

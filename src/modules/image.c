@@ -141,10 +141,10 @@ static long _handle_tell(void *user_data)
     return FS_tell(handle);
 }
 
-static int _handle_eof(void *user_data)
+static bool _handle_eof(void *user_data)
 {
     const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
-    return FS_eof(handle) ? 1 : 0;
+    return FS_eof(handle);
 }
 
 static const GL_IO_Callbacks_t _io_callbacks = {

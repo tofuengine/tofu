@@ -32,7 +32,7 @@ typedef struct image_io_callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
     bool   (*seek)(void *user_data, long offset, int whence);
     long   (*tell)(void *user_data);
-    int    (*eof)(void *user_data);
+    bool   (*eof)(void *user_data);
 } image_io_callbacks_t;
 
 typedef struct image_decode_callbacks_s {
