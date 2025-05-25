@@ -33,6 +33,8 @@
 
 #include <memory.h>
 
+#define _BYTES_PER_PIXEL 4
+
 typedef struct _io_callbacks_closure_s {
     const image_io_callbacks_t *callbacks;
     void *user_data;
@@ -123,7 +125,7 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_free_context;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height, _BYTES_PER_PIXEL);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;

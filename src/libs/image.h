@@ -36,7 +36,7 @@ typedef struct image_io_callbacks_s {
 } image_io_callbacks_t;
 
 typedef struct image_decode_callbacks_s {
-    bool (*on_allocate)(void *user_data, size_t width, size_t height);
+    bool (*on_allocate)(void *user_data, size_t width, size_t height, size_t bytes_per_pixel);
     bool (*on_scanline)(void *user_data, size_t index, const void *pixels);
     void (*on_free)(void *user_data, bool success);
 } image_decode_callbacks_t;
