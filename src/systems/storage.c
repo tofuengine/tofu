@@ -38,6 +38,7 @@
 #include "storage.h"
 
 #include <core/config.h>
+#include <libs/image.h>
 #define _LOG_TAG "storage"
 #include <libs/log.h>
 #include <libs/path.h>
@@ -146,7 +147,7 @@ static void _release(Storage_Resource_t *resource)
             resource, resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
-        stbi_image_free(resource->var.image.pixels);
+        free(resource->var.image.pixels);
         LOG_D("resource-data %p at %p freed (%dx%d image)",
             resource, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
@@ -306,47 +307,113 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
     return true;
 }
 
-static int _stbi_io_read(void *user_data, char *data, int size)
+static size_t _read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     FS_Handle_t *handle = (FS_Handle_t *)user_data;
-    return (int)FS_read(handle, data, (size_t)size);
+    return FS_read(handle, buffer, bytes_to_read);
 }
 
-static void _stbi_io_skip(void *user_data, int n)
+static bool _seek(void *user_data, long offset, int whence)
 {
     FS_Handle_t *handle = (FS_Handle_t *)user_data;
-    FS_seek(handle, n, SEEK_CUR); // We are discarding the return value, yep. :|
+    return FS_seek(handle, offset, whence);
 }
 
-static int _stbi_io_eof(void *user_data)
+static long _tell(void *user_data)
 {
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
-    return FS_eof(handle) ? -1 : 0;
+    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
+    return FS_tell(handle);
 }
 
-static const stbi_io_callbacks _stbi_io_callbacks = {
-    _stbi_io_read,
-    _stbi_io_skip,
-    _stbi_io_eof,
+static bool _eof(void *user_data)
+{
+    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
+    return FS_eof(handle);
+}
+
+static const image_io_callbacks_t _image_io_callbacks = {
+    .read = _read,
+    .seek = _seek,
+    .tell = _tell,
+    .eof  = _eof
+};
+
+typedef struct _decode_callbacks_closure_s {
+    size_t width;
+    size_t height;
+    size_t bytes_per_pixel;
+    void *pixels;
+} _decode_callbacks_closure_t;
+
+static bool _on_allocate(void *user_data, size_t width, size_t height, size_t bytes_per_pixel)
+{
+    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+
+    void *pixels = malloc(width * height * bytes_per_pixel);
+    if (!pixels) {
+        LOG_E("can't allocate `%dx%d` pixel-data", width, height);
+        return false;
+    }
+
+    *closure = (_decode_callbacks_closure_t){
+            .width = width,
+            .height = height,
+            .bytes_per_pixel = bytes_per_pixel,
+            .pixels = pixels
+        };
+
+    return true;
+}
+
+static bool _on_scanline(void *user_data, size_t index, const void *pixels)
+{
+    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+
+    void *ptr = (uint8_t *)closure->pixels + (index * closure->width * closure->bytes_per_pixel); // FIXME: can be optimized.
+
+    memcpy(ptr, pixels, closure->width * closure->bytes_per_pixel);
+
+    return true; // Continue decoding.
+}
+
+static void _on_free(void *user_data, bool success)
+{
+    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+
+    if (!success) {
+        LOG_E("decoding failed, destroying surface");
+        free(closure->pixels);
+    } else {
+        LOG_D("image %p decoded", closure->pixels);
+    }
+}
+
+static const image_decode_callbacks_t _image_decode_callbacks = {
+    .on_allocate = _on_allocate,
+    .on_scanline = _on_scanline,
+    .on_free     = _on_free
 };
 
 static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
 {
-    int width, height, components;
-    void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
-    if (!pixels) {
-        LOG_E("can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
-        return false;
+    _decode_callbacks_closure_t decode_callbacks_closure = { 0 };
+
+    bool decoded = image_decode_from_callbacks(&_image_io_callbacks, handle,
+        &_image_decode_callbacks, &decode_callbacks_closure);
+
+    if (!decoded) {
+        LOG_E("can't decode surface from handle `%p`", handle);
+        return NULL;
     }
-    LOG_D("loaded %dx%d image", width, height);
+    LOG_D("loaded %dx%d image", decode_callbacks_closure.width, decode_callbacks_closure.height);
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_IMAGE,
             .var = {
                 .image = {
-                    .width = (size_t)width,
-                    .height = (size_t)height,
-                    .pixels = pixels
+                    .width = decode_callbacks_closure.width,
+                    .height = decode_callbacks_closure.height,
+                    .pixels = decode_callbacks_closure.pixels
                 }
             },
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
