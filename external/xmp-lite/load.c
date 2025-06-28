@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -140,16 +140,16 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 
 	libxmp_load_prologue(ctx);
 
-	D_(D_WARN "loading");
+	D_(D_WARN "load");
 	test_result = load_result = -1;
 	for (i = 0; format_loaders[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
 
-		D_(D_WARN "testing format: %s", format_loaders[i]->name);
+		D_(D_WARN "test %s", format_loaders[i]->name);
 		test_result = format_loaders[i]->test(h, NULL, 0);
 		if (test_result == 0) {
 			hio_seek(h, 0, SEEK_SET);
-			D_(D_WARN "loading w/ format: %s", format_loaders[i]->name);
+			D_(D_WARN "load format: %s", format_loaders[i]->name);
 			load_result = format_loaders[i]->loader(m, h, 0);
 			break;
 		}
@@ -232,7 +232,7 @@ int xmp_load_module(xmp_context opaque, const char *path)
 	HIO_HANDLE *h;
 	int ret;
 
-	D_(D_WARN "path: %s", path);
+	D_(D_WARN "path = %s", path);
 
 	ret = libxmp_get_filetype(path);
 
@@ -358,7 +358,7 @@ void xmp_release_module(xmp_context opaque)
 
 	ctx->state = XMP_STATE_UNLOADED;
 
-	D_(D_INFO "freeing memory");
+	D_(D_INFO "Freeing memory");
 
 	if (mod->xxt != NULL) {
 		for (i = 0; i < mod->trk; i++) {

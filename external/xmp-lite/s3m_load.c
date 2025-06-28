@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,7 +24,7 @@
  * Tue, 30 Jun 1998 20:23:11 +0200
  * Reported by John v/d Kamp <blade_@dds.nl>:
  * I have this song from Purple Motion called wcharts.s3m, the global
- * volume was set to 0, creating a devide by 0 error in xmp. There should
+ * volume was set to 0, creating a divide by 0 error in xmp. There should
  * be an extra test if it's 0 or not.
  *
  * Claudio's fix: global volume ignored
@@ -374,14 +374,17 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Default pan positions */
 
-	for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */  && (i < 32); i++) {
-		uint8_t x = hio_read8(f);
-		if (x & S3M_PAN_SET) {
-			mod->xxc[i].pan = (x << 4) & 0xff;
+	if (sfh.dp == 0xfc) {
+		for (i = 0; i < 32; i++) {
+			uint8_t x = hio_read8(f);
+			if (x & S3M_PAN_SET) {
+				mod->xxc[i].pan = (x << 4) & 0xff;
+			}
 		}
 	}
 
 	m->c4rate = C4_NTSC_RATE;
+	m->flow_mode = FLOW_MODE_ST3_321;
 
 	if (sfh.version == 0x1300) {
 		m->quirk |= QUIRK_VSALL;
@@ -397,7 +400,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read patterns */
 
-	D_(D_INFO "# of patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
@@ -457,14 +460,14 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 
 	D_(D_INFO "Stereo enabled: %s", stereo ? "yes" : "no");
-	D_(D_INFO "pan settings: %s", sfh.dp ? "no" : "yes");
+	D_(D_INFO "Pan settings: %s", (sfh.dp == 0xfc) ? "yes" : "no");
 
 	if (libxmp_init_instrument(m) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
 
-	D_(D_INFO "# of instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		struct xmp_instrument *xxi = &mod->xxi[i];
@@ -517,7 +520,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sih.magic = readmem32b(buf + 76);	/* 'SCRS' */
 
 		if (buf[0] == 1 && sih.magic != MAGIC_SCRS) {
-			D_(D_CRIT "bad instrument magic");
+			D_(D_CRIT "error: instrument magic");
 			goto err3;
 		}
 
@@ -526,9 +529,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		xxs->lps = sih.loopbeg;
 		xxs->lpe = sih.loopend;
 
-		xxs->flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
+		xxs->flg = (sih.flags & S3M_SAMP_LOOP) ? XMP_SAMPLE_LOOP : 0;
 
-		if (sih.flags & 4) {
+		if (sih.flags & S3M_SAMP_STEREO) {
+			xxs->flg |= XMP_SAMPLE_STEREO;
+		}
+		if (sih.flags & S3M_SAMP_16BIT) {
 			xxs->flg |= XMP_SAMPLE_16BIT;
 		}
 
@@ -542,9 +548,10 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		libxmp_instrument_name(mod, i, sih.name, 28);
 
-		D_(D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
+		D_(D_INFO "[%2X] %-28.28s %04x%c%c %04x %04x %c V%02x %5d",
 		   i, mod->xxi[i].name, mod->xxs[i].len,
 		   xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		   xxs->flg & XMP_SAMPLE_STEREO ? 's' : ' ',
 		   xxs->lps, mod->xxs[i].lpe,
 		   xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol, sih.c2spd);
 

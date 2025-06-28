@@ -75,7 +75,7 @@ static inline int init_block(struct it_stream *in, uint8_t *tmp, int tmplen,
 	/* tmp should be INT16_MAX rounded up to a multiple of 4 bytes long. */
 	if (tmplen < (int)((in->left + 4) & ~3))
 		return -1;
-	if (hio_read(tmp, 1, in->left, src) < in->left)
+	if (!hio_readn(tmp, in->left, src))
 		return -1;
 
 	/* Zero pad to a multiple of 4 bytes for read_bits. */
@@ -92,6 +92,8 @@ int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, int len,
 	uint32_t block_count = 0;
 	uint8_t left = 0, temp = 0, temp2 = 0;
 	uint32_t d, pos;
+
+	memset(&in, 0, sizeof(in)); /* bogus GCC 12 -Wmaybe-uninitialized */
 
 	while (len) {
 		if (!block_count) {
@@ -187,6 +189,8 @@ int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, int len,
 	uint8_t left = 0;
 	int16_t temp = 0, temp2 = 0;
 	uint32_t d, pos;
+
+	memset(&in, 0, sizeof(in)); /* bogus GCC 12 -Wmaybe-uninitialized */
 
 	while (len) {
 		if (!block_count) {

@@ -12,4 +12,4 @@ struct format_loader {
 
 extern const struct format_loader *const format_loaders[];
 
-#endif
+#endif /* LIBXMP_FORMAT_H */

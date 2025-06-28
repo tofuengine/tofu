@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -168,7 +168,7 @@ int libxmp_alloc_tracks_in_pattern(struct xmp_module *mod, int num)
 {
 	int i;
 
-	D_(D_INFO "allocating %d tracks w/ %d rows", mod->chn, mod->xxp[num]->rows);
+	D_(D_INFO "Alloc %d tracks of %d rows", mod->chn, mod->xxp[num]->rows);
 	for (i = 0; i < mod->chn; i++) {
 		int t = num * mod->chn + i;
 		int rows = mod->xxp[num]->rows;
@@ -250,7 +250,7 @@ int libxmp_copy_name_for_fopen(char *dest, const char *name, int n)
 	 * malicious when given to fopen. This should only be used on song files.
 	 */
 	if (!strcmp(name, ".") || strstr(name, "..") ||
-	    name[0] == '\\' || name[0] == '/' || name[0] == ':')
+	    name[0] == '\\' || name[0] == '/' || name[0] == ':' || name[0] == '\0')
 		return -1;
 
 	for (i = 0; i < n - 1; i++) {
@@ -339,8 +339,13 @@ void libxmp_set_type(struct module_data *m, const char *fmt, ...)
 
 char *libxmp_strdup(const char *src)
 {
-	size_t len = strlen(src) + 1;
-	char *buf = (char *) malloc(len);
+	size_t len;
+	char *buf;
+	if (src == NULL) {
+		return NULL;
+	}
+	len = strlen(src) + 1;
+	buf = (char *) malloc(len);
 	if (buf) {
 		memcpy(buf, src, len);
 	}

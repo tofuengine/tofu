@@ -17,7 +17,7 @@ struct blep_state {
 };
 
 struct paula_state {
-	/* the instantenous value of Paula output */
+	/* the instantaneous value of Paula output */
 	int16_t global_output_level;
 
 	/* count of simultaneous bleps to keep track of */

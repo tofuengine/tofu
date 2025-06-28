@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -64,18 +64,23 @@
 #define S3M_INST_ACYM	0x06
 #define S3M_INST_AHIHAT	0x07
 
+/* S3M sample flags */
+#define S3M_SAMP_LOOP	0x01
+#define S3M_SAMP_STEREO	0x02
+#define S3M_SAMP_16BIT	0x04
+
 struct s3m_file_header {
 	uint8_t name[28];	/* Song name */
-	uint8_t doseof;	/* 0x1a */
+	uint8_t doseof;		/* 0x1a */
 	uint8_t type;		/* File type */
 	uint8_t rsvd1[2];	/* Reserved */
 	uint16_t ordnum;	/* Number of orders (must be even) */
 	uint16_t insnum;	/* Number of instruments */
 	uint16_t patnum;	/* Number of patterns */
-	uint16_t flags;	/* Flags */
+	uint16_t flags;		/* Flags */
 	uint16_t version;	/* Tracker ID and version */
 	uint16_t ffi;		/* File format information */
-	uint32_t magic;	/* 'SCRM' */
+	uint32_t magic;		/* 'SCRM' */
 	uint8_t gv;		/* Global volume */
 	uint8_t is;		/* Initial speed */
 	uint8_t it;		/* Initial tempo */
@@ -98,14 +103,14 @@ struct s3m_instrument_header {
 	uint8_t rsvd1;		/* Reserved */
 	uint8_t pack;		/* Packing type (not used) */
 	uint8_t flags;		/* Loop/stereo/16bit samples flags */
-	uint16_t c2spd;	/* C 4 speed */
-	uint16_t rsvd2;	/* Reserved */
+	uint16_t c2spd;		/* C 4 speed */
+	uint16_t rsvd2;		/* Reserved */
 	uint8_t rsvd3[4];	/* Reserved */
 	uint16_t int_gp;	/* Internal - GUS pointer */
 	uint16_t int_512;	/* Internal - SB pointer */
 	uint32_t int_last;	/* Internal - SB index */
 	uint8_t name[28];	/* Instrument name */
-	uint32_t magic;	/* 'SCRS' */
+	uint32_t magic;		/* 'SCRS' */
 };
 
 #endif  /* LIBXMP_LOADERS_S3M_H */

@@ -20,28 +20,36 @@
  * THE SOFTWARE.
  */
 
-#ifndef LIBXMP_LOADERS_MOD_H
-#define LIBXMP_LOADERS_MOD_H
+#include "common.h"
+#include "rng.h"
 
-struct mod_instrument {
-	uint8_t name[22];	/* Instrument name */
-	uint16_t size;		/* Sample length in 16-bit words */
-	int8_t finetune;	/* Finetune (signed nibble) */
-	int8_t volume;		/* Linear playback volume */
-	uint16_t loop_start;	/* Loop start in 16-bit words */
-	uint16_t loop_size;	/* Loop length in 16-bit words */
-};
+#include <time.h>
 
-struct mod_header {
-	uint8_t name[20];
-	struct mod_instrument ins[31];
-	uint8_t len;
-	uint8_t restart;	/* Number of patterns in Soundtracker,
-				 * Restart in Noisetracker/Startrekker,
-				 * 0x7F in Protracker
-				 */
-	uint8_t order[128];
-	uint8_t magic[4];
-};
+static unsigned libxmp_random_step_xorshift32(unsigned state)
+{
+	if (state == 0) state = 1;
+	state ^= state << 13u;
+	state ^= state >> 17u;
+	return   state <<  5u;
+}
 
-#endif  /* LIBXMP_LOADERS_MOD_H */
+unsigned libxmp_get_random(struct rng_state *rng, unsigned range)
+{
+	unsigned state = libxmp_random_step_xorshift32(rng->state);
+	rng->state = state;
+
+	return (uint64)range * state >> 32u;
+}
+
+void libxmp_set_random(struct rng_state *rng, unsigned state)
+{
+	rng->state = state;
+}
+
+void libxmp_init_random(struct rng_state *rng)
+{
+	rng->state = (unsigned) time(NULL);
+	libxmp_get_random(rng, 0);
+	libxmp_get_random(rng, 0);
+	libxmp_get_random(rng, 0);
+}

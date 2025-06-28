@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -119,7 +119,7 @@ static int get_envelope(struct xmp_envelope *env, int x, int def)
 
 static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 {
-	int16 *data = env->data;
+	int16_t *data = env->data;
 	int has_loop, has_sus;
 	int lpe, lps, sus;
 
@@ -129,17 +129,6 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	lps = env->lps << 1;
 	lpe = env->lpe << 1;
 	sus = env->sus << 1;
-
-	/* FT2 and IT envelopes behave in a different way regarding loops,
-	 * sustain and release. When the sustain point is at the end of the
-	 * envelope loop end and the key is released, FT2 escapes the loop
-	 * while IT runs another iteration. (See EnvLoops.xm in the OpenMPT
-	 * test cases.)
-	 */
-	if (has_loop && has_sus && sus == lpe) {
-		if (!release)
-			has_sus = 0;
-	}
 
 	/* If the envelope point is set to somewhere after the sustain point
 	 * or sustain loop, enable release to prevent the envelope point from
@@ -161,10 +150,16 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	 *
 	 * If the envelope point is set to somewhere after the sustain point
 	 * or sustain loop, the loop point is ignored to prevent the envelope
-	 * point to return to the sustain point or loop start. (See Filip Skutela's
-	 * farewell_tear.xm or Ebony Owl Netsuke.xm.)
+	 * point from returning to the sustain point or loop start.
+	 * (See Filip Skutela's farewell_tear.xm or Ebony Owl Netsuke.xm.)
 	*/
 	if (has_loop && x == data[lpe]) {
+		/* FT2 and IT envelopes behave in a different way regarding
+		 * loops, sustain and release. When the sustain point is at the
+		 * end of the envelope loop end and the key is released, FT2
+		 * escapes the loop while IT runs another iteration.
+		 * (See OpenMPT EnvLoops.xm)
+		 */
 		if (!(release && has_sus && sus == lpe))
 			x = data[lps];
 	}
@@ -210,8 +205,10 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release, int 
 
 #endif
 
-static int update_envelope(struct xmp_envelope *env, int x, int release, int key_off, int it_env)
+static int update_envelope(struct context_data *ctx, struct xmp_envelope *env, int x, int release, int key_off)
 {
+	struct module_data *m = &ctx->m;
+
 	if (x < 0xffff)	{	/* increment tick */
 		x++;
 	}
@@ -224,13 +221,14 @@ static int update_envelope(struct xmp_envelope *env, int x, int release, int key
 		return x;
 	}
 
+	(void) m; /* unused in xmp-lite with IT disabled */
+
+	return
 #ifndef LIBXMP_CORE_DISABLE_IT
-	return it_env ?
+		IS_PLAYER_MODE_IT() ?
 		update_envelope_it(env, x, release, key_off) :
-		update_envelope_xm(env, x, release);
-#else
-	return update_envelope_xm(env, x, release);
 #endif
+		update_envelope_xm(env, x, release);
 }
 
 
@@ -824,8 +822,8 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	}
 
 	if (!TEST_PER(VENV_PAUSE)) {
-		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
-			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
+		xc->v_idx = update_envelope(ctx, &instrument->aei, xc->v_idx,
+			DOENV_RELEASE, TEST(KEY_OFF));
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
@@ -950,8 +948,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	instrument = libxmp_get_instrument(ctx, xc->ins);
 
 	if (!TEST_PER(FENV_PAUSE)) {
-		xc->f_idx = update_envelope(&instrument->fei, xc->f_idx,
-			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
+		xc->f_idx = update_envelope(ctx, &instrument->fei, xc->f_idx,
+			DOENV_RELEASE, TEST(KEY_OFF));
 	}
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 
@@ -1137,8 +1135,8 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	instrument = libxmp_get_instrument(ctx, xc->ins);
 
 	if (!TEST_PER(PENV_PAUSE)) {
-		xc->p_idx = update_envelope(&instrument->pei, xc->p_idx,
-			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
+		xc->p_idx = update_envelope(ctx, &instrument->pei, xc->p_idx,
+			DOENV_RELEASE, TEST(KEY_OFF));
 	}
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 
@@ -1411,7 +1409,7 @@ static void play_channel(struct context_data *ctx, int chn)
 			xc->volume += rval[xc->retrig.type].s;
 			xc->volume *= rval[xc->retrig.type].m;
 			xc->volume /= rval[xc->retrig.type].d;
-			xc->retrig.count = LSN(xc->retrig.val);
+			xc->retrig.count = xc->retrig.val;
 
 			if (xc->retrig.limit > 0) {
 				/* Limit the number of retriggers. */
@@ -1478,12 +1476,14 @@ static void next_order(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	int reset_gvol = 0;
 	int mark;
+	int i;
 
 	do {
 		p->ord++;
 
 		/* Restart module */
-		mark = HAS_QUIRK(QUIRK_MARKER) && p->ord < mod->len && mod->xxo[p->ord] == 0xff;
+		mark = HAS_QUIRK(QUIRK_MARKER) && p->ord < mod->len &&
+		       mod->xxo[p->ord] == XMP_MARK_END;
 		if (p->ord >= mod->len || mark) {
 			if (mod->rst > mod->len ||
 			    mod->xxo[mod->rst] >= mod->pat ||
@@ -1515,6 +1515,17 @@ static void next_order(struct context_data *ctx)
 
 	p->pos = p->ord;
 	p->frame = 0;
+
+	/* Scream Tracker 3, Imago Orpheus: position change resets loop vars.
+	 * For some reason the pattern jump effect does not do this in IMF. */
+	if (HAS_FLOW_MODE(FLOW_LOOP_PATTERN_RESET)) {
+		f->loop_start = -1;
+		f->loop_count = 0;
+		for (i = 0; i < mod->chn; i++) {
+			f->loop[i].start = 0;
+			f->loop[i].count = 0;
+		}
+	}
 }
 
 static void next_row(struct context_data *ctx)
@@ -1524,9 +1535,11 @@ static void next_row(struct context_data *ctx)
 
 	p->frame = 0;
 	f->delay = 0;
+	f->loop_param = -1;
 
 	if (f->pbreak) {
 		f->pbreak = 0;
+		f->loop_dest = -1;
 
 		if (f->jump != -1) {
 			p->ord = f->jump - 1;
@@ -1542,9 +1555,9 @@ static void next_row(struct context_data *ctx)
 			f->rowdelay--;
 		}
 
-		if (f->loop_chn) {
-			p->row = f->loop[f->loop_chn - 1].start;
-			f->loop_chn = 0;
+		if (f->loop_dest >= 0) {
+			p->row = f->loop_dest;
+			f->loop_dest = -1;
 		}
 
 		/* check end of pattern */
@@ -1577,6 +1590,18 @@ void libxmp_player_set_fadeout(struct context_data *ctx, int chn)
 
 #endif
 
+/* Get frame time for calculation of the current playback time
+ * based on the most recent scan. This value should be used for
+ * playback time calculation ONLY. */
+static double libxmp_get_frame_time(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	if (p->bpm == 0)
+		return 0.0;
+	return p->scan_time_factor * m->rrate / p->bpm;
+}
+
 static void update_from_ord_info(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
@@ -1588,7 +1613,6 @@ static void update_from_ord_info(struct context_data *ctx)
 	p->bpm = oinfo->bpm;
 	p->gvol = oinfo->gvl;
 	p->current_time = oinfo->time;
-	p->frame_time = m->time_factor * m->rrate / p->bpm;
 }
 
 void libxmp_reset_flow(struct context_data *ctx)
@@ -1597,7 +1621,11 @@ void libxmp_reset_flow(struct context_data *ctx)
 	f->jumpline = 0;
 	f->jump = -1;
 	f->pbreak = 0;
-	f->loop_chn = 0;
+	f->loop_dest = -1;
+	f->loop_param = -1;
+	f->loop_start = -1;
+	f->loop_count = 0;
+	f->loop_active_num = 0;
 	f->delay = 0;
 	f->rowdelay = 0;
 	f->rowdelay_set = 0;
@@ -1747,7 +1775,7 @@ int xmp_play_frame(xmp_context opaque)
 		return -XMP_END;
 	}
 
-	if (HAS_QUIRK(QUIRK_MARKER) && mod->xxo[p->ord] == 0xff) {
+	if (HAS_QUIRK(QUIRK_MARKER) && mod->xxo[p->ord] == XMP_MARK_END) {
 		return -XMP_END;
 	}
 
@@ -1827,8 +1855,7 @@ int xmp_play_frame(xmp_context opaque)
 
 	f->rowdelay_set &= ~ROWDELAY_FIRST_FRAME;
 
-	p->frame_time = m->time_factor * m->rrate / p->bpm;
-	p->current_time += p->frame_time;
+	p->current_time += libxmp_get_frame_time(ctx);
 
 	libxmp_mixer_softmixer(ctx);
 
@@ -1964,7 +1991,7 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 	info->speed = p->speed;
 	info->bpm = p->bpm;
 	info->total_time = p->scan[p->sequence].time;
-	info->frame_time = p->frame_time * 1000;
+	info->frame_time = (int)(libxmp_get_frame_time(ctx) * 1000.0);
 	info->time = p->current_time;
 	info->buffer = s->buffer;
 

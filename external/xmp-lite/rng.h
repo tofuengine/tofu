@@ -20,28 +20,19 @@
  * THE SOFTWARE.
  */
 
-#ifndef LIBXMP_LOADERS_MOD_H
-#define LIBXMP_LOADERS_MOD_H
+#ifndef LIBXMP_RNG_H
+#define LIBXMP_RNG_H
 
-struct mod_instrument {
-	uint8_t name[22];	/* Instrument name */
-	uint16_t size;		/* Sample length in 16-bit words */
-	int8_t finetune;	/* Finetune (signed nibble) */
-	int8_t volume;		/* Linear playback volume */
-	uint16_t loop_start;	/* Loop start in 16-bit words */
-	uint16_t loop_size;	/* Loop length in 16-bit words */
-};
+#include "common.h"
 
-struct mod_header {
-	uint8_t name[20];
-	struct mod_instrument ins[31];
-	uint8_t len;
-	uint8_t restart;	/* Number of patterns in Soundtracker,
-				 * Restart in Noisetracker/Startrekker,
-				 * 0x7F in Protracker
-				 */
-	uint8_t order[128];
-	uint8_t magic[4];
-};
+LIBXMP_BEGIN_DECLS
 
-#endif  /* LIBXMP_LOADERS_MOD_H */
+/* Returns a pseudo-random unsigned integer between 0 and (range - 1) and
+ * steps the player's internal random state. If range = 0, returns 0. */
+unsigned libxmp_get_random	(struct rng_state *, unsigned range);
+void	 libxmp_set_random	(struct rng_state *, unsigned seed);
+void	 libxmp_init_random	(struct rng_state *);
+
+LIBXMP_END_DECLS
+
+#endif /* LIBXMP_RNG_H */

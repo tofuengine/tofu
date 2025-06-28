@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,7 @@
  * - Atari Octalyser CD61 and CD81
  * - Digital Tracker FA04, FA06 and FA08
  * - TakeTracker TDZ1, TDZ2, TDZ3, and TDZ4
+ * - Software Visions DMF (ModEdit M.K. with first 2108 bytes flipped)
  * - (unknown) NSMS, LARD
  *
  * The 'lite' version only recognizes Protracker M.K. and
@@ -41,6 +42,7 @@
 #include <ctype.h>
 #include "loader.h"
 #include "mod.h"
+#include "dataio.h"
 
 static int mod_test(HIO_HANDLE *, char *, const int);
 static int mod_load(struct module_data *, HIO_HANDLE *, const int);
@@ -104,23 +106,16 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->period_type = PERIOD_MODRNG;
 
-    hio_readn(mh.name, 20, f);
-    for (i = 0; i < 31; i++) {
-	hio_readn(mh.ins[i].name, 22, f);	/* Instrument name */
-	mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
-	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
-	mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
-	mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
-	mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
+    if ((patbuf = (uint8 *) malloc(1084)) == NULL) {
+	return -1;
     }
-    mh.len = hio_read8(f);
-    mh.restart = hio_read8(f);
-    hio_readn(mh.order, 128, f);
+    if (!hio_readn(patbuf, 1084, f)) {
+	D_(D_CRIT "read error in MOD header");
+	free(patbuf);
+	return -1;
+    }
     memset(magic, 0, sizeof(magic));
-    hio_readn(magic, 4, f);
-    if (hio_error(f)) {
-        return -1;
-    }
+    memcpy(magic, patbuf + 1080, 4);
 
     if (mod->chn == 0) {
 	if (!memcmp(magic, "M.K.", 4)) {
@@ -136,14 +131,32 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
+    memcpy(mh.name, patbuf, 20);
+    for (i = 0; i < 31; i++) {
+	const uint8_t *pos = patbuf + 20 + i * 30;
+
+	memcpy(mh.ins[i].name, pos, 22);		/* Instrument name */
+	mh.ins[i].size = readmem16b(pos + 22);		/* Length in 16-bit words */
+	mh.ins[i].finetune = pos[24];			/* Finetune (signed nibble) */
+	mh.ins[i].volume = pos[25];			/* Linear playback volume */
+	mh.ins[i].loop_start = readmem16b(pos + 26);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = readmem16b(pos + 28);	/* Loop size in 16-bit words */
+    }
+    mh.len = patbuf[950];
+    mh.restart = patbuf[951];
+    memcpy(mh.order, patbuf + 952, 128);
+    free(patbuf);
+
     strncpy(mod->name, (char *) mh.name, 20);
 
     mod->len = mh.len;
-    /* mod->rst = mh.restart; */
-
-    if (mod->rst >= mod->len)
-	mod->rst = 0;
     memcpy(mod->xxo, mh.order, 128);
+
+    if (mh.restart < 0x7f && mh.restart != 0x78 && (int)mh.restart < mod->len) {
+	/* TODO: an older version of this code was commented out 23+ years ago
+	 * and adding this may have rebroke something. */
+	mod->rst = mh.restart;
+    }
 
     for (i = 0; i < 128; i++) {
 	/* This fixes dragnet.mod (garbage in the order list) */

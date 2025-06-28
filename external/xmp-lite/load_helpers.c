@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -83,8 +83,10 @@ void libxmp_load_prologue(struct context_data *ctx)
 	m->gvol = m->gvolbase = 0x40;
 	m->vol_table = NULL;
 	m->quirk = 0;
+	m->flow_mode = FLOW_MODE_GENERIC;
 	m->read_event_type = READ_EVENT_MOD;
 	m->period_type = PERIOD_AMIGA;
+	m->compare_vblank = 0;
 	m->comment = NULL;
 	m->scan_cnt = NULL;
 	m->midi = NULL;
@@ -187,6 +189,7 @@ void libxmp_load_epilogue(struct context_data *ctx)
 	p->filter = 0;
 	p->mode = XMP_MODE_AUTO;
 	p->flags = p->player_flags;
+	p->scan_time_factor = m->time_factor;
 	libxmp_set_player_mode(ctx);
 }
 
@@ -264,18 +267,21 @@ int libxmp_set_player_mode(struct context_data *ctx)
 	case XMP_MODE_MOD:
 		m->c4rate = C4_PAL_RATE;
 		m->quirk = 0;
+		m->flow_mode = FLOW_MODE_GENERIC;
 		m->read_event_type = READ_EVENT_MOD;
 		m->period_type = PERIOD_AMIGA;
 		break;
 	case XMP_MODE_NOISETRACKER:
 		m->c4rate = C4_PAL_RATE;
 		m->quirk = QUIRK_NOBPM;
+		m->flow_mode = FLOW_MODE_GENERIC;
 		m->read_event_type = READ_EVENT_MOD;
 		m->period_type = PERIOD_MODRNG;
 		break;
 	case XMP_MODE_PROTRACKER:
 		m->c4rate = C4_PAL_RATE;
 		m->quirk = QUIRK_PROTRACK;
+		m->flow_mode = FLOW_MODE_GENERIC;
 		m->read_event_type = READ_EVENT_MOD;
 		m->period_type = PERIOD_MODRNG;
 		break;
@@ -283,12 +289,14 @@ int libxmp_set_player_mode(struct context_data *ctx)
 		q = m->quirk & (QUIRK_VSALL | QUIRK_ARPMEM);
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_ST3 | q;
+		m->flow_mode = FLOW_MODE_ST3_321;
 		m->read_event_type = READ_EVENT_ST3;
 		break;
 	case XMP_MODE_ST3:
 		q = m->quirk & (QUIRK_VSALL | QUIRK_ARPMEM);
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_ST3 | QUIRK_ST3BUGS | q;
+		m->flow_mode = FLOW_MODE_ST3_321;
 		m->read_event_type = READ_EVENT_ST3;
 		break;
 	case XMP_MODE_ST3GUS:
@@ -296,32 +304,40 @@ int libxmp_set_player_mode(struct context_data *ctx)
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_ST3 | QUIRK_ST3BUGS | q;
 		m->quirk &= ~QUIRK_RSTCHN;
+		m->flow_mode = FLOW_MODE_ST3_321;
 		m->read_event_type = READ_EVENT_ST3;
 		break;
 	case XMP_MODE_XM:
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_FT2;
+		m->flow_mode = FLOW_MODE_GENERIC;
 		m->read_event_type = READ_EVENT_FT2;
 		break;
 	case XMP_MODE_FT2:
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_FT2 | QUIRK_FT2BUGS;
+		m->flow_mode = FLOW_MODE_GENERIC;
 		m->read_event_type = READ_EVENT_FT2;
 		break;
 	case XMP_MODE_IT:
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_IT | QUIRK_VIBHALF | QUIRK_VIBINV;
+		m->flow_mode = FLOW_MODE_IT_210;
 		m->read_event_type = READ_EVENT_IT;
 		break;
 	case XMP_MODE_ITSMP:
 		m->c4rate = C4_NTSC_RATE;
 		m->quirk = QUIRKS_IT | QUIRK_VIBHALF | QUIRK_VIBINV;
 		m->quirk &= ~(QUIRK_VIRTUAL | QUIRK_RSTCHN);
+		m->flow_mode = FLOW_MODE_IT_210;
 		m->read_event_type = READ_EVENT_IT;
 		break;
 	default:
 		return -1;
 	}
+
+	if (p->mode != XMP_MODE_AUTO)
+		m->compare_vblank = 0;
 
 	return 0;
 }

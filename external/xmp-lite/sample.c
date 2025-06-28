@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2023 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2025 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,20 +24,27 @@
 #include "loader.h"
 
 /* Convert differential to absolute sample data */
-static void convert_delta(uint8_t *p, int l, int r)
+static void convert_delta(uint8_t *p, int frames, int is_16bit, int channels)
 {
 	uint16_t *w = (uint16_t *)p;
-	uint16_t absval = 0;
+	uint16_t absval;
+	int chn, i;
 
-	if (r) {
-		for (; l--;) {
-			absval = *w + absval;
-			*w++ = absval;
+	if (is_16bit) {
+		for (chn = 0; chn < channels; chn++) {
+			absval = 0;
+			for (i = 0; i < frames; i++) {
+				absval = *w + absval;
+				*w++ = absval;
+			}
 		}
 	} else {
-		for (; l--;) {
-			absval = *p + absval;
-			*p++ = (uint8_t) absval;
+		for (chn = 0; chn < channels; chn++) {
+			absval = 0;
+			for (i = 0; i < frames; i++) {
+				absval = *p + absval;
+				*p++ = (uint8_t) absval;
+			}
 		}
 	}
 }
@@ -52,7 +59,7 @@ static void convert_signal(uint8_t *p, int l, int r)
 			*w += 0x8000;
 	} else {
 		for (; l--; p++)
-			*p += (char)0x80;	/* cast needed by MSVC++ */
+			*p += (uint8_t)0x80;
 	}
 }
 
@@ -70,27 +77,41 @@ static void convert_endian(uint8_t *p, int l)
 	}
 }
 
-#ifdef LIBXMP_DOWNMIX_STEREO_TO_MONO
-/* Downmix stereo samples to mono */
-static void convert_stereo_to_mono(uint8_t *p, int l, int r)
+/* Convert non-interleaved stereo to interleaved stereo.
+ * Due to tracker quirks this should be done after delta decoding, etc. */
+static void convert_stereo_interleaved(void * LIBXMP_RESTRICT _out,
+ const void *in, int frames, int is_16bit)
 {
-	int16_t *b = (int16_t *)p;
 	int i;
 
-	if (r) {
-		l /= 2;
-		for (i = 0; i < l; i++)
-			b[i] = (b[i * 2] + b[i * 2 + 1]) / 2;
+	if (is_16bit) {
+		const int16_t *in_l = (const int16_t *)in;
+		const int16_t *in_r = in_l + frames;
+		int16_t *out = (int16_t *)_out;
+
+		for (i = 0; i < frames; i++) {
+			*(out++) = *(in_l++);
+			*(out++) = *(in_r++);
+		}
 	} else {
-		for (i = 0; i < l; i++)
-			p[i] = (p[i * 2] + p[i * 2 + 1]) / 2;
+		const uint8 *in_l = (const uint8 *)in;
+		const uint8 *in_r = in_l + frames;
+		uint8 *out = (uint8 *)_out;
+
+		for (i = 0; i < frames; i++) {
+			*(out++) = *(in_l++);
+			*(out++) = *(in_r++);
+		}
 	}
 }
-#endif
 
 
 int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_sample *xxs, const void *buffer)
 {
+	unsigned char *tmp = NULL;
+	unsigned char *dest;
+	int channels = 1;
+	int framelen;
 	int bytelen, extralen, i;
 
 	/* Empty or invalid samples
@@ -112,10 +133,31 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 		return 0;
 	}
 
+	/* Patches with samples
+	 * Allocate extra sample for interpolation.
+	 */
+	bytelen = xxs->len;
+	framelen = 1;
+	extralen = 4;
+
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+		bytelen *= 2;
+		extralen *= 2;
+		framelen *= 2;
+	}
+	if (xxs->flg & XMP_SAMPLE_STEREO) {
+		bytelen *= 2;
+		extralen *= 2;
+		framelen *= 2;
+		channels = 2;
+	}
+
 	/* If this sample starts at or after EOF, skip it entirely.
 	 */
 	if (~flags & SAMPLE_FLAG_NOLOAD) {
 		long file_pos, file_len;
+		long remaining = 0;
+		long over = 0;
 		if (!f) {
 			return 0;
 		}
@@ -126,10 +168,25 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 			return 0;
 		}
 		/* If this sample goes past EOF, truncate it. */
-		if (file_pos + xxs->len > file_len && (~flags & SAMPLE_FLAG_ADPCM)) {
+		remaining = file_len - file_pos;
+
+		if (bytelen > remaining) {
+			over = bytelen - remaining;
+			bytelen = remaining;
+		}
+
+		if (over) {
 			D_(D_WARN "sample would extend %ld bytes past EOF; truncating to %ld",
-				file_pos + xxs->len - file_len, file_len - file_pos);
-			xxs->len = file_len - file_pos;
+				over, remaining);
+
+			/* Trim extra bytes non-aligned to sample frame. */
+			bytelen -= bytelen & (framelen - 1);
+
+			xxs->len = bytelen;
+			if (xxs->flg & XMP_SAMPLE_16BIT)
+				xxs->len >>= 1;
+			if (xxs->flg & XMP_SAMPLE_STEREO)
+				xxs->len >>= 1;
 		}
 	}
 
@@ -146,13 +203,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 		xxs->flg &= ~(XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
 	}
 
-	/* Patches with samples
-	 * Allocate extra sample for interpolation.
-	 */
-	bytelen = xxs->len;
-	extralen = 4;
-
-	/* Disable birectional loop flag if sample is not looped
+	/* Disable bidirectional loop flag if sample is not looped
 	 */
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 		if (~xxs->flg & XMP_SAMPLE_LOOP)
@@ -163,11 +214,6 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 			xxs->flg &= ~XMP_SAMPLE_SLOOP_BIDIR;
 	}
 
-	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		bytelen *= 2;
-		extralen *= 2;
-	}
-
 	/* add guard bytes before the buffer for higher order interpolation */
 	xxs->data = (unsigned char *) malloc(bytelen + extralen + 4);
 	if (xxs->data == NULL) {
@@ -176,12 +222,27 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 
 	*(uint32_t *)xxs->data = 0;
 	xxs->data += 4;
+	dest = xxs->data;
+
+	/* If this is a non-interleaved stereo sample, most conversions need
+	 * to occur in an intermediate buffer prior to interleaving. Most
+	 * formats supporting stereo samples use non-interleaved stereo.
+	 */
+	if ((xxs->flg & XMP_SAMPLE_STEREO) && (~flags & SAMPLE_FLAG_INTERLEAVED)) {
+		tmp = (unsigned char *) malloc(bytelen);
+		if (!tmp)
+			goto err2;
+
+		dest = tmp;
+	}
 
 	if (flags & SAMPLE_FLAG_NOLOAD) {
-		memcpy(xxs->data, buffer, bytelen);
+		memcpy(dest, buffer, bytelen);
 	} else {
-		if (!hio_readn(xxs->data, bytelen, f)) {
-			D_(D_WARN "short read in sample load");
+		int bytes_read = (int)hio_read(dest, 1, bytelen, f);
+		if (bytes_read != bytelen) {
+			D_(D_WARN "short read (%d) in sample load", bytes_read - bytelen);
+			memset(dest + bytes_read, 0, bytelen - bytes_read);
 		}
 	}
 
@@ -189,38 +250,35 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 #ifdef WORDS_BIGENDIAN
 		if (~flags & SAMPLE_FLAG_BIGEND)
-			convert_endian(xxs->data, xxs->len);
+			convert_endian(dest, xxs->len * channels);
 #else
 		if (flags & SAMPLE_FLAG_BIGEND)
-			convert_endian(xxs->data, xxs->len);
+			convert_endian(dest, xxs->len * channels);
 #endif
 	}
 
 	/* Convert delta samples */
 	if (flags & SAMPLE_FLAG_DIFF) {
-		convert_delta(xxs->data, xxs->len, xxs->flg & XMP_SAMPLE_16BIT);
+		convert_delta(dest, xxs->len, xxs->flg & XMP_SAMPLE_16BIT, channels);
 	} else if (flags & SAMPLE_FLAG_8BDIFF) {
 		int len = xxs->len;
 		if (xxs->flg & XMP_SAMPLE_16BIT) {
 			len *= 2;
 		}
-		convert_delta(xxs->data, len, 0);
+		convert_delta(dest, len, 0, channels);
 	}
 
 	/* Convert samples to signed */
 	if (flags & SAMPLE_FLAG_UNS) {
-		convert_signal(xxs->data, xxs->len,
+		convert_signal(dest, xxs->len * channels,
 				xxs->flg & XMP_SAMPLE_16BIT);
 	}
 
-#ifdef LIBXMP_DOWNMIX_STEREO_TO_MONO
-	/* Downmix stereo samples */
-	if (flags & SAMPLE_FLAG_STEREO) {
-		convert_stereo_to_mono(xxs->data, xxs->len,
-					xxs->flg & XMP_SAMPLE_16BIT);
-		xxs->len /= 2;
+	/* Done converting individual samples; convert to interleaved. */
+	if ((xxs->flg & XMP_SAMPLE_STEREO) && (~flags & SAMPLE_FLAG_INTERLEAVED)) {
+		convert_stereo_interleaved(xxs->data, dest, xxs->len,
+					   xxs->flg & XMP_SAMPLE_16BIT);
 	}
-#endif
 
 	/* Check for full loop samples */
 	if (flags & SAMPLE_FLAG_FULLREP) {
@@ -229,26 +287,21 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	}
 
 	/* Add extra samples at end */
-	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		for (i = 0; i < 8; i++) {
-			xxs->data[bytelen + i] = xxs->data[bytelen - 2 + i];
-		}
-	} else {
-		for (i = 0; i < 4; i++) {
-			xxs->data[bytelen + i] = xxs->data[bytelen - 1 + i];
-		}
+	for (i = 0; i < extralen; i++) {
+		xxs->data[bytelen + i] = xxs->data[bytelen - framelen + i];
 	}
 
 	/* Add extra samples at start */
-	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		xxs->data[-2] = xxs->data[0];
-		xxs->data[-1] = xxs->data[1];
-	} else {
-		xxs->data[-1] = xxs->data[0];
+	for (i = -1; i >= -4; i--) {
+		xxs->data[i] = xxs->data[framelen + i];
 	}
 
+	free(tmp);
 	return 0;
 
+    err2:
+	libxmp_free_sample(xxs);
+	free(tmp);
     err:
 	return -1;
 }

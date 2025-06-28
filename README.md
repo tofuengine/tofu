@@ -101,7 +101,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [Glad](https://gen.glad.sh/) v2.0.8
 * [GLFW](https://www.glfw.org/) v3.4.0
 * [libspng](https://libspng.org/) v0.7.4
-* [libxmp](https://xmp.sourceforge.net/) v4.6.1
+* [libxmp](https://xmp.sourceforge.net/) v4.6.3
 * [Lua](https://lua.org/) v5.4.8
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.22
 * [miniz](https://github.com/richgel999/miniz) v3.0.2

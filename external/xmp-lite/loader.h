@@ -15,7 +15,7 @@
 #define SAMPLE_FLAG_NOLOAD	0x0010	/* Get from buffer, don't load */
 #define SAMPLE_FLAG_BIGEND	0x0040	/* Big-endian */
 #define SAMPLE_FLAG_VIDC	0x0080	/* Archimedes VIDC logarithmic */
-/*#define SAMPLE_FLAG_STEREO	0x0100	   Interleaved stereo sample */
+#define SAMPLE_FLAG_INTERLEAVED	0x0100	/* Interleaved stereo sample */
 #define SAMPLE_FLAG_FULLREP	0x0200	/* Play full sample before looping */
 #define SAMPLE_FLAG_ADLIB	0x1000	/* Adlib synth instrument */
 #define SAMPLE_FLAG_HSC		0x2000	/* HSC Adlib synth instrument */
@@ -49,8 +49,8 @@ void	libxmp_free_sample		(struct xmp_sample *);
 #define LOAD_INIT()
 
 #define MODULE_INFO() do { \
-    D_(D_WARN "module title: \"%s\"", m->mod.name); \
-    D_(D_WARN "module type: %s", m->mod.type); \
+    D_(D_WARN "Module title: \"%s\"", m->mod.name); \
+    D_(D_WARN "Module type: %s", m->mod.type); \
 } while (0)
 
 #endif
