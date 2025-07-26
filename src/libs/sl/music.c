@@ -172,27 +172,40 @@ static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin
     const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     bool sought = false;
-    if (origin == drflac_seek_origin_start) {
+    if (origin == DRFLAC_SEEK_SET) {
         sought = closure->callbacks->seek(closure->user_data, offset, SEEK_SET);
     } else
-    if (origin == drflac_seek_origin_current) {
+    if (origin == DRFLAC_SEEK_CUR) {
         sought = closure->callbacks->seek(closure->user_data, offset, SEEK_CUR);
+    } else
+    if (origin == DRFLAC_SEEK_END) {
+        sought = closure->callbacks->seek(closure->user_data, offset, SEEK_END);
     }
     return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
+static drflac_bool32 _music_tell(void* user_data, drflac_int64 *cursor)
+{
+    const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
+
+    long offset = closure->callbacks->tell(closure->user_data);
+    *cursor = (drflac_int64)offset;
+
+    return DRFLAC_TRUE;
+}
+
 #if defined(DEBUG) && !defined(SANITIZE)
-static void *_malloc(size_t sz, void *pUserData) // FIXME: move to custom library.
+static void *_malloc(size_t sz, void *user_data) // FIXME: move to custom library.
 {
     return malloc(sz);
 }
 
-static void *_realloc(void *ptr, size_t sz, void *pUserData)
+static void *_realloc(void *ptr, size_t sz, void *user_data)
 {
     return realloc(ptr, sz);
 }
 
-static void  _free(void *ptr, void *pUserData)
+static void  _free(void *ptr, void *user_data)
 {
     free(ptr);
 }
@@ -217,14 +230,14 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
         };
 
 #if defined(DEBUG) && !defined(SANITIZE)
-    music->decoder = drflac_open(_music_read, _music_seek, &music->io_callbacks_closure, &(drflac_allocation_callbacks){
+    music->decoder = drflac_open(_music_read, _music_seek, _music_tell, &music->io_callbacks_closure, &(drflac_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc  = _malloc,
             .onRealloc = _realloc,
             .onFree    = _free
         });
 #else
-    music->decoder = drflac_open(_music_read, _music_seek, &music->io_callbacks_closure, NULL);
+    music->decoder = drflac_open(_music_read, _music_seek, _music_tell, &music->io_callbacks_closure, NULL);
 #endif
     if (!music->decoder) {
         LOG_E("can't create music decoder");
