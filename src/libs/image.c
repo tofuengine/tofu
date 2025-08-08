@@ -131,7 +131,12 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_free_row_buffer;
     }
 
-    spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
+    result = spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
+    if (result != SPNG_OK) {
+        LOG_E("can't start decoding (%s)", spng_strerror(result));
+        goto error_free_row_buffer;
+    }
+
     do {
         struct spng_row_info row_info = { 0 };
 
@@ -156,6 +161,107 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
 
     free(row_buffer);
     spng_ctx_free(ctx);
+
+    return success;
+
+error_free_row_buffer:
+    free(row_buffer);
+error_free_context:
+    spng_ctx_free(ctx);
+error_exit:
+    return false;
+}
+
+static int _spng_write(spng_ctx *ctx, void *user, void *buffer, size_t bytes_to_write)
+{
+    _io_callbacks_closure_t *closure = (_io_callbacks_closure_t *)user;
+
+    size_t bytes_written = closure->callbacks->write(closure->user_data, buffer, bytes_to_write);
+    if (bytes_written != bytes_to_write) {
+        return SPNG_IO_ERROR;
+    }
+
+    return SPNG_OK;
+}
+
+bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                               const image_encode_callbacks_t *encode_callbacks, void *encode_user_data)
+{
+#if defined(DEBUG) && !defined(SANITIZE)
+    spng_ctx *ctx = spng_ctx_new2(&_spng_alloc, SPNG_CTX_ENCODER);
+#else
+    spng_ctx *ctx = spng_ctx_new(SPNG_CTX_ENCODER);
+#endif
+    if (!ctx) {
+        LOG_E("can't allocate context");
+        goto error_exit;
+    }
+
+    // TODO: handle errors!
+    spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
+    spng_set_png_stream(ctx, _spng_write, &(_io_callbacks_closure_t){
+            .callbacks = io_callbacks,
+            .user_data = io_user_data
+        });
+
+    /* Set image properties, this determines the destination image format */
+    /* Valid color type, bit depth combinations: https://www.w3.org/TR/2003/REC-PNG-20031110/#table111 */
+    size_t width, height;
+
+    bool initialized = encode_callbacks->on_initialize(encode_user_data, &width, &height);
+    if (!initialized) {
+        LOG_E("can't initialize encoder");
+        goto error_free_context;
+    }
+
+    struct spng_ihdr ihdr = {
+            .width = width,
+            .height = height,
+            .bit_depth = 8, // Default to 8 bits per channel
+            .color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA // Default to RGBA
+        };
+    int result = spng_set_ihdr(ctx, &ihdr);
+    if (result != SPNG_OK) {
+        LOG_E("can't set PNG header (%s)", spng_strerror(result));
+        goto error_free_context;
+    }
+
+#if defined(IMAGE_HIGHEST_COMPRESSION_LEVEL)
+    spng_set_option(ctx, SPNG_IMG_COMPRESSION_LEVEL, 9);
+#endif 
+
+    size_t image_size = width * height * _BYTES_PER_PIXEL;
+    size_t row_buffer_size = image_size / height;
+
+    void *row_buffer = malloc(row_buffer_size);
+    if (!row_buffer) {
+        LOG_E("can't allocate row buffer");
+        goto error_free_context;
+    }
+
+    result = spng_encode_image(ctx, NULL, 0, SPNG_FMT_PNG, SPNG_ENCODE_PROGRESSIVE);
+    if (result != SPNG_OK) {
+        LOG_E("can't start encoding (%s)", spng_strerror(result));
+        goto error_free_row_buffer;
+    }
+
+    for (size_t row_index = 0; row_index < height; ++row_index) {
+        encode_callbacks->on_scanline(encode_user_data, row_index, row_buffer, row_buffer_size);
+
+        result = spng_encode_row(ctx, row_buffer, row_buffer_size);
+        if (result != SPNG_OK) {
+            break;
+        }
+    }
+
+    bool success = result == SPNG_EOI;
+    LOG_IF_D(success, "image encoded");
+
+    encode_callbacks->on_deinitialize(encode_user_data, success);
+
+    free(row_buffer);
+
+    spng_ctx_free(ctx); // A call to `spng_encode_chunks()` is not needed.
 
     return success;
 

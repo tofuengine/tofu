@@ -30,6 +30,7 @@
 
 typedef struct image_io_callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
+    size_t (*write)(void *user_data, const void *buffer, size_t bytes_to_write);
     bool   (*seek)(void *user_data, long offset, int whence);
     long   (*tell)(void *user_data);
     bool   (*eof)(void *user_data);
@@ -41,7 +42,16 @@ typedef struct image_decode_callbacks_s {
     void (*on_free)(void *user_data, bool success);
 } image_decode_callbacks_t;
 
+typedef struct image_encode_callbacks_s {
+    bool (*on_initialize)(void *user_data, size_t *width, size_t *height);
+    bool (*on_scanline)(void *user_data, size_t index, void *pixels, size_t stride);
+    void (*on_deinitialize)(void *user_data, bool success);
+} image_encode_callbacks_t;
+
 extern bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
                                         const image_decode_callbacks_t *decode_callbacks, void *decode_user_data);
+
+extern bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                                      const image_encode_callbacks_t *encode_callbacks, void *encode_user_data);
 
 #endif  /* TOFU_LIBS_IMAGE_H */

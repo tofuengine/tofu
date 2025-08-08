@@ -45,6 +45,7 @@
 #include <libs/stb.h>
 
 #include <stdint.h>
+#include <stdio.h>
 
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
@@ -307,35 +308,36 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
     return true;
 }
 
-static size_t _read(void *user_data, void *buffer, size_t bytes_to_read)
+static size_t _fs_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_read(handle, buffer, bytes_to_read);
 }
 
-static bool _seek(void *user_data, long offset, int whence)
+static bool _fs_seek(void *user_data, long offset, int whence)
 {
     FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_seek(handle, offset, whence);
 }
 
-static long _tell(void *user_data)
+static long _fs_tell(void *user_data)
 {
     const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
     return FS_tell(handle);
 }
 
-static bool _eof(void *user_data)
+static bool _fs_eof(void *user_data)
 {
     const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
     return FS_eof(handle);
 }
 
 static const image_io_callbacks_t _image_io_callbacks = {
-    .read = _read,
-    .seek = _seek,
-    .tell = _tell,
-    .eof  = _eof
+    .read = _fs_read,
+    .write = NULL, // Not used in decoding.
+    .seek = _fs_seek,
+    .tell = _fs_tell,
+    .eof  = _fs_eof
 };
 
 typedef struct _decode_callbacks_closure_s {
@@ -345,7 +347,7 @@ typedef struct _decode_callbacks_closure_s {
     void *pixels;
 } _decode_callbacks_closure_t;
 
-static bool _on_allocate(void *user_data, size_t width, size_t height, size_t bytes_per_pixel)
+static bool _decode_on_allocate(void *user_data, size_t width, size_t height, size_t bytes_per_pixel)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
@@ -365,7 +367,7 @@ static bool _on_allocate(void *user_data, size_t width, size_t height, size_t by
     return true;
 }
 
-static bool _on_scanline(void *user_data, size_t index, const void *pixels)
+static bool _decode_on_scanline(void *user_data, size_t index, const void *pixels)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
@@ -376,7 +378,7 @@ static bool _on_scanline(void *user_data, size_t index, const void *pixels)
     return true; // Continue decoding.
 }
 
-static void _on_free(void *user_data, bool success)
+static void _decode_on_free(void *user_data, bool success)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
@@ -389,9 +391,9 @@ static void _on_free(void *user_data, bool success)
 }
 
 static const image_decode_callbacks_t _image_decode_callbacks = {
-    .on_allocate = _on_allocate,
-    .on_scanline = _on_scanline,
-    .on_free     = _on_free
+    .on_allocate = _decode_on_allocate,
+    .on_scanline = _decode_on_scanline,
+    .on_free     = _decode_on_free
 };
 
 static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
@@ -583,15 +585,84 @@ error_exit:
     return NULL;
 }
 
-// static void _stbi_write_func(void *context, void *data, int size)
-// {
-//     FILE *stream = (FILE *)context;
-//     size_t bytes_to_write = (size_t)size;
-//     size_t bytes_written = fwrite(data, sizeof(uint8_t), bytes_to_write, stream);
-//     if (bytes_written != bytes_to_write) {
-//         LOG_E("can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
-//     }
-// }
+static size_t _stdio_write(void *user_data, const void *buffer, size_t bytes_to_write)
+{
+    FILE *stream = (FILE *)user_data;
+
+    size_t bytes_written = fwrite(buffer, sizeof(uint8_t), bytes_to_write, stream);
+    LOG_IF_E(bytes_written != bytes_to_write, "can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
+
+    return bytes_written;
+}
+
+static bool _stdio_seek(void *user_data, long offset, int whence)
+{
+    FILE *stream = (FILE *)user_data;
+
+    int result = fseek(stream, offset, whence);
+    LOG_IF_E(result != 0, "can't seek to %ld byte(s) from %d", offset, whence);
+
+    return result == 0;
+}
+
+static long _stdio_tell(void *user_data)
+{
+    FILE *stream = (FILE *)user_data;
+
+    long position = ftell(stream);
+    LOG_IF_E(position < 0, "can't tell position in stream");
+
+    return position;
+}
+
+static bool _stdio_eof(void *user_data)
+{
+    FILE *stream = (FILE *)user_data;
+
+    int result = feof(stream);
+    LOG_IF_E(result != 0, "can't tell if end-of-file reached");
+
+    return result != 0;
+}
+
+static const image_io_callbacks_t _io_callbacks = {
+    .read = NULL, // Not used in encoding.
+    .write = _stdio_write,
+    .seek = _stdio_seek,
+    .tell = _stdio_tell,
+    .eof = _stdio_eof
+};
+
+static bool _encode_on_initialize(void *user_data, size_t *width, size_t *height)
+{
+    const Storage_Resource_t *resource = (const Storage_Resource_t *)user_data;
+
+    *width = SR_IWIDTH(resource);
+    *height = SR_IHEIGHT(resource);
+
+    return true;
+}
+
+static bool _encode_on_scanline(void *user_data, size_t index, void *pixels, size_t stride)
+{
+    const Storage_Resource_t *resource = (const Storage_Resource_t *)user_data;
+
+    const uint8_t *data = (const uint8_t *)SR_IPIXELS(resource) + (index * stride);
+    memcpy(pixels, data, stride);
+
+    return true;
+}
+
+static void _encode_on_deinitialize(void *user_data, bool success)
+{
+    // Not used in this context.
+}
+
+static image_encode_callbacks_t _encode_callbacks = {
+    .on_initialize = _encode_on_initialize,
+    .on_scanline = _encode_on_scanline,
+    .on_deinitialize = _encode_on_deinitialize
+};
 
 // This function saves a file into the local user-dependent storage. The mount points aren't modified.
 bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource)
@@ -621,9 +692,8 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
             break;
         }
         case STORAGE_RESOURCE_IMAGE: {
-//            int done = stbi_write_png_to_func(_stbi_write_func, (void *)stream, SR_IWIDTH(resource), SR_IHEIGHT(resource), 4, SR_IPIXELS(resource), SR_IWIDTH(resource) * 4);
-            int done = 0;
-            result = done != 0;
+            result = image_encode_to_callbacks(&_io_callbacks, (void *)stream,
+                                               &_encode_callbacks, (void *)resource);
             break;
         }
         default: {
@@ -635,6 +705,13 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
 
     if (!result) {
         LOG_E("can't write resource `%s` w/ type %d to file `%s`", name, resource->type, path);
+        // delete the file using POSIX functions, as the file-system API doesn't support it.
+        if (remove(path) != 0) {
+            LOG_E("can't remove file `%s`", path);
+        } else {
+            LOG_D("file `%s` removed", path);
+        }
+        
     }
 
     return result;
