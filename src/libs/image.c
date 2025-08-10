@@ -101,14 +101,17 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_exit;
     }
 
-    spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
-    spng_set_png_stream(ctx, _spng_read, &(_io_callbacks_closure_t){
+    int result = spng_set_png_stream(ctx, _spng_read, &(_io_callbacks_closure_t){
             .callbacks = io_callbacks,
             .user_data = io_user_data
         });
+    if (result != SPNG_OK) {
+        LOG_E("can't set PNG stream (%s)", spng_strerror(result));
+        goto error_free_context;
+    }
 
     struct spng_ihdr ihdr;
-    int result = spng_get_ihdr(ctx, &ihdr);
+    result = spng_get_ihdr(ctx, &ihdr);
     if (result) {
         LOG_E("can't decode image (%s)", spng_strerror(result));
         goto error_free_context;
@@ -116,7 +119,11 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
     LOG_D("image size is %dx%d", ihdr.width, ihdr.height);
 
     size_t image_size;
-    spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
+    result = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
+    if (result != SPNG_OK) {
+        LOG_E("can't get decoded image size (%s)", spng_strerror(result));
+        goto error_free_context;
+    }
     size_t row_buffer_size = image_size / ihdr.height;
 
     void *row_buffer = malloc(row_buffer_size);
@@ -197,12 +204,14 @@ bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *i
         goto error_exit;
     }
 
-    // TODO: handle errors!
-    spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
-    spng_set_png_stream(ctx, _spng_write, &(_io_callbacks_closure_t){
+    int result = spng_set_png_stream(ctx, _spng_write, &(_io_callbacks_closure_t){
             .callbacks = io_callbacks,
             .user_data = io_user_data
         });
+    if (result != SPNG_OK) {
+        LOG_E("can't set PNG stream (%s)", spng_strerror(result));
+        goto error_free_context;
+    }
 
     /* Set image properties, this determines the destination image format */
     /* Valid color type, bit depth combinations: https://www.w3.org/TR/2003/REC-PNG-20031110/#table111 */
@@ -214,13 +223,12 @@ bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *i
         goto error_free_context;
     }
 
-    struct spng_ihdr ihdr = {
-            .width = width,
-            .height = height,
+    result = spng_set_ihdr(ctx, &(struct spng_ihdr){
+            .width = (uint32_t)width,
+            .height = (uint32_t)height,
             .bit_depth = 8, // Default to 8 bits per channel
             .color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA // Default to RGBA
-        };
-    int result = spng_set_ihdr(ctx, &ihdr);
+        });
     if (result != SPNG_OK) {
         LOG_E("can't set PNG header (%s)", spng_strerror(result));
         goto error_free_context;
