@@ -80,7 +80,7 @@ static void _spng_free(void *ptr)
     free(ptr);
 }
 
-static struct spng_alloc _spng_alloc = { // Can't declare this struct as `const` due to SPNG API.
+static struct spng_alloc _spng_alloc = { // Can't declare this struct as `const` due to SPNG API ! :(
     .malloc_fn = _spng_malloc,
     .realloc_fn = _spng_realloc,
     .calloc_fn = _spng_calloc,
@@ -132,7 +132,7 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_free_context;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height, _BYTES_PER_PIXEL);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;
@@ -213,10 +213,7 @@ bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *i
         goto error_free_context;
     }
 
-    /* Set image properties, this determines the destination image format */
-    /* Valid color type, bit depth combinations: https://www.w3.org/TR/2003/REC-PNG-20031110/#table111 */
     size_t width, height;
-
     bool initialized = encode_callbacks->on_initialize(encode_user_data, &width, &height);
     if (!initialized) {
         LOG_E("can't initialize encoder");
@@ -254,7 +251,7 @@ bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *i
     }
 
     for (size_t row_index = 0; row_index < height; ++row_index) {
-        encode_callbacks->on_scanline(encode_user_data, row_index, row_buffer, row_buffer_size);
+        encode_callbacks->on_scanline(encode_user_data, row_index, row_buffer);
 
         result = spng_encode_row(ctx, row_buffer, row_buffer_size);
         if (result != SPNG_OK) {

@@ -343,15 +343,18 @@ static const image_io_callbacks_t _image_io_callbacks = {
 typedef struct _decode_callbacks_closure_s {
     size_t width;
     size_t height;
-    size_t bytes_per_pixel;
+    //size_t stride;
     void *pixels;
 } _decode_callbacks_closure_t;
 
-static bool _decode_on_allocate(void *user_data, size_t width, size_t height, size_t bytes_per_pixel)
+#define _BYTES_PER_PIXEL 4
+
+static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    void *pixels = malloc(width * height * bytes_per_pixel);
+    size_t stride = width * _BYTES_PER_PIXEL;
+    void *pixels = malloc(height * stride);
     if (!pixels) {
         LOG_E("can't allocate `%dx%d` pixel-data", width, height);
         return false;
@@ -360,7 +363,6 @@ static bool _decode_on_allocate(void *user_data, size_t width, size_t height, si
     *closure = (_decode_callbacks_closure_t){
             .width = width,
             .height = height,
-            .bytes_per_pixel = bytes_per_pixel,
             .pixels = pixels
         };
 
@@ -371,9 +373,10 @@ static bool _decode_on_scanline(void *user_data, size_t index, const void *pixel
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    void *ptr = (uint8_t *)closure->pixels + (index * closure->width * closure->bytes_per_pixel); // FIXME: can be optimized.
+    size_t stride = closure->width * _BYTES_PER_PIXEL;
+    void *ptr = (uint8_t *)closure->pixels + (index * stride); // FIXME: can be optimized.
 
-    memcpy(ptr, pixels, closure->width * closure->bytes_per_pixel);
+    memcpy(ptr, pixels, stride);
 
     return true; // Continue decoding.
 }
@@ -643,9 +646,11 @@ static bool _encode_on_initialize(void *user_data, size_t *width, size_t *height
     return true;
 }
 
-static bool _encode_on_scanline(void *user_data, size_t index, void *pixels, size_t stride)
+static bool _encode_on_scanline(void *user_data, size_t index, void *pixels)
 {
     const Storage_Resource_t *resource = (const Storage_Resource_t *)user_data;
+
+    size_t stride = SR_IWIDTH(resource) * _BYTES_PER_PIXEL;
 
     const uint8_t *data = (const uint8_t *)SR_IPIXELS(resource) + (index * stride);
     memcpy(pixels, data, stride);

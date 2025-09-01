@@ -36,15 +36,19 @@ typedef struct image_io_callbacks_s {
     bool   (*eof)(void *user_data);
 } image_io_callbacks_t;
 
+/**
+ * *Note*: the image pixels are always in RGBA() format (8 bits per channel,
+ *         i.e. 4 bytes per pixel).
+ */
 typedef struct image_decode_callbacks_s {
-    bool (*on_allocate)(void *user_data, size_t width, size_t height, size_t bytes_per_pixel);
+    bool (*on_allocate)(void *user_data, size_t width, size_t height);
     bool (*on_scanline)(void *user_data, size_t index, const void *pixels);
     void (*on_free)(void *user_data, bool success);
 } image_decode_callbacks_t;
 
 typedef struct image_encode_callbacks_s {
     bool (*on_initialize)(void *user_data, size_t *width, size_t *height);
-    bool (*on_scanline)(void *user_data, size_t index, void *pixels, size_t stride);
+    bool (*on_scanline)(void *user_data, size_t index, void *pixels);
     void (*on_deinitialize)(void *user_data, bool success);
 } image_encode_callbacks_t;
 
