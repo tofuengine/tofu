@@ -47,6 +47,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define _BYTES_PER_PIXEL 4
+
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
@@ -343,17 +345,16 @@ static const image_io_callbacks_t _image_io_callbacks = {
 typedef struct _decode_callbacks_closure_s {
     size_t width;
     size_t height;
-    //size_t stride;
     void *pixels;
+    size_t stride;
 } _decode_callbacks_closure_t;
-
-#define _BYTES_PER_PIXEL 4
 
 static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
     size_t stride = width * _BYTES_PER_PIXEL;
+
     void *pixels = malloc(height * stride);
     if (!pixels) {
         LOG_E("can't allocate `%dx%d` pixel-data", width, height);
@@ -363,7 +364,8 @@ static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
     *closure = (_decode_callbacks_closure_t){
             .width = width,
             .height = height,
-            .pixels = pixels
+            .pixels = pixels,
+            .stride = stride
         };
 
     return true;
@@ -373,10 +375,9 @@ static bool _decode_on_scanline(void *user_data, size_t index, const void *pixel
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    size_t stride = closure->width * _BYTES_PER_PIXEL;
-    void *ptr = (uint8_t *)closure->pixels + (index * stride); // FIXME: can be optimized.
+    void *ptr = (uint8_t *)closure->pixels + (index * closure->stride);
 
-    memcpy(ptr, pixels, stride);
+    memcpy(ptr, pixels, closure->stride);
 
     return true; // Continue decoding.
 }
@@ -636,24 +637,31 @@ static const image_io_callbacks_t _io_callbacks = {
     .eof = _stdio_eof
 };
 
+typedef struct _encode_callbacks_closure_s { // TODO: this is identical to `_decode_callbacks_closure_t`... simplify?
+    size_t width;
+    size_t height;
+    void *pixels;
+    size_t stride; // Calculated on initialization
+} _encode_callbacks_closure_t;
+
 static bool _encode_on_initialize(void *user_data, size_t *width, size_t *height)
 {
-    const Storage_Resource_t *resource = (const Storage_Resource_t *)user_data;
+    _encode_callbacks_closure_t *closure = (_encode_callbacks_closure_t *)user_data;
 
-    *width = SR_IWIDTH(resource);
-    *height = SR_IHEIGHT(resource);
+    *width = closure->width;
+    *height = closure->height;
+
+    closure->stride = closure->width * _BYTES_PER_PIXEL;
 
     return true;
 }
 
 static bool _encode_on_scanline(void *user_data, size_t index, void *pixels)
 {
-    const Storage_Resource_t *resource = (const Storage_Resource_t *)user_data;
+    const _encode_callbacks_closure_t *closure = (const _encode_callbacks_closure_t *)user_data;
 
-    size_t stride = SR_IWIDTH(resource) * _BYTES_PER_PIXEL;
-
-    const uint8_t *data = (const uint8_t *)SR_IPIXELS(resource) + (index * stride);
-    memcpy(pixels, data, stride);
+    const uint8_t *data = (const uint8_t *)closure->pixels + (index * closure->stride);
+    memcpy(pixels, data, closure->stride);
 
     return true;
 }
@@ -698,7 +706,11 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
         }
         case STORAGE_RESOURCE_IMAGE: {
             result = image_encode_to_callbacks(&_io_callbacks, (void *)stream,
-                                               &_encode_callbacks, (void *)resource);
+                                               &_encode_callbacks, (void *)&(_encode_callbacks_closure_t){
+                                                       .width = SR_IWIDTH(resource), 
+                                                       .height = SR_IHEIGHT(resource),
+                                                       .pixels = SR_IPIXELS(resource)
+                                                   });
             break;
         }
         default: {
