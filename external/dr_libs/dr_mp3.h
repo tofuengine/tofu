@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.7.1 - TBD
+dr_mp3 - v0.7.1 - 2025-09-10
 
 David Reid - mackron@gmail.com
 
@@ -3257,6 +3257,13 @@ static drmp3_bool32 drmp3_init_internal(drmp3* pMP3, drmp3_read_proc onRead, drm
                     /* The start offset needs to be moved to the end of this frame so it's not included in any audio processing after seeking. */
                     pMP3->streamStartOffset += (drmp3_uint32)(firstFrameInfo.frame_bytes);
                     pMP3->streamCursor = pMP3->streamStartOffset;
+
+                    /*
+                    The internal decoder needs to be reset to clear out any state. If we don't reset this state, it's possible for
+                    there to be inconsistencies in the number of samples read when reading to the end of the stream depending on
+                    whether or not the caller seeks to the start of the stream.
+                    */
+                    drmp3dec_init(&pMP3->decoder);
                 }
             } else {
                 /* Failed to read the side info. */
@@ -3992,7 +3999,7 @@ static drmp3_bool32 drmp3__on_tell_stdio(void* pUserData, drmp3_int64* pCursor)
     DRMP3_ASSERT(pFileStdio != NULL);
     DRMP3_ASSERT(pCursor    != NULL);
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(NXDK)
     #if defined(_MSC_VER) && _MSC_VER > 1200
         result = _ftelli64(pFileStdio);
     #else
@@ -4992,8 +4999,10 @@ DIFFERENCES BETWEEN minimp3 AND dr_mp3
 /*
 REVISION HISTORY
 ================
-v0.7.1 - TBD
+v0.7.1 - 2025-09-10
   - Silence a warning with GCC.
+  - Fix an error with the NXDK build.
+  - Fix a decoding inconsistency when seeking. Prior to this change, reading to the end of the stream immediately after initializing will result in a different number of samples read than if the stream is seeked to the start and read to the end.
 
 v0.7.0 - 2025-07-23
   - The old `DRMP3_IMPLEMENTATION` has been removed. Use `DR_MP3_IMPLEMENTATION` instead. The reason for this change is that in the future everything will eventually be using the underscored naming convention in the future, so `drmp3` will become `dr_mp3`.
