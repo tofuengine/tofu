@@ -37,8 +37,10 @@ typedef struct image_io_callbacks_s {
 } image_io_callbacks_t;
 
 /**
- * *Note*: the image pixels are always in RGBA() format (8 bits per channel,
+ * *Note*: the image pixels are stored in RGBA() format (8 bits per channel,
  *         i.e. 4 bytes per pixel).
+ * *Note*: the `on_free()` callback is *always* called the the end of the
+ *         decoding process.
  */
 typedef struct image_decode_callbacks_s {
     bool (*on_allocate)(void *user_data, size_t width, size_t height);

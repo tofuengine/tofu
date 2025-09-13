@@ -232,7 +232,11 @@ bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *i
     }
 
 #if defined(IMAGE_HIGHEST_COMPRESSION_LEVEL)
-    spng_set_option(ctx, SPNG_IMG_COMPRESSION_LEVEL, 9);
+    result = spng_set_option(ctx, SPNG_IMG_COMPRESSION_LEVEL, 9);
+    if (result != SPNG_OK) {
+        LOG_E("can't set compression level (%s)", spng_strerror(result));
+        goto error_free_context;
+    }
 #endif 
 
     size_t image_size = width * height * _BYTES_PER_PIXEL;

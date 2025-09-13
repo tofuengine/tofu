@@ -342,16 +342,17 @@ static const image_io_callbacks_t _image_io_callbacks = {
     .eof  = _fs_eof
 };
 
-typedef struct _decode_callbacks_closure_s {
+// The structure is used for the decode and encode calls.
+typedef struct _image_callbacks_closure_s {
     size_t width;
     size_t height;
     void *pixels;
     size_t stride;
-} _decode_callbacks_closure_t;
+} _image_callbacks_closure_t;
 
 static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
 {
-    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
 
     size_t stride = width * _BYTES_PER_PIXEL;
 
@@ -361,7 +362,7 @@ static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
         return false;
     }
 
-    *closure = (_decode_callbacks_closure_t){
+    *closure = (_image_callbacks_closure_t){
             .width = width,
             .height = height,
             .pixels = pixels,
@@ -373,7 +374,7 @@ static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
 
 static bool _decode_on_scanline(void *user_data, size_t index, const void *pixels)
 {
-    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
 
     void *ptr = (uint8_t *)closure->pixels + (index * closure->stride);
 
@@ -384,7 +385,7 @@ static bool _decode_on_scanline(void *user_data, size_t index, const void *pixel
 
 static void _decode_on_free(void *user_data, bool success)
 {
-    _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
+    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
 
     if (!success) {
         LOG_E("decoding failed, destroying surface");
@@ -402,24 +403,24 @@ static const image_decode_callbacks_t _image_decode_callbacks = {
 
 static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
 {
-    _decode_callbacks_closure_t decode_callbacks_closure = { 0 };
+    _image_callbacks_closure_t closure = { 0 };
 
     bool decoded = image_decode_from_callbacks(&_image_io_callbacks, handle,
-        &_image_decode_callbacks, &decode_callbacks_closure);
+        &_image_decode_callbacks, &closure);
 
     if (!decoded) {
         LOG_E("can't decode surface from handle `%p`", handle);
         return NULL;
     }
-    LOG_D("loaded %dx%d image", decode_callbacks_closure.width, decode_callbacks_closure.height);
+    LOG_D("loaded %dx%d image", closure.width, closure.height);
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_IMAGE,
             .var = {
                 .image = {
-                    .width = decode_callbacks_closure.width,
-                    .height = decode_callbacks_closure.height,
-                    .pixels = decode_callbacks_closure.pixels
+                    .width = closure.width,
+                    .height = closure.height,
+                    .pixels = closure.pixels
                 }
             },
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
@@ -637,16 +638,9 @@ static const image_io_callbacks_t _io_callbacks = {
     .eof = _stdio_eof
 };
 
-typedef struct _encode_callbacks_closure_s { // TODO: this is identical to `_decode_callbacks_closure_t`... simplify?
-    size_t width;
-    size_t height;
-    void *pixels;
-    size_t stride; // Calculated on initialization
-} _encode_callbacks_closure_t;
-
 static bool _encode_on_initialize(void *user_data, size_t *width, size_t *height)
 {
-    _encode_callbacks_closure_t *closure = (_encode_callbacks_closure_t *)user_data;
+    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
 
     *width = closure->width;
     *height = closure->height;
@@ -658,7 +652,7 @@ static bool _encode_on_initialize(void *user_data, size_t *width, size_t *height
 
 static bool _encode_on_scanline(void *user_data, size_t index, void *pixels)
 {
-    const _encode_callbacks_closure_t *closure = (const _encode_callbacks_closure_t *)user_data;
+    const _image_callbacks_closure_t *closure = (const _image_callbacks_closure_t *)user_data;
 
     const uint8_t *data = (const uint8_t *)closure->pixels + (index * closure->stride);
     memcpy(pixels, data, closure->stride);
@@ -706,7 +700,7 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
         }
         case STORAGE_RESOURCE_IMAGE: {
             result = image_encode_to_callbacks(&_io_callbacks, (void *)stream,
-                                               &_encode_callbacks, (void *)&(_encode_callbacks_closure_t){
+                                               &_encode_callbacks, (void *)&(_image_callbacks_closure_t){
                                                        .width = SR_IWIDTH(resource), 
                                                        .height = SR_IHEIGHT(resource),
                                                        .pixels = SR_IPIXELS(resource)
