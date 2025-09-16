@@ -339,7 +339,8 @@ void Engine_shutdown(Engine_t *engine)
 {
     Interpreter_shutdown(engine->interpreter);
 
-    LOG_I("total uptime is %.3f second(s)", engine->environment->state.time);
+    const Environment_State_t *state = Environment_get_state(engine->environment);
+    LOG_I("total uptime is %.3f second(s)", state->time);
 }
 
 static inline void _process(void)
