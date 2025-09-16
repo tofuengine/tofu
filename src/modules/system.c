@@ -41,6 +41,7 @@ static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
 static int system_time_1S_1n(lua_State *L);
 static int system_date_2SS_1s(lua_State *L);
+static int system_uptime_0_1n(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 static int system_stats_0_4nnnn(lua_State *L);
@@ -61,6 +62,7 @@ int system_loader(lua_State *L)
             { "clock", system_clock_0_1n },
             { "time", system_time_1S_1n },
             { "date", system_date_2SS_1s },
+            { "uptime", system_uptime_0_1n },
             { "fps", system_fps_0_1n },
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
             { "stats", system_stats_0_4nnnn },
@@ -161,6 +163,19 @@ static int system_date_2SS_1s(lua_State *L)
     size_t length = strftime(date, _MAX_DATE_LENGTH, format, &tm);
 
     lua_pushlstring(L, date, length);
+
+    return 1;
+}
+
+static int system_uptime_0_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
+
+    const Environment_State_t *state = Environment_get_state(environment);
+    lua_pushnumber(L, (lua_Number)state->time);
 
     return 1;
 }
