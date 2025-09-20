@@ -571,6 +571,21 @@ offset: engine
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/offset
 	@$(builddir)/$(TARGET) --data=./demos/offset
 
+boids: engine
+	@echo "Launching *boids* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/boids
+	@$(builddir)/$(TARGET) --data=./demos/boids
+
+shadows: engine
+	@echo "Launching *shadows* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/shadows
+	@$(builddir)/$(TARGET) --data=./demos/shadows
+
+lissajous: engine
+	@echo "Launching *lissajous* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/lissajous
+	@$(builddir)/$(TARGET) --data=./demos/lissajous
+
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
