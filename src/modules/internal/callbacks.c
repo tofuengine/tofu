@@ -46,6 +46,30 @@ typedef struct rgba_s {
 } rgba_t;
 #pragma pack(pop)
 
+static void _surface_callback_palette_raw(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
+{
+    //const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
+
+    if (row < 0) {
+        return; // Nothing to do.
+    }
+
+    const uint8_t *src = (const uint8_t *)pixels;
+    GL_Pixel_t *dst = surface->data + row * surface->width;
+
+    // for (size_t i = surface->width; i; --i) {
+    //     uint8_t index = *(src++);
+    //     if (index >= palette_length) {
+    //         index = 0; // Fallback to first palette entry.
+    //     }
+    //     const uint8_t *c = palette + index * 3;
+    //     GL_Color_t color = (GL_Color_t){ .r = c[0], .g = c[1], .b = c[2], .a = 255 };
+    //     *(dst++) = GL_palette_find_nearest_color(closure->palette, color);
+    // }
+
+    memcpy(dst, src, surface->width); // Direct copy.
+}
+
 // Given an `MxN` RGBA8888 image, the naive conversion to the color-indexed format requires `MxN` scans to find the
 // nearest-matching color in the palette. This is a computationally demanding operation, since it computes the Euclidean
 // distance for each palette-entry. Even for small images the load-and-convert times are non negligible.
@@ -56,7 +80,7 @@ typedef struct rgba_s {
 //
 // Since the total amount of distinct colors in a single image is typically small, the additional memory usage is worth
 // the effort.
-void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
+static void _surface_callback_palette_png(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
 {
 #if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
     Callback_Palette_Closure_t *closure = (Callback_Palette_Closure_t *)user_data;
@@ -64,16 +88,18 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, c
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
 #endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 
-#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
     if (row == GL_SURFACE_CALLBACK_START_OF_DATA) {
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
         closure->cache = NULL;
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
         return;
     } else
     if (row == GL_SURFACE_CALLBACK_END_OF_DATA) {
+#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
         hmfree(closure->cache);
+#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
         return;
     }
-#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 
     const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data + row * surface->width;
@@ -103,7 +129,27 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, c
     }
 }
 
-void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels)
+void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
+{
+    if (palette) {
+        _surface_callback_palette_raw(user_data, surface, row, pixels, palette, palette_length);
+    } else {
+        _surface_callback_palette_png(user_data, surface, row, pixels, palette, palette_length);
+    }
+}
+
+static void _surface_callback_indexes_raw(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
+{
+    if (row < 0) {
+        return; // Nothing to do.
+    }
+
+    const uint8_t *src = (const uint8_t *)pixels;
+    GL_Pixel_t *dst = surface->data + row * surface->width;
+    memcpy(dst, src, surface->width); // Direct copy.
+}
+
+static void _surface_callback_indexes_png(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
 {
     Callback_Indexes_Closure_t *closure = (Callback_Indexes_Closure_t *)user_data;
 
@@ -122,5 +168,14 @@ void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, c
     for (size_t i = surface->width; i; --i) {
         uint32_t rgba = *(src++);
         *(dst++) = rgba == background ? closure->background : closure->foreground;
+    }
+}
+
+void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
+{
+    if (palette) {
+        _surface_callback_indexes_raw(user_data, surface, row, pixels, palette, palette_length);
+    } else {
+        _surface_callback_indexes_png(user_data, surface, row, pixels, palette, palette_length);
     }
 }

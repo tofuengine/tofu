@@ -52,7 +52,7 @@ typedef struct GL_Surface_s {
 // Note: the `row` parameter is the row number of the image, starting from `0`. It is also
 //       used to signal the start and end of the data stream, using the special values
 //       `GL_SURFACE_CALLBACK_START_OF_DATA` and `GL_SURFACE_CALLBACK_END_OF_DATA`.
-typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, int row, const void *pixels); // RGBA888 format.
+typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length); // RGBA8888 format.
 
 // Special values for the `row` parameter in the `GL_Surface_Callback_t` callback.
 #define GL_SURFACE_CALLBACK_START_OF_DATA -1
