@@ -48,24 +48,12 @@ typedef struct rgba_s {
 
 static void _surface_callback_palette_raw(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length)
 {
-    //const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
-
     if (row < 0) {
         return; // Nothing to do.
     }
 
     const uint8_t *src = (const uint8_t *)pixels;
     GL_Pixel_t *dst = surface->data + row * surface->width;
-
-    // for (size_t i = surface->width; i; --i) {
-    //     uint8_t index = *(src++);
-    //     if (index >= palette_length) {
-    //         index = 0; // Fallback to first palette entry.
-    //     }
-    //     const uint8_t *c = palette + index * 3;
-    //     GL_Color_t color = (GL_Color_t){ .r = c[0], .g = c[1], .b = c[2], .a = 255 };
-    //     *(dst++) = GL_palette_find_nearest_color(closure->palette, color);
-    // }
 
     memcpy(dst, src, surface->width); // Direct copy.
 }

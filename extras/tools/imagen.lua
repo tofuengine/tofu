@@ -111,6 +111,9 @@ end
 -- the image pixels. For each new color found, a new entry is added to the
 -- palette.
 -- Returns the palette as a map (rgb -> index) and the palette length.
+--
+-- TODO: implement a better palette generation algorithm (like median cut).
+--       See: https://en.wikipedia.org/wiki/Median_cut
 local function calculate_palette(image)
   local palette = {}
   local palette_length = 0
@@ -265,7 +268,7 @@ local function main(arg)
     :count(1)
     :args(1)
   parser:option("-p --palette")
-    :description("Sets the size of the palette.")
+    :description("Path of the palette file.")
 --    :count(1)
     :args('?')
   parser:flag("-q --quiet")

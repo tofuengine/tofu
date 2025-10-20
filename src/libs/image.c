@@ -35,15 +35,6 @@
 
 #define _BYTES_PER_PIXEL 4
 
-// typedef struct bean_header_s {
-//     uint8_t magic[4]; // "bEAn"
-//     uint16_t width;
-//     uint16_t height;
-//     uint8_t used_colors;
-//     uint8_t __reserved[3];
-//     uint32_t palette[256];
-// } bean_header_t;
-
 typedef struct _io_callbacks_closure_s {
     const image_io_callbacks_t *callbacks;
     void *user_data;
@@ -162,8 +153,9 @@ static bool _png_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
             break;
         }
 
-        success = spng_decode_row(ctx, row_buffer, row_buffer_size) == SPNG_OK
-            && decode_callbacks->on_scanline(decode_user_data, row_info.row_num, row_buffer);
+        result = spng_decode_row(ctx, row_buffer, row_buffer_size);
+        success = result == SPNG_OK || result == SPNG_EOI;
+        success = success && decode_callbacks->on_scanline(decode_user_data, row_info.row_num, row_buffer);
     } while (success);
 
     LOG_IF_D(success, "image decoded");
@@ -196,6 +188,8 @@ typedef struct _img_header_s {
     uint16_t palette_length;
 } _img_header_t;
 
+static const char *_img_magic = "TOFUIMG!";
+
 static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
                                        const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
 {
@@ -205,7 +199,7 @@ static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
         LOG_E("can't read image header");
         goto error_exit;
     }
-    if (memcmp(header.magic, "TOFUIMG!", 8) != 0) {
+    if (memcmp(header.magic, _img_magic, sizeof(header.magic)) != 0) {
         LOG_E("invalid image header");
         goto error_exit;
     }
@@ -257,21 +251,23 @@ error_exit:
     return false;
 }
 
+static const uint8_t _png_magic[8] = "\x89PNG\r\n\x1a\n";
+
 bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
                                  const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
 {
-    uint8_t header[8];
-    size_t header_size = io_callbacks->read(io_user_data, header, sizeof(header));
-    if (header_size != sizeof(header)) {
+    uint8_t magic[8];
+    size_t magic_size = io_callbacks->read(io_user_data, magic, sizeof(magic));
+    if (magic_size != sizeof(magic)) {
         LOG_E("can't read image header");
         return false;
     }
     io_callbacks->seek(io_user_data, 0, SEEK_SET); // Rewind back to the beginning.
 
-    if (memcmp(header, "\x89PNG\r\n\x1a\n", 8) == 0) {
+    if (memcmp(magic, _png_magic, sizeof(magic)) == 0) {
         return _png_decode_from_callbacks(io_callbacks, io_user_data, decode_callbacks, decode_user_data);
     } else
-    if (memcmp(header, "TOFUIMG!", 8) == 0) {
+    if (memcmp(magic, _img_magic, sizeof(magic)) == 0) {
         return _img_decode_from_callbacks(io_callbacks, io_user_data, decode_callbacks, decode_user_data);
     } else {
         LOG_E("unrecognized image format");
