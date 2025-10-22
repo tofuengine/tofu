@@ -136,12 +136,14 @@ sudo apt install xorg-dev libx11-dev libwayland-dev libxkbcommon-dev wayland-pro
 
 sudo apt install valgrind cloc bear
 
+sudo apt install libvips libvips-dev
 sudo apt install lua5.4 liblua5.4-dev luarocks
 
 sudo luarocks --lua-version=5.4 install argparse
 sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck
 sudo luarocks --lua-version=5.4 install luazen
+sudo luarocks --lua-version=5.4 install lua-vips luaffi-tkl
 ```
 
 Please note that [MinGW](https://en.wikipedia.org/wiki/MinGW) is required only to obtain the Windows build through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). One can simply use MinGW on Windows to build the engine binary as it is.
