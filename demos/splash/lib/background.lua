@@ -47,7 +47,7 @@ function Background:__ctor(_, height, transparent, palette, pool)
   local half_height = height // 2
   local quarter_height = height // 4
 
-  self.font = Font.from_image("assets/images/font-8x8.png", 8, 8, transparent, palette:match(255, 255, 255))
+  self.font = Font.from_image("assets/images/font-8x8.img", 8, 8, transparent, palette:match(255, 255, 255))
 
   self.timer = pool:spawn(10, 0, function(_)
       local program = Program.new()

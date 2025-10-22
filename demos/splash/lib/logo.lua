@@ -43,10 +43,10 @@ local Logo = Class.define()
 
 function Logo:__ctor(width, height, transparent, _, _)
   self.images = {
-      Image.new("assets/images/tofu.png", transparent),
-      Image.new("assets/images/engine.png", transparent)
+      Image.new("assets/images/tofu.img", transparent),
+      Image.new("assets/images/engine.img", transparent)
     }
-  self.outline = Image.new("assets/images/outline.png", transparent)
+  self.outline = Image.new("assets/images/outline.img", transparent)
 
   local w, h = self.outline:size()
   self.x = (width - w) * 0.5
