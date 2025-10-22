@@ -81,8 +81,6 @@ typedef struct _decode_callbacks_closure_s {
     GL_Surface_t *surface;
     const GL_Surface_Callback_t callback;
     void *user_data;
-    const uint8_t *palette;
-    size_t palette_length;
 } _decode_callbacks_closure_t;
 
 static bool _on_allocate(void *user_data, size_t width, size_t height, const uint8_t *palette, size_t palette_length)
@@ -97,10 +95,8 @@ static bool _on_allocate(void *user_data, size_t width, size_t height, const uin
     LOG_D("surface %p allocated with size `%dx%d`", surface, width, height);
 
     closure->surface = surface;
-    closure->palette = palette;
-    closure->palette_length = palette_length;
 
-    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_START_OF_DATA, NULL, NULL, 0);
+    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_START_OF_DATA, NULL);
 
     return true;
 }
@@ -109,7 +105,7 @@ static bool _on_scanline(void *user_data, size_t index, const void *pixels)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    closure->callback(closure->user_data, closure->surface, (int)index, pixels, closure->palette, closure->palette_length);
+    closure->callback(closure->user_data, closure->surface, (int)index, pixels);
 
     return true; // Continue decoding.
 }
@@ -118,7 +114,7 @@ static void _on_free(void *user_data, bool success)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_END_OF_DATA, NULL, NULL, 0);
+    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_END_OF_DATA, NULL);
 
     if (!success) {
         LOG_E("decoding failed, destroying surface");

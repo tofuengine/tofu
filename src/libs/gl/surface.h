@@ -49,12 +49,21 @@ typedef struct GL_Surface_s {
     bool is_power_of_two;
 } GL_Surface_t;
 
+// TODO: try and empty-sized-array approach.
+// typedef struct GL_SurfaceA_s {
+//     size_t width, height; // FIXME: use `GL_Size_t`.
+//     bool is_power_of_two;
+//     size_t data_size;
+//     GL_Pixel_t data[];
+// } GL_SurfaceA_t;
+
 // Note: the `row` parameter is the row number of the image, starting from `0`. It is also
 //       used to signal the start and end of the data stream, using the special values
 //       `GL_SURFACE_CALLBACK_START_OF_DATA` and `GL_SURFACE_CALLBACK_END_OF_DATA`.
-typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length); // RGBA8888 format.
+typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, int row, const void *pixels); // 8bbp indexed format.
 
 // Special values for the `row` parameter in the `GL_Surface_Callback_t` callback.
+// TODO: use a callback-table approach.
 #define GL_SURFACE_CALLBACK_START_OF_DATA -1
 #define GL_SURFACE_CALLBACK_END_OF_DATA   -2
 

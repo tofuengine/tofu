@@ -258,24 +258,6 @@
 // performances.
 #define TOFU_GRAPHICS_OPTIMIZED_ROTATIONS
 
-// During the loading process, a PNG image is "palettized", that is for every
-// pixel is determined the index of the palette color that best matches it. To
-// speed the process up a *memoization* (hash) table can ben used so that for
-// a distinct color the best match is calculated only one time. This results in
-// a *huge* performance improvement and should always be enabled.
-#define TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION
-
-// When converting an RGBA image to a "palettized" one, the alpha channel is
-// used to detect transparency: if lower-or-equal than the threshold value, then
-// the pixel is deem transparent.
-//
-// Fox example, a threshold value equal to `0` requires pixel to be *fully*
-// transparent.
-//
-// Note: in the RGBA space, `A == 0` is fully transparent and `A == 255` is
-//       fully opaque.
-#define TOFU_GRAPHICS_PALETTE_TRANSPARENCY_THRESHOLD 0
-
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:

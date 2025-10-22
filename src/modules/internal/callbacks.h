@@ -44,12 +44,6 @@ typedef struct Callback_Palette_Closure_s {
     const GL_Color_t *palette;
     GL_Pixel_t transparent;
     uint8_t threshold;
-#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
-    struct {
-        GL_Color_t key;
-        GL_Pixel_t value;
-    } *cache; // Stores past executed colors matches.
-#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 } Callback_Palette_Closure_t;
 
 typedef struct Callback_Indexes_Closure_s {
@@ -58,7 +52,7 @@ typedef struct Callback_Indexes_Closure_s {
     uint32_t background_color; // Updated by the code when the first row is processed.
 } Callback_Indexes_Closure_t;
 
-extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length);
-extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels, const uint8_t *palette, size_t palette_length);
+extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, int row, const void *pixels);
+extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, int row, const void *pixels);
 
 #endif  /* TOFU_MODULES_INTERNAL_CALLBACKS_H */
