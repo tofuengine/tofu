@@ -114,25 +114,124 @@ end
 --
 -- TODO: implement a better palette generation algorithm (like median cut).
 --       See: https://en.wikipedia.org/wiki/Median_cut
-local function calculate_palette(image)
-  local palette = {}
-  local palette_length = 0
+local function table_split(tbl, index)
+    local t1, t2 = {}, {}  -- create 2 new tables
+    for i, v in ipairs(tbl) do
+        if i <= index then
+            table.insert(t1, v)
+        else
+            table.insert(t2, v)
+        end
+    end
+    return t1, t2
+end
+
+local function _lower_than(a, b)
+  return a < b
+end
+
+local function sort_range(array, from, to, comparator)
+  local lower_than = comparator or _lower_than
+  for i = from + 1, to do
+    for j = i, from + 1, -1 do
+      if not lower_than(array[j], array[j - 1]) then -- Preserve stability! Swap only if strictly lower-than!
+        break
+      end
+      array[j - 1], array[j] = array[j], array[j - 1] -- Swap adjacent slots.
+    end
+  end
+end
+
+local function subtable_sort(table, from, to)
+    table.sort(table, function(a, b)
+        return a[from] < b[from]
+    end)
+end
+
+-- Recursive median cut algorithm to split colors into clusters.
+-- We don't need to create sub-tables, as we can work in-place in the
+-- array of pixels (i.e. the image buffer).
+local function median_cut(pixels, depth, clusters)
+  if depth == 0 or #pixels == 0 then
+    print(string.format("Reached leaf with %d pixels", #pixels))
+    table.insert(clusters, pixels)
+    return
+  end
+
+  local min_r, min_g, min_b = 255, 255, 255
+  local max_r, max_g, max_b = 0, 0, 0
+  for _, pixel in ipairs(pixels) do
+      if pixel.r < min_r then min_r = pixel.r end
+      if pixel.g < min_g then min_g = pixel.g end
+      if pixel.b < min_b then min_b = pixel.b end
+      if pixel.r > max_r then max_r = pixel.r end
+      if pixel.g > max_g then max_g = pixel.g end
+      if pixel.b > max_b then max_b = pixel.b end
+  end
+  local range_r = max_r - min_r
+  local range_g = max_g - min_g
+  local range_b = max_b - min_b
+  print(string.format("Color ranges: R=%d, G=%d, B=%d", range_r, range_g, range_b))
+  if range_r >= range_g and range_r >= range_b then
+    print("Sorting by R")
+    table.sort(pixels, function(a, b) return a.r < b.r end)
+  elseif range_g >= range_r and range_g >= range_b then
+    print("Sorting by G")
+    table.sort(pixels, function(a, b) return a.g < b.g end)
+  else
+    print("Sorting by B")
+    table.sort(pixels, function(a, b) return a.b < b.b end)
+  end
+
+  local left, right = table_split(pixels, math.floor(#pixels / 2))
+  print(string.format("Split %d into %d and %d pixels", #pixels, #left, #right))
+
+  median_cut(left, depth - 1, clusters)
+  median_cut(right, depth - 1, clusters)
+end
+
+local function calculate_palette(image, colors)
+  local pixels = {}
   local result = for_each_pixel(image,
     function(x, y, r, g, b, a)
-        local rgb = to_rgba32(r, g, b)
-        if not palette[rgb] then
-          if palette_length == 256 then
-            print("*** too many colors in the image (max 256)")
-            return false
-          end
-
-          print(string.format("new palette entry found: %08x", rgb))
-          palette[rgb] = palette_length -- Store the palette index for this color.
-          palette_length = palette_length + 1
-        end
-
+        table.insert(pixels, { r = r, g = g, b = b, a = a })
         return true
     end)
+
+  local depth = math.tointeger(math.ceil(math.log(colors) / math.log(2)))
+  print(string.format("Calculating palette with depth %d...", depth))
+  local clusters = {}
+  median_cut(pixels, depth, clusters)
+  print(string.format("Calculated %d color clusters", #clusters))
+
+  local palette = {}
+  local palette_length = 0
+
+  for _, cluster in ipairs(clusters) do
+      local r_sum, g_sum, b_sum = 0, 0, 0
+      for _, pixel in ipairs(cluster) do
+          r_sum = r_sum + pixel.r
+          g_sum = g_sum + pixel.g
+          b_sum = b_sum + pixel.b
+      end
+
+      local count = #cluster
+      local r = math.tointeger(math.floor(r_sum / count + 0.5))
+      local g = math.tointeger(math.floor(g_sum / count + 0.5))
+      local b = math.tointeger(math.floor(b_sum / count + 0.5))
+
+      local rgb = to_rgba32(r, g, b)
+      if not palette[rgb] then
+        if palette_length == 256 then
+          print("*** too many colors in the image (max 256)")
+          return false
+        end
+
+        print(string.format("new palette entry found: %08x", rgb))
+        palette[rgb] = palette_length -- Store the palette index for this color.
+        palette_length = palette_length + 1
+      end
+  end
 
   if not result then
     return nil
@@ -277,6 +376,10 @@ local function main(arg)
     :description("Enables detailed output during image conversion.")
   local args = parser:parse(arg)
 
+  for k, v in pairs(args) do
+    print(string.format("arg[%s] = %s", k, tostring(v)))
+  end
+
   local flags = {}
   for _, flag in ipairs({ "quiet", "detailed" }) do
     flags[flag] = args[flag] and true or false
@@ -295,7 +398,7 @@ local function main(arg)
 
   local palette = args.palette
     and load_and_parse_palette(args.palette[1])
-    or calculate_palette(image)
+    or calculate_palette(image, args.colors)
 
   if not palette then
     os.exit(-1)
