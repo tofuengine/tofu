@@ -64,8 +64,6 @@ end
 
 -- Iterate over each pixel in the image, calling the given callback with
 -- the pixel coordinates and RGBA values.
--- If the callback returns false, the iteration is stopped.
--- Returns true if the iteration completed, false otherwise.
 local function for_each_pixel(image, callback)
   local width, height = image:width(), image:height()
   local buffer = image:write_to_memory() -- Conver to to a buffer for faster access.
@@ -78,15 +76,11 @@ local function for_each_pixel(image, callback)
           local b = buffer[offset + 2]
           local a = buffer[offset + 3]
 
-          local result = callback(x, y, r, g, b, a)
-          if not result then
-            return false
-          end
+          callback(x, y, r, g, b, a)
 
           offset = offset + 4
       end
   end
-  return true
 end
 
 local function to_rgba32(r, g, b)
@@ -101,148 +95,227 @@ local function from_rgba32(rgb)
     return r, g, b
 end
 
-local function length(T)
-  local count = 0
-  for _, _ in pairs(T) do count = count + 1 end
-  return count
-end
+-- Iterate over each pixel in the image and compute the histogram of colors.
+-- The histogram is a table mapping from color (as 32-bit RGB integer) to
+-- occurrence count.
+local function compute_histogram(image)
+  local histogram = {}
 
--- Given a image buffer in RGBA format, calculates the palette by scanning
--- the image pixels. For each new color found, a new entry is added to the
--- palette.
--- Returns the palette as a map (rgb -> index) and the palette length.
---
--- TODO: implement a better palette generation algorithm (like median cut).
---       See: https://en.wikipedia.org/wiki/Median_cut
-local function table_split(tbl, index)
-    local t1, t2 = {}, {}  -- create 2 new tables
-    for i, v in ipairs(tbl) do
-        if i <= index then
-            table.insert(t1, v)
-        else
-            table.insert(t2, v)
-        end
-    end
-    return t1, t2
-end
-
-local function _lower_than(a, b)
-  return a < b
-end
-
-local function sort_range(array, from, to, comparator)
-  local lower_than = comparator or _lower_than
-  for i = from + 1, to do
-    for j = i, from + 1, -1 do
-      if not lower_than(array[j], array[j - 1]) then -- Preserve stability! Swap only if strictly lower-than!
-        break
-      end
-      array[j - 1], array[j] = array[j], array[j - 1] -- Swap adjacent slots.
-    end
-  end
-end
-
-local function subtable_sort(table, from, to)
-    table.sort(table, function(a, b)
-        return a[from] < b[from]
+  for_each_pixel(image,
+    function(x, y, r, g, b, a)
+        local rgb = to_rgba32(r, g, b)
+        histogram[rgb] = (histogram[rgb] or 0) + 1
     end)
+
+  local buckets = {}
+  for rgb, count in pairs(histogram) do
+    print(string.format("Color %08x: %d occurrences", rgb, count))
+    local r, g, b = from_rgba32(rgb)
+    table.insert(buckets, { r = r, g = g, b = b, count = count })
+  end
+  return buckets
 end
 
--- Recursive median cut algorithm to split colors into clusters.
--- We don't need to create sub-tables, as we can work in-place in the
--- array of pixels (i.e. the image buffer).
-local function median_cut(pixels, depth, clusters)
-  if depth == 0 or #pixels == 0 then
-    print(string.format("Reached leaf with %d pixels", #pixels))
-    table.insert(clusters, pixels)
-    return
-  end
-
+-- Process a bucket to compute its color range and total count.
+local function process_bucket(bucket)
   local min_r, min_g, min_b = 255, 255, 255
   local max_r, max_g, max_b = 0, 0, 0
-  for _, pixel in ipairs(pixels) do
-      if pixel.r < min_r then min_r = pixel.r end
-      if pixel.g < min_g then min_g = pixel.g end
-      if pixel.b < min_b then min_b = pixel.b end
-      if pixel.r > max_r then max_r = pixel.r end
-      if pixel.g > max_g then max_g = pixel.g end
-      if pixel.b > max_b then max_b = pixel.b end
+  local count = 0
+  for _, color in ipairs(bucket) do
+    if color.r < min_r then min_r = color.r end
+    if color.g < min_g then min_g = color.g end
+    if color.b < min_b then min_b = color.b end
+    if color.r > max_r then max_r = color.r end
+    if color.g > max_g then max_g = color.g end
+    if color.b > max_b then max_b = color.b end
+    count = count + color.count
   end
   local range_r = max_r - min_r
   local range_g = max_g - min_g
   local range_b = max_b - min_b
-  print(string.format("Color ranges: R=%d, G=%d, B=%d", range_r, range_g, range_b))
-  if range_r >= range_g and range_r >= range_b then
-    print("Sorting by R")
-    table.sort(pixels, function(a, b) return a.r < b.r end)
-  elseif range_g >= range_r and range_g >= range_b then
-    print("Sorting by G")
-    table.sort(pixels, function(a, b) return a.g < b.g end)
-  else
-    print("Sorting by B")
-    table.sort(pixels, function(a, b) return a.b < b.b end)
+  local range = math.max(range_r, math.max(range_g, range_b))
+
+  return {
+    min_r = min_r,
+    min_g = min_g,
+    min_b = min_b,
+    max_r = max_r,
+    max_g = max_g,
+    max_b = max_b,
+    range_r = range_r,
+    range_g = range_g,
+    range_b = range_b,
+    range = range,
+    count = count
+  }
+end
+
+-- We scan the buckets and pick the one with the largest color range, weighted
+-- by the number of colors it contains.
+local function pick_best_bucket(buckets)
+  local best_index = 1
+  local best_score = -1
+
+  for index, bucket in ipairs(buckets) do
+    local info = process_bucket(bucket)
+    local score = info.range * info.count
+    if score > best_score then
+      best_score = score
+      best_index = index
+    end
   end
 
-  local left, right = table_split(pixels, math.floor(#pixels / 2))
-  print(string.format("Split %d into %d and %d pixels", #pixels, #left, #right))
+  return best_index
+end
 
-  median_cut(left, depth - 1, clusters)
-  median_cut(right, depth - 1, clusters)
+-- A bucket can be split if and only if it contains at least one color.
+local function can_split_bucket(bucket)
+  return #bucket > 1
+end
+
+local function split_bucket(bucket)
+  -- Determine the channel with the largest range
+  local info = process_bucket(bucket)
+  print(string.format("Color ranges: R=%d, G=%d, B=%d", info.range_r, info.range_g, info.range_b))
+  print(string.format("Total count: %d", info.count))
+
+  -- Sort the bucket by the selected channel
+  if info.range_r >= info.range_g and info.range_r >= info.range_b then
+    print("Sorting by R")
+    table.sort(bucket, function(a, b) return a.r < b.r end)
+  elseif info.range_g >= info.range_r and info.range_g >= info.range_b then
+    print("Sorting by G")
+    table.sort(bucket, function(a, b) return a.g < b.g end)
+  else
+    print("Sorting by B")
+    table.sort(bucket, function(a, b) return a.b < b.b end)
+  end
+
+  -- Find the pivot point, that is the index of the element that cause the
+  -- cumulative count to reach half of the total count.
+  --
+  -- pivot = first index i such that cumulative[i] >= total/2
+  for index, color in ipairs(bucket) do
+    print(string.format("  color %08x with count %d",
+      to_rgba32(color.r, color.g, color.b), color.count))
+  end
+
+  print("Finding pivot point...")
+  local cumulative_count = 0
+  local pivot_index = 1
+  local half_count = info.count / 2 -- Float division, we are OK with that.
+  for index, color in ipairs(bucket) do
+    cumulative_count = cumulative_count + color.count
+    print(string.format("  color %08x with count %d brings running count to %d",
+      to_rgba32(color.r, color.g, color.b), color.count, cumulative_count))
+    if cumulative_count >= half_count then
+      pivot_index = index
+      print(string.format("  -> pivot found at index %d", pivot_index))
+      break
+    end
+  end
+
+  -- Split the bucket into two new buckets
+  local bucket_a = {}
+  local bucket_b = {}
+
+  -- Dominant color check: the pivot color surpasses half of the total count.
+  -- This will ensure that we are not creating empty buckets when filling the
+  -- buckets with a running cumulative count (i.e. if the pivot is at the
+  -- beginning or the end of the bucket). Anyway, in the other cases we just
+  -- we are essentially optimizing the split.
+  if bucket[pivot_index].count >= half_count then -- Dominant color detected!
+    print("Dominant color detected at pivot")
+    for index, color in ipairs(bucket) do
+      if index == pivot_index then
+        print(string.format("  -> color %08x goes to bucket A", to_rgba32(color.r, color.g, color.b)))
+        table.insert(bucket_a, color)
+      else
+        print(string.format("  -> color %08x goes to bucket B", to_rgba32(color.r, color.g, color.b)))
+        table.insert(bucket_b, color)
+      end
+    end
+  else
+    for index, color in ipairs(bucket) do
+      if index <= pivot_index then
+        print(string.format("  -> color %08x goes to bucket A", to_rgba32(color.r, color.g, color.b)))
+        table.insert(bucket_a, color)
+      else
+        print(string.format("  -> color %08x goes to bucket B", to_rgba32(color.r, color.g, color.b)))
+        table.insert(bucket_b, color)
+      end
+    end
+  end
+
+  return bucket_a, bucket_b
+end
+
+local function average_bucket_color(bucket)
+  local r_sum, g_sum, b_sum = 0, 0, 0
+  local count = 0
+  for _, color in ipairs(bucket) do
+    r_sum = r_sum + color.r * color.count
+    g_sum = g_sum + color.g * color.count
+    b_sum = b_sum + color.b * color.count
+    count = count + color.count
+  end
+
+  print(string.format("Averaging %d colors", count))
+  print(string.format("Total sums: R=%d, G=%d, B=%d", r_sum, g_sum, b_sum))
+  local r = math.tointeger(math.floor(r_sum / count + 0.5))
+  local g = math.tointeger(math.floor(g_sum / count + 0.5))
+  local b = math.tointeger(math.floor(b_sum / count + 0.5))
+  print(string.format("Average color: R=%d, G=%d, B=%d", r, g, b))
+
+  return to_rgba32(r, g, b)
 end
 
 local function calculate_palette(image, colors)
-  local pixels = {}
-  local result = for_each_pixel(image,
-    function(x, y, r, g, b, a)
-        table.insert(pixels, { r = r, g = g, b = b, a = a })
-        return true
-    end)
-
-  local depth = math.tointeger(math.ceil(math.log(colors) / math.log(2)))
-  print(string.format("Calculating palette with depth %d...", depth))
-  local clusters = {}
-  median_cut(pixels, depth, clusters)
-  print(string.format("Calculated %d color clusters", #clusters))
-
-  local palette = {}
-  local palette_length = 0
-
-  for _, cluster in ipairs(clusters) do
-      local r_sum, g_sum, b_sum = 0, 0, 0
-      for _, pixel in ipairs(cluster) do
-          r_sum = r_sum + pixel.r
-          g_sum = g_sum + pixel.g
-          b_sum = b_sum + pixel.b
-      end
-
-      local count = #cluster
-      local r = math.tointeger(math.floor(r_sum / count + 0.5))
-      local g = math.tointeger(math.floor(g_sum / count + 0.5))
-      local b = math.tointeger(math.floor(b_sum / count + 0.5))
-
-      local rgb = to_rgba32(r, g, b)
-      if not palette[rgb] then
-        if palette_length == 256 then
-          print("*** too many colors in the image (max 256)")
-          return false
-        end
-
-        print(string.format("new palette entry found: %08x", rgb))
-        palette[rgb] = palette_length -- Store the palette index for this color.
-        palette_length = palette_length + 1
-      end
-  end
-
-  if not result then
+  local bucket = compute_histogram(image)
+  if not bucket then
     return nil
   end
+  local buckets = { bucket }
+  print(string.format("Initial bucket with %d colors", #bucket))
 
-  return palette, palette_length
+  while #buckets < colors do
+    -- Pick the best bucket to be split
+    local index = pick_best_bucket(buckets)
+    local bucket = buckets[index]
+    print(string.format("Splitting bucket %d with %d colors", index, #bucket))
+
+    -- Check if the bucket can be split. If the selected bucket can't be
+    -- split anymore, we are done.
+    if not can_split_bucket(bucket) then
+      print("*** no more splittable buckets available")
+      break
+    end
+
+    -- Split the bucket into two new buckets
+    local bucket_a, bucket_b = split_bucket(bucket)
+    table.remove(buckets, index)
+    if #bucket_a == 0 or #bucket_b == 0 then
+      print("*** bucket split resulted in an empty bucket, aborting")
+      break
+    end
+    table.insert(buckets, bucket_a)
+    table.insert(buckets, bucket_b)
+  end
+
+  local palette = {}
+  for _, bucket in ipairs(buckets) do
+    print(string.format("Final bucket with %d colors", #bucket))
+
+    local rgb = average_bucket_color(bucket)
+    table.insert(palette, rgb)
+    print(string.format("new palette entry added: %08x", rgb))
+  end
+
+  return palette
 end
 
 local function emit_header(writer, flags, image, palette)
   local width, height = image:width(), image:height()
-  local palette_length = length(palette)
 
   -- `TOFUIMG!` (8 bytes, ASCII)
   -- width (2 bytes, little-endian)
@@ -255,8 +328,8 @@ local function emit_header(writer, flags, image, palette)
   writer:write(string.pack("<I2", width))
   writer:write(string.pack("<I2", height))
   writer:write(string.pack("<I2", 0)) -- No RLE encoding for now.
-  writer:write(string.pack("<I2", palette_length))
-  for rgb, index in pairs(palette) do
+  writer:write(string.pack("<I2", #palette))
+  for _, rgb in ipairs(palette) do
     local r, g, b = from_rgba32(rgb)
     writer:write(string.pack("BBB", r, g, b))
   end
@@ -265,7 +338,7 @@ end
 local function match_color_in_palette(r, g, b, palette)
   local best_index = 0
   local best_distance = math.huge
-  for crgb, index in pairs(palette) do
+  for index, crgb in ipairs(palette) do
     local cr, cg, cb = from_rgba32(crgb)
     local dr = r - cr
     local dg = g - cg
@@ -273,29 +346,28 @@ local function match_color_in_palette(r, g, b, palette)
     local distance = (dr * dr) + (dg * dg) + (db * db)
     if distance < best_distance then
       best_distance = distance
-      best_index = index
+      best_index = index - 1 -- Palette index is zero-based.
     end
   end
   return best_index
 end
 
+-- pixel data (width * height bytes, each byte is an index in the palette)
 local function emit_data(writer, flags, image, palette)
-  -- pixel data (width * height bytes, each byte is an index in the palette)
-  local result = for_each_pixel(image,
+  local cache = {} -- Memoization cache for color lookups.
+
+  for_each_pixel(image,
     function(x, y, r, g, b, a)
         local rgb = to_rgba32(r, g, b)
 
-        local index = palette[rgb]
-        if not index then -- No exact match found in the palette, find the closest one.
+        local index = cache[rgb]
+        if not index then -- Not cached yet. Find (the best matching) color in palette.
           index = match_color_in_palette(r, g, b, palette)
-          palette[rgb] = index -- Cache it for next time.
+          cache[rgb] = index -- Cache it for later use.
         end
 
         writer:write(string.pack("B", index))
-        return true
     end)
-
-  return result
 end
 
 local function write_image(path, flags, image, palette)
@@ -318,11 +390,10 @@ local function load_and_parse_palette(path)
   local reader = io.open(path, "rb")
   if not reader then
     print(string.format("*** can't open palette file `%s`", path))
-    return nil, 0
+    return nil
   end
 
-  local palette = {}
-  local palette_length = 0
+  local palette = { }
   while true do
     local line = reader:read("*l")
     if not line then
@@ -330,22 +401,19 @@ local function load_and_parse_palette(path)
     end
     local rgb = tonumber(line, 16)
 
-    if not palette[rgb] then
-      if palette_length == 256 then
-        print("*** too many colors in the palette (max 256)")
-        reader:close()
-        return nil, 0
-      end
-
-      print(string.format("new palette entry found: %08x", rgb))
-      palette[rgb] = palette_length -- Store the palette index for this color.
-      palette_length = palette_length + 1
+    if #palette == 256 then
+      print("*** too many colors in the palette (max 256)")
+      reader:close()
+      return nil
     end
+
+    print(string.format("new palette entry found: %08x", rgb))
+    table.insert(palette, rgb)
   end
 
   reader:close()
 
-  return palette, palette_length
+  return palette
 end
 
 local function main(arg)
@@ -386,7 +454,7 @@ local function main(arg)
   end
 
   if not flags.quiet then
-    print("ImageN v0.1.0")
+    print("ImageN v0.2.0")
     print("=============")
   end
 
@@ -398,7 +466,7 @@ local function main(arg)
 
   local palette = args.palette
     and load_and_parse_palette(args.palette[1])
-    or calculate_palette(image, args.colors)
+    or calculate_palette(image, math.tointeger(args.colors))
 
   if not palette then
     os.exit(-1)
