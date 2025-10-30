@@ -68,7 +68,7 @@ local function log_init(args)
   end
 end
 
-local function load_image(path, flags)
+local function load_image(path)
   log("Loading image %s...", path)
 
   local image = vips.Image.new_from_file(path, { access = "random" })
@@ -137,60 +137,17 @@ local function compute_histogram(image)
   return colors
 end
 
--- Various metrics to calculate the "score" of a bucket.
---
--- La scelta del bucket è il punto chiave. Ecco le euristiche più efficaci
--- (ordinale dal più semplice al più sofisticato):
--- 
--- Max range — scegli il bucket con la massima estensione su R, G o B
--- (la classica scelta di Heckbert).
---   Pro: semplice.
---   Contro: ignora quanto è popolato il bucket.
--- Max peso (totalCount) — scegli il bucket con più pixel totali.
---   Pro: garantisce che split si concentri sulle aree più “importanti”.
---   Contro: potrebbe preferire bucket già stretti (poco range).
--- Max (range * totalCount) — combinazione semplice molto efficace: dà priorità
--- a bucket larghi e popolosi.
---   Spesso è la scelta pratica migliore per immagini reali.
--- Max weighted variance (o volume) — calcola la varianza pesata (somma delle
--- varianze su canali, o il volume del box) e scegli il bucket con la massima
--- varianza.
---   Più costoso ma più accurato; preferito se vuoi qualità massima.
--- Max perceptual measure — esegui i calcoli in spazio Lab e usa il volume/variance in Lab per scegliere (migliore corrispondenza percettiva).
---   Richiede conversione colore.
--- 
--- Nota: sempre controlla canSplit: non puoi splittare bucket che contengono
--- un solo colore distinto (o che non possono essere divisi in due sottoinsiemi
--- non-vuoti).
-local function score_max_range(bucket)
-  return bucket.info.range
-end
-
-local function score_max_weight(bucket)
-  return bucket.info.count
-end
-
-local function score_max_weighted_range(bucket)
-  return bucket.info.range * bucket.info.count
-end
-
-local function score_max_weighted_variance(bucket)
-  return bucket.info.var
-end
-
--- Process a bucket to compute its color range and total count.
+-- Process a bucket to compute its color maximum weighted variance. This
+-- is more computationally expensive than just computing the range, but it gives
+-- better results. Specifically, it avoids splitting buckets where the range is
+-- determined by outlier colors with very low occurrence counts. The variance
+-- is a more stable metric in this sense, as it takes into account of the
+-- internal distribution of colors in the bucket (and not just the extreme
+-- values).
 local function process_bucket(bucket)
-  local min_r, min_g, min_b = 255, 255, 255
-  local max_r, max_g, max_b = 0, 0, 0
   local mu_r, mu_g, mu_b = 0, 0, 0
   local count = 0
   for _, color in ipairs(bucket) do
-    if color.r < min_r then min_r = color.r end
-    if color.g < min_g then min_g = color.g end
-    if color.b < min_b then min_b = color.b end
-    if color.r > max_r then max_r = color.r end
-    if color.g > max_g then max_g = color.g end
-    if color.b > max_b then max_b = color.b end
     mu_r = mu_r + color.r * color.count
     mu_g = mu_g + color.g * color.count
     mu_b = mu_b + color.b * color.count
@@ -213,25 +170,11 @@ local function process_bucket(bucket)
   var_g = var_g / count
   var_b = var_b / count
 
-  local range_r = max_r - min_r
-  local range_g = max_g - min_g
-  local range_b = max_b - min_b
-
   return {
-    min_r = min_r,
-    min_g = min_g,
-    min_b = min_b,
-    max_r = max_r,
-    max_g = max_g,
-    max_b = max_b,
-    range_r = range_r,
-    range_g = range_g,
-    range_b = range_b,
-    range = math.max(range_r, math.max(range_g, range_b)),
     var_r = var_r,
     var_g = var_g,
     var_b = var_b,
-    var = math.max(var_r, math.max(var_g, var_b)),
+    variance = math.max(var_r, math.max(var_g, var_b)),
     count = count
   }
 end
@@ -262,7 +205,7 @@ local function pick_best_bucket(buckets)
     end
 
     local info = process_bucket(bucket)
-    local score = info.range * info.count
+    local score = info.variance
     if score > best_score then
       best_score = score
       best_index = index
@@ -277,14 +220,14 @@ end
 local function split_bucket(bucket)
   -- Determine the channel with the largest range
   local info = process_bucket(bucket)
-  log_debug("Color ranges: R=%d, G=%d, B=%d", info.range_r, info.range_g, info.range_b)
+  log_debug("Color variances: R=%.2f, G=%.2f, B=%.2f", info.var_r, info.var_g, info.var_b)
   log_debug("Total count: %d", info.count)
 
   -- Sort the bucket by the selected channel
-  if info.range_r >= info.range_g and info.range_r >= info.range_b then
+  if info.variance == info.var_r then
     log_debug("Sorting by R")
     table.sort(bucket, function(a, b) return a.r < b.r end)
-  elseif info.range_g >= info.range_r and info.range_g >= info.range_b then
+  elseif info.variance == info.var_g then
     log_debug("Sorting by G")
     table.sort(bucket, function(a, b) return a.g < b.g end)
   else
@@ -405,23 +348,22 @@ local function calculate_palette(image, colors)
     log_debug("new palette entry added: %08x", rgb)
   end
 
+  table.sort(palette)
+
   return palette
 end
 
-local function emit_header(writer, flags, image, palette)
+local function emit_header(writer, image, palette)
   local width, height = image:width(), image:height()
 
   -- `TOFUIMG!` (8 bytes, ASCII)
   -- width (2 bytes, little-endian)
   -- height (2 bytes, little-endian)
-  -- flags (2 bytes, little-endian)
-  --   bit 0: RLE encoding (0 = no, 1 = yes)
   -- palette length (2 bytes, little-endian)
   -- palette data (palette size * 3 bytes)
   writer:write(string.pack("c8", "TOFUIMG!"))
   writer:write(string.pack("<I2", width))
   writer:write(string.pack("<I2", height))
-  writer:write(string.pack("<I2", 0)) -- No RLE encoding for now.
   writer:write(string.pack("<I2", #palette))
   for _, rgb in ipairs(palette) do
     local r, g, b = from_rgba32(rgb)
@@ -447,7 +389,7 @@ local function match_color_in_palette(r, g, b, palette)
 end
 
 -- pixel data (width * height bytes, each byte is an index in the palette)
-local function emit_data(writer, flags, image, palette)
+local function emit_data(writer, image, palette)
   local cache = {} -- Memoization cache for color lookups.
 
   for_each_pixel(image,
@@ -464,15 +406,15 @@ local function emit_data(writer, flags, image, palette)
     end)
 end
 
-local function write_image(path, flags, image, palette)
+local function write_image(path, image, palette)
   local writer = io.open(path, "wb")
   if not writer then
     log("*** can't create file `%s`", path)
     return false
   end
 
-  emit_header(writer, flags, image, palette)
-  emit_data(writer, flags, image, palette)
+  emit_header(writer, image, palette)
+  emit_data(writer, image, palette)
 
   writer:close()
 
@@ -511,8 +453,8 @@ local function load_and_parse_palette(path)
   return palette
 end
 
-local function convert_command(args, flags)
-  local image = load_image(args.input, flags)
+local function convert_command(args)
+  local image = load_image(args.input)
 
   log(string.format("Processing image %s as %s", args.input, args.output))
 
@@ -529,11 +471,16 @@ local function convert_command(args, flags)
     log("palette[%3d] = %08x", index - 1, rgb)
   end
 
-  local success = write_image(args.output, flags, image, palette)
+  local success = write_image(args.output, image, palette)
 
   log(success and "Done!" or "Failed!")
 
   return success
+end
+
+local function command_extract(args)
+  log("*** extract command not implemented yet")
+  return false
 end
 
 local function main(arg)
@@ -581,7 +528,7 @@ local function main(arg)
 
   local success = false
   if args.command == "convert" then
-    success = convert_command(args, flags)
+    success = convert_command(args)
   end
 
   os.exit(not success and -1 or 0)
