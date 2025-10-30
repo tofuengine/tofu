@@ -44,20 +44,41 @@ SOFTWARE.
 local argparse = require("argparse")
 local vips = require("vips")
 
-local function load_image(path, flags)
-  if not flags.quiet then
-    print(string.format("Loading image %s...", path))
+local function log_init(args)
+  if args.quiet then
+    log = function(...)
+      -- No-op
+    end
+    log_debug = function(...)
+      -- No-op
+    end
+  else
+    log = function(...)
+      print(string.format(...))
+    end
+    if args.detailed then
+      log_debug = function(...)
+        print(string.format(...))
+      end
+    else
+      log_debug = function(...)
+        -- No-op
+      end
+    end
   end
+end
+
+local function load_image(path, flags)
+  log("Loading image %s...", path)
+
   local image = vips.Image.new_from_file(path, { access = "random" })
   if image:bands() == 3 then
       image = image:bandjoin({255})
   end
   image = image:cast("uchar")
 
-  if not flags.quiet then
-    print(string.format("Image size: %dx%d", image:width(), image:height()))
-    print(string.format("Image bands: %d", image:bands()))
-  end
+  log("Image size: %dx%d", image:width(), image:height())
+  log("Image bands: %d", image:bands())
 
   return image
 end
@@ -107,19 +128,61 @@ local function compute_histogram(image)
         histogram[rgb] = (histogram[rgb] or 0) + 1
     end)
 
-  local buckets = {}
+  local colors = {}
   for rgb, count in pairs(histogram) do
-    print(string.format("Color %08x: %d occurrences", rgb, count))
+    log_debug("Color %08x: %d occurrences", rgb, count)
     local r, g, b = from_rgba32(rgb)
-    table.insert(buckets, { r = r, g = g, b = b, count = count })
+    table.insert(colors, { r = r, g = g, b = b, count = count })
   end
-  return buckets
+  return colors
+end
+
+-- Various metrics to calculate the "score" of a bucket.
+--
+-- La scelta del bucket è il punto chiave. Ecco le euristiche più efficaci
+-- (ordinale dal più semplice al più sofisticato):
+-- 
+-- Max range — scegli il bucket con la massima estensione su R, G o B
+-- (la classica scelta di Heckbert).
+--   Pro: semplice.
+--   Contro: ignora quanto è popolato il bucket.
+-- Max peso (totalCount) — scegli il bucket con più pixel totali.
+--   Pro: garantisce che split si concentri sulle aree più “importanti”.
+--   Contro: potrebbe preferire bucket già stretti (poco range).
+-- Max (range * totalCount) — combinazione semplice molto efficace: dà priorità
+-- a bucket larghi e popolosi.
+--   Spesso è la scelta pratica migliore per immagini reali.
+-- Max weighted variance (o volume) — calcola la varianza pesata (somma delle
+-- varianze su canali, o il volume del box) e scegli il bucket con la massima
+-- varianza.
+--   Più costoso ma più accurato; preferito se vuoi qualità massima.
+-- Max perceptual measure — esegui i calcoli in spazio Lab e usa il volume/variance in Lab per scegliere (migliore corrispondenza percettiva).
+--   Richiede conversione colore.
+-- 
+-- Nota: sempre controlla canSplit: non puoi splittare bucket che contengono
+-- un solo colore distinto (o che non possono essere divisi in due sottoinsiemi
+-- non-vuoti).
+local function score_max_range(bucket)
+  return bucket.info.range
+end
+
+local function score_max_weight(bucket)
+  return bucket.info.count
+end
+
+local function score_max_weighted_range(bucket)
+  return bucket.info.range * bucket.info.count
+end
+
+local function score_max_weighted_variance(bucket)
+  return bucket.info.var
 end
 
 -- Process a bucket to compute its color range and total count.
 local function process_bucket(bucket)
   local min_r, min_g, min_b = 255, 255, 255
   local max_r, max_g, max_b = 0, 0, 0
+  local mu_r, mu_g, mu_b = 0, 0, 0
   local count = 0
   for _, color in ipairs(bucket) do
     if color.r < min_r then min_r = color.r end
@@ -128,12 +191,31 @@ local function process_bucket(bucket)
     if color.r > max_r then max_r = color.r end
     if color.g > max_g then max_g = color.g end
     if color.b > max_b then max_b = color.b end
+    mu_r = mu_r + color.r * color.count
+    mu_g = mu_g + color.g * color.count
+    mu_b = mu_b + color.b * color.count
     count = count + color.count
   end
+  mu_r = mu_r / count
+  mu_g = mu_g / count
+  mu_b = mu_b / count
+
+  local var_r, var_g, var_b = 0, 0, 0
+  for _, color in ipairs(bucket) do
+    local dr = color.r - mu_r
+    local dg = color.g - mu_g
+    local db = color.b - mu_b
+    var_r = var_r + (dr * dr) * color.count
+    var_g = var_g + (dg * dg) * color.count
+    var_b = var_b + (db * db) * color.count
+  end
+  var_r = var_r / count
+  var_g = var_g / count
+  var_b = var_b / count
+
   local range_r = max_r - min_r
   local range_g = max_g - min_g
   local range_b = max_b - min_b
-  local range = math.max(range_r, math.max(range_g, range_b))
 
   return {
     min_r = min_r,
@@ -145,49 +227,68 @@ local function process_bucket(bucket)
     range_r = range_r,
     range_g = range_g,
     range_b = range_b,
-    range = range,
+    range = math.max(range_r, math.max(range_g, range_b)),
+    var_r = var_r,
+    var_g = var_g,
+    var_b = var_b,
+    var = math.max(var_r, math.max(var_g, var_b)),
     count = count
   }
+end
+
+-- A bucket can be split if it contains at least one. Since each color in a
+-- bucket is unque (by construction), we don't need to check for range
+-- variations. Colors are always different each other.
+local function can_split_bucket(bucket)
+  return #bucket > 1
 end
 
 -- We scan the buckets and pick the one with the largest color range, weighted
 -- by the number of colors it contains.
 local function pick_best_bucket(buckets)
-  local best_index = 1
+  local best_index = nil
   local best_score = -1
 
   for index, bucket in ipairs(buckets) do
+    -- We don´t really need to check for splittability for every bucket here,
+    -- as we could just pick the best one and check for splittability later. This
+    -- way we can avoid unnecessary processing, and we also keep the code
+    -- more generic. Checking for splittability on return (to halt the process)
+    -- would work only if we pick the "best bucket" considering it's range and
+    -- so actually skipping "null" buckets.
+    if not can_split_bucket(bucket) then
+      log_debug("Bucket %d can't be split anymore", index)
+      goto continue
+    end
+
     local info = process_bucket(bucket)
     local score = info.range * info.count
     if score > best_score then
       best_score = score
       best_index = index
     end
+
+    ::continue::
   end
 
   return best_index
 end
 
--- A bucket can be split if and only if it contains at least one color.
-local function can_split_bucket(bucket)
-  return #bucket > 1
-end
-
 local function split_bucket(bucket)
   -- Determine the channel with the largest range
   local info = process_bucket(bucket)
-  print(string.format("Color ranges: R=%d, G=%d, B=%d", info.range_r, info.range_g, info.range_b))
-  print(string.format("Total count: %d", info.count))
+  log_debug("Color ranges: R=%d, G=%d, B=%d", info.range_r, info.range_g, info.range_b)
+  log_debug("Total count: %d", info.count)
 
   -- Sort the bucket by the selected channel
   if info.range_r >= info.range_g and info.range_r >= info.range_b then
-    print("Sorting by R")
+    log_debug("Sorting by R")
     table.sort(bucket, function(a, b) return a.r < b.r end)
   elseif info.range_g >= info.range_r and info.range_g >= info.range_b then
-    print("Sorting by G")
+    log_debug("Sorting by G")
     table.sort(bucket, function(a, b) return a.g < b.g end)
   else
-    print("Sorting by B")
+    log_debug("Sorting by B")
     table.sort(bucket, function(a, b) return a.b < b.b end)
   end
 
@@ -196,21 +297,21 @@ local function split_bucket(bucket)
   --
   -- pivot = first index i such that cumulative[i] >= total/2
   for index, color in ipairs(bucket) do
-    print(string.format("  color %08x with count %d",
-      to_rgba32(color.r, color.g, color.b), color.count))
+    log_debug("  color %08x with count %d",
+      to_rgba32(color.r, color.g, color.b), color.count)
   end
 
-  print("Finding pivot point...")
+  log_debug("Finding pivot point...")
   local cumulative_count = 0
   local pivot_index = 1
   local half_count = info.count / 2 -- Float division, we are OK with that.
   for index, color in ipairs(bucket) do
     cumulative_count = cumulative_count + color.count
-    print(string.format("  color %08x with count %d brings running count to %d",
-      to_rgba32(color.r, color.g, color.b), color.count, cumulative_count))
+    log_debug("  color %08x with count %d brings running count to %d",
+      to_rgba32(color.r, color.g, color.b), color.count, cumulative_count)
     if cumulative_count >= half_count then
       pivot_index = index
-      print(string.format("  -> pivot found at index %d", pivot_index))
+      log_debug("  -> pivot found at index %d", pivot_index)
       break
     end
   end
@@ -225,23 +326,23 @@ local function split_bucket(bucket)
   -- beginning or the end of the bucket). Anyway, in the other cases we just
   -- we are essentially optimizing the split.
   if bucket[pivot_index].count >= half_count then -- Dominant color detected!
-    print("Dominant color detected at pivot")
+    log_debug("Dominant color detected at pivot")
     for index, color in ipairs(bucket) do
       if index == pivot_index then
-        print(string.format("  -> color %08x goes to bucket A", to_rgba32(color.r, color.g, color.b)))
+        log_debug("  -> color %08x goes to bucket A", to_rgba32(color.r, color.g, color.b))
         table.insert(bucket_a, color)
       else
-        print(string.format("  -> color %08x goes to bucket B", to_rgba32(color.r, color.g, color.b)))
+        log_debug("  -> color %08x goes to bucket B", to_rgba32(color.r, color.g, color.b))
         table.insert(bucket_b, color)
       end
     end
   else
     for index, color in ipairs(bucket) do
       if index <= pivot_index then
-        print(string.format("  -> color %08x goes to bucket A", to_rgba32(color.r, color.g, color.b)))
+        log_debug("  -> color %08x goes to bucket A", to_rgba32(color.r, color.g, color.b))
         table.insert(bucket_a, color)
       else
-        print(string.format("  -> color %08x goes to bucket B", to_rgba32(color.r, color.g, color.b)))
+        log_debug("  -> color %08x goes to bucket B", to_rgba32(color.r, color.g, color.b))
         table.insert(bucket_b, color)
       end
     end
@@ -260,12 +361,12 @@ local function average_bucket_color(bucket)
     count = count + color.count
   end
 
-  print(string.format("Averaging %d colors", count))
-  print(string.format("Total sums: R=%d, G=%d, B=%d", r_sum, g_sum, b_sum))
+  log_debug("Averaging %d colors", count)
+  log_debug("Total sums: R=%d, G=%d, B=%d", r_sum, g_sum, b_sum)
   local r = math.tointeger(math.floor(r_sum / count + 0.5))
   local g = math.tointeger(math.floor(g_sum / count + 0.5))
   local b = math.tointeger(math.floor(b_sum / count + 0.5))
-  print(string.format("Average color: R=%d, G=%d, B=%d", r, g, b))
+  log_debug("Average color: R=%d, G=%d, B=%d", r, g, b)
 
   return to_rgba32(r, g, b)
 end
@@ -276,39 +377,32 @@ local function calculate_palette(image, colors)
     return nil
   end
   local buckets = { bucket }
-  print(string.format("Initial bucket with %d colors", #bucket))
+  log_debug("Initial bucket with %d colors", #bucket)
 
   while #buckets < colors do
-    -- Pick the best bucket to be split
     local index = pick_best_bucket(buckets)
+    if not index then
+      log_debug("*** no more splittable buckets available")
+      break
+    end
+
     local bucket = buckets[index]
-    print(string.format("Splitting bucket %d with %d colors", index, #bucket))
+    log_debug("Splitting bucket %d with %d colors", index, #bucket)
 
-    -- Check if the bucket can be split. If the selected bucket can't be
-    -- split anymore, we are done.
-    if not can_split_bucket(bucket) then
-      print("*** no more splittable buckets available")
-      break
-    end
-
-    -- Split the bucket into two new buckets
     local bucket_a, bucket_b = split_bucket(bucket)
+    assert(#bucket_a > 0 and #bucket_b > 0, "bucket split resulted in an empty bucket, aborting")
     table.remove(buckets, index)
-    if #bucket_a == 0 or #bucket_b == 0 then
-      print("*** bucket split resulted in an empty bucket, aborting")
-      break
-    end
     table.insert(buckets, bucket_a)
     table.insert(buckets, bucket_b)
   end
 
   local palette = {}
   for _, bucket in ipairs(buckets) do
-    print(string.format("Final bucket with %d colors", #bucket))
+    log_debug("Final bucket with %d colors", #bucket)
 
     local rgb = average_bucket_color(bucket)
     table.insert(palette, rgb)
-    print(string.format("new palette entry added: %08x", rgb))
+    log_debug("new palette entry added: %08x", rgb)
   end
 
   return palette
@@ -373,7 +467,7 @@ end
 local function write_image(path, flags, image, palette)
   local writer = io.open(path, "wb")
   if not writer then
-    print(string.format("*** can't create file `%s`", path))
+    log("*** can't create file `%s`", path)
     return false
   end
 
@@ -385,11 +479,12 @@ local function write_image(path, flags, image, palette)
   return true
 end
 
+-- Load and parse a palette file in the simple hexadecimal format used by
 -- https://lospec.com/palette-list
 local function load_and_parse_palette(path)
   local reader = io.open(path, "rb")
   if not reader then
-    print(string.format("*** can't open palette file `%s`", path))
+    log("*** can't open palette file `%s`", path)
     return nil
   end
 
@@ -402,12 +497,12 @@ local function load_and_parse_palette(path)
     local rgb = tonumber(line, 16)
 
     if #palette == 256 then
-      print("*** too many colors in the palette (max 256)")
+      log("*** too many colors in the palette (max 256)")
       reader:close()
       return nil
     end
 
-    print(string.format("new palette entry found: %08x", rgb))
+    log("new palette entry found: %08x", rgb)
     table.insert(palette, rgb)
   end
 
@@ -416,70 +511,77 @@ local function load_and_parse_palette(path)
   return palette
 end
 
+local function convert_command(args, flags)
+  local image = load_image(args.input, flags)
+
+  log(string.format("Processing image %s as %s", args.input, args.output))
+
+  local palette = args.palette
+    and load_and_parse_palette(args.palette)
+    or calculate_palette(image, args.colors or 256)
+
+  if not palette then
+    log("*** failed to calculate palette")
+    return false
+  end
+
+  for index, rgb in ipairs(palette) do
+    log("palette[%3d] = %08x", index - 1, rgb)
+  end
+
+  local success = write_image(args.output, flags, image, palette)
+
+  log(success and "Done!" or "Failed!")
+
+  return success
+end
+
 local function main(arg)
   -- https://argparse.readthedocs.io/en/stable/options.html#flags
   local parser = argparse()
     :name("imagen")
     :description("Image generator.")
+  parser:argument("command")
+    :choices({'convert', 'extract'})
+    :description("Command to be executed (only `convert` is supported).")
+    :args(1)
   parser:argument("input")
     :description("Path of the input image to be converted.")
     :args(1)
   parser:option("-o --output")
     :description("Name of the the generated image.")
     :default("aout.img")
+    :args('?')
     :count(1)
-    :args(1)
   parser:option("-c --colors")
     :description("Sets the size of the palette.")
     :default("256")
+    :args('?')
+    :convert(math.tointeger)
     :count(1)
-    :args(1)
   parser:option("-p --palette")
     :description("Path of the palette file.")
---    :count(1)
+    :default("")
     :args('?')
+    :count(1)
   parser:flag("-q --quiet")
     :description("Enables quiet output during image conversion.")
   parser:flag("-d --detailed")
     :description("Enables detailed output during image conversion.")
   local args = parser:parse(arg)
 
-  for k, v in pairs(args) do
-    print(string.format("arg[%s] = %s", k, tostring(v)))
-  end
+  --for k, v in pairs(args) do
+  --  print(string.format("arg[%s] = %s", k, tostring(v)))
+  --end
 
-  local flags = {}
-  for _, flag in ipairs({ "quiet", "detailed" }) do
-    flags[flag] = args[flag] and true or false
-  end
+  log_init(args)
 
-  if not flags.quiet then
-    print("ImageN v0.2.0")
-    print("=============")
-  end
+  log("ImageN v0.2.0")
+  log("=============")
 
-  local image = load_image(args.input, flags)
-
-  if not flags.quiet then
-    print(string.format("Processing image %s as %s", args.input, args.output))
-  end
-
-  local palette = args.palette
-    and load_and_parse_palette(args.palette[1])
-    or calculate_palette(image, math.tointeger(args.colors))
-
-  if not palette then
-    os.exit(-1)
-  end
-
-  local success = write_image(args.output, flags, image, palette)
-
-  if not flags.quiet then
-    if success then
-      print("Done!")
-    else
-      print("Failed!")
-    end
+  local success = false
+  if args.command == "convert" then
+    success = convert_command(args, flags)
   end
 
   os.exit(not success and -1 or 0)
