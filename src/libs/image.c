@@ -180,13 +180,15 @@ error_exit:
     return false;
 }
 
+#pragma pack(push, 1)
 typedef struct _img_header_s {
     uint8_t magic[8]; // "TOFUIMG!"
-    uint16_t width;
-    uint16_t height;
-    uint16_t flags;
-    uint16_t palette_length;
+    uint16_t width; // Width of the image in pixels (max 65535)
+    uint16_t height; // Height of the image in pixels (max 65535)
+    uint16_t palette_length; // Actual number of used palette entries
+    uint8_t palette[256 * 3]; // Max 256 RGB entries
 } _img_header_t;
+#pragma pack(pop)
 
 static const char *_img_magic = "TOFUIMG!";
 
@@ -211,14 +213,6 @@ static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
         goto error_exit;
     }
 
-    uint8_t palette[256 * 3];
-    size_t bytes_to_read = header.palette_length * 3;
-    size_t bytes_read = io_callbacks->read(io_user_data, palette, bytes_to_read);
-    if (bytes_read != bytes_to_read) {
-        LOG_E("can't read palette");
-        goto error_free_row_buffer;
-    }
-
     bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, palette, header.palette_length);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
@@ -227,7 +221,7 @@ static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
 
     bool success = true;
     for (size_t row_index = 0; success && row_index < header.height; ++row_index) {
-        bytes_read = io_callbacks->read(io_user_data, row_buffer, row_buffer_size);
+        size_t bytes_read = io_callbacks->read(io_user_data, row_buffer, row_buffer_size);
         success = bytes_read == row_buffer_size;
         success = success && decode_callbacks->on_scanline(decode_user_data, row_index, row_buffer);
     }
