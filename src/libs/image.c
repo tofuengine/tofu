@@ -213,7 +213,7 @@ static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
         goto error_exit;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, palette, header.palette_length);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette, header.palette_length);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;
