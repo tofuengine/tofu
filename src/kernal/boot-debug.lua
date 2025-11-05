@@ -111,7 +111,7 @@ function Boot:__ctor()
             table.insert(errors, str)
           end
 
-          me.font = Font.default(0, 1)
+          me.font = Font.default()
           me.lines = {}
           local margin <const> = 4 -- Pre-calculate lines position and rectangle area.
           local span <const> = width - 2 * margin
