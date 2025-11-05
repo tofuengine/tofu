@@ -52,7 +52,6 @@ function Boot:__ctor()
   self.states = {
     ["splash"] = { -- TODO: implement "splash" state that emulates Amiga's boot.
       enter = function(_)
-          self:switch("running")
         end,
       leave = function(_)
         end,
@@ -61,6 +60,7 @@ function Boot:__ctor()
       deinit = function(_)
         end,
       update = function(_, _)
+          self:switch("running")
         end,
       render = function(_, _)
         end
@@ -77,6 +77,9 @@ function Boot:__ctor()
           me.main:init()
         end,
       deinit = function(me)
+          if not me.main then -- Sanity check, in case of an error in the `enter()` method.
+            return
+          end
           me.main:deinit()
         end,
       update = function(me, delta_time)
