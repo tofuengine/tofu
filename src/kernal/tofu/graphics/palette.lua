@@ -38,7 +38,7 @@ SOFTWARE.
 local Palette = {}
 
 function Palette.default(id)
-  return Palette.new("assets/pal/" .. id .. ".pal")
+  return Palette.new(string.format("assets/pal/%s.pal", id))
 end
 
 return Palette
