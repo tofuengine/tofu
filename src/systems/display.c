@@ -324,12 +324,6 @@ static GLFWwindow *_window_create(const Display_t *display, GL_Rectangle_t *pres
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
     glfwSetWindowCloseCallback(window, _close_callback); // Override close button, according to configuration.
 
-    if (configuration->icon.pixels) {
-        glfwSetWindowIcon(window, 1, &configuration->icon);
-    } else {
-        LOG_W("icon is missing");
-    }
-
     LOG_D("%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 

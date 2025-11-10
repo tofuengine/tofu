@@ -74,7 +74,6 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Out-of-the-box timers support.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
 * [x] 2D physics-engine.
-* [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root directory override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
 * [x] Multiple player support w/ up to 4 simultaneous game controllers. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
