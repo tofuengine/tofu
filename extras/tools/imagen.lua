@@ -378,10 +378,15 @@ end
 -- Find the best matching color in the palette for the given RGB color.
 -- The best matching color is the one with the smallest Euclidean distance
 -- in the RGB color space.
-local function match_color_in_palette(r, g, b, palette)
+-- If no color is found (which should not happen), returns palette index 0.
+local function match_color_in_palette(r, g, b, palette, exclude)
   local best_index = 0
   local best_distance = math.huge
   for index, color in ipairs(palette) do
+    if index - 1 == exclude then
+      log_debug("  skipping excluded palette index %d", index - 1)
+      goto continue
+    end
     local dr = r - color.r
     local dg = g - color.g
     local db = b - color.b
@@ -390,6 +395,7 @@ local function match_color_in_palette(r, g, b, palette)
       best_distance = distance
       best_index = index - 1 -- Palette index is zero-based.
     end
+    ::continue::
   end
   return best_index
 end
@@ -412,16 +418,21 @@ local function emit_header(writer, header)
   end
 end
 
-local function emit_data(writer, image, palette)
+local function emit_data(writer, image, palette, trasparent)
   local cache = {} -- Memoization cache for color lookups.
 
   for_each_pixel(image,
     function(x, y, r, g, b, a)
+        if a < 255 then
+          writer:write(string.pack("B", trasparent))
+          return
+        end
+
         local rgb = to_rgba32(r, g, b)
 
         local index = cache[rgb]
         if not index then -- Not cached yet. Find (the best matching) color in palette.
-          index = match_color_in_palette(r, g, b, palette)
+          index = match_color_in_palette(r, g, b, palette, trasparent)
           cache[rgb] = index -- Cache it for later use.
         end
 
@@ -429,7 +440,7 @@ local function emit_data(writer, image, palette)
     end)
 end
 
-local function write_image(path, image, palette)
+local function write_image(path, image, palette, trasparent)
   local writer = io.open(path, "wb")
   if not writer then
     log("*** can't create file `%s`", path)
@@ -443,7 +454,7 @@ local function write_image(path, image, palette)
   }
 
   emit_header(writer, header)
-  emit_data(writer, image, palette)
+  emit_data(writer, image, palette, trasparent)
 
   writer:close()
 
@@ -510,7 +521,7 @@ end
 -- COMMANDS --------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
 
-local function convert_command(input, palette, colors, sort)
+local function convert_command(input, palette, colors, sort, transparent)
   local image = load_image(input)
 
   log("Converting image %s", input)
@@ -541,7 +552,7 @@ local function convert_command(input, palette, colors, sort)
   -- The output file name is the same of the input, but with `.img` extension.
   local output = input:gsub("%.%w+$", "") .. ".img"
   log("Writing output image `%s`", output)
-  local success = write_image(output, image, palette)
+  local success = write_image(output, image, palette, transparent)
 
   log(success and "Done!" or "Failed!")
 
@@ -616,6 +627,12 @@ local function main(arg)
     :default("")
     :args(1)
     :count(1)
+  parser:option("-t --transparent")
+    :description("Index of the transparent index in the palette.")
+    :default("0")
+    :args(1)
+    :count(1)
+    :convert(math.tointeger)
   parser:flag("-s --sort")
     :description("Sort the palette entries before converting the image.")
   parser:flag("-q --quiet")
@@ -639,7 +656,7 @@ local function main(arg)
   local success = false
   for _, path in ipairs(paths) do
     if args.command == "convert" then
-      success = convert_command(path, args.palette, args.colors, args.sort)
+      success = convert_command(path, args.palette, args.colors, args.sort, args.transparent)
     elseif args.command == "inspect" then
       success = command_inspect(path)
     end
