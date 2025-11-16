@@ -383,7 +383,7 @@ local function match_color_in_palette(r, g, b, palette, exclude)
   local best_index = 0
   local best_distance = math.huge
   for index, color in ipairs(palette) do
-    if index - 1 == exclude then
+    if exclude and index - 1 == exclude then -- Transparent color can be `nil` if disabled
       log_debug("  skipping excluded palette index %d", index - 1)
       goto continue
     end
@@ -418,13 +418,13 @@ local function emit_header(writer, header)
   end
 end
 
-local function emit_data(writer, image, palette, trasparent)
+local function emit_data(writer, image, palette, transparent)
   local cache = {} -- Memoization cache for color lookups.
 
   for_each_pixel(image,
     function(x, y, r, g, b, a)
-        if a < 255 then
-          writer:write(string.pack("B", trasparent))
+        if transparent and a < 255 then
+          writer:write(string.pack("B", transparent))
           return
         end
 
@@ -432,7 +432,7 @@ local function emit_data(writer, image, palette, trasparent)
 
         local index = cache[rgb]
         if not index then -- Not cached yet. Find (the best matching) color in palette.
-          index = match_color_in_palette(r, g, b, palette, trasparent)
+          index = match_color_in_palette(r, g, b, palette, transparent)
           cache[rgb] = index -- Cache it for later use.
         end
 
@@ -440,7 +440,7 @@ local function emit_data(writer, image, palette, trasparent)
     end)
 end
 
-local function write_image(path, image, palette, trasparent)
+local function write_image(path, image, palette, transparent)
   local writer = io.open(path, "wb")
   if not writer then
     log("*** can't create file `%s`", path)
@@ -454,7 +454,7 @@ local function write_image(path, image, palette, trasparent)
   }
 
   emit_header(writer, header)
-  emit_data(writer, image, palette, trasparent)
+  emit_data(writer, image, palette, transparent)
 
   writer:close()
 
@@ -633,6 +633,8 @@ local function main(arg)
     :args(1)
     :count(1)
     :convert(math.tointeger)
+  parser:flag("-o --opaque")
+    :description("Don't consider the transparent index.")
   parser:flag("-s --sort")
     :description("Sort the palette entries before converting the image.")
   parser:flag("-q --quiet")
@@ -656,7 +658,7 @@ local function main(arg)
   local success = false
   for _, path in ipairs(paths) do
     if args.command == "convert" then
-      success = convert_command(path, args.palette, args.colors, args.sort, args.transparent)
+      success = convert_command(path, args.palette, args.colors, args.sort, not args.opaque and args.transparent or nil)
     elseif args.command == "inspect" then
       success = command_inspect(path)
     end
