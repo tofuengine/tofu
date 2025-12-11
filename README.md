@@ -96,7 +96,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 
 * [cglm](https://github.com/recp/cglm) v0.9.6
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.13.1, v0.7.1, v0.14.1
+* [dr_libs](https://github.com/mackron/dr_libs) v0.13.2, v0.7.2, v0.14.2
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://gen.glad.sh/) v2.0.8
 * [GLFW](https://www.glfw.org/) v3.4.0
