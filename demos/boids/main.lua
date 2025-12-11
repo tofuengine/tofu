@@ -86,10 +86,7 @@ end
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  local canvas = Canvas.default()
-  canvas:transparent({ ["0"] = false, ["11"] = true })
-
-  self.font = Font.default(11, 6)
+  self.font = Font.default()
   self.objects = {}
 
   for _ = 1, BOIDS do

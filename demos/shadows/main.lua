@@ -53,18 +53,12 @@ local SPEED <const> = 32
 --384 x 224 pixels
 
 function Main:__ctor()
-  local greyscale = Palette.new(256)
-  local palette = Palette.new(3, 3, 2) -- R3G3B2
+  local palette = Palette.default("nes") -- R3G3B2
   Display.palette(palette)
 
-  local canvas = Canvas.default()
-  canvas:transparent(0, false)
-
-  self.background = Image.new("assets/background.png")
-  self.stamp = Image.new("assets/sphere.png", 0, greyscale)
-  self.bank = Bank.new(Image.new("assets/sheet.png",
-    palette:match(0, 0, 0), palette:match(255, 255, 255)), 32, 32)
-  self.font = Font.default(palette:match(255, 255, 255), palette:match(0, 0, 0))
+  self.background = Image.new("assets/background.img")
+  self.bank = Bank.new(Image.new("assets/sheet.img"), 32, 32)
+  self.font = Font.default()
   self.velocity = { x = 0, y = 0 }
   self.position = { x = 0, y = 0 }
   self.cursor = { x = 0, y = 0 }

@@ -58,8 +58,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   self.background = palette:match(31, 31, 63)
 
-  self.font = Font.default("5x8", 0, palette:match(0, 255, 0))
-  self.surface = Image.new("assets/road.png", 0)
+  self.font = Font.default("5x8")
+  self.surface = Image.new("assets/road.img")
   self.xform = XForm.new()
   self.running = true
   self.wrap = 1

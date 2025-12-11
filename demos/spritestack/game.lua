@@ -62,9 +62,9 @@ function Game:__ctor()
   Display.palette(palette)
 
   self.palette = palette
-  self.bank = Bank.new(Image.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
---  self.bank = Bank.new(Image.new("assets/images/racing-car-small-red.png", 0), 32, 32)
-  self.font = Font.default(0, 31)
+  self.bank = Bank.new(Image.new("assets/images/racing-car-tiny-red.img"), 16, 16)
+--  self.bank = Bank.new(Image.new("assets/images/racing-car-small-red.img"), 32, 32)
+  self.font = Font.default()
   self.tweener = Tweener.new("sine-out")
 
   self.sprites = {}

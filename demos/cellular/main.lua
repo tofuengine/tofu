@@ -58,7 +58,7 @@ function Main:__ctor()
   local image = canvas:image()
   local width, height = image:size()
 
-  self.font = Font.default(0, 15)
+  self.font = Font.default()
   self.grid = Grid2D.new(width, height, { 0 })
   self.dirg = Grid2D.new(width, height, { 0 })
 end

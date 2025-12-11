@@ -49,16 +49,15 @@ local Program = require("tofu.graphics.program")
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8-ext"))
+  Display.palette(Palette.default("nes"))
 
   local canvas = Canvas.default()
   local image = canvas:image()
   local width, height = image:size()
-  canvas:transparent({ ["0"] = false, ["22"] = true })
 
-  self.font = Font.default(0, 11)
-  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
-  self.big_font = Font.default("32x64", 1, 31)
+  self.font = Font.default()
+  self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
+  self.big_font = Font.default("32x64")
   self.running = true
   self.time = 0
   self.dx = 0

@@ -76,7 +76,10 @@ function Bunny:render(canvas)
   local _, ch = self.bank:size(CELL_ID)
   local angle = self.body:angle()
   canvas:sprite(x, y, self.bank, CELL_ID, Math.angle_to_rotation(angle))
-  canvas:write(x, y - ch * 0.5, self.font, string.format("%d, %d, %d", x, y, self.body:mass()), "center", "middle")
+  canvas:push()
+    canvas:shift(1, 2)
+    canvas:write(x, y - ch * 0.5, self.font, string.format("%d, %d, %d", x, y, self.body:mass()), "center", "middle")
+  canvas:pop()
 end
 
 return Bunny

@@ -52,7 +52,7 @@ local CAMERA_SPEED = 128.0
 function Main:__ctor()
   Display.palette(Palette.default("gameboy"))
 
-  self.font = Font.default(3, 1)
+  self.font = Font.default()
   self.map = Map.from_file("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)

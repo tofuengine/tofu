@@ -54,7 +54,7 @@ local SKY <const> = {
 local Background = Class.define()
 
 function Background:__ctor(camera, index)
-  self.skyline = Bank.new(Image.new("assets/skyline.png", index))
+  self.skyline = Bank.new(Image.new("assets/skyline.img"))
   self.camera = camera
   self.index = index
   self.program = Program.new()

@@ -55,16 +55,15 @@ local MAX_BUNNIES <const> = 32768
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
+  Display.palette(Palette.default("nes"))
 
   local canvas = Canvas.default()
-  canvas:transparent({ ["0"] = false, ["11"] = true })
 
   local width, height = canvas:image():size()
 
   self.bunnies = {}
-  self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
-  self.font = Font.default(11, 6)
+  self.bank = Bank.new(Image.new("assets/bunnies.img"), "assets/bunnies.sheet")
+  self.font = Font.default()
 
   self.world = World.new(0.0, 200.0)
 
@@ -133,8 +132,11 @@ function Main:render(_)
     bunny:render(canvas)
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(width, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
+  canvas:push()
+    canvas:shift(1, 2)
+    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+    canvas:write(width, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
+  canvas:pop()
 end
 
 return Main

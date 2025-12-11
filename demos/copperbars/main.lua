@@ -56,7 +56,7 @@ function Main:__ctor()
   local width, _ = image:size()
   local half_width = width * 0.5
 
-  self.font = Font.default(0, 1)
+  self.font = Font.default()
 
   local step = 255 / SHADES
 

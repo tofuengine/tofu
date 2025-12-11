@@ -39,20 +39,22 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
 local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 
 local Main = Class.define()
 
 function Main:__ctor()
-  --Display.palette(Palette.default("pico-8"))
+  Display.palette(Palette.default("6-bit-bw"))
 
   local canvas = Canvas.default()
   local image = canvas:image()
   local width, height = image:size()
 
-  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 8, 8)
-  self.font = Font.default(0, 255)
+  self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
+  self.font = Font.default()
 
   local cw, ch = self.bank:size(Bank.NIL)
   self.columns = width / cw
@@ -86,7 +88,10 @@ function Main:render(_)
     y = y + ch
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:push()
+    canvas:shift(1, 63)
+    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:pop()
 end
 
 return Main

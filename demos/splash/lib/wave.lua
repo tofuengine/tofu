@@ -43,8 +43,8 @@ local Image = require("tofu.graphics.image")
 
 local Wave = Class.define()
 
-function Wave:__ctor(_, _, transparent, _, pool)
-  self.stripe = Image.new("assets/images/stripes.img", transparent)
+function Wave:__ctor(_, _, _, pool)
+  self.stripe = Image.new("assets/images/stripes.img")
   self.tweener = Tweener.new("linear", 5)
   self.oscillator = Oscillator.new("sine", 0.75)
   self.period_current = 0

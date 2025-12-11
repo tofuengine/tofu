@@ -64,7 +64,7 @@ function Main:__ctor()
 
   self.current = 1
 
-  self.font = Font.default(0, COLORS - 1)
+  self.font = Font.default()
   self.noise = Noise.new(NOISES[self.current])
   self.grid = Grid2D.new(width, height)
 

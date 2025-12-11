@@ -63,8 +63,8 @@ function Main:__ctor()
   canvas:transparent({ ["0"] = false, ["11"] = true })
 
   self.bunnies = {}
-  self.bank = Bank.new(Image.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
-  self.font = Font.default(11, 6)
+  self.bank = Bank.new(Image.new("assets/bunnies.img"), "assets/bunnies.sheet")
+  self.font = Font.default()
   self.speed = 1.0
   self.running = true
   self.static = true

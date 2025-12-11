@@ -65,8 +65,8 @@ local INDICES <const> = {
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 12, 12)
-  self.font = Font.default(0, 15)
+  self.bank = Bank.new(Image.new("assets/sheet.img"), 12, 12)
+  self.font = Font.default()
   self.down = {}
   self.scale = {}
 end
