@@ -52,11 +52,11 @@ function Boot:__ctor()
   self.states = {
     ["splash"] = { -- TODO: implement "splash" state that emulates Amiga's boot.
       enter = function(_)
-          self:switch("running")
         end,
       leave = function(_)
         end,
       init = function(_)
+        self:switch("running")
         end,
       deinit = function(_)
         end,
@@ -74,9 +74,15 @@ function Boot:__ctor()
           me.main = nil
         end,
       init = function(me)
+          if not me.main then -- Sanity check, in case of an error in the `enter()` method.
+            return
+          end
           me.main:init()
         end,
       deinit = function(me)
+          if not me.main then -- Ditto.
+            return
+          end
           me.main:deinit()
         end,
       update = function(me, delta_time)
@@ -108,7 +114,7 @@ function Boot:__ctor()
             table.insert(errors, str)
           end
 
-          me.font = Font.default(0, 1)
+          me.font = Font.default()
           me.lines = {}
           local margin <const> = 4 -- Pre-calculate lines position and rectangle area.
           local span <const> = width - 2 * margin
@@ -182,6 +188,9 @@ local function _reinit_system()
   canvas:reset() -- Reset default canvas from the game state.
 end
 
+-- Achtung! Don´t *ever* call `switch()` from within `enter()` or `leave()`
+-- ======== methods! It is suggested also to avoid it from `init()` and
+-- ======== `deinit()`, unless you really know what you are doing.
 function Boot:switch(id, ...)
   local exiting <const> = self.state
   if exiting then

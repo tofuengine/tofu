@@ -41,12 +41,12 @@ local Image = require("tofu.graphics.image")
 
 local Logo = Class.define()
 
-function Logo:__ctor(width, height, transparent, _, _)
+function Logo:__ctor(width, height, _, _)
   self.images = {
-      Image.new("assets/images/tofu.png", transparent),
-      Image.new("assets/images/engine.png", transparent)
+      Image.new("assets/images/tofu.img"),
+      Image.new("assets/images/engine.img")
     }
-  self.outline = Image.new("assets/images/outline.png", transparent)
+  self.outline = Image.new("assets/images/outline.img")
 
   local w, h = self.outline:size()
   self.x = (width - w) * 0.5

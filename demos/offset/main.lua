@@ -49,7 +49,7 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette(Palette.default("pico-8"))
 
-  self.font = Font.default(0, 1)
+  self.font = Font.default()
 
   local canvas = Canvas.default()
   local image = canvas:image()

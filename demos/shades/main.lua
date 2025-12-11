@@ -78,7 +78,7 @@ function Main:__ctor()
   local width, height = image:size()
 
   self.lut = build_table(PALETTE, LEVELS, TARGET)
-  self.font = Font.default(0, PALETTE:match(0, 255, 0))
+  self.font = Font.default()
   self.width = width / STEPS
   self.height = height / STEPS
   self.mode = 0

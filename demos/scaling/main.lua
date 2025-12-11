@@ -48,13 +48,10 @@ local Palette = require("tofu.graphics.palette")
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8-ext"))
+  Display.palette(Palette.default("nes"))
 
-  local canvas = Canvas.default()
-  canvas:transparent({ ["0"] = false, ["22"] = true })
-
-  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
-  self.font = Font.default(22, 2)
+  self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
+  self.font = Font.default()
 
   self.x, self.y = 0, 0
   self.x_speed, self.y_speed = 0, 0
@@ -116,7 +113,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local image = canvas:image()
-  image:clear(12)
+  image:clear(45)
 
   local width, height = image:size()
   local x, y = self.x, self.y

@@ -78,7 +78,7 @@ local function extra_half_brite(palette, target, ratio)
   local r, g, b = table.unpack(target)
   local tweaked = Palette.new(palette)
   tweaked:lerp(r, g, b, ratio)
-  palette:merge(32, tweaked, 0, 32, false) -- Just append.
+  palette:merge(64, tweaked, 0, 64, false) -- Just append.
 --  local size = palette:size()
 --  for index = 0, size - 1 do
 --    local ar, ag, ab = palette:peek(index)
@@ -89,17 +89,14 @@ local function extra_half_brite(palette, target, ratio)
 end
 
 function Main:__ctor()
-  local palette = Palette.default("pico-8-ext")
+  local palette = Palette.default("nes")
   Display.palette(palette)
-
-  local canvas = Canvas.default()
-  canvas:transparent({ ["0"] = false, ["22"] = true })
 
   self.atlas = Image.new(1, 1)
   self.pixies = Bank.new(self.atlas, 1, 1)
-  self.bank = Bank.new(Image.new("assets/sprites.png", 22), 16, 16)
-  self.tileset = Bank.new(Image.new("assets/tileset.png", 22), 16, 16)
-  self.font = Font.default(22, 2)
+  self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
+  self.tileset = Bank.new(Image.new("assets/tileset.img"), 16, 16)
+  self.font = Font.default()
 
   self.animations = {
       ["sleeping-right"] = Animation.new(self.bank, { 12 }, 0, nil, false, false),
@@ -273,8 +270,8 @@ function Main:update(delta_time)
   local t = System.time()
   local program = Program.new()
   program:wait(0, y)
-  for i = 0, 31 do
-    program:shift(i, 32 + i)
+  for i = 0, 63 do
+    program:shift(i, 64 + i)
   end
   program:modulo(-width * 2)
   for i = y, height - 1 do -- Combined x/y waves.
@@ -289,7 +286,7 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   local width, height = canvas:image():size()
-  canvas:image():clear(12)
+  canvas:image():clear(50)
 
   local x, y = (width - 16) * 0.5, height * 0.5
 

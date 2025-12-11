@@ -64,7 +64,7 @@ end
 function Main:__ctor()
   Display.palette(Palette.new(256))
 
-  self.font = Font.default(0, 15)
+  self.font = Font.default()
   self.bank = _create_bank();
 
   self.a = 1

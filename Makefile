@@ -300,7 +300,7 @@ endif
 OBJECTS:=$(SOURCES:%.c=%.o)
 
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
-RESOURCES:=$(shell find $(srcdir)/kernal -type f -name '*.*')
+RESOURCES:=$(shell find $(srcdir)/kernal -type f)
 
 # Setting the docker-image dependencies.
 DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
@@ -352,7 +352,7 @@ engine: $(builddir) $(builddir)/$(TARGET) $(builddir)/$(KERNAL)
 $(builddir):
 	mkdir -p $(builddir)
 
-# The `kernal.pak` archive contains all the Lua scripts that constitue (part of)
+# The `kernal.pak` archive contains all the Lua scripts that constitute (part of)
 # the runtime. It's required for the engine to work and it's repacked each time
 # a file is changed.
 #

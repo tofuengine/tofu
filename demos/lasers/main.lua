@@ -70,7 +70,7 @@ function Main:__ctor()
 
   local width, height = canvas:image():size()
 
-  self.font = Font.default(0, FOREGROUND)
+  self.font = Font.default()
   self.colors = {
       PALETTE:match( 15,  15,  15),
       PALETTE:match( 31,  31,  31),

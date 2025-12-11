@@ -129,7 +129,7 @@ end
 
 function Scene:__ctor(camera, palette, index)
   self.camera = camera
-  self.bank = Bank.new(Image.new("assets/texture.png", index), "assets/texture.sheet")
+  self.bank = Bank.new(Image.new("assets/texture.img"), "assets/texture.sheet")
   self.font = nil
 
   self.lut = _build_table(palette, FOG_LEVELS, FOG_COLOR, { index })

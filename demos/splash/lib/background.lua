@@ -43,20 +43,24 @@ local Program = require("tofu.graphics.program")
 
 local Background = Class.define()
 
-function Background:__ctor(_, height, transparent, palette, pool)
+-- We conventiently use the transparent index to create a rasterbar-like
+-- gradient effect.
+
+function Background:__ctor(_, height, palette, pool)
   local half_height = height // 2
   local quarter_height = height // 4
 
-  self.font = Font.from_image("assets/images/font-8x8.png", 8, 8, transparent, palette:match(255, 255, 255))
+  self.font = Font.from_image("assets/images/font-8x8.img", 8, 8)
 
   self.timer = pool:spawn(10, 0, function(_)
+      local length = palette:size()
       local program = Program.new()
-      program:gradient(transparent, {
-          { 0, palette:peek(math.random(0, transparent)) },
-          { quarter_height - 1, palette:peek(math.random(0, transparent)) },
-          { half_height - 1, palette:peek(math.random(0, transparent)) },
-          { height - quarter_height - 1, palette:peek(math.random(0, transparent)) },
-          { height - 1, palette:peek(math.random(0, transparent)) }
+      program:gradient(0, { -- `0` is the transparent index!
+          { 0, palette:peek(math.random(0, length)) },
+          { quarter_height - 1, palette:peek(math.random(0, length)) },
+          { half_height - 1, palette:peek(math.random(0, length)) },
+          { height - quarter_height - 1, palette:peek(math.random(0, length)) },
+          { height - 1, palette:peek(math.random(0, length)) }
         })
 --      program:wait(0, height - (quarter_height // 2) - 1)
 --      program:modulo(-width * 4)

@@ -37,10 +37,8 @@ SOFTWARE.
 
 local Palette = {}
 
-local PALETTES <const> = require("assets/lua/palettes")
-
 function Palette.default(id)
-  return Palette.new(PALETTES[id])
+  return Palette.new(string.format("assets/pal/%s.pal", id))
 end
 
 return Palette

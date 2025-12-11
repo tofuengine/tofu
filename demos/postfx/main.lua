@@ -52,14 +52,11 @@ local LITTER_SIZE = 64
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("nes"))
-
-  local canvas = Canvas.default()
-  canvas:transparent({ [0] = false, [13] = true })
+  Display.palette(Palette.default("vga13h"))
 
   self.sprites = {}
-  self.bank = Bank.new(Image.new("assets/images/diamonds.png", 13), 16, 16)
-  self.font = Font.default(13, 0)
+  self.bank = Bank.new(Image.new("assets/images/diamonds.img"), 16, 16)
+  self.font = Font.default()
   self.speed = 1.0
   self.running = true
 end
@@ -104,7 +101,7 @@ function Main:render(_)
   local canvas = Canvas.default()
   local image = canvas:image()
   local width, _ = image:size()
-  image:clear(63)
+  image:clear(0)
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end

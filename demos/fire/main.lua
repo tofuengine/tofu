@@ -61,7 +61,7 @@ function Main:__ctor()
   local image = canvas:image()
   local width, height = image:size()
 
-  self.font = Font.default(0, 15)
+  self.font = Font.default()
   self.x_size = width / STEPS
   self.y_size = height / STEPS
   self.windy = false

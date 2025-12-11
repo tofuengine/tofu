@@ -50,23 +50,19 @@ local Wave = require("lib/wave")
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("famicube")
-  local background_index = palette:size() - 1 -- The background index is the last palette entry!
+  local palette = Palette.default("nes")
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  canvas:transparent({ [0] = false, [background_index] = true })
-
-  self.background_index = background_index -- Use it as background colour and transparent! :)
 
   self.pool = Pool.new()
 
   local width, height = canvas:image():size()
   self.objects = {
-      Background.new(width, height, background_index, palette, self.pool),
-      Wave.new(width, height, background_index, palette, self.pool),
-      Logo.new(width, height, background_index, palette, self.pool),
-      Stars.new(width, height, background_index, palette, self.pool)
+      Background.new(width, height, palette, self.pool),
+      Wave.new(width, height, palette, self.pool),
+      Logo.new(width, height, palette, self.pool),
+      Stars.new(width, height, palette, self.pool)
     }
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")
@@ -90,7 +86,7 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  canvas:clear(self.background_index)
+  canvas:clear(0)
 
   for _, object in ipairs(self.objects) do
     object:render(canvas)

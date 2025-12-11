@@ -58,7 +58,7 @@ function Main:__ctor()
   Display.palette(Palette.new(PALETTE)) -- "arne-16")
   Display.palette(Palette.default("arne-16"))
 
-  self.font = Font.default(0, 1)
+  self.font = Font.default()
   self.mode = 0
 end
 

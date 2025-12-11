@@ -53,10 +53,10 @@ function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
   Display.palette(Palette.default("pico-8"))
 
-  -- Create a default font, palette color `0` as background and `15` as foreground.
+  -- Create a default font.
   -- Please note that, as default, palette color `0` is set as transparent. This
   -- means that the font background color won't be drawn.
-  self.font = Font.default(0, 15)
+  self.font = Font.default()
 end
 
 function Main:init()

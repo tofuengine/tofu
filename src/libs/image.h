@@ -27,6 +27,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct image_io_callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
@@ -37,17 +38,29 @@ typedef struct image_io_callbacks_s {
 } image_io_callbacks_t;
 
 /**
- * *Note*: the image pixels are stored in RGBA() format (8 bits per channel,
- *         i.e. 4 bytes per pixel).
+ * The image pixels are either raw RGBA data or indexed data. This can be
+ * determined by the `palette` argument of the `on_allocate()` callback.
+ * If `palette` is `NULL` then the pixels are raw 32bpp RGBA data, otherwise
+ * they are 8bpp indexed data and the palette contains `palette_length` RGBA
+ * entries (4 bytes each).
+ *
  * *Note*: the `on_free()` callback is *always* called the the end of the
  *         decoding process.
  */
 typedef struct image_decode_callbacks_s {
-    bool (*on_allocate)(void *user_data, size_t width, size_t height);
+    bool (*on_allocate)(void *user_data, size_t width, size_t height, const uint8_t *palette, size_t palette_length);
     bool (*on_scanline)(void *user_data, size_t index, const void *pixels);
     void (*on_free)(void *user_data, bool success);
 } image_decode_callbacks_t;
 
+/**
+ * The image pixels are always raw RGBA data.
+ *
+ * *Note*: the `on_deinitialize()` callback is *always* called the the end of the
+ *         encoding process.
+ *
+ * TODO: implement support for indexed images (palette passed to `on_initialize()`?).
+ */
 typedef struct image_encode_callbacks_s {
     bool (*on_initialize)(void *user_data, size_t *width, size_t *height);
     bool (*on_scanline)(void *user_data, size_t index, void *pixels);

@@ -65,7 +65,7 @@ function Main:__ctor()
   self.c:smul(0.5)
   self.fan = false
 
-  self.font = Font.default(0, 15)
+  self.font = Font.default()
 
   self.time = 0
   self.running = true

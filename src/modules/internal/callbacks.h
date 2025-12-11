@@ -44,12 +44,6 @@ typedef struct Callback_Palette_Closure_s {
     const GL_Color_t *palette;
     GL_Pixel_t transparent;
     uint8_t threshold;
-#if defined(TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION)
-    struct {
-        GL_Color_t key;
-        GL_Pixel_t value;
-    } *cache; // Stores past executed colors matches.
-#endif  /* TOFU_GRAPHICS_PALETTE_MATCH_MEMOIZATION */
 } Callback_Palette_Closure_t;
 
 typedef struct Callback_Indexes_Closure_s {

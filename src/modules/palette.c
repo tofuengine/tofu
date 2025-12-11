@@ -42,6 +42,7 @@
 #include <core/config.h>
 #define _LOG_TAG "palette"
 #include <libs/log.h>
+#include <systems/storage.h>
 
 static int palette_new_v_1o(lua_State *L);
 static int palette_gc_1o_0(lua_State *L);
@@ -171,6 +172,75 @@ static int palette_new_1t_1o(lua_State *L)
     return 1;
 }
 
+static uint8_t _from_hex(char hex[2])
+{
+    uint8_t value = 0;
+    for (size_t i = 0; i < 2; ++i) {
+        value <<= 4;
+        char c = hex[i];
+        if (c >= '0' && c <= '9') {
+            value |= (uint8_t)(c - '0');
+        } else
+        if (c >= 'a' && c <= 'f') {
+            value |= (uint8_t)(c - 'a' + 10);
+        } else
+        if (c >= 'A' && c <= 'F') {
+            value |= (uint8_t)(c - 'A' + 10);
+        }
+    }
+    return value;
+}
+
+static int palette_new_1s_1o(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+
+    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
+
+    LOG_D("loading custom palette `%s`", name);
+
+    FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
+    if (!handle) {
+        return luaL_error(L, "can't access file `%s`", name);
+    }
+    LOG_D("handle %p opened for file `%s`", handle, name);
+
+    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
+    size_t size = 0;
+    while (true) {
+        char hex[8] = { 0 };
+        size_t bytes_read = FS_read(handle, hex, 7); // Read up to 7 bytes (6 + null-terminator).
+        if (bytes_read < 6) {
+            break;
+        }
+        palette[size] = (GL_Color_t){
+                .r = _from_hex(&hex[0]),
+                .g = _from_hex(&hex[2]),
+                .b = _from_hex(&hex[4]),
+                .a = 255
+            };
+        size += 1;
+        if (size >= GL_MAX_PALETTE_COLORS) {
+            LOG_W("palette has too many colors (%d) - clamping to %d", size, GL_MAX_PALETTE_COLORS);
+            break;
+        }
+    }
+
+    Storage_close(storage, handle);
+
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
+            .size = size
+        }, OBJECT_TYPE_PALETTE);
+
+    GL_palette_copy(self->palette, palette);
+    LOG_D("palette %p allocated w/ %d color(s)", self, size);
+
+    return 1;
+}
+
 static int palette_new_1o_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -231,6 +301,7 @@ static int palette_new_v_1o(lua_State *L)
         LUAX_OVERLOAD_BY_ARITY(palette_new_0_1o, 0)
         LUAX_OVERLOAD_BY_TYPES(palette_new_1n_1o, LUA_TNUMBER)
         LUAX_OVERLOAD_BY_TYPES(palette_new_1t_1o, LUA_TTABLE)
+        LUAX_OVERLOAD_BY_TYPES(palette_new_1s_1o, LUA_TSTRING)
         LUAX_OVERLOAD_BY_TYPES(palette_new_1o_1o, LUA_TOBJECT)
         LUAX_OVERLOAD_BY_ARITY(palette_new_3n_1o, 3)
     LUAX_OVERLOAD_END

@@ -63,13 +63,12 @@ function Main:__ctor()
   local canvas <const> = Canvas.default()
   local image <const> = canvas:image()
   local width <const>, height <const> = image:size()
-  canvas:transparent({ [0] = false, [63] = true })
 
   self.player = Player.new()
   self.camera = Camera.new(CAMERA_FIELD_OF_VIEW, width, height, CAMERA_NEAR, CAMERA_FAR)
   self.scene = Scene.new(self.camera, palette, 63)
   self.background = Background.new(self.camera, 59)
-  self.font = Font.default(63, 11)
+  self.font = Font.default()
 
   self.running = true
 end

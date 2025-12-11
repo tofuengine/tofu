@@ -58,8 +58,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:image():size()
 
-  self.bank = Bank.new(Image.new("assets/sheet.png", 0, 5), 8, 8)
-  self.font = Font.default(0, 15)
+  self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
+  self.font = Font.default()
   self.wave = Wave.new("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
   self.y_size = height / AMOUNT

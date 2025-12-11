@@ -54,6 +54,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Support for both proportional and non-proportional bitmap-based fonts (alphabet subset can be specified, if required).
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Tiles drawing with offset/scaling/flipping.
+* [x] *Custom image format*, optimized for blazing-fast loading time. A support tool for converting from standard formats is provided, supporting also image palette optimization (via median-cut color reduction) and/or matching.
 * [x] Palette-based graphics w/ 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Banked palette support w/ color bias during VRAM transfer.
@@ -74,7 +75,6 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Out-of-the-box timers support.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
 * [x] 2D physics-engine.
-* [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root directory override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
 * [x] Multiple player support w/ up to 4 simultaneous game controllers. Mouse emulation is supported. Controllers #0 and #1 can be keyboard emulated.
@@ -136,12 +136,14 @@ sudo apt install xorg-dev libx11-dev libwayland-dev libxkbcommon-dev wayland-pro
 
 sudo apt install valgrind cloc bear
 
+sudo apt install libvips libvips-dev
 sudo apt install lua5.4 liblua5.4-dev luarocks
 
 sudo luarocks --lua-version=5.4 install argparse
 sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck
 sudo luarocks --lua-version=5.4 install luazen
+sudo luarocks --lua-version=5.4 install lua-vips luaffi-tkl
 ```
 
 Please note that [MinGW](https://en.wikipedia.org/wiki/MinGW) is required only to obtain the Windows build through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). One can simply use MinGW on Windows to build the engine binary as it is.
@@ -257,21 +259,26 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 
 ### Graphics
 
+* [ ] Transparency encoding in the image.
+* [ ] Palette selection from the configuration file.
+* [ ] Automatic clear of the default image buffer on each loop (configurable?).
+* [ ] Adding image manipulation features (e.g. `image:replace()`) for faster optimizations.
 * [ ] Move to full GPU use (beware of the diamond-exit-rule and ensure pixel-perfect positioning).
 * [ ] Adopt another (more simple to merge into) pixel font.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
-* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 
 ### Audio
 
 * [ ] On-the-fly (could pre-cache it for later usage) sound synthesizer, similar to [srfx](https://github.com/grimfang4/sfxr).
 * [ ] Audio channels support -- each source is to associated to a channel.
 * [ ] Real-time audio effects (noise, reverb, filters, [spatialization](https://www.sfml-dev.org/tutorials/2.6/audio-spatialization.php), etc...).
+* [ ] Custom "raw" sound formats.
 
 ### Input
 
+* [ ] Input recording and playback -- this would be useful to record and share gameplays.
 * [ ] Rumble and force feedback support -- this might be implemented with a specific library as GLFW doesn't support it (perhaps taken from [SDL_syshaptic](https://github.com/libsdl-org/SDL/blob/main/src/haptic/SDL_syshaptic.h)?).
 * [ ] Analogue support for shoulder and trigger axes.
 * [ ] Better input handling by leveraging an event-driver approach -- this should reduce the current sub-system complexity (as it polled).

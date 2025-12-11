@@ -54,7 +54,7 @@ function Main:__ctor()
   Display.palette(palette)
 
   self.palette = palette
-  self.font = Font.default(0, 15)
+  self.font = Font.default()
   self.factor = 0.75
 end
 

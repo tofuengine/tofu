@@ -52,7 +52,6 @@
 #include <stddef.h>
 
 typedef struct Display_Configuration_s {
-    GLFWimage icon;
     struct {
         const char *title;
         size_t width, height, scale;

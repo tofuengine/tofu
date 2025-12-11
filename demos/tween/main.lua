@@ -78,8 +78,8 @@ function Main:__ctor()
   local x0, y0 = width * 0.25, height * 0
   self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
 
-  self.bank = Bank.new(Image.new("assets/sheet.png", 0), 8, 8)
-  self.font = Font.default(0, 15)
+  self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
+  self.font = Font.default()
   self.wave = Wave.new("triangle", PERIOD)
 end
 

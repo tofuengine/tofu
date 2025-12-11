@@ -348,9 +348,11 @@ typedef struct _image_callbacks_closure_s {
     size_t height;
     void *pixels;
     size_t stride;
+    const uint8_t *palette;
+    size_t palette_length;
 } _image_callbacks_closure_t;
 
-static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
+static bool _decode_on_allocate(void *user_data, size_t width, size_t height, const uint8_t *palette, size_t palette_length)
 {
     _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
 
@@ -366,7 +368,9 @@ static bool _decode_on_allocate(void *user_data, size_t width, size_t height)
             .width = width,
             .height = height,
             .pixels = pixels,
-            .stride = stride
+            .stride = stride,
+            .palette = palette,
+            .palette_length = palette_length
         };
 
     return true;
@@ -376,9 +380,28 @@ static bool _decode_on_scanline(void *user_data, size_t index, const void *pixel
 {
     _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
 
-    void *ptr = (uint8_t *)closure->pixels + (index * closure->stride);
+    void *row_ptr = (uint8_t *)closure->pixels + (index * closure->stride);
 
-    memcpy(ptr, pixels, closure->stride);
+    if (closure->palette) { // We have a palette, so we need to expand the pixels. 
+        const uint8_t *palette = closure->palette;
+        const uint8_t *src = (const uint8_t *)pixels;
+        uint8_t *dst = (uint8_t *)row_ptr;
+
+        for (int i = closure->width; i; --i) {
+            size_t palette_index = *(src++);
+            if (palette_index >= closure->palette_length) {
+                LOG_W("pixel index %d is out-of-bounds for palette of size %d", palette_index, closure->palette_length);
+                palette_index = 0; // Fallback to the first palette entry.
+            }
+            const uint8_t *color = &palette[palette_index * 3];
+            *(dst++) = *(color++); // R(ed)
+            *(dst++) = *(color++); // G(reen)
+            *(dst++) = *(color++); // B(lue)
+            *(dst++) = 255;        // A(lpha) is always 255 (opaque).
+        }
+    } else { // No palette, so we can directly copy the pixels.
+        memcpy(row_ptr, pixels, closure->stride);
+    }
 
     return true; // Continue decoding.
 }

@@ -47,7 +47,7 @@ local Palette = require("tofu.graphics.palette")
 local bump = require("lib/bump")
 
 local PALETTE <const> = Palette.default("famicube")
-local FONT <const> = Font.default(63, 11)
+local FONT <const> = Font.default()
 
 local LIFE <const> = 2.0
 

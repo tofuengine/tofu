@@ -44,22 +44,22 @@ local Font = {}
 -- Font.__index = Font
 
 local FONTS <const> = {
-    ["5x8"] = { file = "assets/png/spleen-5x8.png", width = 5, height = 8 },
-    ["6x12"] = { file = "assets/png/spleen-6x12.png", width = 6, height = 12 },
-    ["8x16"] = { file = "assets/png/spleen-8x16.png", width = 8, height = 16 },
-    ["12x24"] = { file = "assets/png/spleen-12x24.png", width = 12, height = 24 },
-    ["16x32"] = { file = "assets/png/spleen-16x32.png", width = 16, height = 32 },
-    ["32x64"] = { file = "assets/png/spleen-32x64.png", width = 32, height = 64 },
+    ["5x8"] = { file = "assets/img/spleen-5x8.img", width = 5, height = 8 },
+    ["6x12"] = { file = "assets/img/spleen-6x12.img", width = 6, height = 12 },
+    ["8x16"] = { file = "assets/img/spleen-8x16.img", width = 8, height = 16 },
+    ["12x24"] = { file = "assets/img/spleen-12x24.img", width = 12, height = 24 },
+    ["16x32"] = { file = "assets/img/spleen-16x32.img", width = 16, height = 32 },
+    ["32x64"] = { file = "assets/img/spleen-32x64.img", width = 32, height = 64 },
   }
 
 function Font.default(...)
   local args = { ... }
-  if #args == 2 then -- background_color, foreground_color
+  if #args == 0 then -- <none>
     local font = FONTS["5x8"]
-    return Font.from_image(font.file, font.width, font.height, args[1], args[2])
-  elseif #args == 3 then -- id, background_color, foreground_color
+    return Font.from_image(font.file, font.width, font.height)
+  elseif #args == 1 then -- id
     local font = FONTS[args[1]]
-    return Font.from_image(font.file, font.width, font.height, args[2], args[3])
+    return Font.from_image(font.file, font.width, font.height)
   else
     error("invalid arguments for default font")
   end
@@ -75,20 +75,8 @@ function Font.from_image(...)
     else -- file, width, height
       return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]))
     end
-  elseif #args == 4 then
-    if type(args[2]) == 'string' then -- file, cells_file, background_color, foreground_color
-      return Font.new(Bank.new(Image.new(args[1], args[3], args[4]), args[2]))
-    else -- file, width, height, alphabet
-      return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]), args[4])
-    end
-  elseif #args == 5 then
-    if type(args[2]) == 'string' then -- file, cells_file, alphabet, background_color, foreground_color
-      return Font.new(Bank.new(Image.new(args[1], args[4], args[5]), args[2]), args[3])
-    else -- file, width, height, background_color, foreground_color
-      return Font.new(Bank.new(Image.new(args[1], args[4], args[5]), args[2], args[3]))
-    end
-  elseif #args == 6 then -- file, width, height, alphabet, background_color, foreground_color
-    return Font.new(Bank.new(Image.new(args[1], args[5], args[6]), args[2], args[3]), args[4])
+  elseif #args == 4 then -- file, width, height, alphabet
+    return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]), args[4])
   else
     error("invalid arguments for `from_image` method")
   end

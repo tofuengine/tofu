@@ -88,8 +88,8 @@ static struct spng_alloc _spng_alloc = { // Can't declare this struct as `const`
 };
 #endif
 
-bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
-                                 const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
+static bool _png_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                                       const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
 {
 #if defined(DEBUG) && !defined(SANITIZE)
     spng_ctx *ctx = spng_ctx_new2(&_spng_alloc, 0);
@@ -132,7 +132,7 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_free_context;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, ihdr.width, ihdr.height, NULL, 0);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;
@@ -144,19 +144,20 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_free_row_buffer;
     }
 
+    bool success = true;
     do {
         struct spng_row_info row_info = { 0 };
-
         result = spng_get_row_info(ctx, &row_info);
-        if (result) {
+        if (result != SPNG_OK) {
+            success = result == SPNG_EOI;
             break;
         }
 
         result = spng_decode_row(ctx, row_buffer, row_buffer_size);
-        decode_callbacks->on_scanline(decode_user_data, row_info.row_num, row_buffer);
-    } while (!result);
+        success = result == SPNG_OK || result == SPNG_EOI;
+        success = success && decode_callbacks->on_scanline(decode_user_data, row_info.row_num, row_buffer);
+    } while (success);
 
-    bool success = result == SPNG_EOI;
     LOG_IF_D(success, "image decoded");
 
     decode_callbacks->on_free(decode_user_data, success);
@@ -177,6 +178,95 @@ error_free_context:
     spng_ctx_free(ctx);
 error_exit:
     return false;
+}
+
+#pragma pack(push, 1)
+typedef struct _img_header_s {
+    uint8_t magic[8]; // "TOFUIMG!"
+    uint16_t width; // Width of the image in pixels (max 65535)
+    uint16_t height; // Height of the image in pixels (max 65535)
+    uint16_t palette_length; // Actual number of used palette entries
+    uint8_t palette[256 * 3]; // Max 256 RGB entries
+} _img_header_t;
+#pragma pack(pop)
+
+static const char *_img_magic = "TOFUIMG!";
+
+static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                                       const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
+{
+    _img_header_t header;
+    size_t header_size = io_callbacks->read(io_user_data, &header, sizeof(header));
+    if (header_size != sizeof(header)) {
+        LOG_E("can't read image header");
+        goto error_exit;
+    }
+    if (memcmp(header.magic, _img_magic, sizeof(header.magic)) != 0) {
+        LOG_E("invalid image header");
+        goto error_exit;
+    }
+
+    size_t row_buffer_size = header.width;
+    void *row_buffer = malloc(row_buffer_size);
+    if (!row_buffer) {
+        LOG_E("can't allocate row buffer");
+        goto error_exit;
+    }
+
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette, header.palette_length);
+    if (!allocated) {
+        LOG_E("can't allocate target buffer");
+        goto error_free_row_buffer;
+    }
+
+    bool success = true;
+    for (size_t row_index = 0; success && row_index < header.height; ++row_index) {
+        size_t bytes_read = io_callbacks->read(io_user_data, row_buffer, row_buffer_size);
+        success = bytes_read == row_buffer_size;
+        success = success && decode_callbacks->on_scanline(decode_user_data, row_index, row_buffer);
+    }
+
+    LOG_IF_D(success, "image decoded");
+
+    decode_callbacks->on_free(decode_user_data, success);
+
+    if (!success) {
+        LOG_E("can't decode image");
+        goto error_free_row_buffer;
+    }
+
+    free(row_buffer);
+
+    return success;
+
+error_free_row_buffer:
+    free(row_buffer);
+error_exit:
+    return false;
+}
+
+static const uint8_t _png_magic[8] = "\x89PNG\r\n\x1a\n";
+
+bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
+                                 const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
+{
+    uint8_t magic[8];
+    size_t magic_size = io_callbacks->read(io_user_data, magic, sizeof(magic));
+    if (magic_size != sizeof(magic)) {
+        LOG_E("can't read image header");
+        return false;
+    }
+    io_callbacks->seek(io_user_data, 0, SEEK_SET); // Rewind back to the beginning.
+
+    if (memcmp(magic, _png_magic, sizeof(magic)) == 0) {
+        return _png_decode_from_callbacks(io_callbacks, io_user_data, decode_callbacks, decode_user_data);
+    } else
+    if (memcmp(magic, _img_magic, sizeof(magic)) == 0) {
+        return _img_decode_from_callbacks(io_callbacks, io_user_data, decode_callbacks, decode_user_data);
+    } else {
+        LOG_E("unrecognized image format");
+        return false;
+    }
 }
 
 static int _spng_write(spng_ctx *ctx, void *user, void *buffer, size_t bytes_to_write)
@@ -254,16 +344,12 @@ bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *i
         goto error_free_row_buffer;
     }
 
-    for (size_t row_index = 0; row_index < height; ++row_index) {
-        encode_callbacks->on_scanline(encode_user_data, row_index, row_buffer);
-
-        result = spng_encode_row(ctx, row_buffer, row_buffer_size);
-        if (result != SPNG_OK) {
-            break;
-        }
+    bool success = true;
+    for (size_t row_index = 0; success && row_index < height; ++row_index) {
+        success = encode_callbacks->on_scanline(encode_user_data, row_index, row_buffer)
+            && spng_encode_row(ctx, row_buffer, row_buffer_size) == SPNG_OK;
     }
 
-    bool success = result == SPNG_EOI;
     LOG_IF_D(success, "image encoded");
 
     encode_callbacks->on_deinitialize(encode_user_data, success);

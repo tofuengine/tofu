@@ -63,13 +63,12 @@ function Main:__ctor()
   local image = canvas:image()
   local width, height = image:size()
 
-  -- Load a custom 8x8 font from file, setting palette colour `0` as background
-  -- and `15` as foreground.
+  -- Load a custom 8x8 font from file.
   -- Please note that, as default, palette colour `0` is set as transparent. This
   -- means that the font background colour won't be drawn.
   self.canvas = Canvas.new(Image.new(width, height))
-  self.font = Font.from_image("assets/font-8x8.png", 8, 8, 0, 15)
-  self.font_digits = Font.from_image("assets/digits.png", 8, 8, "0123456789", 0, 15)
+  self.font = Font.from_image("assets/font-8x8.img", 8, 8)
+  self.font_digits = Font.from_image("assets/digits.img", 8, 8, "0123456789")
 
   self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:wrap("border")

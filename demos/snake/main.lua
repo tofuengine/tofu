@@ -105,7 +105,7 @@ function Main:__ctor()
   local image = canvas:image()
   local width, height = image:size()
 
-  self.font = Font.default(palette:match(0, 0, 0), palette:match(255, 255, 255))
+  self.font = Font.default()
   self.grid = Grid2D.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
 
   self.sources = {}

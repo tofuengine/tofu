@@ -59,12 +59,11 @@ local Main = Class.define()
 
 function Main:__ctor()
   local color = Palette.default("famicube")
-  local greyscale = Palette.new(color:size())
 
-  self.font = Font.default(0, 15)
-  self.top = Image.new("assets/top.png", 0, color)
-  self.bottom = Image.new("assets/bottom.png", 0, color)
-  self.mask = Image.new("assets/gradient.png", 0, greyscale)
+  self.font = Font.default()
+  self.top = Image.new("assets/top.img")
+  self.bottom = Image.new("assets/bottom.img")
+  self.mask = Image.new("assets/gradient.img")
   self.comparator = 1
   self.threshold = 255
   self.mode = 0

@@ -83,7 +83,7 @@ typedef struct _decode_callbacks_closure_s {
     void *user_data;
 } _decode_callbacks_closure_t;
 
-static bool _on_allocate(void *user_data, size_t width, size_t height)
+static bool _on_allocate(void *user_data, size_t width, size_t height, const uint8_t *palette, size_t palette_length)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 

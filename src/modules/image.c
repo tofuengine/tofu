@@ -154,7 +154,7 @@ static const GL_IO_Callbacks_t _io_callbacks = {
     .eof = _handle_eof,
 };
 
-static int image_new_3sNO_1o(lua_State *L)
+static int image_new_1s_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -162,17 +162,8 @@ static int image_new_3sNO_1o(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
-    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_OBJECT(L, 3, OBJECT_TYPE_PALETTE, NULL);
 
     Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
-    const Display_t *display = (const Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
-    Callback_Palette_Closure_t closure = (Callback_Palette_Closure_t){
-            .palette = palette ? palette->palette : Display_get_palette(display), // Use current display's if not passed.
-            .transparent = transparent_index,
-            .threshold = TOFU_GRAPHICS_PALETTE_TRANSPARENCY_THRESHOLD
-        };
 
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     StopWatch_t stopwatch = stopwatch_init();
@@ -184,57 +175,7 @@ static int image_new_3sNO_1o(lua_State *L)
     }
     LOG_D("handle %p opened for file `%s`", handle, name);
 
-    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_palette, (void *)&closure);
-    if (!surface) {
-        Storage_close(storage, handle);
-        return luaL_error(L, "can't decode file `%s`", name);
-    }
-
-    Storage_close(storage, handle);
-#if defined(TOFU_CORE_PROFILING_ENABLED)
-    LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
-#endif
-    LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
-
-    Image_Object_t *self = (Image_Object_t *)udt_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){
-            .surface = surface,
-            .allocated = true
-        }, OBJECT_TYPE_IMAGE);
-
-    LOG_D("image %p allocated w/ surface %p", self, surface);
-
-    return 1;
-}
-
-static int image_new_3snn_1o(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-    GL_Pixel_t background_index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
-    GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
-
-    Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
-
-    Callback_Indexes_Closure_t closure = (Callback_Indexes_Closure_t){
-            .background = background_index,
-            .foreground = foreground_index
-        };
-
-#if defined(TOFU_CORE_PROFILING_ENABLED)
-    StopWatch_t stopwatch = stopwatch_init();
-    LOG_I("profiling loading and decoding for image `%s`", name);
-#endif
-    FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
-    if (!handle) {
-        return luaL_error(L, "can't access file `%s`", name);
-    }
-    LOG_D("handle %p opened for file `%s`", handle, name);
-
-    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_indexes, (void *)&closure);
+    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_palette, NULL);
     if (!surface) {
         Storage_close(storage, handle);
         return luaL_error(L, "can't decode file `%s`", name);
@@ -260,11 +201,8 @@ static int image_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_BY_ARITY(image_new_0_1o, 0)
-        LUAX_OVERLOAD_BY_TYPES(image_new_3sNO_1o, LUA_TSTRING)
-        LUAX_OVERLOAD_BY_TYPES(image_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER)
+        LUAX_OVERLOAD_BY_ARITY(image_new_1s_1o, 1)
         LUAX_OVERLOAD_BY_ARITY(image_new_2nn_1o, 2)
-        LUAX_OVERLOAD_BY_TYPES(image_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER, LUA_TOBJECT)
-        LUAX_OVERLOAD_BY_ARITY(image_new_3snn_1o, 3)
     LUAX_OVERLOAD_END
 }
 
