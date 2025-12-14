@@ -49,7 +49,7 @@
 
 static int bank_new_v_1o(lua_State *L);
 static int bank_gc_1o_0(lua_State *L);
-static int bank_size_4onNN_2n(lua_State *L);
+static int bank_size_4onNN_2nn(lua_State *L);
 
 int bank_loader(lua_State *L)
 {
@@ -59,7 +59,7 @@ int bank_loader(lua_State *L)
             { "new", bank_new_v_1o },
             { "__gc", bank_gc_1o_0 },
             // -- accessors --
-            { "size", bank_size_4onNN_2n },
+            { "size", bank_size_4onNN_2nn },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -160,7 +160,7 @@ static int bank_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static int bank_size_4onNN_2n(lua_State *L)
+static int bank_size_4onNN_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

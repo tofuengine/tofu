@@ -142,7 +142,7 @@ static int world_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static int world_gravity_1o_2n(lua_State *L)
+static int world_gravity_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -178,7 +178,7 @@ static int world_gravity_3onn_0(lua_State *L)
 static int world_gravity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(world_gravity_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(world_gravity_1o_2nn, 1)
         LUAX_OVERLOAD_BY_ARITY(world_gravity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }

@@ -53,7 +53,7 @@ function Canvas:square(mode, x, y, size, index)
   self:rectangle(mode, x, y, size, size, index)
 end
 
--- Only `font`, `x`, `y`, and `text` are required. All the other arguments are optional.
+-- Only `x`, `y`, `font`, and `text` are required. All the other arguments are optional.
 --
 -- From the [reference manual](https://www.lua.org/pil/5.1.html)
 -- << [...] A function call that is not the last element in the list always produces one

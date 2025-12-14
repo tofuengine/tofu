@@ -151,7 +151,7 @@ static int body_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static int body_center_of_gravity_1o_2n(lua_State *L)
+static int body_center_of_gravity_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -187,7 +187,7 @@ static int body_center_of_gravity_3onn_0(lua_State *L)
 static int body_center_of_gravity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_1o_2nn, 1)
         LUAX_OVERLOAD_BY_ARITY(body_center_of_gravity_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
@@ -321,7 +321,7 @@ static int body_momentum_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int body_position_1o_2n(lua_State *L)
+static int body_position_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -362,7 +362,7 @@ static int body_position_3onn_0(lua_State *L)
 static int body_position_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(body_position_1o_2n, 1)
+        LUAX_OVERLOAD_BY_ARITY(body_position_1o_2nn, 1)
         LUAX_OVERLOAD_BY_ARITY(body_position_3onn_0, 3)
     LUAX_OVERLOAD_END
 }

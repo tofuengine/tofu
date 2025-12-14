@@ -232,12 +232,6 @@ end
 
 --[[
 
-Each archive entry is formed by an header telling the size and the name of the entry,
-follower by its content, as a sequence of bytes.
-
-Note that the offset of the entry in the file is not stored, as it is automatically
-calculated during the indexing process.
-
 +--------+--------+----------+-----------------------------------------------------------+
 + OFFSET |  SIZE  | NAME     | DESCRIPTION                                               |
 +--------+--------+----------+-----------------------------------------------------------+

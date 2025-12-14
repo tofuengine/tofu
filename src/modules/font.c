@@ -33,7 +33,7 @@
 
 static int font_new_2oS_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
-static int font_size_4osNN_2n(lua_State *L);
+static int font_size_4osNN_2nn(lua_State *L);
 
 int font_loader(lua_State *L)
 {
@@ -43,7 +43,7 @@ int font_loader(lua_State *L)
             { "new", font_new_2oS_1o },
             { "__gc", font_gc_1o_0 },
             // -- accessors --
-            { "size", font_size_4osNN_2n },
+            { "size", font_size_4osNN_2nn },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -127,7 +127,7 @@ static GL_Size_t _size(const GL_Sheet_t *sheet, const char *text, const GL_Cell_
     return (GL_Size_t){ .width = width, .height = height };
 }
 
-static int font_size_4osNN_2n(lua_State *L)
+static int font_size_4osNN_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
