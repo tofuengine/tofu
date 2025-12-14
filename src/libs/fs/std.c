@@ -130,9 +130,11 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
     char path[PLATFORM_PATH_MAX] = { 0 };
     path_join(path, std_mount->path, name);
 
-    bool exists = path_exists(path);
-    LOG_IF_D(exists, "file `%s` found in mount %p", name, mount);
-    return exists;
+    bool exists_as_file = path_exists(path) // First check for existence, to avoid errors in `path_is_file()`.
+            && path_is_file(path); // Then check if it's a file, otherwise folders could be misinterpreted as files.
+    LOG_IF_D(exists_as_file, "file `%s` found in mount %p", name, mount);
+
+    return exists_as_file;
 }
 
 static size_t _size(FILE *stream)
