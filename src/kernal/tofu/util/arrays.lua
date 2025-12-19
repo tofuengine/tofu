@@ -341,8 +341,20 @@ local function merged(a, b)
   return result
 end
 
+local function split(array, index)
+    local left, right = {}, {}
+    for i, v in ipairs(array) do
+        if i <= index then
+            table.insert(left, v)
+        else
+            table.insert(right, v)
+        end
+    end
+    return left, right
+end
+
 -- Naive implementation of insertion-sort which is stable and uber-efficient when the table is incrementally grown
--- and re-sorted every time (that is, only the last item is_pressed eventually moved to the correct place).
+-- and re-sorted every time (that is, only the last item is eventually moved to the correct place).
 -- It's even faster than `table.sort()`.
 --
 -- Note that's not Cormen-Leiserson-Rivest's optimized version, since it won't work with Lua's `for ...`.
@@ -350,17 +362,20 @@ local function _lower_than(a, b)
   return a < b
 end
 
-local function sort(array, comparator)
+local function sort_range(array, from, to, comparator)
   local lower_than = comparator or _lower_than
-  local length = #array
-  for i = 2, length do
-    for j = i, 2, -1 do
+  for i = from + 1, to do
+    for j = i, from + 1, -1 do
       if not lower_than(array[j], array[j - 1]) then -- Preserve stability! Swap only if strictly lower-than!
         break
       end
       array[j - 1], array[j] = array[j], array[j - 1] -- Swap adjacent slots.
     end
   end
+end
+
+local function sort(array, comparator)
+  return sort_range(array, 1, #array, comparator)
 end
 
 -- Add the element `item` to `array`, preserving the current ordering. Designed to be incrementally called to
@@ -401,6 +416,8 @@ return {
   copy = copy,
   merge = merge,
   merged = merged,
+  split = split,
+  sort_range = sort_range,
   sort = sort,
   add = add
 }
