@@ -57,6 +57,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] *Custom image format*, optimized for blazing-fast loading time. A support tool for converting from standard formats is provided, supporting also image palette optimization (via median-cut color reduction) and/or matching.
 * [x] Palette-based graphics w/ 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
+* [x] Automatic clear of the default image buffer on each loop (configurable).
 * [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
@@ -261,7 +262,6 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 
 * [ ] Transparency encoding in the image.
 * [ ] Palette selection from the configuration file.
-* [ ] Automatic clear of the default image buffer on each loop (configurable?).
 * [ ] Adding image manipulation features (e.g. `image:replace()`) for faster optimizations.
 * [ ] Move to full GPU use (beware of the diamond-exit-rule and ensure pixel-perfect positioning).
 * [ ] Adopt another (more simple to merge into) pixel font.

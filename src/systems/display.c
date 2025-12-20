@@ -678,6 +678,11 @@ bool Display_update(Display_t *display, float delta_time)
     return true;
 }
 
+void Display_clear(Display_t *display, GL_Pixel_t index)
+{
+    GL_surface_clear(display->canvas.surface, index);
+}
+
 void Display_present(const Display_t *display)
 {
     // It is advisable to clear the colour buffer even if the framebuffer will be

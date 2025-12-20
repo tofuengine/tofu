@@ -110,6 +110,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "display-vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
+    if (strcmp(fqn, "display-clear-index") == 0) {
+        configuration->display.clear_index = (int)strtol(value, NULL, 0);
+    } else
     if (strcmp(fqn, "display-effect") == 0) {
         strncpy(configuration->display.effect, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
@@ -268,6 +271,7 @@ Configuration_t *Configuration_create(const char *data)
                 .scale = 0,
                 .fullscreen = false,
                 .vertical_sync = false,
+                .clear_index = 0,
                 .effect = "assets/glsl/passthru.glsl"
             },
             .audio = {
