@@ -85,5 +85,6 @@ extern size_t FS_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)
 extern bool FS_seek(FS_Handle_t *handle, long offset, int whence);
 extern long FS_tell(const FS_Handle_t *handle);
 extern bool FS_eof(const FS_Handle_t *handle);
+extern size_t FS_gets(FS_Handle_t *handle, char *buffer, size_t max_length);
 
 #endif /* TOFU_LIBS_FS_H */

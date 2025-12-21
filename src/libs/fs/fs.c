@@ -277,3 +277,29 @@ bool FS_eof(const FS_Handle_t *handle)
 {
     return handle->vtable.eof(handle);
 }
+
+size_t FS_gets(FS_Handle_t *handle, char *buffer, size_t buffer_size)
+{
+    if (buffer_size == 0) {
+        return 0;
+    }
+
+    size_t total_read = 0;
+    while (total_read < buffer_size - 1) { // Leave space for the null-terminator.
+        char ch;
+        size_t bytes_read = FS_read(handle, &ch, sizeof(char)); // Cast away constness for API compatibility.
+        if (bytes_read == 0) {
+            break; // EOF or error.
+        }
+
+        buffer[total_read++] = ch;
+
+        if (ch == '\n') {
+            break; // Newline encountered.
+        }
+    }
+
+    buffer[total_read] = '\0'; // Null-terminate the string.
+
+    return total_read;
+}
