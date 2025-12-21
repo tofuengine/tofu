@@ -308,7 +308,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     luaX_overridesearchers(interpreter->state, _searcher, 1, true);
 
     // If protected calls are enabled we need to have, at index `1` of the stack, the error
-    // handling function. This could be either our custom traceback *OR* Lua default one.
+    // handling function. This could be either our custom traceback *OR* Lua's default one.
 #if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
 #if defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
     lua_pushcfunction(interpreter->state, _error_handler);

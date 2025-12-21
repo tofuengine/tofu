@@ -86,6 +86,7 @@ typedef struct GL_Rectangle_s {
 typedef struct GL_Quad_s {
     int x0, y0; // FIXME: rename to left, top, right, and bottom.
     int x1, y1;
+    // TODO: optimize by adding `width` and `height` fields?
 } GL_Quad_t;
 
 #pragma pack(push, 1)

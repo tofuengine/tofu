@@ -330,7 +330,7 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
 
 // Preloading a Lua module from the FFI API is achieved by storing the a loader
 // function in the `_PRELOAD` registry table. The module is not loaded, yet, but
-// also prepared for later usage.
+// prepared for later usage.
 void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
