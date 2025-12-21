@@ -359,6 +359,11 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
 
 static inline bool _render(const Engine_t *engine, float ratio)
 {
+    const int clear_index = engine->configuration->display.clear_index; // TODO: is it worth to have it configurable?
+    if (clear_index >= 0) {
+        Display_clear(engine->display, clear_index);
+    }
+
     if (!Interpreter_render(engine->interpreter, ratio)) {
         return false;
     }
