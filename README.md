@@ -86,6 +86,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Logging facility (w/ selectable severity level).
 * [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom [RTTI](https://en.wikipedia.org/wiki/Run-time_type_information) implementation.
 * [x] Crash screen (debug build).
+* [x] Performance profiling (debug build).
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times) and resource usage (memory).
 * [x] User-dependent I/O functions to load/store game data.
@@ -95,6 +96,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 
 Although I'm used to take pleasure in reinventing the wheel at every possible opportunity, Tofu Engine leverages some *awesome* libraries:
 
+* [2dengine/profile.lua](https://github.com/2dengine/profile.lua)
 * [cglm](https://github.com/recp/cglm) v0.9.6
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
 * [dr_libs](https://github.com/mackron/dr_libs) v0.13.2, v0.7.2, v0.14.2
