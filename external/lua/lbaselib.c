@@ -181,7 +181,6 @@ static int luaB_rawset (lua_State *L) {
 }
 
 
-#if !defined(LUA_SANDBOX_MODE)
 static int pushmode (lua_State *L, int oldmode) {
   if (oldmode == -1)
     luaL_pushfail(L);  /* invalid call to 'lua_gc' */
@@ -255,7 +254,6 @@ static int luaB_collectgarbage (lua_State *L) {
   luaL_pushfail(L);  /* invalid call (inside a finalizer) */
   return 1;
 }
-#endif  /* LUA_SANDBOX_MODE */
 
 
 static int luaB_type (lua_State *L) {
@@ -511,8 +509,8 @@ static int luaB_tostring (lua_State *L) {
 
 static const luaL_Reg base_funcs[] = {
   {"assert", luaB_assert},
-#if !defined(LUA_SANDBOX_MODE)
   {"collectgarbage", luaB_collectgarbage},
+#if !defined(LUA_SANDBOX_MODE)
   {"dofile", luaB_dofile},
 #endif  /* LUA_SANDBOX_MODE */
   {"error", luaB_error},
