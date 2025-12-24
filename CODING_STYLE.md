@@ -430,3 +430,39 @@ We have extended the support for this kind of "split implementation", however, a
 > Beware! Accessing a Lua table from C is a potential performance hazard. Use this approach sparingly!
 
 Another commodity for the hybrid module design is the *post-load initialization method*. Imaging you are creating an object with some userdata/metatable pair. Since the Lua module part is loaded and interpreted *before* the userdata and metatable are created, you won't be able to reference anything natively defined (for example, to create a method alias). The solution for that is the `Module.__init()` method, which is called (if present) at the end of the module loading process to enable some Lua-side initialization.
+
+## Lua Code
+
+### Modules Inclusion
+
+The required modules are the first thing to be written into a source file. They need to appear, lexycographically sorted, after the file comment-header. THe order of the modules is the following:
+
+- engine module (e.g. `tofu.graphics.font`),
+- game common modules (e.g. `lib.logic`),
+- accessory modules (e.g. `palette`).
+
+## Common (Immutable) Objects
+
+It usually happens that some object are to be created at the very beginning of the game script initialization. An example of this is the default font, or the default canvas (to get the screen size). These are declared as `<const>` just after the *modules inclusion* section. Despite being objects, since they are immutable, the are also to be declared UPPERCASE.
+
+This is typical example:
+
+```lua
+-- ... omissis...
+local Vector2D = require("tofu.util.vector2d")
+
+local Boid = require('lib.boid')
+local Rules = require('lib.rules')
+
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+-- ... omissis...
+```
+
+## Palette Setup
+
+As a common convention, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display.palette()` method.
+
+> Achtung! Don't use the main class constructor to setup the initial palette. The constructor of the class should be used only to initialize the game internal structure/objects. Of course, 'though, it will work flawlessy anyway. :)
