@@ -48,6 +48,11 @@ local World = require("tofu.physics.world")
 
 local Bunny = require("lib/bunny")
 
+local PALETTE <const> = Palette.default("nes")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local INITIAL_BUNNIES <const> = 1
 local LITTER_SIZE <const> = 5
 local MAX_BUNNIES <const> = 32768
@@ -55,33 +60,27 @@ local MAX_BUNNIES <const> = 32768
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("nes"))
-
-  local canvas = Canvas.default()
-
-  local width, height = canvas:image():size()
-
   self.bunnies = {}
   self.bank = Bank.new(Image.new("assets/bunnies.img"), "assets/bunnies.sheet")
   self.font = Font.default()
 
   self.world = World.new(0.0, 200.0)
 
-  local left = self.world:spawn("box", 1, height, 0)
+  local left = self.world:spawn("box", 1, HEIGHT, 0)
   left:type("static") -- Can either be kinematic or static (the latter is better)
-  left:position(0, height * 0.5)
+  left:position(0, HEIGHT * 0.5)
   left:elasticity(1.0)
   self.left = left
 
-  local bottom = self.world:spawn("box", width, 1, 0)
+  local bottom = self.world:spawn("box", WIDTH, 1, 0)
   bottom:type("static")
-  bottom:position(width * 0.5, height)
+  bottom:position(WIDTH * 0.5, HEIGHT)
   bottom:elasticity(1.0)
   self.bottom = bottom
 
-  local right = self.world:spawn("box", 1, height, 0)
+  local right = self.world:spawn("box", 1, HEIGHT, 0)
   right:type("static")
-  right:position(width, height * 0.5)
+  right:position(WIDTH, HEIGHT * 0.5)
   right:elasticity(1.0)
   self.right = right
 
@@ -91,6 +90,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -122,20 +122,15 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, _ = image:size()
-  image:clear(0)
-
+function Main:render(canvas, _)
   for _, bunny in ipairs(self.bunnies) do
     bunny:render(canvas)
   end
 
   canvas:push()
     canvas:shift(1, 2)
-    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-    canvas:write(width, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
   canvas:pop()
 end
 

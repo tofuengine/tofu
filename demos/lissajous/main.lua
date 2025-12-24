@@ -45,9 +45,13 @@ local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Controller = require("tofu.input.controller")
 
+local PALETTE <const> = Palette.new(256)
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local HALF_WIDTH <const>, HALF_HEIGHT <const> = WIDTH * 0.5, HEIGHT * 0.5
+
 -- See: https://en.wikipedia.org/wiki/Lissajous_curve
---local WIDTH <const>, HEIGHT <const> = Canvas.default():image():size()
-local HALF_WIDTH <const>, HALF_HEIGHT <const> = Canvas.default():image():center()
 
 local DRAWS_PER_FRAME = 25
 local STEP = 0.0005
@@ -62,9 +66,6 @@ local function _create_bank()
 end
 
 function Main:__ctor()
-  Display.palette(Palette.new(256))
-
-  self.font = Font.default()
   self.bank = _create_bank();
 
   self.a = 1
@@ -77,6 +78,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -107,8 +109,8 @@ function Main:update(_)
   self:handle_input(_)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
+function Main:render(canvas, _)
+  --!!! DON'T CLEAR THE CANVAS !!!
 
   local t = self.age
   for _ = 1, DRAWS_PER_FRAME do
@@ -120,7 +122,7 @@ function Main:render(_)
   end
   self.age = t
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

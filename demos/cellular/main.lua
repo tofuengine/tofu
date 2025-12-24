@@ -48,22 +48,21 @@ local Grid2D = require("tofu.util.grid2d")
 local Main = Class.define()
 
 local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local SAND <const> = PALETTE:match(255, 255, 0)
 local CURSOR <const> = PALETTE:match(255, 255, 255)
 
 function Main:__ctor()
-  Display.palette(PALETTE)
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
   self.font = Font.default()
-  self.grid = Grid2D.new(width, height, { 0 })
-  self.dirg = Grid2D.new(width, height, { 0 })
+  self.grid = Grid2D.new(WIDTH, HEIGHT, { 0 })
+  self.dirg = Grid2D.new(WIDTH, HEIGHT, { 0 })
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -118,11 +117,7 @@ local function draw_cursor(canvas, x, y, size, color)
   canvas:line(x - size, y, x + size, y, color)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
+function Main:render(canvas, _)
   self.grid:scan(function(column, row, value)
       if value == 1 then
         canvas:point(column, row, SAND)
@@ -133,7 +128,7 @@ function Main:render(_)
   local cx, cy = cursor:position()
   draw_cursor(canvas, cx, cy, 2, CURSOR)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

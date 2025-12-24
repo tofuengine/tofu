@@ -46,7 +46,10 @@ local Font = require("tofu.graphics.font")
 local Controller = require("tofu.input.controller")
 local Cursor = require("tofu.input.cursor")
 
-local Main = Class.define()
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local IDS <const> = {
     "a", "b", "x", "y",
@@ -62,16 +65,16 @@ local INDICES <const> = {
     24, 25
   }
 
-function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
+local Main = Class.define()
 
+function Main:__ctor()
   self.bank = Bank.new(Image.new("assets/sheet.img"), 12, 12)
-  self.font = Font.default()
   self.down = {}
   self.scale = {}
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -116,17 +119,12 @@ local function draw_trigger(canvas, cx, cy, radius, magnitude)
   canvas:circle("line", cx, cy, radius, 1)
 end
 
-function Main:render(_)
+function Main:render(canvas, _)
   local t = System.time()
 
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
   local cw, ch = self.bank:size(Bank.NIL)
-  local width, height = image:size()
 
-  local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5
+  local x, y = (WIDTH - #IDS * cw) * 0.5, (HEIGHT - ch) * 0.5
   for index, id in ipairs(IDS) do
     local dy = math.sin(t * 2.5 + x * 0.5) * ch
     if self.down[id] then
@@ -144,7 +142,7 @@ function Main:render(_)
   end
 
   local controller = Controller.default()
-  local cy = height * 0.5
+  local cy = HEIGHT * 0.5
   local lx, ly, la, lm = controller:stick("left")
   local rx, ry, ra, rm = controller:stick("right")
   draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, controller:is_down("lt"))
@@ -161,8 +159,8 @@ function Main:render(_)
   canvas:line(mx, my - 3, mx, my - 1, index)
   canvas:line(mx, my + 1, mx, my + 3, index)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(width, height, self.font, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(WIDTH, HEIGHT, FONT, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
     "right", "bottom")
 end
 

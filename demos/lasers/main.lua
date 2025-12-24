@@ -56,6 +56,10 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
 local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local FOREGROUND <const> = PALETTE:match(255, 255, 255)
 
 local MIN_DISTANCE <const> = 8
@@ -63,12 +67,7 @@ local MIN_DISTANCE <const> = 8
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(PALETTE)
-
-  local canvas = Canvas.default()
-  canvas:transparent(0, false)
-
-  local width, height = canvas:image():size()
+  CANVAS:transparent(0, false)
 
   self.font = Font.default()
   self.colors = {
@@ -80,13 +79,14 @@ function Main:__ctor()
     }
   self.step = 4
   self.lines = {}
-  self.a = { x = width * 0, y = height * 0.5 }
-  self.b = { x = width - 1, y = height * 0.5 }
-  self.c = { x = width * 0.5, y = height * 0.5 }
+  self.a = { x = WIDTH * 0, y = HEIGHT * 0.5 }
+  self.b = { x = WIDTH - 1, y = HEIGHT * 0.5 }
+  self.c = { x = WIDTH * 0.5, y = HEIGHT * 0.5 }
   self.changed = true
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -149,18 +149,14 @@ function Main:update(_) -- delta_time
   self.lines = lines
 end
 
-function Main:render(_) -- ratio
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
+function Main:render(canvas, _) -- ratio
   for _, line in ipairs(self.lines) do
     canvas:polyline(line.points, line.color)
   end
 
   canvas:square("fill", self.c.x - 1, self.c.y - 1, 3, FOREGROUND)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

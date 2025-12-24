@@ -43,20 +43,17 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 
+local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local SHADES <const> = 64 - 1
 
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("famicube")
-  Display.palette(palette)
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, _ = image:size()
-  local half_width = width * 0.5
-
-  self.font = Font.default()
+  local half_width = WIDTH * 0.5
 
   local step = 255 / SHADES
 
@@ -83,29 +80,22 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(palette)
 end
 
 function Main:deinit()
 end
 
 function Main:update(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local _, height = image:size()
-
   local t = System.time() * 2.5
-  local y = math.sin(t) * height * 0.25 + height * 0.5
+  local y = math.sin(t) * HEIGHT * 0.25 + HEIGHT * 0.5
   self.program:wait(0, y - SHADES, 2)
 
   Display.program(self.program)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+function Main:render(canvas, _)
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

@@ -47,21 +47,24 @@ local Palette = require("tofu.graphics.palette")
 
 local Sprite = require("lib/sprite")
 
+local PALETTE <const> = Palette.default("nes")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, _ <const> = CANVAS:image():size()
+
 local LITTER_SIZE = 64
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("vga13h"))
-
   self.sprites = {}
   self.bank = Bank.new(Image.new("assets/images/diamonds.img"), 16, 16)
-  self.font = Font.default()
   self.speed = 1.0
   self.running = true
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -97,16 +100,13 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, _ = image:size()
-  image:clear(0)
+function Main:render(canvas, _)
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
+
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Main

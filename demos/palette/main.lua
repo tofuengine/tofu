@@ -46,50 +46,40 @@ local Display = require("tofu.graphics.display")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Arrays = require("tofu.util.arrays")
 
 require("preload")
 
-local Main = Class.define()
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local AMOUNT <const> = 16
 local PALETTES <const> = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 
-function Main:__ctor()
-  local canvas = Canvas.default()
-  local width, height = canvas:image():size()
+local Main = Class.define()
 
+function Main:__ctor()
   self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
-  self.font = Font.default()
   self.wave = Wave.new("triangle", 10.0, 128.0)
-  self.x_size = width / AMOUNT
-  self.y_size = height / AMOUNT
+  self.x_size = WIDTH / AMOUNT
+  self.y_size = HEIGHT / AMOUNT
   self.palette = 1
   self.scale_x = 1.0
   self.scale_y = -1.0
-  self.x, self.y = canvas:image():center()
+  self.x, self.y = WIDTH / 2, HEIGHT / 2
   self.mode = 0
   self.clipping = false
 
   self.noise = Noise.new("simplex", 1234, 0.02)
-
-  self:_change_palette(Palette.default("pico-8"))
 end
 
 function Main:init()
+  self:_change_palette(PALETTE)
 end
 
 function Main:deinit()
-end
-
-local function _index_of(array, compare, from)
-  local length = #array
-  for index = from or 1, length do
-    local value = array[index]
-    if compare(value) then
-      return index
-    end
-  end
-  return nil
 end
 
 local function _chop(t, len)
@@ -111,10 +101,10 @@ function Main:_change_palette(palette)
       return _to_luminance(a) < _to_luminance(b)
     end);
 
-  local shifting = {} -- Ma each ordered color ([0, 15]) to the actual palette index, for shifting.
+  local shifting = {} -- Match each ordered color ([0, 15]) to the actual palette index, for shifting.
   local colors = _chop(palette:colors(), count)
   for from, color in ipairs(sorted) do
-    local to = _index_of(colors, function(value)
+    local to = Arrays.index_of(colors, function(value)
         return color[1] == value[1] and color[2] == value[2] and color[3] == value[3]
       end)
     shifting[from] = to
@@ -144,11 +134,10 @@ function Main:handle_input()
   elseif controller:is_pressed("x") then
     print("X")
     self.clipping = not self.clipping
-    local canvas = Canvas.default()
     if self.clipping then
-      canvas:clipping(32, 32, 64, 64)
+      CANVAS:clipping(32, 32, 64, 64)
     else
-      canvas:clipping()
+      CANVAS:clipping()
     end
   end
 end
@@ -156,6 +145,7 @@ end
 function Main:update(_)
   self:handle_input()
 
+  -- TODO: set up a timer, here
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
@@ -164,12 +154,7 @@ function Main:update(_)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-  image:clear(0)
-
+function Main:render(canvas, _)
   local time = System.time()
 
   if self.mode == 0 then
@@ -179,7 +164,7 @@ function Main:render(_)
       for j = 0, AMOUNT - 1 do
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
-        local y = (height - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
+        local y = (HEIGHT - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
         canvas:shift(5, color)
         canvas:sprite(x, y, self.bank, index)
       end
@@ -217,15 +202,15 @@ function Main:render(_)
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
 
-    canvas:sprite(width / 2, height / 2, self.bank, 0, scale, scale, rotation)
-    canvas:write(width, height, self.font, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
+    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, scale, scale, rotation)
+    canvas:write(WIDTH, HEIGHT, FONT, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
   elseif self.mode == 5 then
-    canvas:sprite(width / 2, height / 2, self.bank, 0, 10, 10, 256 * 1)
+    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 256 * 1)
   elseif self.mode == 6 then
-    canvas:sprite(width / 2, height / 2, self.bank, 0, 10, 10, 128 * 1)
+    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 128 * 1)
   elseif self.mode == 7 then
-    local x = (width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
-    local y = (height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
+    local x = (WIDTH + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
+    local y = (HEIGHT + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
     canvas:sprite(x - 4, y - 4, self.bank, 0)
   elseif self.mode == 8 then
     canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
@@ -241,8 +226,8 @@ function Main:render(_)
     canvas:pop()
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()), 1.5)
-  canvas:write(width, 0, self.font, string.format("mode: %d", self.mode), "right")
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()), 1.5)
+  canvas:write(WIDTH, 0, FONT, string.format("mode: %d", self.mode), "right")
 end
 
 return Main

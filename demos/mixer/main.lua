@@ -44,7 +44,10 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Source = require("tofu.sound.source")
 
-local Main = Class.define()
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local SOURCES <const> = {
   { name = "assets/flac/1ch-22050-16.flac", type = "sample" },
@@ -56,14 +59,11 @@ local SOURCES <const> = {
   { name = "assets/mods/turrican_iii.xm", type = "module" }
 }
 
-function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
+local Main = Class.define()
 
+function Main:__ctor()
 --  warn("@on")
 --  warn("Hello,", "Again")
-
-  self.font = Font.default(0, 15)
-
   self.sources = {}
   for _, source in ipairs(SOURCES) do
     local instance = Source.new(source.name, source.type)
@@ -79,6 +79,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -139,24 +140,19 @@ function Main:update(_)
   self:handle_input()
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
-  local width, height = image:size()
-
+function Main:render(canvas, _)
   local x, y = 0, 0
   for index, source in ipairs(self.sources) do
       local text = string.format("%s%s %.3f %.3f",
         self.current == index and "*" or " ",
         source.instance:is_playing() and "!" or " ",
         source.pan, source.instance:gain())
-    local _, th = canvas:write(x, y, self.font, text)
+    local _, th = canvas:write(x, y, FONT, text)
     y = y + th
   end
-  canvas:write(x, y, self.font, PROPERTIES[self.property])
-  canvas:write(width, height, self.font, string.format("%d FPS", System.fps()), "right", "bottom")
+
+  canvas:write(x, y, FONT, PROPERTIES[self.property])
+  canvas:write(WIDTH, HEIGHT, FONT, string.format("%d FPS", System.fps()), "right", "bottom")
 end
 
 return Main

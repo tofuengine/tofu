@@ -40,14 +40,19 @@ local System = require("tofu.core.system")
 ---local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Palette = require("tofu.graphics.palette")
 --local Arrays = require("tofu.util.arrays")
 local Vector2D = require("tofu.util.vector2d")
 
 local Boid = require('lib.boid')
 --local Obstacle = require('lib.obstacle')
 local Rules = require('lib.rules')
+
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local BOIDS <const> = 64
 --local OBSTACLES_PADDING <const> = 16
@@ -59,11 +64,9 @@ local RULES <const> = {
   { rule = Rules.cohesion, weight =  2 },
   { rule = Rules.separation, weight = 3 },
   { rule = Rules.follow, weight = 1 },
-  -- scattering
-  -- perching
+  -- TODO: scattering
+  -- TODO: perching
 }
-
-local WIDTH <const>, HEIGHT <const> = Canvas.default():image():size()
 
 local Main = Class.define()
 
@@ -84,9 +87,8 @@ end
 -- end
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
+  --self.is_profiled = true
 
-  self.font = Font.default()
   self.objects = {}
 
   for _ = 1, BOIDS do
@@ -95,6 +97,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -122,16 +125,13 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  canvas:image():clear(0)
-
+function Main:render(canvas, _)
   for _, object in ipairs(self.objects) do
     object:draw(canvas)
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, self.font, string.format("#%d objects", #self.objects), "right")
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(WIDTH, 0, FONT, string.format("#%d objects", #self.objects), "right")
 end
 
 return Main

@@ -45,9 +45,10 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Grid2D = require("tofu.util.grid2d")
 
-local Main = Class.define()
-
-local COLORS <const> = 256
+local PALETTE <const> = Palette.new(256)
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local NOISES <const> = {
     "perlin",
@@ -55,18 +56,13 @@ local NOISES <const> = {
     "cellular"
   }
 
+local Main = Class.define()
+
 function Main:__ctor()
-  local palette = Palette.new(COLORS)
-  Display.palette(palette)
-
-  local canvas = Canvas.default()
-  local width, height = canvas:image():size()
-
   self.current = 1
 
-  self.font = Font.default()
   self.noise = Noise.new(NOISES[self.current])
-  self.grid = Grid2D.new(width, height)
+  self.grid = Grid2D.new(WIDTH, HEIGHT)
 
   self.min = 0
   self.max = 1
@@ -74,6 +70,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -99,10 +96,6 @@ end
 function Main:update(_)
   self:handle_input()
 
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
   local time <const> = System.time() * 0.1
   local nz = time
 
@@ -110,10 +103,10 @@ function Main:update(_)
   local grid = self.grid
   local noise = self.noise
   local min, max = math.huge, -math.huge
-  for y = 0, height - 1 do
-    local ny = y / height + 0.5 -- Scale into `[0, 1]` to make frequency work.
-    for x = 0, width - 1 do
-      local nx = x / width + 0.5 -- Ditto.
+  for y = 0, HEIGHT - 1 do
+    local ny = y / HEIGHT + 0.5 -- Scale into `[0, 1]` to make frequency work.
+    for x = 0, WIDTH - 1 do
+      local nx = x / WIDTH + 0.5 -- Ditto.
 
       local frequency = self.frequency
       local amplitude = 1.0
@@ -140,18 +133,14 @@ function Main:update(_)
   --print(">", min, max)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
-  local scale = (COLORS - 1) / (self.max - self.min)
+function Main:render(canvas, _)
+  local scale = 255 / (self.max - self.min)
   canvas:scan(function(x, y, _)
       local v = self.grid:peek(x, y)
       return math.tointeger((v - self.min) * scale)
     end)
 
-  canvas:write(0, 0, self.font, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
+  canvas:write(0, 0, FONT, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
 end
 
 return Main

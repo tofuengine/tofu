@@ -41,24 +41,23 @@ local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Image = require("tofu.graphics.image")
-local Display = require("tofu.graphics.display")
-local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
 local MovingBunny = require("lib/moving_bunny")
 local StaticBunny = require("lib/static_bunny")
 
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local INITIAL_BUNNIES = 15000
 local LITTER_SIZE = 250
 local MAX_BUNNIES = 32768
 
-local WIDTH <const>, HEIGHT <const> = Canvas.default():image():size()
-
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
-
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
 
@@ -76,6 +75,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -119,16 +119,13 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  canvas:image():clear(0)
-
+function Main:render(canvas, _)
   for _, bunny in ipairs(self.bunnies) do
     bunny:render(canvas)
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, self.font, string.format("#%d bunnies", #self.bunnies), "right")
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
 end
 
 return Main

@@ -44,28 +44,29 @@ local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
+local PALETTE <const> = Palette.default("pico-8-ext")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local SIZE <const> = 4
 local RADIUS <const> = SIZE * 0.5
 
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("pico-8-ext")
-  Display.palette(palette)
-
-  self.palette = palette
-  self.font = Font.default()
   self.factor = 0.75
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
+  local controller = Controller.default() -- TODO: move after the require calls?
   if controller:is_pressed("left") then
     self.factor = self.factor - 0.01
   elseif controller:is_pressed("right") then
@@ -77,15 +78,10 @@ function Main:update(_)
   self:handle_input()
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-  image:clear(0)
+function Main:render(canvas, _)
+  local x = WIDTH * 0.5
 
-  local x = width * 0.5
-
-  for y = 0, height, SIZE * 2 do
+  for y = 0, HEIGHT, SIZE * 2 do
     local coords = {}
     for i = 0, 1 do
       local t = System.time() * 2 + y * self.factor + math.pi * i
@@ -100,18 +96,18 @@ function Main:render(_)
     for px = coords[1].x, coords[2].x, delta_x do
       local r = (px - coords[1].x) / (coords[2].x - coords[1].x)
       local v = Math.lerp(coords[1].v, coords[2].v, r)
-      local index = self.palette:match(v, v, v)
+      local index = PALETTE:match(v, v, v)
       canvas:point(px, py, index)
     end
 
     local v1 = coords[1].v
-    canvas:circle("fill", coords[1].x, coords[1].y, RADIUS, self.palette:match(v1, v1, v1))
+    canvas:circle("fill", coords[1].x, coords[1].y, RADIUS, PALETTE:match(v1, v1, v1))
 
     local v2 = coords[2].v
-    canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:match(v2, v2, v2))
+    canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, PALETTE:match(v2, v2, v2))
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

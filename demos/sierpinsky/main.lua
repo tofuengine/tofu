@@ -43,11 +43,16 @@ local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
-local Main = Class.define()
+local PALETTE <const> = Palette.default("pico-8")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local MARGIN <const> = 16
 local POINTS_PER_SECOND <const> = 8192
 local RESET_AFTER <const> = 10
+
+local Main = Class.define()
 
 local function _mid_point(a, b)
   return {
@@ -57,20 +62,13 @@ local function _mid_point(a, b)
 end
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
-
-  self.font = Font.default()
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
-  self.buffer = Canvas.new(Image.new(width, height))
+  self.buffer = Canvas.new(Image.new(WIDTH, HEIGHT))
 
   self.age = math.huge
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -121,12 +119,10 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_) -- ratio
-  local canvas = Canvas.default()
-
+function Main:render(canvas, _) -- ratio
   canvas:copy(self.buffer:image())
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

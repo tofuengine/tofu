@@ -46,27 +46,26 @@ local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 
+local PALETTE <const> = Palette.default("nes")
+local FONT <const> = Font.default()
+local BIG_FONT <const> = Font.default("32x64")
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("nes"))
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
-  self.font = Font.default()
   self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
-  self.big_font = Font.default("32x64")
   self.running = true
   self.time = 0
   self.dx = 0
   self.dy = 0
-  self.x = width * 0.5
-  self.y = height * 0.25
+  self.x = WIDTH * 0.5
+  self.y = HEIGHT * 0.25
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -106,12 +105,8 @@ function Main:update(delta_time)
   self.x = self.x + self.dx * 64 * delta_time
   self.y = self.y + self.dy * 64 * delta_time
 
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
   local t = self.time
-  local y = math.sin(t * 2.5) * height * 0.125 + height * 0.25
+  local y = math.sin(t * 2.5) * HEIGHT * 0.125 + HEIGHT * 0.25
 
   local program = Program.new()
   program:wait(0, 0)
@@ -132,32 +127,26 @@ function Main:update(delta_time)
     program:color(1, v, 0x00, v)
     program:color(31, v, v, 0x00)
   end
-  program:wait(0, height * 0.5)
+  program:wait(0, HEIGHT * 0.5)
   program:color(0, 0x00, 0x11, 0x44)
   program:color(1, 0x00, 0x11, 0x44)
   program:color(31, 0x00, 0x11, 0x44)
-  program:modulo(-width * 2)
-  for i = height // 2, height - 1 do
+  program:modulo(-WIDTH * 2)
+  for i = HEIGHT // 2, HEIGHT - 1 do
     program:wait(0, i)
     program:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
   end
   Display.program(program)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local _, height = image:size()
-
-  image:clear(0)
-
+function Main:render(canvas, _)
   local t = self.time
-  local y = math.sin(t * 0.5) * height * 0.125 + height * 0.25
-  canvas:write(0, y, self.big_font, "TOFU ENGINE")
+  local y = math.sin(t * 0.5) * HEIGHT * 0.125 + HEIGHT * 0.25
+  canvas:write(0, y, BIG_FONT, "TOFU ENGINE")
 
   canvas:sprite(self.x, self.y, self.bank, 12, 4, 4, 0)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

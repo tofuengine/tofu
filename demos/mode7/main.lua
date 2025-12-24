@@ -45,6 +45,11 @@ local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local XForm = require("tofu.graphics.xform")
 
+local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local WRAP_MODES <const> = {
   "repeat", "edge", "border", "mirror-repeat", "mirror-edge", "mirror-border"
 }
@@ -52,13 +57,8 @@ local WRAP_MODES <const> = {
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("famicube")
-  Display.palette(palette)
+  self.background = PALETTE:match(31, 31, 63)
 
-  local canvas = Canvas.default()
-  self.background = palette:match(31, 31, 63)
-
-  self.font = Font.default("5x8")
   self.surface = Image.new("assets/road.img")
   self.xform = XForm.new()
   self.running = true
@@ -70,14 +70,13 @@ function Main:__ctor()
   self.speed = 0.0
   self.elevation = 48
 
-  local image = canvas:image()
-  local width, height = image:size()
   self.xform:wrap(WRAP_MODES[self.wrap])
-  self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
-  self.xform:project(height, math.pi * 0.5 - self.angle, self.elevation)
+  self.xform:matrix(1, 0, 0, 1, WIDTH * 0.5, HEIGHT * 0.5)
+  self.xform:project(HEIGHT, math.pi * 0.5 - self.angle, self.elevation)
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -142,25 +141,21 @@ function Main:update(delta_time)
   self.xform:offset(-self.x, -self.y)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
+function Main:render(canvas, _)
+  canvas:clear(self.background)
 
-  image:clear(self.background)
+--  canvas:rectangle("fill", 0, 0, WIDTH, HEIGHT * 0.25, 21)
+  canvas:xform(0, HEIGHT * 0.25, self.surface, self.xform)
 
---  canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
-  canvas:xform(0, height * 0.25, self.surface, self.xform)
-
-  local cx, cy = width * 0.5, height * 0.5
+  local cx, cy = WIDTH * 0.5, HEIGHT * 0.5
   canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)
 
   canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(width, 0, self.font, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
-  canvas:write(width, height, self.font, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(WIDTH, 0, FONT, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
+  canvas:write(WIDTH, HEIGHT, FONT, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
 end
 
 return Main

@@ -45,13 +45,15 @@ local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
+local PALETTE <const> = Palette.default("nes")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("nes"))
-
   self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
-  self.font = Font.default()
 
   self.x, self.y = 0, 0
   self.x_speed, self.y_speed = 0, 0
@@ -62,6 +64,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -110,21 +113,17 @@ function Main:update(delta_time)
   self.y = self.y + self.y_speed * delta_time
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(45)
+function Main:render(canvas, _)
+  canvas:clear(45)
 
-  local width, height = image:size()
   local x, y = self.x, self.y
-
   for _ = 1, 1 do
     canvas:sprite(x, y, self.bank, 9,
       self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale)
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
-  canvas:write(width, height, self.font, string.format("S:%.2f X:%s Y:%s",
+  canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
+  canvas:write(WIDTH, HEIGHT, FONT, string.format("S:%.2f X:%s Y:%s",
     self.scale, self.flip_x, self.flip_y), "right", "bottom")
 end
 

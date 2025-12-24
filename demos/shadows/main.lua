@@ -40,31 +40,30 @@ local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
 local Cursor = require("tofu.input.cursor")
 local Bank = require("tofu.graphics.bank")
-local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
-local Main = Class.define()
+local PALETTE <const> = Palette.default("nes")
+local FONT <const> = Font.default()
 
 local SPEED <const> = 32
+
+local Main = Class.define()
 
 --384 x 224 pixels
 
 function Main:__ctor()
-  local palette = Palette.default("nes") -- R3G3B2
-  Display.palette(palette)
-
   self.background = Image.new("assets/background.img")
   self.bank = Bank.new(Image.new("assets/sheet.img"), 32, 32)
-  self.font = Font.default()
   self.velocity = { x = 0, y = 0 }
   self.position = { x = 0, y = 0 }
   self.cursor = { x = 0, y = 0 }
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -103,24 +102,15 @@ function Main:update(delta_time)
   self.cursor.x, self.cursor.y = cursor:position()
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
+function Main:render(canvas, _)
 --  local time = System.time()
-
-  if self.apply then
-    local w, h = self.stamp:size()
-    canvas:blend(self.cursor.x - (w * 0.5), self.cursor.y - (h * 0.5), self.stamp, "add", self.background)
-  end
 
   canvas:copy(self.background)
 
   canvas:push()
     canvas:transparent(255, true)
     canvas:sprite(self.position.x, self.position.y, self.bank, 0)
-    canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
+    canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
   canvas:pop()
 
   canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)

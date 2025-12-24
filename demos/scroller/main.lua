@@ -44,7 +44,14 @@ local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 local Controller = require("tofu.input.controller")
 
-local Main = Class.define()
+local SPEED_IN_PIXELS_PER_SECOND <const> = -16.0
+local FONT_HEIGHT <const> = 8
+local FONT_WIDTH <const> = 8
+
+local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.from_image("assets/images/font-8x8.img", FONT_WIDTH, FONT_HEIGHT)
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local GRADIENTS <const> = 32
 local STEP <const> = 2
@@ -78,17 +85,9 @@ local LINES <const> = {
   "Hello, World! #22",
 }
 
-local SPEED_IN_PIXELS_PER_SECOND <const> = -16.0
-local FONT_HEIGHT <const> = 8
-local FONT_WIDTH <const> = 8
+local Main = Class.define()
 
 function Main:__ctor()
-  local palette <const> = Palette.default("famicube")
-  Display.palette(palette)
-
-  local canvas <const> = Canvas.default()
-  local _, height <const> = canvas:image():size()
-
   local program = Program.new()
   for i = 0, GRADIENTS do
     local y <const> = i * STEP
@@ -98,7 +97,7 @@ function Main:__ctor()
     program:color(FONT_INDEX, v, v, v)
   end
   for i = GRADIENTS, 0, -1 do
-    local y <const> = height - STEP - i * STEP
+    local y <const> = HEIGHT - STEP - i * STEP
     program:wait(0, y)
     local ratio = i / GRADIENTS
     local v = math.tointeger(255.0 * ratio)
@@ -106,13 +105,13 @@ function Main:__ctor()
   end
   Display.program(program)
 
-  self.font = Font.from_image("assets/images/font-8x8.img", FONT_WIDTH, FONT_HEIGHT)
-  self.offset = height
+  self.offset = HEIGHT
   self.current = 1
   self.running = true
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -139,27 +138,21 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
-  local width <const>, height <const> = image:size()
-
-  local x <const> = width * 0.5
+function Main:render(canvas, _)
+  local x <const> = WIDTH * 0.5
   local y <const> = self.offset
-  local lines_on_screen <const> = math.tointeger(math.ceil((height - self.offset) / FONT_HEIGHT))
+  local lines_on_screen <const> = math.tointeger(math.ceil((HEIGHT - self.offset) / FONT_HEIGHT))
   local lines_available <const> = #LINES - self.current
   local lines_to_render <const> = math.min(lines_available, lines_on_screen)
 
   for i = 0, lines_to_render do
     local index <const> = self.current + i
-    canvas:write(x, y + i * FONT_HEIGHT, self.font, LINES[index], "center", "top")
+    canvas:write(x, y + i * FONT_HEIGHT, FONT, LINES[index], "center", "top")
   end
 
   canvas:push()
     canvas:shift(FONT_INDEX, 31)
-    canvas:write(0, 0, self.font, string.format("%d", System.fps()))
+    canvas:write(0, 0, FONT, string.format("%d", System.fps()))
   canvas:pop()
 end
 

@@ -38,7 +38,6 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
-local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
@@ -104,11 +103,7 @@ function Main:update(_)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
+function Main:render(canvas, _)
   canvas:copy(self.bottom)
   -- self.top:process(function(x, y, from, to)
   --     local pixel = self.mask:peek(x, y)
@@ -120,9 +115,8 @@ function Main:render(_)
   --   end, canvas)
   canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
-  local width, _ = image:size()
   canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
-  canvas:write(width, 0, self.font, string.format("M: %d, T: %d", self.mode, self.threshold), "right")
+  canvas:write(0, 8, self.font, string.format("M: %d, T: %d", self.mode, self.threshold))
 end
 
 return Main

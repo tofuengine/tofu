@@ -39,7 +39,7 @@ local Class = require("tofu.core.class")
 local Log = require("tofu.core.log")
 local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
-local Canvas = require("tofu.graphics.canvas")
+--local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
@@ -48,6 +48,9 @@ local bump = require("lib/bump")
 
 local PALETTE <const> = Palette.default("famicube")
 local FONT <const> = Font.default()
+-- local CANVAS <const> = Canvas.default()
+-- local WIDTH, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local LIFE <const> = 2.0
 
@@ -61,10 +64,8 @@ function Main:_add_block(x, y, w, h)
 end
 
 function Main:__ctor()
-  Display.palette(PALETTE)
-
-  local canvas = Canvas.default()
-  canvas:transparent({ [0] = false, [63] = true })
+  self.is_profiled = true
+  self.profiling_info = 64
 
   self.player = { x = 50, y = 50, w = 20, h = 20, speed = 80 }
 
@@ -79,36 +80,37 @@ function Main:__ctor()
   self:_add_block(0,      600-32, 800, 32)
 
   for _ = 1, 30 do
-    self:_add_block(math.random(100, 600),
-                    math.random(100, 400),
-                    math.random(10, 100),
-                    math.random(10, 100)
-    )
+    self:_add_block(
+        math.random(100, 600),
+        math.random(100, 400),
+        math.random(10, 100),
+        math.random(10, 100)
+      )
   end
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     collectgarbage("collect")
   end
 
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.dx = 1
-  elseif controller:is_down("left") then
+  elseif CONTROLLER:is_down("left") then
     self.dx = -1
   else
     self.dx = 0
   end
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.dy = 1
-  elseif controller:is_down("up") then
+  elseif CONTROLLER:is_down("up") then
     self.dy = -1
   else
     self.dy = 0
@@ -166,14 +168,14 @@ function Main:draw_player(canvas)
   _box(canvas, self.player, 0, 255, 0)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  canvas:clear(0)
-
+function Main:render(canvas, _)
   self:draw_blocks(canvas)
   self:draw_player(canvas)
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:push()
+    canvas:shift(1, 2)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:pop()
 end
 
 return Main

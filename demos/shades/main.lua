@@ -43,9 +43,13 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Controller = require("tofu.input.controller")
 
-local PALETTE
-local STEPS
-local LEVELS
+local PALETTE <const> = Palette.new(3, 3, 2) --"famicube")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
+local STEPS = PALETTE:size()
+local LEVELS = STEPS
 local TARGET = { 0, 0, 0 }
 
 local function build_table(palette, levels, target)
@@ -67,24 +71,15 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  PALETTE = Palette.new(3, 3, 2) --"famicube")
-  STEPS = PALETTE:size()
-  LEVELS = STEPS
-
-  Display.palette(PALETTE)
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
   self.lut = build_table(PALETTE, LEVELS, TARGET)
   self.font = Font.default()
-  self.width = width / STEPS
-  self.height = height / STEPS
+  self.width = WIDTH / STEPS
+  self.height = HEIGHT / STEPS
   self.mode = 0
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -101,11 +96,8 @@ function Main:update(_)
   self:handle_input()
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-  image:clear(0)
+function Main:render(canvas, _)
+  local image <const> = canvas:image()
 
   for i = 0, STEPS - 1 do
     local y = self.height * i
@@ -121,23 +113,23 @@ function Main:render(_)
     for i = 0, STEPS - 1 do
       local y = self.height * i
       canvas:shift(self.lut[i])
-      canvas:blit(0, y, image, 0, y, width, self.height)
+      canvas:blit(0, y, image, 0, y, WIDTH, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
       canvas:shift(self.lut[i])
-      canvas:blit(i, 0, image, i, 0, 1, height)
-      canvas:blit(width - 1 - i, 0, image, width - 1 - i, 0, 1, height)
+      canvas:blit(i, 0, image, i, 0, 1, HEIGHT)
+      canvas:blit(WIDTH - 1 - i, 0, image, WIDTH - 1 - i, 0, 1, HEIGHT)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     canvas:shift(self.lut[index])
-    canvas:blit(0, 0, image, 0, 0, width, height / 2)
+    canvas:blit(0, 0, image, 0, 0, WIDTH, HEIGHT / 2)
   end
   canvas:pop()
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

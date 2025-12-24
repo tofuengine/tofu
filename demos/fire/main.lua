@@ -44,26 +44,25 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Grid2D = require("tofu.util.grid2d")
 
-local STEPS = 64
-local PALETTE = {
+local COLORS <const> = {
     { 0x00, 0x00, 0x00 }, { 0x24, 0x00, 0x00 }, { 0x48, 0x00, 0x00 }, { 0x6D, 0x00, 0x00 },
     { 0x91, 0x00, 0x00 }, { 0xB6, 0x00, 0x00 }, { 0xDA, 0x00, 0x00 }, { 0xFF, 0x00, 0x00 },
     { 0xFF, 0x3F, 0x00 }, { 0xFF, 0x7F, 0x00 }, { 0xFF, 0xBF, 0x00 }, { 0xFF, 0xFF, 0x00 },
     { 0xFF, 0xFF, 0x3F }, { 0xFF, 0xFF, 0x7F }, { 0xFF, 0xFF, 0xBF }, { 0xFF, 0xFF, 0xFF }
   }
 
+local PALETTE <const> = Palette.new(COLORS)
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
+local STEPS <const> = 64
+
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new(PALETTE))
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
-  self.font = Font.default()
-  self.x_size = width / STEPS
-  self.y_size = height / STEPS
+  self.x_size = WIDTH / STEPS
+  self.y_size = HEIGHT / STEPS
   self.windy = false
   self.damping = 1.0
   self.grid = Grid2D.new(STEPS, STEPS, { 0 })
@@ -72,6 +71,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -80,7 +80,7 @@ end
 function Main:reset()
   self.grid:process(function(column, row, _)
     if row == STEPS - 1 then
-      return column, row, #PALETTE - 1
+      return column, row, #COLORS - 1
     end
     return column, row, 0
   end)
@@ -130,12 +130,7 @@ function Main:update(_)
     end)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, _ = image:size()
-  image:clear(0)
-
+function Main:render(canvas, _)
   local w = self.x_size
   local h = self.y_size
   self.grid:scan(function(column, row, value)
@@ -146,8 +141,11 @@ function Main:render(_)
       end
     end)
 
-    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-    canvas:write(width, 0, self.font, string.format("D: %.2f", self.damping), "right")
+    canvas:push()
+      canvas:shift(1, 12)
+      canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+      canvas:write(WIDTH, 0, FONT, string.format("D: %.2f", self.damping), "right")
+    canvas:pop()
 end
 
 return Main
