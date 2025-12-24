@@ -45,6 +45,11 @@ local Controller = require("tofu.input.controller")
 local Source = require("tofu.sound.source")
 local Grid2D = require("tofu.util.grid2d")
 
+local PALETTE <const> = Palette.default("gameboy")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local INITIAL_LENGTH <const> = 5
 local SPEED_RATIO <const> = 5
 local CELL_SIZE <const> = 8
@@ -98,15 +103,7 @@ local SOURCES <const> = {
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("gameboy")
-  Display.palette(palette)
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
-  self.font = Font.default()
-  self.grid = Grid2D.new(width // CELL_SIZE, height // CELL_SIZE, { 0 })
+  self.grid = Grid2D.new(WIDTH // CELL_SIZE, HEIGHT // CELL_SIZE, { 0 })
 
   self.sources = {}
   for _, source in ipairs(SOURCES) do
@@ -118,6 +115,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -217,12 +215,7 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-  image:clear(0)
-
+function Main:render(canvas, _)
   self.grid:scan(function(column, row, value)
       local x = column * CELL_SIZE
       local y = row * CELL_SIZE
@@ -237,15 +230,15 @@ function Main:render(_)
 
     if self.state == "game-over" then
       local points <const> = (self.length - INITIAL_LENGTH) * 10
-      canvas:write(width * 0.5, height * 0.25, self.font,
+      canvas:write(WIDTH * 0.5, HEIGHT * 0.25, FONT,
         "GAME OVER", "center", "middle", 4, 4)
-      canvas:write(width * 0.5, height * 0.50, self.font,
+      canvas:write(WIDTH * 0.5, HEIGHT * 0.50, FONT,
         string.format("Your final score is %d", points), "center", "middle", 2, 2)
-      canvas:write(width * 0.5, height * 0.75, self.font,
+      canvas:write(WIDTH * 0.5, HEIGHT * 0.75, FONT,
         "-- press start --", "center", "middle", 2, 2)
     end
 
-    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

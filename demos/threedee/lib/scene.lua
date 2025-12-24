@@ -60,7 +60,7 @@ local function _build_table(palette, levels, target, excluded)
     local ratio = i / (levels - 1)
     for j, color in ipairs(colors) do
       local index = j - 1
-      if Arrays.index_of(excluded, index) then
+      if Arrays.index_of(excluded, function(value) return value == index end) then
         shifting[index] = index
       else
         local ar, ag, ab = table.unpack(color)

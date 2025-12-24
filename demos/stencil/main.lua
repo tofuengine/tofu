@@ -43,6 +43,9 @@ local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
+local PALETTE <const> = Palette.default("famicube")
+local FONT <const> = Font.default()
+
 local COMPARATORS <const> = {
   "never",
   "less",
@@ -57,23 +60,19 @@ local COMPARATORS <const> = {
 local Main = Class.define()
 
 function Main:__ctor()
-  local color = Palette.default("famicube")
-
-  self.font = Font.default()
   self.top = Image.new("assets/top.img")
   self.bottom = Image.new("assets/bottom.img")
   self.mask = Image.new("assets/gradient.img")
   self.comparator = 1
   self.threshold = 255
   self.mode = 0
-  self.limit = color:size()
+  self.limit = PALETTE:size()
 
   --  canvas:transparent(0, false)
-
-  Display.palette(color)
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -115,8 +114,8 @@ function Main:render(canvas, _)
   --   end, canvas)
   canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
-  canvas:write(0, 0, self.font, string.format("%.1f FPS", System.fps()))
-  canvas:write(0, 8, self.font, string.format("M: %d, T: %d", self.mode, self.threshold))
+  canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
+  canvas:write(0, 8, FONT, string.format("M: %d, T: %d", self.mode, self.threshold))
 end
 
 return Main

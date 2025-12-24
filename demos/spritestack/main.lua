@@ -46,9 +46,11 @@ function Main:__ctor()
 end
 
 function Main:init()
+  self.game:init()
 end
 
 function Main:deinit()
+  self.game:deinit()
 end
 
 function Main:update(delta_time)
@@ -56,8 +58,8 @@ function Main:update(delta_time)
   self.game:update(delta_time)
 end
 
-function Main:render(ratio)
-  self.game:render(ratio)
+function Main:render(canvas, ratio)
+  self.game:render(canvas, ratio)
 end
 
 return Main

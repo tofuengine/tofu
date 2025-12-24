@@ -44,24 +44,23 @@ local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
+local PALETTE <const> = Palette.default("6-bit-bw")
+local CANVAS <const> = Canvas.default()
+local FONT <const> = Font.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("6-bit-bw"))
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
   self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
-  self.font = Font.default()
 
   local cw, ch = self.bank:size(Bank.NIL)
-  self.columns = width / cw
-  self.rows = height / ch
+  self.columns = WIDTH / cw
+  self.rows = HEIGHT / ch
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -70,16 +69,11 @@ end
 function Main:update(_)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, _ = image:size()
-  image:clear(0)
-
+function Main:render(canvas, _)
   local time = System.time() * 7.5
 
   local cw, ch = self.bank:size(Bank.NIL)
-  local x, y = (width - cw) * 0.5, 0
+  local x, y = (WIDTH - cw) * 0.5, 0
 
   for row = 1, self.rows do
 --    local cell_id = math.tointeger((math.sin(time + row * 0.5) + 1) * 0.5 * 9)
@@ -90,7 +84,7 @@ function Main:render(_)
 
   canvas:push()
     canvas:shift(1, 63)
-    canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
   canvas:pop()
 end
 

@@ -46,6 +46,11 @@ local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
+local PALETTE <const> = Palette.default("pico-8")
+local CANVAS <const> = Canvas.default()
+local FONT <const> = Font.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local EASINGS = {
     "linear",
     "quadratic-in", "quadratic-out", "quadratic-in-out",
@@ -65,25 +70,20 @@ local PERIOD = 5.0
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
-
   self.tweeners = {}
   for _, easing in ipairs(EASINGS) do
     table.insert(self.tweeners, Tweener.new(easing))
   end
 
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-  local x0, y0 = width * 0.25, height * 0
-  self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
+  local x0, y0 = WIDTH * 0.25, HEIGHT * 0
+  self.area = { x = x0, y = y0, width = WIDTH * 0.50, height = HEIGHT * 1 }
 
   self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
-  self.font = Font.default()
   self.wave = Wave.new("triangle", PERIOD)
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -98,11 +98,7 @@ function Main:_evaluate(t)
   return math.min(math.max(y, 0.0), 1.0)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
+function Main:render(canvas, _)
   local ratio = self:_evaluate(System.time()) -- The waves have values in the range [-1, +1].
 
   local area = self.area
@@ -116,7 +112,7 @@ function Main:render(_)
     y = y + ch
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

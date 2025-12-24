@@ -44,6 +44,11 @@ local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 local Vector2D = require("tofu.util.vector2d")
 
+local PALETTE <const> = Palette.default("pico-8")
+local CANVAS <const> = Canvas.default()
+local FONT <const> = Font.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local function square(canvas, x, y, s, r, g, b)
 --  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
   local index = math.floor(math.min(1.0, r * g + b) * 15)
@@ -53,25 +58,17 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
-
-  local canvas = Canvas.default()
-  canvas:transparent(0, false)
-
-  local image = canvas:image()
-  local width, height = image:size()
-  self.m = Vector2D.new(width - 1, height - 1)
+  self.m = Vector2D.new(WIDTH - 1, HEIGHT - 1)
   self.c = Vector2D.new(self.m)
   self.c:smul(0.5)
   self.fan = false
-
-  self.font = Font.default()
 
   self.time = 0
   self.running = true
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -94,9 +91,10 @@ function Main:update(delta_time)
   self.time = self.time + delta_time
 end
 
-function Main:render(_)
-  local canvas = Canvas:default()
-  -- Note that we *don't* clear the canvas on purpose!!!
+function Main:render(canvas, _)
+  -- **************************************
+  -- *** CANVAS NEEDS NOT TO BE CLEARED ***
+  -- **************************************
 
   local m = self.m
   local c = self.c
@@ -134,7 +132,7 @@ function Main:render(_)
     end
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

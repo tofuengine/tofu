@@ -47,22 +47,20 @@ local Logo = require("lib/logo")
 local Stars = require("lib/stars")
 local Wave = require("lib/wave")
 
+local PALETTE <const> = Palette.default("nes")
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette = Palette.default("nes")
-  Display.palette(palette)
-
-  local canvas = Canvas.default()
-
   self.pool = Pool.new()
 
-  local width, height = canvas:image():size()
   self.objects = {
-      Background.new(width, height, palette, self.pool),
-      Wave.new(width, height, palette, self.pool),
-      Logo.new(width, height, palette, self.pool),
-      Stars.new(width, height, palette, self.pool)
+      Background.new(WIDTH, HEIGHT, PALETTE, self.pool),
+      Wave.new(WIDTH, HEIGHT, PALETTE, self.pool),
+      Logo.new(WIDTH, HEIGHT, PALETTE, self.pool),
+      Stars.new(WIDTH, HEIGHT, PALETTE, self.pool)
     }
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")
@@ -71,6 +69,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -84,10 +83,7 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  canvas:clear(0)
-
+function Main:render(canvas, _)
   for _, object in ipairs(self.objects) do
     object:render(canvas)
   end

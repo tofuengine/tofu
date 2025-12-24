@@ -50,11 +50,13 @@ local Scene = require("lib/scene")
 
 local config = require("config")
 
-local Main = Class.define()
+local FONT <const> = Font.default()
 
 local CAMERA_FIELD_OF_VIEW <const> = config.camera.field_of_view or math.pi / 4
 local CAMERA_NEAR <const> = config.camera.near or 1
 local CAMERA_FAR <const> = config.camera.far or 1000
+
+local Main = Class.define()
 
 function Main:__ctor()
   local palette <const> = Palette.default(config.display.palette)
@@ -127,18 +129,14 @@ function Main:update(delta_time)
   self.scene:update(delta_time)
 end
 
-function Main:render(_)
+function Main:render(canvas, _)
   local camera <const> = self.camera
-
-  local canvas <const> = Canvas.default()
-  local image <const> = canvas:image()
-  image:clear(59)
 
   self.background:render(canvas)
   self.scene:render(canvas)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(0, 10, self.font, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(0, 10, FONT, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
 end
 
 return Main

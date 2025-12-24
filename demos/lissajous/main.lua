@@ -110,7 +110,9 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
-  --!!! DON'T CLEAR THE CANVAS !!!
+  -- **************************************
+  -- *** CANVAS NEEDS NOT TO BE CLEARED ***
+  -- **************************************
 
   local t = self.age
   for _ = 1, DRAWS_PER_FRAME do

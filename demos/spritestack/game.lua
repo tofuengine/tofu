@@ -49,6 +49,11 @@ local Font = require("tofu.graphics.font")
 
 local Sprite = require("lib/sprite")
 
+local PALETTE <const> = Palette.default("pico-8-ext")
+local CANVAS <const> = Canvas.default()
+local FONT <const> = Font.default()
+local WIDTH <const>, _ <const> = CANVAS:image():size()
+
 local CHUNK_SIZE <const> = 1
 
 local TORQUE <const> = 0.25
@@ -58,13 +63,8 @@ local BRAKE <const> = 25.0
 local Game = Class.define()
 
 function Game:__ctor()
-  local palette = Palette.default("pico-8-ext")
-  Display.palette(palette)
-
-  self.palette = palette
   self.bank = Bank.new(Image.new("assets/images/racing-car-tiny-red.img"), 16, 16)
 --  self.bank = Bank.new(Image.new("assets/images/racing-car-small-red.img"), 32, 32)
-  self.font = Font.default()
   self.tweener = Tweener.new("sine-out")
 
   self.sprites = {}
@@ -75,6 +75,13 @@ function Game:__ctor()
   self.torque = 0
   self.force_life = 0
   self.torque_life = 0
+end
+
+function Game:init()
+  Display.palette(PALETTE)
+end
+
+function Game:deinit()
 end
 
 -- PHYSICS
@@ -94,7 +101,7 @@ function Game:handle_input()
   if controller:is_pressed("start") then
     local cx, cy = Canvas.default():image():center()
     for _ = 1, CHUNK_SIZE do
-      local sprite = Sprite.new(self.bank, 15, 11, 1, self.palette)
+      local sprite = Sprite.new(self.bank, 15, 11, 1, PALETTE)
 --      local sprite = Sprite.new(self.bank, 31, 19, 1)
       sprite:move(cx, cy)
       table.insert(self.sprites, sprite)
@@ -130,18 +137,13 @@ function Game:update(delta_time)
   end
 end
 
-function Game:render(_)
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, _ = image:size()
-  image:clear(0)
-
+function Game:render(canvas, _)
   for _, sprite in ipairs(self.sprites) do
     sprite:render(canvas)
   end
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
-  canvas:write(width, 0, self.font, string.format("#%d sprites", #self.sprites), "right")
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Game

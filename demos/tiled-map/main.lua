@@ -39,20 +39,19 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
 local Display = require("tofu.graphics.display")
-local Canvas = require("tofu.graphics.canvas")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
 local Map = require("lib/map")
 
-local Main = Class.define()
+local PALETTE <const> = Palette.default("gameboy")
+local FONT <const> = Font.default()
 
 local CAMERA_SPEED = 128.0
 
-function Main:__ctor()
-  Display.palette(Palette.default("gameboy"))
+local Main = Class.define()
 
-  self.font = Font.default()
+function Main:__ctor()
   self.map = Map.from_file("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
@@ -67,12 +66,13 @@ function Main:__ctor()
     camera.post_draw = function(me, canvas)
         local x, y = me:to_screen(me.x, me.y)
         canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        canvas:write(me.screen_x + me.screen_width, me.screen_y, self.font, tostring(me), "right")
+        canvas:write(me.screen_x + me.screen_width, me.screen_y, FONT, tostring(me), "right")
       end
   end
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -125,16 +125,14 @@ function Main:update(delta_time)
   self.map:update(delta_time)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  canvas:clear(0)
+function Main:render(canvas, _)
   self.map:draw(canvas)
 
   local camera = self.map:camera_from_id("right")
   local x, y = camera:to_screen(self.player.x, self.player.y)
   canvas:rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  canvas:write(0, 0, self.font, string.format("%d FPS", System.fps()))
+  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 
 return Main

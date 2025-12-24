@@ -41,34 +41,33 @@ local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Pool = require("tofu.timers.pool")
 
+local PALETTE <const> = Palette.default("pico-8")
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.default("pico-8"))
-
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  local width, height = image:size()
-
   self.pool = Pool.new()
 
   self.timerA = self.pool:spawn(0.5, 50, function()
       --local o = Object.new()
-      self.x = math.random() * width
+      self.x = math.random() * WIDTH
     end)
   self.timerB = self.pool:spawn(0.25, -1, function()
-      self.y = math.random() * height
+      self.y = math.random() * HEIGHT
     end)
   self.timerC = self.pool:spawn(15, 0, function()
       self.timerA:cancel()
       self.timerB = nil
     end)
 
-    self.x = math.random() * width
-    self.y = math.random() * height
+    self.x = math.random() * WIDTH
+    self.y = math.random() * HEIGHT
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
@@ -78,12 +77,8 @@ function Main:update(delta_time)
   self.pool:update(delta_time)
 end
 
-function Main:render(_)
+function Main:render(canvas, _)
   --local x = X.new()
-  local canvas = Canvas.default()
-  local image = canvas:image()
-  image:clear(0)
-
   canvas:circle("fill", self.x, self.y, 5, 15)
 end
 
