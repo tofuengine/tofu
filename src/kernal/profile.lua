@@ -152,8 +152,9 @@ end
 -- Returns the report as a numeric table of rows containing the rank, function label,
 -- number of calls, total execution time and source code line number.
 -- @tparam[opt] number limit Maximum number of rows
+-- @tparam[opt] number skip Number of rows to skip from the start
 -- @treturn table Table of rows
-function profile.query(limit)
+function profile.query(limit, skip)
   local t = {}
   for f, n in pairs(_ncalls) do
     if n > 0 then
@@ -161,6 +162,11 @@ function profile.query(limit)
     end
   end
   table.sort(t, profile.comp)
+  if skip then
+    for _ = 1, skip do
+      table.remove(t, 1)
+    end
+  end
   if limit then
     while #t > limit do
       table.remove(t)
@@ -182,9 +188,9 @@ local cols = { 3, 29, 11, 24, 32 }
 -- Returns the report as a string that can be printed to the console.
 -- @tparam[opt] number limit Maximum number of rows
 -- @treturn string Text-based profiling report
-function profile.report(n)
+function profile.report(n, skip)
   local out = {}
-  local report = profile.query(n)
+  local report = profile.query(n, skip)
   for i, row in ipairs(report) do
     for j = 1, 5 do
       local s = row[j]
