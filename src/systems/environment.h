@@ -43,6 +43,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+typedef struct Environment_Configuration_s {
+    bool debug;
+    bool profiling;
+} Environment_Configuration_t;
+
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 typedef enum Environment_Index_e {
     ENVIRONMENT_INDEX_PROCESS,
@@ -71,11 +76,14 @@ typedef struct Environment_State_s {
 } Environment_State_t;
 
 typedef struct Environment_s {
+    Environment_Configuration_t configuration;
+
     const Display_t *display;
+
     Environment_State_t state;
 } Environment_t;
 
-extern Environment_t *Environment_create(const Display_t *display);
+extern Environment_t *Environment_create(const Environment_Configuration_t *configuration, const Display_t *display);
 extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);

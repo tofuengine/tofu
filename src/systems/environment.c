@@ -51,7 +51,7 @@
     #include <psapi.h>
 #endif
 
-Environment_t *Environment_create(const Display_t *display)
+Environment_t *Environment_create(const Environment_Configuration_t *configuration, const Display_t *display)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
@@ -61,6 +61,7 @@ Environment_t *Environment_create(const Display_t *display)
     LOG_D("environment allocated");
 
     *environment = (Environment_t){
+            .configuration = *configuration,
             .display = display,
             .state = (Environment_State_t){
                 .is_active = false,

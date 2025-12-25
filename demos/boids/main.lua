@@ -87,8 +87,6 @@ end
 -- end
 
 function Main:__ctor()
-  --self.is_profiled = true
-
   self.objects = {}
 
   for _ = 1, BOIDS do

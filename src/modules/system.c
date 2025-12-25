@@ -36,6 +36,8 @@
 
 #define _MAX_DATE_LENGTH 64
 
+static int system_debug_0_1b(lua_State *L);
+static int system_profiling_0_1b(lua_State *L);
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
@@ -56,6 +58,9 @@ int system_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- getters/setters --
+            { "debug", system_debug_0_1b },
+            { "profiling", system_profiling_0_1b },
             // -- accessors --
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
@@ -78,6 +83,30 @@ int system_loader(lua_State *L)
         (const luaX_Const[]){
             { NULL, LUA_CT_NIL, { 0 } }
         });
+}
+
+static int system_debug_0_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
+
+    lua_pushboolean(L, environment->configuration.debug ? 1 : 0);
+
+    return 1;
+}
+
+static int system_profiling_0_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
+
+    lua_pushboolean(L, environment->configuration.profiling ? 1 : 0);
+
+    return 1;
 }
 
 static int system_version_0_3nnn(lua_State *L)

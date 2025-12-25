@@ -56,6 +56,7 @@ typedef struct Configuration_s {
             int major, minor, revision;
         } version;
         bool debug;
+        bool profiling;
         char mappings[CONFIGURATION_MAX_VALUE_LENGTH];
         bool quit_on_close;
     } system;
@@ -90,6 +91,8 @@ typedef struct Configuration_s {
         size_t frames_limit;
     } engine;
 } Configuration_t;
+
+// TODO: switch to TOML or JSON configuration parsing?
 
 extern Configuration_t *Configuration_create(const char *data);
 extern void Configuration_destroy(Configuration_t *configuration);

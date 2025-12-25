@@ -239,7 +239,10 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("audio ready");
 
-    engine->environment = Environment_create(engine->display);
+    engine->environment = Environment_create(&(const Environment_Configuration_t){
+            .debug = engine->configuration->system.debug,
+            .profiling = engine->configuration->system.profiling
+        }, engine->display);
     if (!engine->environment) {
         LOG_F("can't initialize environment");
         goto error_destroy_audio;

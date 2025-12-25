@@ -77,6 +77,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "system-debug") == 0) {
         configuration->system.debug = strcmp(value, "true") == 0;
     } else
+    if (strcmp(fqn, "system-profiling") == 0) {
+        configuration->system.profiling = strcmp(value, "true") == 0;
+    } else
     if (strcmp(fqn, "system-mappings") == 0) {
         strncpy(configuration->system.mappings, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
@@ -260,7 +263,8 @@ Configuration_t *Configuration_create(const char *data)
             .system = {
                 .identity = { 0 },
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
-                .debug = true,
+                .debug = DEBUG,
+                .profiling = false,
                 .mappings = "assets/txt/gamecontrollerdb.txt",
                 .quit_on_close = true
             },

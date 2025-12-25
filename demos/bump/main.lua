@@ -63,9 +63,6 @@ function Main:_add_block(x, y, w, h)
 end
 
 function Main:__ctor()
-  self.is_profiled = true
-  self.profiling_info = 64
-
   self.player = { x = 50, y = 50, w = 20, h = 20, speed = 80 }
 
   -- World creation
