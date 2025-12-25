@@ -159,11 +159,11 @@ local function generate(callback)
   return result
 end
 
-local function index_of(array, search, from)
+local function index_of(array, compare, from)
   local length = #array
   for index = from or 1, length do
     local value = array[index]
-    if value == search then
+    if compare(value) then
       return index
     end
   end
