@@ -202,6 +202,10 @@
 // the average is calculated upon.
 #define TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES 128
 
+// When defined, include the Lua profiling support in the engine. This is
+// normally disabled in the `RELEASE` build.
+#define TOFU_ENGINE_SCRIPT_LEVEL_PROFILING
+
 // ############
 // ### File ###
 // ############
@@ -483,6 +487,7 @@
   #undef TOFU_CORE_DEFENSIVE_CHECKS
   #undef TOFU_ENGINE_PERFORMANCE_STATISTICS
   #undef TOFU_ENGINE_HEAP_STATISTICS
+  #undef TOFU_ENGINE_SCRIPT_LEVEL_PROFILING
   #undef TOFU_FILE_DEBUG_ENABLED
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS

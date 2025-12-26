@@ -40,12 +40,16 @@
 
 #include "display.h"
 
+#include <core/config.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 
 typedef struct Environment_Configuration_s {
     bool debug;
+#if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
     bool profile;
+#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
 } Environment_Configuration_t;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)

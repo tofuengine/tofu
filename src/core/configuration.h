@@ -38,6 +38,7 @@
 #ifndef TOFU_CORE_CONFIGURATION_H
 #define TOFU_CORE_CONFIGURATION_H
 
+#include <core/config.h>
 #include <core/platform.h>
 
 #include <stdbool.h>
@@ -56,7 +57,9 @@ typedef struct Configuration_s {
             int major, minor, revision;
         } version;
         bool debug;
+#if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
         bool profile;
+#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
         char mappings[CONFIGURATION_MAX_VALUE_LENGTH];
         bool quit_on_close;
     } system;

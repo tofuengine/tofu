@@ -37,7 +37,9 @@
 #define _MAX_DATE_LENGTH 64
 
 static int system_debug_0_1b(lua_State *L);
+#if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
 static int system_profile_0_1b(lua_State *L);
+#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
@@ -60,7 +62,9 @@ int system_loader(lua_State *L)
         (const struct luaL_Reg[]){
             // -- getters/setters --
             { "debug", system_debug_0_1b },
+#if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
             { "profile", system_profile_0_1b },
+#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
             // -- accessors --
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
@@ -97,6 +101,7 @@ static int system_debug_0_1b(lua_State *L)
     return 1;
 }
 
+#if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
 static int system_profile_0_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -108,6 +113,7 @@ static int system_profile_0_1b(lua_State *L)
 
     return 1;
 }
+#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
 
 static int system_version_0_3nnn(lua_State *L)
 {
