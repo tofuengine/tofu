@@ -50,6 +50,11 @@ local Vector2D = require("tofu.util.vector2d")
 
 local Animation = require("lib/animation")
 
+local PALETTE <const> = Palette.default("nes")
+local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+
 local WATER_DISPLACEMENT = 1.5
 
 local SNOW = false
@@ -74,29 +79,11 @@ local function generate_map(screens)
   return map
 end
 
-local function extra_half_brite(palette, target, ratio)
-  local r, g, b = table.unpack(target)
-  local tweaked = Palette.new(palette)
-  tweaked:lerp(r, g, b, ratio)
-  palette:merge(64, tweaked, 0, 64, false) -- Just append.
---  local size = palette:size()
---  for index = 0, size - 1 do
---    local ar, ag, ab = palette:peek(index)
---    local mr, mg, mb = Palette.mix(r, g, b, ar, ag, ab, ratio)
---    palette:poke(size + index, mr, mg, mb)
---  end
-  return palette
-end
-
 function Main:__ctor()
-  local palette = Palette.default("nes")
-  Display.palette(palette)
-
   self.atlas = Image.new(1, 1)
   self.pixies = Bank.new(self.atlas, 1, 1)
   self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
   self.tileset = Bank.new(Image.new("assets/tileset.img"), 16, 16)
-  self.font = Font.default()
 
   self.animations = {
       ["sleeping-right"] = Animation.new(self.bank, { 12 }, 0, nil, false, false),
@@ -126,13 +113,27 @@ function Main:__ctor()
 
   self.atlas:clear(0)
 
-  -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
-  self.palette = Palette.new(extra_half_brite(palette, { 31, 127, 63 }, 0.5))
-  Display.palette(self.palette)
 --  self.pixies:clear(0)
 end
 
+local function _extra_half_brite(palette, target, ratio)
+  local r, g, b = table.unpack(target)
+  local tweaked = Palette.new(palette)
+  tweaked:lerp(r, g, b, ratio)
+  palette:merge(64, tweaked, 0, 64, false) -- Just append.
+--  local size = palette:size()
+--  for index = 0, size - 1 do
+--    local ar, ag, ab = palette:peek(index)
+--    local mr, mg, mb = Palette.mix(r, g, b, ar, ag, ab, ratio)
+--    palette:poke(size + index, mr, mg, mb)
+--  end
+  return palette
+end
+
 function Main:init()
+  -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
+  local palette <const> = Palette.new(_extra_half_brite(PALETTE, { 31, 127, 63 }, 0.5))
+  Display.palette(palette)
 end
 
 function Main:deinit()
@@ -283,12 +284,10 @@ function Main:update(delta_time)
   Display.program(program)
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  local width, height = canvas:image():size()
-  canvas:image():clear(50)
+function Main:render(canvas, _)
+  canvas:clear(50)
 
-  local x, y = (width - 16) * 0.5, height * 0.5
+  local x, y = (WIDTH - 16) * 0.5, HEIGHT * 0.5
 
   local px, py = self.position:unpack()
 
@@ -329,7 +328,7 @@ function Main:render(_)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
-  canvas:write(0, 0, self.font, string.format("%d FPS", math.floor(System.fps() + 0.5)))
+  canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
 
 --  local a, b, c, d = System.stats()
 --  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)

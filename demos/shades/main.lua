@@ -72,7 +72,6 @@ local Main = Class.define()
 
 function Main:__ctor()
   self.lut = build_table(PALETTE, LEVELS, TARGET)
-  self.font = Font.default()
   self.width = WIDTH / STEPS
   self.height = HEIGHT / STEPS
   self.mode = 0

@@ -62,7 +62,6 @@ local Main = Class.define()
 function Main:__ctor()
   self.bunnies = {}
   self.bank = Bank.new(Image.new("assets/bunnies.img"), "assets/bunnies.sheet")
-  self.font = Font.default()
 
   self.world = World.new(0.0, 200.0)
 
@@ -85,7 +84,7 @@ function Main:__ctor()
   self.right = right
 
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.font, self.bank, self.world))
+    table.insert(self.bunnies, Bunny.new(FONT, self.bank, self.world))
   end
 end
 
@@ -100,7 +99,7 @@ function Main:handle_input()
   local controller = Controller.default()
   if controller:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.font, self.bank, self.world))
+      table.insert(self.bunnies, Bunny.new(FONT, self.bank, self.world))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()

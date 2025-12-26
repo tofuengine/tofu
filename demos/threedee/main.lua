@@ -51,6 +51,8 @@ local Scene = require("lib/scene")
 local config = require("config")
 
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local CAMERA_FIELD_OF_VIEW <const> = config.camera.field_of_view or math.pi / 4
 local CAMERA_NEAR <const> = config.camera.near or 1
@@ -59,23 +61,17 @@ local CAMERA_FAR <const> = config.camera.far or 1000
 local Main = Class.define()
 
 function Main:__ctor()
-  local palette <const> = Palette.default(config.display.palette)
-  Display.palette(palette)
-
-  local canvas <const> = Canvas.default()
-  local image <const> = canvas:image()
-  local width <const>, height <const> = image:size()
-
+  self.palette = Palette.default(config.display.palette)
   self.player = Player.new()
-  self.camera = Camera.new(CAMERA_FIELD_OF_VIEW, width, height, CAMERA_NEAR, CAMERA_FAR)
-  self.scene = Scene.new(self.camera, palette, 63)
+  self.camera = Camera.new(CAMERA_FIELD_OF_VIEW, WIDTH, HEIGHT, CAMERA_NEAR, CAMERA_FAR)
+  self.scene = Scene.new(self.camera, self.palette, 63)
   self.background = Background.new(self.camera, 59)
-  self.font = Font.default()
 
   self.running = true
 end
 
 function Main:init()
+  Display.palette(self.palette)
 end
 
 function Main:deinit()

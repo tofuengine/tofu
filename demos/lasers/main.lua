@@ -69,7 +69,6 @@ local Main = Class.define()
 function Main:__ctor()
   CANVAS:transparent(0, false)
 
-  self.font = Font.default()
   self.colors = {
       PALETTE:match( 15,  15,  15),
       PALETTE:match( 31,  31,  31),

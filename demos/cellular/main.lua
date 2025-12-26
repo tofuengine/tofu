@@ -55,8 +55,9 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local SAND <const> = PALETTE:match(255, 255, 0)
 local CURSOR <const> = PALETTE:match(255, 255, 255)
 
+-- TODO: this demo is incomplete! Finish it! :D
+
 function Main:__ctor()
-  self.font = Font.default()
   self.grid = Grid2D.new(WIDTH, HEIGHT, { 0 })
   self.dirg = Grid2D.new(WIDTH, HEIGHT, { 0 })
 end
@@ -66,6 +67,10 @@ function Main:init()
 end
 
 function Main:deinit()
+end
+
+function Main:reset()
+  --self.grid:clear(0)
 end
 
 function Main:handle_input()
