@@ -241,7 +241,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
 
     engine->environment = Environment_create(&(const Environment_Configuration_t){
             .debug = engine->configuration->system.debug,
-            .profiling = engine->configuration->system.profiling
+            .profile = engine->configuration->system.profile
         }, engine->display);
     if (!engine->environment) {
         LOG_F("can't initialize environment");

@@ -56,7 +56,7 @@ typedef struct Configuration_s {
             int major, minor, revision;
         } version;
         bool debug;
-        bool profiling;
+        bool profile;
         char mappings[CONFIGURATION_MAX_VALUE_LENGTH];
         bool quit_on_close;
     } system;

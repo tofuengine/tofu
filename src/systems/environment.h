@@ -45,7 +45,7 @@
 
 typedef struct Environment_Configuration_s {
     bool debug;
-    bool profiling;
+    bool profile;
 } Environment_Configuration_t;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)

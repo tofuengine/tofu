@@ -79,8 +79,9 @@ function Boot:__ctor()
           if not me.main then -- Sanity check, in case of an error in the `enter()` method.
             return
           end
-          if System.profiling() then
+          if System.profile() then
             profile.start()
+            me.is_profiling = true
           end
           me.main:init()
         end,
@@ -89,7 +90,7 @@ function Boot:__ctor()
             return
           end
           me.main:deinit()
-          if System.profiling() then
+          if me.is_profiling then
             profile.stop()
             print(profile.report(32))
           end
