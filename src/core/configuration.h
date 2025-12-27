@@ -97,7 +97,9 @@ typedef struct Configuration_s {
 
 // TODO: switch to TOML or JSON configuration parsing?
 
-extern Configuration_t *Configuration_create(const char *data);
+extern Configuration_t *Configuration_create(void);
+extern void Configuration_parse(Configuration_t *configuration, const char *data);
+extern void Configuration_override(Configuration_t *configuration, const char **parameters);
 extern void Configuration_destroy(Configuration_t *configuration);
 
 #endif  /* TOFU_CORE_CONFIGURATION_H */

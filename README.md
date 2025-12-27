@@ -48,6 +48,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Fully scripted in [Lua](https://www.lua.org/).
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
+* [x] Tweakable from either configuration file and/or command-line arguments.
 * [x] Array of predefined common/famous resolutions (e.g. C64, Capcom's arcades, Nintendo DS, Sony PSP, etc...).
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.

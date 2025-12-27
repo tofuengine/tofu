@@ -39,6 +39,7 @@
 #include <core/engine.h>
 #include <core/platform.h>
 #include <libs/path.h>
+#include <libs/stb.h>
 
 #include <getopt.h>
 #include <stdlib.h>
@@ -48,6 +49,7 @@ static const struct option _long_options[] = {
     { "help", no_argument, NULL, 'h' },
     { "kernal", optional_argument, NULL, 'k' },
     { "data", optional_argument, NULL, 'd' },
+    { "set", optional_argument, NULL, 's' },
     { NULL, 0, NULL, 0 }
 };
 
@@ -59,6 +61,7 @@ static void _print_usage(int argc, const char *argv[])
     fprintf(stderr, "\t-h, --help\t\tShow this help.\n");
     fprintf(stderr, "\t-k, --kernal <path>\tPath of the folder or file to mount (can be repeated).\n");
     fprintf(stderr, "\t-d, --data <path>\tPath of the folder or file to mount (can be repeated).\n");
+    fprintf(stderr, "\t-s, --set <parameter>\tSet a configuration parameter (can be repeated).\n");
 }
 
 static void _options_init(Engine_Options_t *options, const char *argv0)
@@ -80,7 +83,7 @@ static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *
     _options_init(options, argv[0]);
 
     while (true) {
-        int option = getopt_long(argc, (char * const *)argv, "hk:d:", _long_options, NULL);
+        int option = getopt_long(argc, (char * const *)argv, "hk:d:s:", _long_options, NULL);
         if (option == -1) {
             break;
         }
@@ -97,6 +100,10 @@ static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *
                 strncpy(options->data_path, optarg, PLATFORM_PATH_MAX - 1);
                 break;
             }
+            case 's': {
+                arrpush(options->parameters, optarg);
+                break;
+            }
             default: {
                 fprintf(stderr, "Try '%s --help' for more information.\n", argv[0]);
                 return false;
@@ -104,18 +111,16 @@ static bool _parse_command_line(int argc, const char *argv[], Engine_Options_t *
         }
     }
 
+    if (arrlenu(options->parameters) > 0) {
+        arrpush(options->parameters, NULL); // Ensure `NULL` termination if parameters were provided.
+    }
+
     return true;
 }
 
-int main(int argc, const char *argv[])
+static inline bool _main(const Engine_Options_t *options)
 {
-    Engine_Options_t options = { 0 };
-    bool parsed = _parse_command_line(argc, argv, &options);
-    if (!parsed) {
-        goto error_exit;
-    }
-
-    Engine_t *engine = Engine_create(&options);
+    Engine_t *engine = Engine_create(options);
     if (!engine) {
         goto error_exit;
     }
@@ -130,10 +135,29 @@ int main(int argc, const char *argv[])
     Engine_shutdown(engine);
     Engine_destroy(engine);
 
-    return EXIT_SUCCESS;
+    return true;
 
 error_destroy:
     Engine_destroy(engine);
 error_exit:
-    return EXIT_FAILURE;
+    return false;
+}
+
+int main(int argc, const char *argv[])
+{
+    Engine_Options_t options = { 0 };
+    bool parsed = _parse_command_line(argc, argv, &options);
+    if (!parsed) {
+        return EXIT_FAILURE;
+    }
+
+    bool result = _main(&options);
+
+    arrfree(options.parameters);
+
+#if defined(STB_LEAKCHECK_INCLUDED)
+    stb_leakcheck_dumpmem();
+#endif
+
+    return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

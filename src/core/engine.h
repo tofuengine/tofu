@@ -50,6 +50,7 @@
 typedef struct Engine_Options_s {
     char kernal_path[PLATFORM_PATH_MAX];
     char data_path[PLATFORM_PATH_MAX];
+    const char **parameters; // `NULL`-terminated array of strings.
 } Engine_Options_t;
 
 typedef struct Engine_s {

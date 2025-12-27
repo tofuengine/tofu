@@ -55,7 +55,7 @@
 // See: `Four billion dollar question`, here https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
 #define _ENGINE_EPOCH 4294967296.0
 
-static Configuration_t *_configure(Storage_t *storage)
+static Configuration_t *_configure(Storage_t *storage, const char **parameters)
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
@@ -63,11 +63,14 @@ static Configuration_t *_configure(Storage_t *storage)
         goto error_exit;
     }
 
-    Configuration_t *configuration = Configuration_create(SR_SCHARS(resource));
+    Configuration_t *configuration = Configuration_create();
     if (!configuration) {
         LOG_F("can't create configuration");
         goto error_exit;
     }
+
+    Configuration_parse(configuration, SR_SCHARS(resource));
+    Configuration_override(configuration, parameters);
 
     Log_configure(configuration->system.debug, NULL);
 
@@ -147,7 +150,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("storage ready");
 
-    engine->configuration = _configure(engine->storage);
+    engine->configuration = _configure(engine->storage, options->parameters);
     if (!engine->configuration) {
         goto error_destroy_storage;
     }
@@ -295,10 +298,6 @@ void Engine_destroy(Engine_t *engine)
 
     free(engine);
     LOG_D("engine freed");
-
-#if defined(STB_LEAKCHECK_INCLUDED)
-    stb_leakcheck_dumpmem();
-#endif
 }
 
 bool Engine_boot(Engine_t *engine)
