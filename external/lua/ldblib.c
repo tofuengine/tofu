@@ -18,6 +18,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "llimits.h"
 
 
 /*
@@ -192,8 +193,10 @@ static int db_getinfo (lua_State *L) {
     settabsi(L, "ftransfer", ar.ftransfer);
     settabsi(L, "ntransfer", ar.ntransfer);
   }
-  if (strchr(options, 't'))
+  if (strchr(options, 't')) {
     settabsb(L, "istailcall", ar.istailcall);
+    settabsi(L, "extraargs", ar.extraargs);
+  }
   if (strchr(options, 'L'))
     treatstackoption(L, L1, "activelines");
   if (strchr(options, 'f'))
@@ -454,16 +457,6 @@ static int db_traceback (lua_State *L) {
 }
 
 
-#if !defined(LUA_SANDBOX_MODE)
-static int db_setcstacklimit (lua_State *L) {
-  int limit = (int)luaL_checkinteger(L, 1);
-  int res = lua_setcstacklimit(L, limit);
-  lua_pushinteger(L, res);
-  return 1;
-}
-#endif  /* LUA_SANDBOX_MODE */
-
-
 static const luaL_Reg dblib[] = {
 #if !defined(LUA_SANDBOX_MODE)
   {"debug", db_debug},
@@ -487,9 +480,6 @@ static const luaL_Reg dblib[] = {
   {"setupvalue", db_setupvalue},
 #endif  /* LUA_SANDBOX_MODE */
   {"traceback", db_traceback},
-#if !defined(LUA_SANDBOX_MODE)
-  {"setcstacklimit", db_setcstacklimit},
-#endif  /* LUA_SANDBOX_MODE */
   {NULL, NULL}
 };
 

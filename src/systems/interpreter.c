@@ -282,7 +282,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
 
     LOG_I("Lua: %s.%s.%s", LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_RELEASE);
 
-    interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
+    interpreter->state = lua_newstate(_allocate, NULL, 0U); // No user-data is passed.
     if (!interpreter->state) {
         LOG_F("can't create interpreter VM");
         goto error_free_interpreter;
