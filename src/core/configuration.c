@@ -253,7 +253,7 @@ static void _normalize_identity(Configuration_t *configuration)
     }
 }
 
-Configuration_t *Configuration_create(const char *data)
+Configuration_t *Configuration_create(void)
 {
     Configuration_t *configuration = malloc(sizeof(Configuration_t));
     if (!configuration) {
@@ -315,6 +315,11 @@ Configuration_t *Configuration_create(const char *data)
             }
         };
 
+    return configuration;
+}
+
+void Configuration_parse(Configuration_t *configuration, const char *data)
+{
     char context[CONFIGURATION_MAX_CONTEXT_LENGTH] = { 0 };
     for (const char *ptr = data; ptr;) {
         char line[CONFIGURATION_MAX_LINE_LENGTH] = { 0 };
@@ -330,8 +335,26 @@ Configuration_t *Configuration_create(const char *data)
     }
 
     _normalize_identity(configuration);
+}
 
-    return configuration;
+void Configuration_override(Configuration_t *configuration, const char **parameters)
+{
+    if (!parameters) {
+        LOG_D("no override parameters provided");
+        return;
+    }
+    while (*parameters) {
+        const char *parameter = *(parameters++);
+
+        char line[CONFIGURATION_MAX_LINE_LENGTH] = { 0 };
+        strncpy(line, parameter, CONFIGURATION_MAX_LINE_LENGTH - 1);
+
+        const char *key, *value;
+        if (!_parse_pair(line, &key, &value)) {
+            continue;
+        }
+        _on_parameter(configuration, NULL, key, value);
+    }
 }
 
 void Configuration_destroy(Configuration_t *configuration)

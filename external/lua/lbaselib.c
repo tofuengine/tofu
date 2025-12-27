@@ -339,7 +339,6 @@ static int load_aux (lua_State *L, int status, int envidx) {
 }
 
 
-#if !defined(LUA_SANDBOX_MODE)
 static const char *getMode (lua_State *L, int idx) {
   const char *mode = luaL_optstring(L, idx, "bt");
   if (strchr(mode, 'B') != NULL)  /* Lua code cannot use fixed buffers */
@@ -348,6 +347,7 @@ static const char *getMode (lua_State *L, int idx) {
 }
 
 
+#if !defined(LUA_SANDBOX_MODE)
 static int luaB_loadfile (lua_State *L) {
   const char *fname = luaL_optstring(L, 1, NULL);
   const char *mode = luaL_optstring(L, 2, NULL);
