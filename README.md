@@ -48,7 +48,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Fully scripted in [Lua](https://www.lua.org/).
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
-* [x] Tweakable from either configuration file and/or command-line arguments.
+* [x] Tweakable run-time parameters, either from the configuration file and/or command-line arguments (w/ parameters override through command-line arguments).
 * [x] Array of predefined common/famous resolutions (e.g. C64, Capcom's arcades, Nintendo DS, Sony PSP, etc...).
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
@@ -91,7 +91,6 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times) and resource usage (memory).
 * [x] User-dependent I/O functions to load/store game data.
-* [x] Configuration override through command-line arguments.
 
 ## Dependencies
 
@@ -100,7 +99,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [2dengine/profile.lua](https://github.com/2dengine/profile.lua)
 * [cglm](https://github.com/recp/cglm) v0.9.6
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.13.2, v0.7.2, v0.14.2
+* [dr_libs](https://github.com/mackron/dr_libs) v0.13.2, v0.7.3, v0.14.3
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://gen.glad.sh/) v2.0.8
 * [GLFW](https://www.glfw.org/) v3.4.0
