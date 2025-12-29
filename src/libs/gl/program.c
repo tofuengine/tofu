@@ -41,6 +41,11 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+static const GL_Program_Entry_t END_OF_DATA = {
+    .command = GL_PROGRAM_COMMAND_WAIT,
+    .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
+};
+
 static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, const GL_Program_Entry_t entry)
 {
     const ptrdiff_t length = arrlen(program);
@@ -76,11 +81,7 @@ GL_Program_t *GL_program_create(void)
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     // We will be adding the other entries at the end of the array, keeping the `WAIT/max/max` terminator.
-    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
-            .command = GL_PROGRAM_COMMAND_WAIT,
-            .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
-        };
-    arrpush(program->entries, end_of_data);
+    arrpush(program->entries, END_OF_DATA);
 
     return program;
 }
@@ -124,6 +125,20 @@ void GL_program_destroy(GL_Program_t *program)
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
 }
 
+#if defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS)
+bool GL_program_validate(const GL_Program_t *program)
+{
+    size_t length = arrlenu(program->entries);
+    if (length == 0) {
+        return false;
+    }
+    const GL_Program_Entry_t entry = program->entries[length - 1];
+    return entry.command == GL_PROGRAM_COMMAND_WAIT
+            && entry.args[0].size == SIZE_MAX
+            && entry.args[1].size == SIZE_MAX;
+}
+#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+
 void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
 {
     size_t length = arrlenu(other->entries);
@@ -139,11 +154,7 @@ void GL_program_clear(GL_Program_t *program)
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-    const GL_Program_Entry_t end_of_data = (GL_Program_Entry_t){
-            .command = GL_PROGRAM_COMMAND_WAIT,
-            .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } }
-        };
-    arrpush(program->entries, end_of_data);
+    arrpush(program->entries, END_OF_DATA);
 }
 
 void GL_program_erase(GL_Program_t *program, size_t position, size_t length)

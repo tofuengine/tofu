@@ -176,12 +176,12 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
     memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS); // Make a local copy, the processor could change it.
     memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
-    size_t wait = 0;
+    size_t wait_index = 0;
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     const int count = processor->palette->size;
 #endif
-    int modulo = 0;
-    size_t offset = 0; // Always in the range `[0, width)`.
+    int src_modulo = 0;
+    size_t dst_offset = 0; // Always in the range `[0, width)`.
 
     const GL_Program_Entry_t *entry = state->program->entries;
     const GL_Pixel_t *src = surface->data;
@@ -190,22 +190,28 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
     const size_t dwidth = surface->width;
     const size_t dheight = surface->height;
 
-    size_t i = 0;
+    // The raster index is the absolute pixel index in the destination surface. It is incremented for each
+    // pixel drawn, and used to check against the current `WAIT` target (i.e. `wait_index`).
+    //
+    // Prior transferring a pixel to the destination, all the processor commands are executed until the next `WAIT`
+    // target is reached (or exceeded).
+    //
+    // Note: there's no explicit length indicator for the processor program. That means that the inner wait-loop
+    // would run endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this, a "wait forever"
+    // trailer is added to the program by the `GL_program_create()` and `GL_program_reset()` functions.
+    // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
+    // is used to mark the end of the processor.
+    size_t raster_index = 0;
     for (size_t h = dheight; h; --h) {
         GL_Color_t *dst_eod = dst_sod + dwidth;
-        GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
+        GL_Color_t *dst = dst_sod + dst_offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
 
         for (size_t w = dwidth; w; --w) {
-            // Note: there's no length indicator for the processor program. That means that the interpreter would run
-            // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
-            // trailer is added to the program in the `GL_program_create()` and `GL_program_reset()` functions.
-            // This somehow mimics the real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE`
-            // is used to mark the end of the processor.
-#if defined(__PROCESSOR_ONE_COMMAND_PER_PIXEL__)
-            if (i >= wait) {
-#else
-            while (i >= wait) {
-#endif
+#if defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL)
+            if (raster_index >= wait) {
+#else   /* TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL */
+            while (raster_index >= wait_index) {
+#endif  /* TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL */
                 switch (entry->command) {
                     case GL_PROGRAM_COMMAND_NOP: {
                         break;
@@ -213,23 +219,41 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
                     case GL_PROGRAM_COMMAND_WAIT: {
                         size_t x = entry->args[0].size;
                         size_t y = entry->args[1].size;
-                        wait = y * dwidth + x;
+                        size_t index = y * dwidth + x;
+#if defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS)
+                        // This is not really an issue, as the processor would work anyway,
+                        // but it may be a mistyped `WAIT` command.
+                        if (index < wait_index) {
+                            LOG_W("WAIT command can't jump backwards (at <%d, %d>)", x, y);
+                        }
+#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+                        wait_index = index;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_SKIP: {
                         int dx = entry->args[0].integer;
                         int dy = entry->args[1].integer;
-                        wait += dy * dwidth + dx;
+                        size_t index = wait_index + (dy * dwidth + dx);
+#if defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS)
+                        // Ditto (see above).
+                        if (index < wait_index) {
+                            LOG_W("WAIT command can't jump backwards <%d, %d>)", dx, dy);
+                        }
+#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+                        wait_index = index;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_MODULO: {
-                        modulo = entry->args[0].integer;
+                        src_modulo = entry->args[0].integer;
                         break;
                     }
                     case GL_PROGRAM_COMMAND_OFFSET: {
                         // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
                         // we are casting to `int` to avoid integer promotion, as this is a macro!
-                        offset = (size_t)IMOD(entry->args[0].integer, (int)dwidth);
+                        int offset = IMOD(entry->args[0].integer, (int)dwidth);
+                        int delta = offset - (int)dst_offset;
+                        dst_offset = (size_t)offset;
+                        dst += delta; // Update the current destination pointer accordingly.
                         break;
                     }
                     case GL_PROGRAM_COMMAND_COLOR: {
@@ -268,10 +292,10 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
                 dst = dst_sod;
             }
 
-            ++i;
+            ++raster_index;
         }
 
-        src += modulo;
+        src += src_modulo;
         dst_sod += dwidth;
     }
 }
@@ -279,8 +303,16 @@ void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surfac
 // FIXME: make a copy or track the reference? (also for xform and palettes)
 void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program)
 {
-    if (processor->state.program) { // Deallocate current program, is present.
-       GL_program_destroy(processor->state.program);
+#if defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS)
+        bool is_valid = !program || GL_program_validate(program);
+        if (!is_valid) {
+            LOG_E("attempt to set invalid processor program %p", program);
+            return;
+        }
+#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+
+    if (processor->state.program) { // Deallocate current program, if present.
+        GL_program_destroy(processor->state.program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program %p destroyed", processor->program);
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */

@@ -69,6 +69,10 @@ extern GL_Program_t *GL_program_create(void);
 extern GL_Program_t *GL_program_clone(const GL_Program_t *program);
 extern void GL_program_destroy(GL_Program_t *program);
 
+#if defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS)
+extern bool GL_program_validate(const GL_Program_t *program);
+#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+
 extern void GL_program_copy(GL_Program_t *program, const GL_Program_t *other);
 extern void GL_program_clear(GL_Program_t *program);
 extern void GL_program_erase(GL_Program_t *program, size_t position, size_t length);

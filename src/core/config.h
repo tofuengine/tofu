@@ -295,6 +295,17 @@
 // granted.
 #undef  TOFU_GRAPHICS_XFORM_TRANSPARENCY
 
+// When defined, the surface-to-VRAM processor will be limited to a single
+// command per pixel. Generally, this is not wanted as multiple commands per
+// pixel are useful to create more sophisticated effects.
+#undef  TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL
+
+// Enables additional checks inside the processor functions to validate
+// the correctness of the processor program. This is useful to track bugs in
+// the program creation phase (for example, badly formed `WAIT` commands that
+// could cause infinite wait-loops).
+#define TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS
+
 // ###################
 // ### Interpreter ###
 // ###################
@@ -490,6 +501,7 @@
   #undef TOFU_ENGINE_SCRIPT_LEVEL_PROFILING
   #undef TOFU_FILE_DEBUG_ENABLED
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
+  #undef TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS
   #undef TOFU_INTERPRETER_GC_MODE
   #undef TOFU_INTERPRETER_GC_REPORTING
