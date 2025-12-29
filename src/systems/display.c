@@ -529,8 +529,9 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_D("graphics surface %p created", display->canvas.surface);
 
     // TODO: implement a small boot effect?
-    GL_surface_clear(display->canvas.surface, 0);
-    LOG_D("graphics surface %p cleared", display->canvas.surface);
+
+    display->canvas.clear_index = configuration->clear_index;
+    LOG_D("display clear index set to %d", display->canvas.clear_index);
 
     display->canvas.processor = GL_processor_create();
     if (!display->canvas.processor) {
@@ -678,9 +679,9 @@ bool Display_update(Display_t *display, float delta_time)
     return true;
 }
 
-void Display_clear(Display_t *display, GL_Pixel_t index)
+void Display_clear(Display_t *display)
 {
-    GL_surface_clear(display->canvas.surface, index);
+    GL_surface_clear(display->canvas.surface, display->canvas.clear_index);
 }
 
 void Display_present(const Display_t *display)
@@ -720,6 +721,11 @@ void Display_reset(Display_t *display)
     Display_set_offset(display, (GL_Point_t){ 0, 0 });
 
     GL_processor_reset(display->canvas.processor);
+}
+
+void Display_set_clear_index(Display_t *display, GL_Pixel_t index)
+{
+    display->canvas.clear_index = index;
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)
@@ -773,12 +779,12 @@ GL_Surface_t *Display_get_surface(const Display_t *display)
     return display->canvas.surface;
 }
 
-const GL_Color_t *Display_get_palette(const Display_t *display)
-{
-    return GL_processor_get_palette(display->canvas.processor);
-}
-
 GL_Point_t Display_get_offset(const Display_t *display)
 {
     return display->vram.offset;
+}
+
+const GL_Color_t *Display_get_palette(const Display_t *display)
+{
+    return GL_processor_get_palette(display->canvas.processor);
 }

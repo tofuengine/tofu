@@ -187,6 +187,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
             .fullscreen = engine->configuration->display.fullscreen,
             .vertical_sync = engine->configuration->display.vertical_sync,
             .quit_on_close = engine->configuration->system.quit_on_close,
+            .clear_index = engine->configuration->display.clear_index,
             .effect = SR_SCHARS(effect)
         });
     if (!engine->display) {
@@ -363,10 +364,7 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
 
 static inline bool _render(const Engine_t *engine, float ratio)
 {
-    const int clear_index = engine->configuration->display.clear_index; // TODO: is it worth to have it configurable?
-    if (clear_index >= 0) {
-        Display_clear(engine->display, clear_index);
-    }
+    Display_clear(engine->display);
 
     if (!Interpreter_render(engine->interpreter, ratio)) {
         return false;
