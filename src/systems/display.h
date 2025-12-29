@@ -59,7 +59,8 @@ typedef struct Display_Configuration_s {
     bool fullscreen;
     bool vertical_sync;
     bool quit_on_close;
-    GL_Pixel_t clear_index;
+    const GL_Color_t *palette;
+    int clear_index; // Actually a `GL_Pixel_t`, but using `int` to allow `-1` as "no clear".
     const char *effect;
 } Display_Configuration_t;
 
@@ -78,7 +79,7 @@ typedef struct Display_s {
     struct {
         GL_Size_t size;
         GL_Surface_t *surface;
-        GL_Pixel_t clear_index; // This is the index used to clear the surface with not shifting logic.
+        int clear_index;
         GL_Processor_t *processor; // The processor holds the display-wise palette and shifting logic.
     } canvas;
 
@@ -107,7 +108,7 @@ extern void Display_present(const Display_t *display);
 
 extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `processor` field directly?
 
-extern void Display_set_clear_index(Display_t *display, GL_Pixel_t index);
+extern void Display_set_clear_index(Display_t *display, int index);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_palette(Display_t *display, const GL_Color_t *palette);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);

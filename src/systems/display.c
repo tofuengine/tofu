@@ -681,6 +681,9 @@ bool Display_update(Display_t *display, float delta_time)
 
 void Display_clear(Display_t *display)
 {
+    if (display->canvas.clear_index < 0) {
+        return; // No clear required.
+    }
     GL_surface_clear(display->canvas.surface, display->canvas.clear_index);
 }
 
@@ -723,7 +726,7 @@ void Display_reset(Display_t *display)
     GL_processor_reset(display->canvas.processor);
 }
 
-void Display_set_clear_index(Display_t *display, GL_Pixel_t index)
+void Display_set_clear_index(Display_t *display, int index)
 {
     display->canvas.clear_index = index;
 }

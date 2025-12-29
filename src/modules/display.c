@@ -91,7 +91,7 @@ static int display_clear_1n_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 1);
+    int index = LUAX_INTEGER(L, 1);
 
     Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
