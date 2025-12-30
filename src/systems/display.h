@@ -118,7 +118,7 @@ extern GLFWwindow *Display_get_window(const Display_t *display);
 extern GL_Size_t Display_get_virtual_size(const Display_t *display);
 extern GL_Size_t Display_get_physical_size(const Display_t *display);
 extern GL_Surface_t *Display_get_surface(const Display_t *display);
-extern const GL_Color_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
+extern const GL_Color_t *Display_get_palette(const Display_t *display);
 
 #endif  /* TOFU_SYSTEMS_DISPLAY_H */

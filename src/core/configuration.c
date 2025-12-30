@@ -113,6 +113,18 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "display-fullscreen") == 0) {
         configuration->display.fullscreen = strcmp(value, "true") == 0;
     } else
+    if (strcmp(fqn, "display-palette") == 0) {
+        // If ending in `.pal` assume it being a full path (to be used as
+        // specified by the user. Otherwise, consider it begin the name of
+        // an internally defined (i.e. asset) palette.
+        if (strlen(value) > 4 && strcmp(value + strlen(value) - 4, ".pal") == 0) {
+            strncpy(configuration->display.palette, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
+        } else {
+            strncpy(configuration->display.palette, "assets/pal/", CONFIGURATION_MAX_VALUE_LENGTH - 1);
+            strncat(configuration->display.palette, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
+            strncat(configuration->display.palette, ".pal", CONFIGURATION_MAX_VALUE_LENGTH - 1);
+        }
+    } else
     if (strcmp(fqn, "display-vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
@@ -235,7 +247,7 @@ static bool _parse_pair(char *line, const char **key, const char **value)
 
 static void _normalize_identity(Configuration_t *configuration)
 {
-    if (configuration->system.identity[0] == '\0') {
+    if (configuration->system.identity[0] == '\0') { // No identity provided, derive it from the title.
         size_t length = strlen(configuration->display.title);
         for (size_t i = 0, j = 0; i < length; ++i) {
             char c = configuration->display.title[i];
@@ -289,6 +301,7 @@ Configuration_t *Configuration_create(void)
                 .fullscreen = false,
                 .vertical_sync = false,
                 .clear_index = 0,
+                .palette = { 0 },
                 .effect = "assets/glsl/passthru.glsl"
             },
             .audio = {

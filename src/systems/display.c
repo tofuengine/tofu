@@ -540,6 +540,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     LOG_D("processor %p created", display->canvas.processor);
 
+    if (configuration->palette) {
+        GL_processor_set_palette(display->canvas.processor, configuration->palette);
+        LOG_D("processor %p palette set", display->canvas.processor);
+    }
+
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
@@ -679,6 +684,7 @@ bool Display_update(Display_t *display, float delta_time)
     return true;
 }
 
+// TODO: adopt a `clear_function_t` to remove the branch?
 void Display_clear(Display_t *display)
 {
     if (display->canvas.clear_index < 0) {

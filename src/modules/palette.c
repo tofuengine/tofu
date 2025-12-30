@@ -40,6 +40,7 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#include <libs/hex.h>
 #define _LOG_TAG "palette"
 #include <libs/log.h>
 #include <systems/storage.h>
@@ -172,25 +173,6 @@ static int palette_new_1t_1o(lua_State *L)
     return 1;
 }
 
-static uint8_t _from_hex(char hex[2])
-{
-    uint8_t value = 0;
-    for (size_t i = 0; i < 2; ++i) {
-        value <<= 4;
-        char c = hex[i];
-        if (c >= '0' && c <= '9') {
-            value |= (uint8_t)(c - '0');
-        } else
-        if (c >= 'a' && c <= 'f') {
-            value |= (uint8_t)(c - 'a' + 10);
-        } else
-        if (c >= 'A' && c <= 'F') {
-            value |= (uint8_t)(c - 'A' + 10);
-        }
-    }
-    return value;
-}
-
 static int palette_new_1s_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -210,21 +192,22 @@ static int palette_new_1s_1o(lua_State *L)
 
     GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     size_t size = 0;
-    while (true) {
-        char hex[8] = { 0 };
-        size_t bytes_read = FS_read(handle, hex, 7); // Read up to 7 bytes (6 + null-terminator).
-        if (bytes_read < 6) {
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        char hex[16] = { 0 };
+        size_t bytes_read = FS_gets(handle, hex, 16);
+        if (bytes_read == 0) {
+            LOG_D("palette `%s` has %d colors", name, i);
             break;
         }
         palette[size] = (GL_Color_t){
-                .r = _from_hex(&hex[0]),
-                .g = _from_hex(&hex[2]),
-                .b = _from_hex(&hex[4]),
+                .r = hex_to_uint8(&hex[0]),
+                .g = hex_to_uint8(&hex[2]),
+                .b = hex_to_uint8(&hex[4]),
                 .a = 255
             };
         size += 1;
         if (size >= GL_MAX_PALETTE_COLORS) {
-            LOG_W("palette has too many colors (%d) - clamping to %d", size, GL_MAX_PALETTE_COLORS);
+            LOG_W("palette has too many colors - clamping to %d", GL_MAX_PALETTE_COLORS);
             break;
         }
     }
