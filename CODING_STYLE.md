@@ -433,6 +433,18 @@ Another commodity for the hybrid module design is the *post-load initialization 
 
 ## Lua Code
 
+## Coding Style
+
+As a general rule, the style is very similar to what one would be adopt in any "modern" C/C++ codebase:
+
+- Snake-case is used for the identifiers.
+- Classes are in Pascal-case.
+- Constants are all uppercase.
+- Local module variables and functions are prefixed with the `_` character.
+- NOTE: local constants have NO `_` prefix, as uppercase variables with this prefix are reserved by Lua.
+
+For further reference, please refer to [this](https://github.com/Olivine-Labs/lua-style-guide) guide.
+
 ### Modules Inclusion
 
 The required modules are the first thing to be written into a source file. They need to appear, lexycographically sorted, after the file comment-header. THe order of the modules is the following:
@@ -441,7 +453,7 @@ The required modules are the first thing to be written into a source file. They 
 - game common modules (e.g. `lib.logic`),
 - accessory modules (e.g. `palette`).
 
-## Common (Immutable) Objects
+### Common (Immutable) Objects
 
 It usually happens that some object are to be created at the very beginning of the game script initialization. An example of this is the default font, or the default canvas (to get the screen size). These are declared as `<const>` just after the *modules inclusion* section. Despite being objects, since they are immutable, the are also to be declared UPPERCASE.
 
@@ -461,7 +473,7 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 -- ... omissis...
 ```
 
-## Palette Setup
+### Palette Setup
 
 As a common convention, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display.palette()` method.
 
