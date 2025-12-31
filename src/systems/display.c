@@ -730,6 +730,8 @@ void Display_reset(Display_t *display)
     Display_set_offset(display, (GL_Point_t){ 0, 0 });
 
     GL_processor_reset(display->canvas.processor);
+
+    display->canvas.clear_index = display->configuration.clear_index;
 }
 
 void Display_set_clear_index(Display_t *display, int index)
