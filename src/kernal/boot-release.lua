@@ -35,15 +35,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
--- Note
--- ====
---
--- The `RELEASE` boot script is actually empty and could be avoided totally.
--- However, we are keeping it for sake of balance with the `DEBUG` one. Also,
--- it might prove useful as a mean to override and/or add the engine behaviour
--- by kernal overriding. It should be noticed that there's no additional cost
--- in having it as it called just once.
+local Class <const> = require("tofu.core.class")
+local Canvas <const> = require("tofu.graphics.canvas")
 
 local Main <const> = require("main")
 
-return Main.new()
+local CANVAS <const> = Canvas.default()
+
+local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+
+function Boot:__ctor()
+  self.main = Main.new()
+end
+
+function Boot:init()
+  self.main:init()
+end
+
+function Boot:deinit()
+  self.main:deinit()
+end
+
+function Boot:update(delta_time)
+  self.main:update(delta_time)
+end
+
+-- TODO: pass the default canvas straight from C?
+function Boot:render(ratio)
+  self.main:render(CANVAS, ratio)
+end
+
+return Boot.new()

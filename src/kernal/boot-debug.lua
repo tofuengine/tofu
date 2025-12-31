@@ -40,11 +40,11 @@ local Log <const> = require("tofu.core.log")
 local System <const> = require("tofu.core.system")
 local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
-local Palette <const> = require("tofu.graphics.palette")
-local Font <const> = require("tofu.graphics.font")
 local Speakers <const> = require("tofu.sound.speakers")
 
 local INITIAL_STATE <const> = "splash"
+
+local CANVAS <const> = Canvas.default()
 
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
@@ -62,24 +62,30 @@ function Boot:__ctor()
         end,
       update = function(_, _)
         end,
-      render = function(_, _)
+      render = function(_, _, _)
         end
     },
     ["running"] = {
       enter = function(me)
+          if System.profile() then
+            me.profile = require("profile")
+            me.profile.start()
+          end
+
           local Main <const> = require("main") -- Lazy require, to trap and display errors in the constructor!
           me.main = Main.new()
         end,
       leave = function(me)
+          if me.profile then
+            me.profile.stop()
+            print(me.profile.report(32))
+          end
+
           me.main = nil
         end,
       init = function(me)
           if not me.main then -- Sanity check, in case of an error in the `enter()` method.
             return
-          end
-          if System.profile() then
-            me.profile = require("profile")
-            me.profile.start()
           end
           me.main:init()
         end,
@@ -88,76 +94,32 @@ function Boot:__ctor()
             return
           end
           me.main:deinit()
-          if me.profile then
-            me.profile.stop()
-            print(me.profile.report(32))
-          end
         end,
       update = function(me, delta_time)
           me.main:update(delta_time)
         end,
-      render = function(me, ratio)
-          me.main:render(ratio)
+      render = function(me, canvas, ratio)
+          me.main:render(canvas, ratio)
         end
     },
     ["failure"] = {
       enter = function(me, message)
-          me.message = message
+          local Panic <const> = require("panic")
+          me.panic = Panic.new(message)
         end,
-      leave = function(me)
-          me.message = nil
+      leave = function(_)
         end,
       init = function(me)
-          -- TODO: rename "Display" to "Video" and "Speakers" to "Audio"?
-          Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
-          local canvas <const> = Canvas.default()
-          local width <const>, _ <const> = canvas:image():size()
-
-          local title <const> = {
-              "Software Failure.",
-              "Guru Meditation"
-            }
-          local errors <const> = {}
-          for str in string.gmatch(me.message, "([^\n]+)") do -- Split the error-message into separate lines.
-            table.insert(errors, str)
-          end
-
-          me.font = Font.default()
-          me.lines = {}
-          local margin <const> = 4 -- Pre-calculate lines position and rectangle area.
-          local span <const> = width - 2 * margin
-          local y = margin
-          for _, text in ipairs(title) do -- Title lines are centered.
-            local lw <const>, lh <const> = me.font:size(text)
-            table.insert(me.lines, { text = text, x = (width - lw) * 0.5, y = y })
-            y = y + lh
-          end
-          me.width = width
-          y = y + margin
-          me.height = y -- The rectangle ends here, message follows.
-          y = y + margin
-          for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
-            local texts <const> = me.font:wrap(line, span)
-            for _, text in ipairs(texts) do
-              local _ <const>, th <const> = me.font:size(text)
-              table.insert(me.lines, { text = text, x = margin, y = y })
-              y = y + th
-            end
-          end
+          me.panic:init()
         end,
       deinit = function(me)
-          me.font = nil
+          me.panic:deinit()
         end,
-      update = function(_, _)
+      update = function(me, delta_time)
+          me.panic:update(delta_time)
         end,
-      render = function(me, _)
-          local on <const> = (math.floor(System.time()) % 2) == 0
-          local canvas <const> = Canvas.default()
-          canvas:image():clear(0)
-          canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
-          for _, line in ipairs(me.lines) do
-            canvas:write(line.x, line.y, me.font, line.text)
-          end
+      render = function(me, canvas, ratio)
+          me.panic:render(canvas, ratio)
         end
     }
   }
@@ -183,17 +145,16 @@ end
 
 function Boot:render(ratio)
   local me <const> = self.state
-  self:call(me.render, me, ratio)
+  self:call(me.render, me, CANVAS, ratio)
 end
 
-local function _reinit_system()
+function Boot:reinit_system()
   Speakers.halt() -- Stop all sounds sources.
 
   Display.reset()
 
-  local canvas <const> = Canvas.default()
-  canvas:pop() -- Discard all saved states, if any.
-  canvas:reset() -- Reset default canvas from the game state.
+  CANVAS:pop() -- Discard all saved states, if any.
+  CANVAS:reset() -- Reset default canvas from the game state.
 end
 
 -- Achtung! Don´t *ever* call `switch()` from within `enter()` or `leave()`
@@ -206,7 +167,7 @@ function Boot:switch(id, ...)
     self:call(exiting.leave, exiting)
   end
 
-  _reinit_system() -- Ensure that everything is neutral, as when booted.
+  self:reinit_system() -- Ensure that everything is neutral, as when booted.
 
   if not id then
     self.state = nil
