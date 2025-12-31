@@ -44,8 +44,6 @@ local Palette <const> = require("tofu.graphics.palette")
 local Font <const> = require("tofu.graphics.font")
 local Speakers <const> = require("tofu.sound.speakers")
 
-local profile <const> = require("profile")
-
 local INITIAL_STATE <const> = "splash"
 
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
@@ -80,8 +78,8 @@ function Boot:__ctor()
             return
           end
           if System.profile() then
-            profile.start()
-            me.is_profiling = true
+            me.profile = require("profile")
+            me.profile.start()
           end
           me.main:init()
         end,
@@ -90,9 +88,9 @@ function Boot:__ctor()
             return
           end
           me.main:deinit()
-          if me.is_profiling then
-            profile.stop()
-            print(profile.report(32))
+          if me.profile then
+            me.profile.stop()
+            print(me.profile.report(32))
           end
         end,
       update = function(me, delta_time)
