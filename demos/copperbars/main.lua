@@ -80,7 +80,7 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(palette)
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()
