@@ -442,6 +442,7 @@ As a general rule, the style is very similar to what one would be adopt in any "
 - Constants are all uppercase.
 - Local module variables and functions are prefixed with the `_` character.
 - NOTE: local constants have NO `_` prefix, as uppercase variables with this prefix are reserved by Lua.
+- When including logic sub-modules, adopt a *lazy-require* policy, as some modules could be declaring non-trivial module-level variables. We might want to defer the allocation of such variables.
 
 For further reference, please refer to [this](https://github.com/Olivine-Labs/lua-style-guide) guide.
 
