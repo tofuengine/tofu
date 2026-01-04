@@ -39,6 +39,7 @@
 #define TOFU_SYSTEMS_ENVIRONMENT_H
 
 #include "display.h"
+#include "interpreter.h"
 
 #include <core/config.h>
 
@@ -69,7 +70,8 @@ typedef struct Environment_Stats_s {
     float times[Environment_Index_t_CountOf];
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
-    size_t memory_usage;
+    float memory_usage;
+    float vm_memory_usage;
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 } Environment_Stats_t;
 
@@ -83,11 +85,12 @@ typedef struct Environment_s {
     Environment_Configuration_t configuration;
 
     const Display_t *display;
+    const Interpreter_t *interpreter;
 
     Environment_State_t state;
 } Environment_t;
 
-extern Environment_t *Environment_create(const Environment_Configuration_t *configuration, const Display_t *display);
+extern Environment_t *Environment_create(const Environment_Configuration_t *configuration, const Display_t *display, const Interpreter_t *interpreter);
 extern void Environment_destroy(Environment_t *environment);
 
 extern const Environment_State_t *Environment_get_state(const Environment_t *environment);

@@ -121,6 +121,7 @@ static inline void _information(void)
         return;
     }
     LOG_I("running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
+    // TODO: display also the free RAM
 }
 
 static bool _parse_palette(const char *definition, GL_Color_t palette[GL_MAX_PALETTE_COLORS])
@@ -318,31 +319,31 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("audio ready");
 
+    engine->interpreter = Interpreter_create(engine->storage);
+    if (!engine->interpreter) {
+        LOG_F("can't initialize interpreter");
+        goto error_destroy_audio;
+    }
+    LOG_I("interpreter ready");
+
     engine->environment = Environment_create(&(const Environment_Configuration_t){
             .debug = engine->configuration->system.debug,
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
             .profile = engine->configuration->system.profile
 #endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
-        }, engine->display);
+        }, engine->display, engine->interpreter);
     if (!engine->environment) {
         LOG_F("can't initialize environment");
-        goto error_destroy_audio;
+        goto error_destroy_interpreter;
     }
     LOG_I("environment ready");
-
-    engine->interpreter = Interpreter_create(engine->storage);
-    if (!engine->interpreter) {
-        LOG_F("can't initialize interpreter");
-        goto error_destroy_environment;
-    }
-    LOG_I("interpreter ready");
 
     LOG_I("engine ready to boot");
     return engine;
 
     // Goto clean-up section.
-error_destroy_environment:
-    Environment_destroy(engine->environment);
+error_destroy_interpreter:
+    Interpreter_destroy(engine->interpreter);
 error_destroy_audio:
     Audio_destroy(engine->audio);
 error_destroy_input:
@@ -363,8 +364,8 @@ error_exit:
 
 void Engine_destroy(Engine_t *engine)
 {
-    Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
     Environment_destroy(engine->environment);
+    Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
     Audio_destroy(engine->audio);
     Input_destroy(engine->input);
     Display_destroy(engine->display);
@@ -384,8 +385,8 @@ bool Engine_boot(Engine_t *engine)
             engine->display,
             engine->input,
             engine->audio,
-            engine->environment,
             engine->interpreter,
+            engine->environment,
             NULL
         });
     if (!booted) {

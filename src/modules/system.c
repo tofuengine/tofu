@@ -267,9 +267,16 @@ static int system_heap_1S_1n(lua_State *L)
         case 'k': { usage = (float)stats->memory_usage / 1024.0f; } break;
         case 'b': { usage = (float)stats->memory_usage; } break;
     }
+    float vm_usage = 0.0f;
+    switch (unit[0]) {
+        case 'm': { vm_usage = (float)stats->vm_memory_usage / (1024.0f * 1024.0f); } break;
+        case 'k': { vm_usage = (float)stats->vm_memory_usage / 1024.0f; } break;
+        case 'b': { vm_usage = (float)stats->vm_memory_usage; } break;
+    }
     lua_pushnumber(L, (lua_Number)usage);
+    lua_pushnumber(L, (lua_Number)vm_usage);
 
-    return 1;
+    return 2;
 }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 
