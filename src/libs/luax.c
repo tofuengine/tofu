@@ -423,6 +423,11 @@ int luaX_upvaluescount(lua_State *L)
     return nup;
 }
 
+int luaX_isgcrunning(lua_State *L)
+{
+    return lua_gc(L, LUA_GCISRUNNING);
+}
+
 void luaX_gccycle(lua_State *L)
 {
     for (;;) {

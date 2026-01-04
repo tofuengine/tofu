@@ -404,12 +404,21 @@ bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 
 bool Interpreter_collect(const Interpreter_t *interpreter)
 {
+    // If the GC is currently running we don't interfere with its work and let
+    // it handle everything. This enables the game-engine to auto-configure the
+    // behaviour in case the GC settings are changed dynamically with the
+    // `collectgarbage()` Lua method.
+    bool is_running = luaX_isgcrunning(interpreter->state) != 0;
+    if (is_running) {
+        return true;
+    }
+
 #if defined(TOFU_INTERPRETER_GC_FULL_STEP)
     luaX_gccycle(interpreter->state);
-    return true;
 #else
-    return luaX_gcstep(interpreter->state);
+    luaX_gcstep(interpreter->state);
 #endif
+    return true;
 }
 
 size_t Interpreter_stats(const Interpreter_t *interpreter)
