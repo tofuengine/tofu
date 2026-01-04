@@ -214,20 +214,32 @@ typedef struct Input_Controller_s {
     Input_Controller_Triggers_t triggers;
 } Input_Controller_t;
 
+typedef struct Input_State_s {
+    Input_Keyboard_t keyboard;
+    Input_Cursor_t cursor;
+    Input_Controller_t controllers[INPUT_CONTROLLERS_COUNT];
+    size_t controllers_count;
+    bool used_gamepads[GLFW_JOYSTICK_LAST + 1];
+} Input_State_t;
+
+typedef struct Input_State_History_s {
+    Input_State_t state;
+    double time;
+} Input_State_History_t;
+
 typedef struct Input_s {
     Input_Configuration_t configuration;
 
     GLFWwindow *window;
 
-    struct {
-        Input_Keyboard_t keyboard;
-        Input_Cursor_t cursor;
-        Input_Controller_t controllers[INPUT_CONTROLLERS_COUNT];
-        size_t controllers_count;
-        bool used_gamepads[GLFW_JOYSTICK_LAST + 1];
-    } state;
-
+    bool is_recording;
+    bool is_playing;
+    size_t replay_index;
+    Input_State_History_t *history;
+    Input_State_t state;
     double age;
+
+    double time;
 } Input_t;
 
 typedef struct Input_Position_s {
@@ -241,6 +253,10 @@ typedef struct Input_Area_s {
 
 extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
 extern void Input_destroy(Input_t *input);
+
+extern void Input_set_recording(Input_t *input, bool enabled);
+extern void Input_set_playing(Input_t *input, const Input_State_History_t *history, size_t length);
+extern void Input_relocate_history(Input_t *input, double base);
 
 extern bool Input_update(Input_t *input, float delta_time);
 

@@ -422,3 +422,24 @@ int luaX_upvaluescount(lua_State *L)
     }
     return nup;
 }
+
+void luaX_gccycle(lua_State *L)
+{
+    for (;;) {
+        int result = lua_gc(L, LUA_GCSTEP);
+        if (result == 1) {
+            break;
+        }
+    }
+}
+
+int luaX_gcstep(lua_State *L)
+{
+    return lua_gc(L, LUA_GCSTEP); // Perform one basic step of the GC (keep everything under control)
+}
+
+int luaX_memoryusage(lua_State *L)
+{
+    return lua_gc(L, LUA_GCCOUNT) * 1024
+        + lua_gc(L, LUA_GCCOUNTB);
+}

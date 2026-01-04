@@ -216,4 +216,8 @@ extern void luaX_pushvalues(lua_State *L, int nup);
 extern int luaX_pushupvalues(lua_State *L);
 extern int luaX_upvaluescount(lua_State *L); // UNUSED
 
+extern void luaX_gccycle(lua_State *L);
+extern int luaX_gcstep(lua_State *L);
+extern int luaX_memoryusage(lua_State *L);
+
 #endif  /* TOFU_LIBS_LUAX_H */

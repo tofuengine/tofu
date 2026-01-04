@@ -50,16 +50,14 @@
 #define COLOR_MATCH_PERCEPTUAL 2
 #define COLOR_MATCH_OCTREE     3
 
-#define GC_CONTINUOUS_STEP_PERIOD   0.1f
-#define GC_COLLECTION_PERIOD        15.0f
+#define GC_REPORTING_PERIOD 5.0f
 
 #define GC_TYPE_INCREMENTAL  0
 #define GC_TYPE_GENERATIONAL 1
 
 #define GC_MODE_AUTOMATIC  0
 #define GC_MODE_CONTINUOUS 1
-#define GC_MODE_PERIODIC   2
-#define GC_MODE_MANUAL     3
+#define GC_MODE_MANUAL     2
 
 #define BALANCE_LAW_LINEAR    0
 #define BALANCE_LAW_SINCOS    1
@@ -314,8 +312,6 @@
 // used. This will report a simpler output.
 #define TOFU_INTERPRETER_CUSTOM_TRACEBACK
 
-#define TOFU_INTERPRETER_GC_REPORTING
-
 // Selects the garbage-collector type. Could be either `GC_TYPE_INCREMENTAL` or
 // `GC_TYPE_GENERATIONAL`.
 //
@@ -339,12 +335,7 @@
 //
 // - GC_MODE_CONTINUOUS
 //   A single GC step is performed periodically at a fixed time-step (i.e.
-//   every 100 milliseconds, please see the `GC_CONTINUOUS_STEP_PERIOD` macro)
-//   so that the overhead is distributed over time.
-//
-// - GC_MODE_PERIODIC
-//   Every `GC_COLLECTION_PERIOD` seconds a full garbage-collection cycle is
-//   forced. This could have a non trivial overhead.
+//   at every VM update step) so that the overhead is distributed over time.
 //
 // - GC_MODE_MANUAL
 //   no autonomous garbage-collection is performed by the game-engine. It is
@@ -352,11 +343,16 @@
 //   (e.g. during the level loading process).
 //
 // For small-sized projects, probably `GC_MODE_AUTOMATIC` is advisable. For
-// mid-sized project either `GC_MODE_PERIODIC` or `GC_MODE_CONTINUOUS` are
-// suggested (with the latter giving the most consistent behaviour). On large
+// mid-sized project either `GC_MODE_CONTINUOUS` are suggested. On large
 // projects, or where performance really matters, `GC_MODE_MANUAL` is to be used
-// as it gives the programmer full control on when the GC is to be used.
 #define TOFU_INTERPRETER_GC_MODE GC_MODE_CONTINUOUS
+
+// When the `GC_MODE_AUTOMATIC` mode is enabled, on every `Interpreter_update()`
+// call a garbage-collection step is performed. With macro we can control if 
+// a single (indivisible) or a full (i.e. while it is actually completed) step
+// is performed. Usually a *single* step is preferable as it is more consistent
+// and less expensive.
+#define TOFU_INTERPRETER_GC_FULL_STEP
 
 // Enforces 'lua_pcall()' over (faster) 'lua_call()' when calling the scripting
 // sub-system callbacks (e.g. `update()`). This will ensure that any potential
@@ -491,8 +487,6 @@
 // resources are to be freed with the `Storage.flush()` API.
 #define TOFU_STORAGE_AUTO_COLLECT
 
-// In release build, disable VM calls debug and periodic collection for better
-// performance.
 #if defined(NDEBUG)
   #undef TOFU_CORE_PROFILING_ENABLED
   #undef TOFU_CORE_DEFENSIVE_CHECKS
@@ -503,8 +497,6 @@
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
   #undef TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS
-  #undef TOFU_INTERPRETER_GC_MODE
-  #undef TOFU_INTERPRETER_GC_REPORTING
 #endif
 
 #endif  /* TOFU_CORE_CONFIG_H */
