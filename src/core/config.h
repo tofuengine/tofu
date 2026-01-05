@@ -162,13 +162,12 @@
 #define TOFU_ENGINE_DATA_NAME "data.pak"
 #define TOFU_ENGINE_KERNAL_NAME "kernal.pak"
 
-// Enables the *heap* statistics feature of the engine. Currently only the total
-// heap usage is tracked. The data can be accessed with the `System.heap()`
-// method.
+// Enables the *heap* statistics tracking. Currently both the game-engine and
+// the VM total heap usage are fetched. The data can be accessed with the
+// `System.heap()` method.
 #define TOFU_ENGINE_HEAP_STATISTICS
 
-// When defined, heat statistics is be periodically outputted as logging
-// information.
+// When defined, heap statistics area periodically logged.
 #undef  TOFU_ENGINE_HEAP_STATISTICS_DEBUG
 
 // Controls the period (in seconds) of the aforementioned debug heap statistics.
@@ -183,15 +182,6 @@
 //       game engine due to its overhead.
 #define TOFU_ENGINE_PERFORMANCE_STATISTICS
 
-// When defined, performance statistics is periodically be outputted as logging
-// information. This is useful to track detailed informations for a specific
-// game-loop phase.
-#define TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG
-
-// Controls the period (in seconds) of the aforementioned debug performance
-// statistics.
-#define TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD 10.0f
-
 // Enables a more costly (but precise) performance average calculation, based
 // upon a moving average.
 #undef  TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE
@@ -199,6 +189,14 @@
 // When the moving average is enabled this value tells the amount of samples
 // the average is calculated upon.
 #define TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES 128
+
+// When defined, performance and heap statistics is periodically be outputted
+// as logging information. This is useful to track detailed information for a
+// specific game-loop phase.
+#define TOFU_ENGINE_STATISTICS_DEBUG
+
+// Controls the period (in seconds) of the aforementioned debug statistics.
+#define TOFU_ENGINE_STATISTICS_PERIOD 10.0f
 
 // When defined, include the Lua profiling support in the engine. This is
 // normally disabled in the `RELEASE` build.

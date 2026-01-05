@@ -139,46 +139,6 @@ static inline void _calculate_times(float times[Environment_Index_t_CountOf], co
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf])
-#else
-void Environment_accumulate(Environment_t *environment, float frame_time)
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-{
-    Environment_State_t *state = &environment->state;
-
-    Environment_Stats_t *stats = &state->stats;
-    stats->fps = _calculate_fps(frame_time); // We could use `1 / frame_time` but it would be inaccurate due to rounding/representation.
-
-#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-    _calculate_times(stats->times, deltas);
-#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG)
-    static float stats_time = 0.0f;
-    stats_time += frame_time;
-    while (stats_time > TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD) {
-        stats_time -= TOFU_ENGINE_PERFORMANCE_STATISTICS_PERIOD;
-        LOG_I("uptime is %0.2fs",
-            state->time);
-        LOG_I("running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
-            stats->fps,
-            stats->times[ENVIRONMENT_INDEX_PROCESS], stats->times[ENVIRONMENT_INDEX_PROCESS] / stats->times[ENVIRONMENT_INDEX_FRAME],
-            stats->times[ENVIRONMENT_INDEX_UPDATE ], stats->times[ENVIRONMENT_INDEX_UPDATE ] / stats->times[ENVIRONMENT_INDEX_FRAME],
-            stats->times[ENVIRONMENT_INDEX_RENDER ], stats->times[ENVIRONMENT_INDEX_RENDER ] / stats->times[ENVIRONMENT_INDEX_FRAME],
-            stats->times[ENVIRONMENT_INDEX_WAIT   ], stats->times[ENVIRONMENT_INDEX_WAIT   ] / stats->times[ENVIRONMENT_INDEX_FRAME],
-            stats->times[ENVIRONMENT_INDEX_FRAME  ]);
-        LOG_I("heap-usage %.0fKiB, vm heap-usage %.0fKiB",
-            stats->memory_usage / 1024.0f,
-            stats->vm_memory_usage / 1024.0f);
-    }
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS_DEBUG */
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
-}
-
-static inline bool _is_active(const Display_t *display)
-{
-    return glfwGetWindowAttrib(display->window, GLFW_FOCUSED) == GLFW_TRUE;
-}
-
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static inline size_t _heap_usage(void) // TODO: move to a library!
 {
@@ -197,6 +157,32 @@ static inline size_t _heap_usage(void) // TODO: move to a library!
 }
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf])
+#else
+void Environment_accumulate(Environment_t *environment, float frame_time)
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+{
+    Environment_State_t *state = &environment->state;
+
+    Environment_Stats_t *stats = &state->stats;
+    stats->fps = _calculate_fps(frame_time); // We could use `1 / frame_time` but it would be inaccurate due to rounding/representation.
+
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+    _calculate_times(stats->times, deltas);
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+    stats->memory_usage = FLERP(stats->memory_usage, _heap_usage(), 0.1f);
+    stats->vm_memory_usage = FLERP(stats->memory_usage, Interpreter_stats(environment->interpreter), 0.1f);
+#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+}
+
+static inline bool _is_active(const Display_t *display)
+{
+    return glfwGetWindowAttrib(display->window, GLFW_FOCUSED) == GLFW_TRUE;
+}
+
 bool Environment_update(Environment_t *environment, float delta_time)
 {
     Environment_State_t *state = &environment->state;
@@ -205,19 +191,31 @@ bool Environment_update(Environment_t *environment, float delta_time)
 
     state->is_active = _is_active(environment->display);
 
-#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+#if defined(TOFU_ENGINE_STATISTICS_DEBUG)
     Environment_Stats_t *stats = &state->stats;
-    stats->memory_usage = FLERP(stats->memory_usage, _heap_usage(), 0.1f);
-    stats->vm_memory_usage = FLERP(stats->memory_usage, Interpreter_stats(environment->interpreter), 0.1f);
-#if defined(TOFU_ENGINE_HEAP_STATISTICS_DEBUG)
-    static float heap_time = TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
-    heap_time += frame_time;
-    while (heap_time > TOFU_ENGINE_HEAP_STATISTICS_PERIOD) {
-        heap_time -= TOFU_ENGINE_HEAP_STATISTICS_PERIOD;
-        LOG_I("currently using %u byte(s)", stats->memory_usage);
-    }
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS_DEBUG */
+
+    static float stats_time = 0.0f;
+    stats_time += delta_time;
+    while (stats_time > TOFU_ENGINE_STATISTICS_PERIOD) {
+        stats_time -= TOFU_ENGINE_STATISTICS_PERIOD;
+        LOG_I("uptime is %0.2fs",
+            state->time);
+#if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
+        LOG_I("running at %d FPS (P=%.3fms (%.2f), U=%.3fms (%.2f), R=%.3fms (%.2f), W=%.3fms (%.2f), F=%.3fms)",
+            stats->fps,
+            stats->times[ENVIRONMENT_INDEX_PROCESS], stats->times[ENVIRONMENT_INDEX_PROCESS] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_UPDATE ], stats->times[ENVIRONMENT_INDEX_UPDATE ] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_RENDER ], stats->times[ENVIRONMENT_INDEX_RENDER ] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_WAIT   ], stats->times[ENVIRONMENT_INDEX_WAIT   ] / stats->times[ENVIRONMENT_INDEX_FRAME],
+            stats->times[ENVIRONMENT_INDEX_FRAME  ]);
+#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+        LOG_I("heap-usage %.0fKiB, vm heap-usage %.0fKiB",
+            stats->memory_usage / 1024.0f,
+            stats->vm_memory_usage / 1024.0f);
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+    }
+#endif  /* TOFU_ENGINE_STATISTICS_DEBUG */
 
     return true;
 }
