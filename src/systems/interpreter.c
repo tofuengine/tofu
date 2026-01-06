@@ -355,11 +355,13 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     }
     LOG_D("entry-points detected");
 
+    LUAX_STACK_BEGIN(interpreter->state)
     if (_method_call(interpreter->state, ENTRY_POINT_METHOD_INIT, 0, 0) != LUA_OK) {
         LOG_F("can't call `init` entry-point");
         goto error_exit;
     }
     LOG_D("`init` entry-point called");
+    LUAX_STACK_END(interpreter->state)
 
     return true;
 
@@ -369,11 +371,13 @@ error_exit:
 
 bool Interpreter_shutdown(Interpreter_t *interpreter)
 {
+    LUAX_STACK_BEGIN(interpreter->state)
     if (_method_call(interpreter->state, ENTRY_POINT_METHOD_DEINIT, 0, 0) != LUA_OK) {
         LOG_F("can't call `deinit` entry-point");
         return false;
     }
     LOG_D("`deinit` entry-point called");
+    LUAX_STACK_END(interpreter->state)
 
     return true;
 }
@@ -382,10 +386,12 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
     interpreter->age += delta_time;
 
+    LUAX_STACK_BEGIN(interpreter->state)
     lua_pushnumber(interpreter->state, (lua_Number)delta_time);
     if (_method_call(interpreter->state, ENTRY_POINT_METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
+    LUAX_STACK_END(interpreter->state)
 
     return true;
 }
@@ -393,13 +399,17 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     // TODO: pass the default `Canvas` instance?
+    LUAX_STACK_BEGIN(interpreter->state)
     lua_pushnumber(interpreter->state, (lua_Number)ratio);
     return _method_call(interpreter->state, ENTRY_POINT_METHOD_RENDER, 1, 0) == LUA_OK;
+    LUAX_STACK_END(interpreter->state)
 }
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
+    LUAX_STACK_BEGIN(interpreter->state)
     return _raw_call(interpreter->state, nargs, nresults) == LUA_OK;
+    LUAX_STACK_END(interpreter->state)
 }
 
 bool Interpreter_collect(const Interpreter_t *interpreter)

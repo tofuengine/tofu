@@ -183,6 +183,23 @@ typedef struct luaX_String_s {
     #define LUAX_OPTIONAL_OBJECT(l, idx, t, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toobject((L), (idx), (t)))
 #endif
 
+// The following macros offers a simple way to check and validate if the Lua's
+// VM stack is corrupted/unbalanced.
+#if defined(LUAX_RUNTIME_CHECKS)
+    #define LUAX_STACK_BEGIN(L) \
+        do { \
+            int _top = lua_gettop((L));
+    #define LUAX_STACK_END(L) \
+            int _delta = lua_gettop((L)) - _top; \
+            if (_delta != 0) { \
+                return luaL_error(L, "[%s:%d] stack is unbalanced (%d)", __FILE__, __LINE__, _delta); \
+            } \
+        } while (0);
+#else
+    #define LUAX_STACK_BEGIN(L)
+    #define LUAX_STACK_END(L)
+#endif
+
 #define LUAX_UNUSED(x)   (void)(x)
 
 #define luaX_dump(L) luaX_stackdump((L), __FILE__, __LINE__)
