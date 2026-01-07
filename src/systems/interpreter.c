@@ -37,6 +37,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
+#include <libs/stopwatch.h>
 #include <modules/modules.h>
 
 #include <stdint.h>
@@ -339,8 +340,26 @@ void Interpreter_destroy(Interpreter_t *interpreter)
 
 bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
 {
+    LUAX_STACK_BEGIN(interpreter->state)
     modules_initialize(interpreter->state, userdatas);
+    LUAX_STACK_END(interpreter->state)
 
+    // !!!!!!!!!!!!!!!
+    // !!! Achtung !!!
+    // !!!!!!!!!!!!!!!
+    //
+    // Loading the boot script and detecting the entry-points purposely make
+    // the Lua stack GROW! This is actually an optimization we are performing
+    // by leaving the stack as follows:
+    //
+    //   [1] TRACEBACK function (if any)
+    //   [2] OBJECT
+    //   [3] F1
+    //   ...
+    //   [n] Fn
+    //
+    // For this reason, we can't use sorround these two sections with the
+    // `LUAX_STACK_BEGIN` and `LUAX_STACK_END` pair.
     luaL_loadstring(interpreter->state, _kickstart_lua);
     int result = _raw_call(interpreter->state, 0, 1);
     if (result != LUA_OK) {
