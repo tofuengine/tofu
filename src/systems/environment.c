@@ -111,6 +111,7 @@ static inline size_t _calculate_fps(float frame_time)
 #endif
 }
 
+// TODO: ditch moving average, and write a devlog about it! :)
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 static inline void _calculate_times(float times[Environment_Index_t_CountOf], const float deltas[Environment_Index_t_CountOf])
 {

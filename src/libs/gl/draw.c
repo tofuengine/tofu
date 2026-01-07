@@ -462,7 +462,7 @@ static GL_Pixel_t _add(GL_Pixel_t destination, GL_Pixel_t source)
 static GL_Pixel_t _add_clamped(GL_Pixel_t destination, GL_Pixel_t source)
 {
     const int value = (int)destination + (int)source;
-    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+    return (GL_Pixel_t)ICLAMP(value, 0, 255); // FIXME: this clamping is wrong, works only for 256 colors palettes!
 }
 
 static GL_Pixel_t _subtract(GL_Pixel_t destination, GL_Pixel_t source)
@@ -473,7 +473,7 @@ static GL_Pixel_t _subtract(GL_Pixel_t destination, GL_Pixel_t source)
 static GL_Pixel_t _subtract_clamped(GL_Pixel_t destination, GL_Pixel_t source)
 {
     const int value = (int)destination - (int)source;
-    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+    return (GL_Pixel_t)ICLAMP(value, 0, 255); // Ditto
 }
 
 static GL_Pixel_t _reverse_subtract(GL_Pixel_t destination, GL_Pixel_t source)
@@ -484,7 +484,7 @@ static GL_Pixel_t _reverse_subtract(GL_Pixel_t destination, GL_Pixel_t source)
 static GL_Pixel_t _reverse_subtract_clamped(GL_Pixel_t destination, GL_Pixel_t source)
 {
     const int value = (int)source - (int)destination;
-    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+    return (GL_Pixel_t)ICLAMP(value, 0, 255); // Ditto
 }
 
 static GL_Pixel_t _multiply(GL_Pixel_t destination, GL_Pixel_t source)
@@ -495,7 +495,7 @@ static GL_Pixel_t _multiply(GL_Pixel_t destination, GL_Pixel_t source)
 static GL_Pixel_t _multiply_clamped(GL_Pixel_t destination, GL_Pixel_t source)
 {
     const int value = (int)destination * (int)source;
-    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+    return (GL_Pixel_t)ICLAMP(value, 0, 255); // Ditto
 }
 
 static GL_Pixel_t _min(GL_Pixel_t destination, GL_Pixel_t source)

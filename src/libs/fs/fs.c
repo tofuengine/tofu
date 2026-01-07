@@ -287,7 +287,7 @@ size_t FS_gets(FS_Handle_t *handle, char *buffer, size_t buffer_size)
     size_t total_read = 0;
     while (total_read < buffer_size - 1) { // Leave space for the null-terminator.
         char ch;
-        size_t bytes_read = FS_read(handle, &ch, sizeof(char)); // Cast away constness for API compatibility.
+        size_t bytes_read = FS_read(handle, &ch, sizeof(char));
         if (bytes_read == 0) {
             break; // EOF or error.
         }

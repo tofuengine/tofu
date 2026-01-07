@@ -356,7 +356,7 @@ Depending to its type, each shader variable has a different prefix:
 
 ### Byte Ordering
 
-Custom binary files are stored in a way that network-byte-order is (i.e. big-endian) is used to store informations.
+Custom binary files are stored in a way that network-byte-order is (i.e. big-endian) is used to store information.
 
 ## Lua FFI
 
