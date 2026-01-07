@@ -464,8 +464,8 @@ This is typical example:
 -- ... omissis...
 local Vector2D = require("tofu.util.vector2d")
 
-local Boid = require('lib.boid')
-local Rules = require('lib.rules')
+local Boid = require("lib.boid")
+local Rules = require("lib.rules")
 
 local PALETTE <const> = Palette.default("pico-8")
 local FONT <const> = Font.default()
