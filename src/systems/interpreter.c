@@ -342,7 +342,7 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
 {
     LUAX_STACK_BEGIN(interpreter->state)
     modules_initialize(interpreter->state, userdatas);
-    LUAX_STACK_END(interpreter->state)
+    LUAX_STACK_END(interpreter->state, 0)
 
     // !!!!!!!!!!!!!!!
     // !!! Achtung !!!
@@ -352,14 +352,13 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     // the Lua stack GROW! This is actually an optimization we are performing
     // by leaving the stack as follows:
     //
-    //   [1] TRACEBACK function (if any)
+    //   [1] TRACEBACK function (if any, already pushed during VM creation)
     //   [2] OBJECT
     //   [3] F1
     //   ...
     //   [n] Fn
     //
-    // For this reason, we can't use sorround these two sections with the
-    // `LUAX_STACK_BEGIN` and `LUAX_STACK_END` pair.
+    LUAX_STACK_BEGIN(interpreter->state)
     luaL_loadstring(interpreter->state, _kickstart_lua);
     int result = _raw_call(interpreter->state, 0, 1);
     if (result != LUA_OK) {
@@ -367,12 +366,15 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
         goto error_exit;
     }
     LOG_D("boot script loaded");
+    LUAX_STACK_END(interpreter->state, 1)
 
+    LUAX_STACK_BEGIN(interpreter->state)
     if (!_detect(interpreter->state, _methods)) {
         LOG_F("can't detect entry-points");
         goto error_exit;
     }
     LOG_D("entry-points detected");
+    LUAX_STACK_END(interpreter->state, Entry_Point_Methods_t_CountOf)
 
     LUAX_STACK_BEGIN(interpreter->state)
     if (_method_call(interpreter->state, ENTRY_POINT_METHOD_INIT, 0, 0) != LUA_OK) {
@@ -380,7 +382,7 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
         goto error_exit;
     }
     LOG_D("`init` entry-point called");
-    LUAX_STACK_END(interpreter->state)
+    LUAX_STACK_END(interpreter->state, 0)
 
     return true;
 
@@ -396,7 +398,7 @@ bool Interpreter_shutdown(Interpreter_t *interpreter)
         return false;
     }
     LOG_D("`deinit` entry-point called");
-    LUAX_STACK_END(interpreter->state)
+    LUAX_STACK_END(interpreter->state, 0)
 
     return true;
 }
@@ -410,7 +412,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
     if (_method_call(interpreter->state, ENTRY_POINT_METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
-    LUAX_STACK_END(interpreter->state)
+    LUAX_STACK_END(interpreter->state, 0)
 
     return true;
 }
@@ -421,14 +423,14 @@ bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
     LUAX_STACK_BEGIN(interpreter->state)
     lua_pushnumber(interpreter->state, (lua_Number)ratio);
     return _method_call(interpreter->state, ENTRY_POINT_METHOD_RENDER, 1, 0) == LUA_OK;
-    LUAX_STACK_END(interpreter->state)
+    LUAX_STACK_END(interpreter->state, 0)
 }
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
     LUAX_STACK_BEGIN(interpreter->state)
     return _raw_call(interpreter->state, nargs, nresults) == LUA_OK;
-    LUAX_STACK_END(interpreter->state)
+    LUAX_STACK_END(interpreter->state, 0)
 }
 
 bool Interpreter_collect(const Interpreter_t *interpreter)

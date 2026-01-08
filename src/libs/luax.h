@@ -189,15 +189,15 @@ typedef struct luaX_String_s {
     #define LUAX_STACK_BEGIN(L) \
         do { \
             int _top = lua_gettop((L));
-    #define LUAX_STACK_END(L) \
+    #define LUAX_STACK_END(L, delta) \
             int _delta = lua_gettop((L)) - _top; \
-            if (_delta != 0) { \
+            if (_delta != (delta)) { \
                 return luaL_error(L, "[%s:%d] stack is unbalanced (%d)", __FILE__, __LINE__, _delta); \
             } \
         } while (0);
 #else
     #define LUAX_STACK_BEGIN(L)
-    #define LUAX_STACK_END(L)
+    #define LUAX_STACK_END(L, delta)
 #endif
 
 #define LUAX_UNUSED(x)   (void)(x)
