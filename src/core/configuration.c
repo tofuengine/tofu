@@ -322,7 +322,7 @@ Configuration_t *Configuration_create(void)
             },
             .engine = {
                 .frames_per_seconds = 60,
-                .low_priority_frames_per_seconds = 120, // Twice the engine FPS count.
+                .low_priority_frames_per_seconds = 15, // A quarter of the engine FPS count, i.e. with a longer period
                 .skippable_frames = 3, // About 5% of the FPS amount.
                 .frames_limit = 60
             }

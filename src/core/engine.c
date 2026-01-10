@@ -397,7 +397,7 @@ bool Engine_boot(Engine_t *engine)
     soy_set_time(_ENGINE_EPOCH);
     LOG_D("engine epoch initialized");
 
-    LOG_I("engine is up and running");
+    LOG_I("engine is up");
     return true;
 
 error_exit:
@@ -461,7 +461,7 @@ void Engine_run(Engine_t *engine)
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
     const float skippable_time = delta_time * (float)skippable_frames; // This is the allowed "fast-forwardable" time window.
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / (float)engine->configuration->engine.frames_limit;
-    LOG_I("now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
+    LOG_I("now running, delta-time is %.6fs (%.6fs low-priority) w/ %d skippable frames, reference-time is %.6fs", delta_time, low_priority_delta_time, skippable_frames, reference_time);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float deltas[5] = { 0 };
