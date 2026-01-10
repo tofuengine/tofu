@@ -321,7 +321,7 @@
 // the point that we use pools of actors/entities that are reused.
 //
 // For this reason the *incremental* type is suggested.
-#define TOFU_INTERPRETER_GC_TYPE GC_TYPE_INCREMENTAL
+#define TOFU_INTERPRETER_GC_TYPE GC_TYPE_GENERATIONAL
 
 // Selects the mode under which the garbage-collection is performed during the
 // game-engine lifetime. It can be one of the following values:
@@ -345,11 +345,11 @@
 // projects, or where performance really matters, `GC_MODE_MANUAL` is to be used
 #define TOFU_INTERPRETER_GC_MODE GC_MODE_CONTINUOUS
 
-// When the `GC_MODE_AUTOMATIC` mode is enabled, on every `Interpreter_update()`
-// call a garbage-collection step is performed. With macro we can control if 
-// a single (indivisible) or a full (i.e. while it is actually completed) step
-// is performed. Usually a *single* step is preferable as it is more consistent
-// and less expensive.
+// When the `GC_MODE_AUTOMATIC` mode is enabled, on every `Interpreter_collect()`
+// call a garbage-collection step is performed. With this macro we can control
+// if a single (indivisible) or a full (i.e. while it is actually completed)
+// step is performed. Usually a *single* step is preferable as it is more
+// consistent and less expensive.
 #define TOFU_INTERPRETER_GC_FULL_STEP
 
 // Enforces 'lua_pcall()' over (faster) 'lua_call()' when calling the scripting
