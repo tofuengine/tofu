@@ -428,9 +428,17 @@ int luaX_isgcrunning(lua_State *L)
     return lua_gc(L, LUA_GCISRUNNING);
 }
 
-void luaX_gccycle(lua_State *L)
+void luaX_gccollect(lua_State *L)
+{
+    lua_gc(L, LUA_GCCOLLECT);
+}
+
+void luaX_gccycle(lua_State *L, int max_steps)
 {
     for (;;) {
+        if (max_steps >= 0 && max_steps-- == 0) { // To be used if in generational GC-mode
+            break;
+        }
         int result = lua_gc(L, LUA_GCSTEP);
         if (result == 1) {
             break;

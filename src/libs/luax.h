@@ -234,7 +234,8 @@ extern int luaX_pushupvalues(lua_State *L);
 extern int luaX_upvaluescount(lua_State *L); // UNUSED
 
 extern int luaX_isgcrunning(lua_State *L);
-extern void luaX_gccycle(lua_State *L);
+extern void luaX_gccollect(lua_State *L);
+extern void luaX_gccycle(lua_State *L, int max_steps);
 extern int luaX_gcstep(lua_State *L);
 extern int luaX_memoryusage(lua_State *L);
 
