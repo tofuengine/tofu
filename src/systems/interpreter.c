@@ -445,10 +445,15 @@ bool Interpreter_collect(const Interpreter_t *interpreter)
     }
 
 #if defined(TOFU_INTERPRETER_GC_FULL_STEP)
-    luaX_gccycle(interpreter->state);
-#else
+    #if TOFU_INTERPRETER_GC_TYPE == GC_TYPE_GENERATIONAL
+    luaX_gccollect(interpreter->state);
+    #else
+    luaX_gccycle(interpreter->state, -1);
+    #endif
+#else   /* defined(TOFU_INTERPRETER_GC_FULL_STEP) */
     luaX_gcstep(interpreter->state);
-#endif
+#endif  /* defined(TOFU_INTERPRETER_GC_FULL_STEP) */
+
     return true;
 }
 
