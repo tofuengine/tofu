@@ -345,12 +345,13 @@
 // projects, or where performance really matters, `GC_MODE_MANUAL` is to be used
 #define TOFU_INTERPRETER_GC_MODE GC_MODE_CONTINUOUS
 
-// When the `GC_MODE_AUTOMATIC` mode is enabled, on every `Interpreter_collect()`
-// call a garbage-collection step is performed. With this macro we can control
-// if a single (indivisible) or a full (i.e. while it is actually completed)
-// step is performed. Usually a *single* step is preferable as it is more
-// consistent and less expensive.
-#define TOFU_INTERPRETER_GC_FULL_STEP
+// When the `GC_MODE_CONTINUOUS` mode is enabled, Interpreter_collect()` is
+// called periodically to perform a garbage-collection step. With this macro we
+// can control if a single (indivisible) or a full (i.e. while it is actually
+// completed) step is performed. Usually a *single* step is preferable as it is
+// more consistent and less expensive, but it might be not sufficient to reclaim
+// all the memory.
+#define TOFU_INTERPRETER_GC_FULL_CYCLE
 
 // Enforces 'lua_pcall()' over (faster) 'lua_call()' when calling the scripting
 // sub-system callbacks (e.g. `update()`). This will ensure that any potential

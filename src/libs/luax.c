@@ -439,7 +439,7 @@ void luaX_gccycle(lua_State *L, int max_steps)
         if (max_steps >= 0 && max_steps-- == 0) { // To be used if in generational GC-mode
             break;
         }
-        int result = lua_gc(L, LUA_GCSTEP);
+        int result = lua_gc(L, LUA_GCSTEP, 0);
         if (result == 1) {
             break;
         }
@@ -448,7 +448,7 @@ void luaX_gccycle(lua_State *L, int max_steps)
 
 int luaX_gcstep(lua_State *L)
 {
-    return lua_gc(L, LUA_GCSTEP); // Perform one basic step of the GC (keep everything under control)
+    return lua_gc(L, LUA_GCSTEP, 0); // Perform one basic step of the GC (keep everything under control)
 }
 
 int luaX_memoryusage(lua_State *L)

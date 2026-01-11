@@ -444,15 +444,15 @@ bool Interpreter_collect(const Interpreter_t *interpreter)
         return true;
     }
 
-#if defined(TOFU_INTERPRETER_GC_FULL_STEP)
+#if defined(TOFU_INTERPRETER_GC_FULL_CYCLE)
     #if TOFU_INTERPRETER_GC_TYPE == GC_TYPE_GENERATIONAL
     luaX_gccollect(interpreter->state);
     #else
     luaX_gccycle(interpreter->state, -1);
     #endif
-#else   /* defined(TOFU_INTERPRETER_GC_FULL_STEP) */
+#else   /* defined(TOFU_INTERPRETER_GC_FULL_CYCLE) */
     luaX_gcstep(interpreter->state);
-#endif  /* defined(TOFU_INTERPRETER_GC_FULL_STEP) */
+#endif  /* defined(TOFU_INTERPRETER_GC_FULL_CYCLE) */
 
     return true;
 }
