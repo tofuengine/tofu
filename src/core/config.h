@@ -321,7 +321,7 @@
 // the point that we use pools of actors/entities that are reused.
 //
 // For this reason the *incremental* type is suggested.
-#define TOFU_INTERPRETER_GC_TYPE GC_TYPE_GENERATIONAL
+#define TOFU_INTERPRETER_GC_TYPE GC_TYPE_INCREMENTAL
 
 // Selects the mode under which the garbage-collection is performed during the
 // game-engine lifetime. It can be one of the following values:
