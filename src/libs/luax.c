@@ -425,7 +425,7 @@ int luaX_upvaluescount(lua_State *L)
 
 int luaX_isgcrunning(lua_State *L)
 {
-    return lua_gc(L, LUA_GCISRUNNING);
+    return lua_gc(L, LUA_GCISRUNNING); // Internally in Lua, this call is cheap, we can call it repeatedly
 }
 
 void luaX_gccollect(lua_State *L)
