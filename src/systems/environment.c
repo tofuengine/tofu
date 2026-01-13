@@ -40,16 +40,13 @@
 #include <core/config.h>
 #include <core/platform.h>
 #include <libs/fmath.h>
+#if defined(TOFU_ENGINE_HEAP_STATISTICS)
+#include <libs/heap.h>
+#endif
 #include <libs/imath.h>
 #define _LOG_TAG "environment"
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#include <malloc.h>
-#if PLATFORM_ID == PLATFORM_WINDOWS
-    #include <windows.h>
-    #include <psapi.h>
-#endif
 
 Environment_t *Environment_create(const Environment_Configuration_t *configuration, const Display_t *display, const Interpreter_t *interpreter)
 {
@@ -140,24 +137,6 @@ static inline void _calculate_times(float times[Environment_Index_t_CountOf], co
 }
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
-#if defined(TOFU_ENGINE_HEAP_STATISTICS)
-static inline size_t _heap_usage(void) // TODO: move to a library!
-{
-#if PLATFORM_ID == PLATFORM_WINDOWS
-    PROCESS_MEMORY_COUNTERS pmc = { 0 };
-    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-    return pmc.WorkingSetSize;
-#elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
-    // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
-    struct mallinfo2 mi = mallinfo2();
-    return mi.uordblks;
-#else
-    struct mallinfo mi = mallinfo();
-    return mi.uordblks;
-#endif
-}
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
-
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf])
 #else
@@ -174,7 +153,7 @@ void Environment_accumulate(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
-    stats->memory_usage = FLERP(stats->memory_usage, _heap_usage(), 0.1f);
+    stats->memory_usage = FLERP(stats->memory_usage, heap_usage(), 0.1f);
     stats->vm_memory_usage = FLERP(stats->memory_usage, Interpreter_stats(environment->interpreter), 0.1f);
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 }
