@@ -51,7 +51,7 @@ size_t heap_usage(void)
     PROCESS_MEMORY_COUNTERS pmc = { 0 };
     GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
     return pmc.WorkingSetSize;
-#elif __GLIBC__ > 2 || __GLIBC_MINOR__ > 33
+#elif __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33)
     // `mallinfo2()` is available only starting from glibc-2.33, superseding `mallinfo()`.
     struct mallinfo2 mi = mallinfo2();
     return mi.uordblks;
