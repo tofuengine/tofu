@@ -464,7 +464,7 @@ void Engine_run(Engine_t *engine)
     LOG_I("now running, delta-time is %.6fs (%.6fs low-priority) w/ %d skippable frames, reference-time is %.6fs", delta_time, low_priority_delta_time, skippable_frames, reference_time);
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-    float deltas[5] = { 0 };
+    float deltas[Environment_Index_t_CountOf] = { 0 };
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
     StopWatch_t marker = stopwatch_init();
     float lag = 0.0f;
