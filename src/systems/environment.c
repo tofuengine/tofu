@@ -48,6 +48,8 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#define _EMA_ALPHA 0.1f
+
 Environment_t *Environment_create(const Environment_Configuration_t *configuration, const Display_t *display, const Interpreter_t *interpreter)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
@@ -130,7 +132,7 @@ static inline void _calculate_times(float times[Environment_Index_t_CountOf], co
 
     for (size_t i = 0; i < Environment_Index_t_CountOf; ++i) {
         const float t = deltas[i] * 1000.0f;
-        averages[i] = FLERP(averages[i], t, 0.1f); // Ditto.
+        averages[i] = FLERP(averages[i], t, _EMA_ALPHA); // Ditto.
         times[i] = averages[i];
     }
 #endif
@@ -153,8 +155,8 @@ void Environment_accumulate(Environment_t *environment, float frame_time)
 #endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
-    stats->memory_usage = FLERP(stats->memory_usage, heap_usage(), 0.1f);
-    stats->vm_memory_usage = FLERP(stats->memory_usage, Interpreter_stats(environment->interpreter), 0.1f);
+    stats->memory_usage = FLERP(stats->memory_usage, heap_usage(), _EMA_ALPHA);
+    stats->vm_memory_usage = FLERP(stats->memory_usage, Interpreter_stats(environment->interpreter), _EMA_ALPHA);
 #endif  /* TOFU_ENGINE_HEAP_STATISTICS */
 }
 
