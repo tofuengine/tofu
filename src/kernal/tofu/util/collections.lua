@@ -38,7 +38,7 @@ SOFTWARE.
 -- http://developer.classpath.org/doc/java/util/Collections-source.html
 
 local function map(collection, callback) -- mapper(value, key, collection)
-  local result = {}
+  local result <const> = {}
   for k, v in pairs(collection) do
     result[k] = callback(v, k, collection)
   end
@@ -46,7 +46,7 @@ local function map(collection, callback) -- mapper(value, key, collection)
 end
 
 local function filter(collection, callback) -- filter(value, key, collection)
-  local result = {}
+  local result <const> = {}
   for k, v in pairs(collection) do
     if callback(v, k, collection) then
       result[k] = v
