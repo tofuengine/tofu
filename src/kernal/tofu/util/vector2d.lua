@@ -35,18 +35,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Vector2D = {}
+local Vector2D <const> = {}
 
 function Vector2D.from_points(a, b)
-  local v = Vector2D.new()
-  local ax, ay = a:unpack()
-  local bx, by = b:unpack()
+  local v <const> = Vector2D.new()
+  local ax <const> , ay <const>  a:unpack()
+  local bx <const> , by <const> = b:unpack()
   v:assign(bx - ax, by - ay)
   return v
 end
 
 function Vector2D.from_polar(a, l, ox, oy)
-  local v = Vector2D.new()
+  local v <const> = Vector2D.new()
   v:cast(a, l, ox, oy)
   return v
 end
@@ -67,13 +67,13 @@ end
 -- https://www.gamedev.net/forums/topic/647810-intersection-point-of-two-vectors/
 -- http://www.tonypa.pri.ee/vectors/tut05.html
 function Vector2D.intersect(p0, v0, p1, v1)
-  local det = v0:perp_dot(v1)
+  local det <const> = v0:perp_dot(v1)
   if det == 0.0 then
     return nil, nil
   end
-  local v = Vector2D.new(Vector2D.from_points(p0, p1))
-  local t0 = v:perp_dot(v1) / det -- ratio for the first ray
-  local t1 = v:perp_dot(v0) / det -- ratio for the second ray
+  local v <const> = Vector2D.new(Vector2D.from_points(p0, p1))
+  local t0 <const> = v:perp_dot(v1) / det -- ratio for the first ray
+  local t1 <const> = v:perp_dot(v0) / det -- ratio for the second ray
   return t0, t1
 end
 
@@ -89,7 +89,7 @@ end
 --
 -- https://en.wikipedia.org/wiki/Vector_projection
 function Vector2D:project(v)
-  local s = self:dot(v) / v:dot(v)
+  local s <const> = self:dot(v) / v:dot(v)
   self:assign(v)
   self:smul(s)
 end
@@ -100,8 +100,8 @@ end
 --
 -- https://math.stackexchange.com/questions/2239169/reflecting-a-vector-over-another-line
 function Vector2D:mirror(v)
-  local s = 2 * self:dot(v) / v:dot(v)
-  local vx, vy = v:unpack()
+  local s <const> = 2 * self:dot(v) / v:dot(v)
+  local vx <const>, vy <const> = v:unpack()
   self:sub(s * vx, s * vy)
 end
 

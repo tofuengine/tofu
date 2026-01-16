@@ -35,17 +35,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local Timer = require("tofu.timers.timer")
+local Class <const> = require("tofu.core.class")
+local Timer <const> = require("tofu.timers.timer")
 
-local Pool = Class.define()
+local Pool <const> = Class.define()
 
 function Pool:__ctor()
   self.timers = {}
 end
 
 function Pool:spawn(period, repeats, callback, rate)
-  local timer = Timer.new(period, repeats, callback, rate)
+  local timer <const> = Timer.new(period, repeats, callback, rate)
   table.insert(self.timers, timer)
   return timer
 end
@@ -55,10 +55,10 @@ function Pool:clear()
 end
 
 function Pool:update(delta_time)
-  local timers = self.timers -- Use local for faster access.
+  local timers <const> = self.timers -- Use local for faster access.
 
   for index = #timers, 1, -1 do -- Reverse iterate to remove timers when "dead".
-    local timer = timers[index]
+    local timer <const> = timers[index]
     if timer.cancelled then
       table.remove(timers, index)
     else

@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Palette = {}
+local Palette <const> = {}
 
 function Palette.default(id)
   return Palette.new(string.format("assets/pal/%s.pal", id))

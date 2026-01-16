@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Math = {}
+local Math <const> = {}
 
 -- TODO: https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 

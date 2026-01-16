@@ -36,7 +36,7 @@ SOFTWARE.
 ]]--
 
 local function forward(t, looped)
-  local n = #t
+  local n <const> = #t
   local i = 0
   return function()
       i = i + 1
@@ -51,7 +51,7 @@ local function forward(t, looped)
 end
 
 local function reverse(t, looped)
-  local n = #t
+  local n <const> = #t
   local i = n + 1
   return function()
       i = i - 1
@@ -66,7 +66,7 @@ local function reverse(t, looped)
 end
 
 local function circular(t, looped)
-  local n = #t
+  local n <const> = #t
   local i = 0
   return function()
       i = i + 1
@@ -81,7 +81,7 @@ local function circular(t, looped)
 end
 
 local function bounce(t, bounced)
-  local n = #t
+  local n <const> = #t
   local d = 1
   local i = 0
   return function()

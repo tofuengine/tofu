@@ -35,9 +35,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Body = require("tofu.physics.body")
+local Body <const> = require("tofu.physics.body")
 
-local World = {}
+local World <const> = {}
 
 function World:spawn(...)
   local body = Body.new(...)

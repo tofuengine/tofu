@@ -35,22 +35,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
+local Class <const> = require("tofu.core.class")
 
-local Bus = Class.define()
+local Bus <const> = Class.define()
 
 function Bus:__ctor()
   self.listeners = {}
 end
 
 function Bus:register(event, cb)
-  local listeners = self.listeners
+  local listeners <const> = self.listeners
   listeners[event] = listeners[event] or {}
   table.insert(listeners[event], cb)
 end
 
 function Bus:unregister(event, cb)
-  local listeners = self.listeners
+  local listeners <const> = self.listeners
   listeners[event] = listeners[event] or {}
   for index, value in ipairs(listeners[event]) do
     if value == cb then
@@ -61,7 +61,7 @@ function Bus:unregister(event, cb)
 end
 
 function Bus:emit(event, ...)
-  local listeners = self.listeners
+  local listeners <const> = self.listeners
   for _, cb in ipairs(listeners[event]) do
     cb(...)
   end

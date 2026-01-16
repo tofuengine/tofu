@@ -35,10 +35,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local Wave = require("tofu.generators.wave")
+local Class <const> = require("tofu.core.class")
+local Wave <const> = require("tofu.generators.wave")
 
-local Oscillator = Class.define()
+local Oscillator <const> = Class.define()
 
 -- See: https://blog.demofox.org/2012/05/19/diy-synthesizer-chapter-2-common-wave-forms/
 
@@ -48,8 +48,8 @@ function Oscillator:__ctor(...)
 end
 
 function Oscillator:advance(delta_phase)
+  local period <const> = self.wave:period()
   local phase = self.phase + delta_phase
-  local period = self.wave:period()
   while phase >= period do -- Keep constrained in [0, period) in order not to loose precision.
     phase = phase - period
   end

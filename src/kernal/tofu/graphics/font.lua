@@ -35,10 +35,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Bank = require("tofu.graphics.bank")
-local Image = require("tofu.graphics.image")
+local Bank <const> = require("tofu.graphics.bank")
+local Image <const> = require("tofu.graphics.image")
 
-local Font = {}
+local Font <const> = {}
 
 -- Note: the `__index` metatable reference is set by the module loader.
 -- Font.__index = Font
@@ -53,7 +53,7 @@ local FONTS <const> = {
   }
 
 function Font.default(...)
-  local args = { ... }
+  local args <const> = { ... }
   if #args == 0 then -- <none>
     local font = FONTS["5x8"]
     return Font.from_image(font.file, font.width, font.height)
@@ -66,7 +66,7 @@ function Font.default(...)
 end
 
 function Font.from_image(...)
-  local args = { ... }
+  local args <const> = { ... }
   if #args == 2 then -- file, cells_file
     return Font.new(Bank.new(Image.new(args[1]), args[2]))
   elseif #args == 3 then
@@ -83,7 +83,7 @@ function Font.from_image(...)
 end
 
 function Font:wrap(text, width)
-  local lines = {}
+  local lines <const> = {}
   local line = ""
   for c in text:gmatch(".") do
     local lw, _ = self:size(line .. c)

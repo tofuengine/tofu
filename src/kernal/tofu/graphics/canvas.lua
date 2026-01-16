@@ -35,15 +35,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Image = require("tofu.graphics.image")
+local Image <const> = require("tofu.graphics.image")
 
-local Canvas = {}
+local Canvas <const> = {}
 
 local _default = nil
 
 function Canvas.default()
   if not _default then
-    local image = Image.new() -- Get a reference to the VRAM as an `Image`.
+    local image <const> = Image.new() -- Get a reference to the VRAM as an `Image`.
     _default = Canvas.new(image)
   end
   return _default
@@ -60,7 +60,7 @@ end
 -- result [...] When a function call is the last (or the only) argument to another call,
 -- all results from the first call go as arguments. >>
 function Canvas:write(x, y, font, text, h_align, v_align, scale_x, scale_y)
-  local width, height = font:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
+  local width <const>, height <const> = font:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
   local dx, dy
   if h_align == "center" then

@@ -35,22 +35,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Grid2D = {}
+local Grid2D <const> = {}
 
 -- <width>|<height>|<amount>:<value>|<amount>:<value>|<amount>:<value>
 function Grid2D.parse(content)
-  local columns, rows, data = string.match(content, "^(%d+)|(%d+)|(.+)$")
+  local columns <const>, rows <const>, data <const> = string.match(content, "^(%d+)|(%d+)|(.+)$")
   if not columns or not rows or not data then
     error("grid content is malformed")
   end
 
-  local width = math.tointeger(columns)
-  local height = math.tointeger(rows)
+  local width <const> = math.tointeger(columns)
+  local height <const> = math.tointeger(rows)
   if width <= 0 or height <= 0 then
     error("grid dimensions must be positive")
   end
 
-  local grid = Grid2D.new(width, height, {})
+  local grid <const> = Grid2D.new(width, height, {})
 
   local offset = 0
   for amount, value in string.gmatch(data, "(%d+):([+-]?%d+%.?%d*)") do -- Matches any number (not only integer).
@@ -64,10 +64,10 @@ function Grid2D.parse(content)
 end
 
 function Grid2D:to_string()
-  local width, height = self:size()
-  local size = width * height
+  local width <const>, height <const> = self:size()
+  local size <const> = width * height
 
-  local content = {}
+  local content <const> = {}
   table.insert(content, string.format("%d|%d", width, height))
 
   local value = nil

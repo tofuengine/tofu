@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Log = {}
+local Log <const> = {}
 
 function Log.dump(t, spaces)
   spaces = spaces or ""
@@ -50,14 +50,14 @@ function Log.dump(t, spaces)
 end
 
 function Log.print_r(value)
-  local cache = {}
+  local cache <const> = {}
   local function sub_print_r(t, indent)
     if (cache[tostring(t)]) then
       print(indent.."*"..tostring(t))
     else
       cache[tostring(t)]=true
       if (type(t)=="table") then
-        local tLen = #t
+        local tLen <const> = #t
         for i = 1, tLen do
           local val = t[i]
           if (type(val)=="table") then

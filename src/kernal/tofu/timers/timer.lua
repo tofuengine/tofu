@@ -35,9 +35,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
+local Class <const> = require("tofu.core.class")
 
-local Timer = Class.define()
+local Timer <const> = Class.define()
 
 function Timer:__ctor(period, repeats, callback, rate)
   self.period = period

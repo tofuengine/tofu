@@ -35,9 +35,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
+local Class <const> = require("tofu.core.class")
 
-local Channel = Class.define()
+local Channel <const> = Class.define()
 
 function Channel:__ctor()
 end
