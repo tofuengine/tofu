@@ -39,85 +39,6 @@ SOFTWARE.
 
 -- FIXME: adopt build pattern and remove copies?
 
-local function map(array, callback) -- mapper(value, index, length, array)
-  local result = {}
-  local length = #array
-  for index = 1, length do
-    local value = array[index]
-    result[index] = callback(value, index, length, array)
-  end
-  return result
-end
-
-local function filter(array, callback) -- filter(value, index, length, array)
-  local result = {}
-  local length = #array
-  local n = 0
-  for index = 1, length do
-    local value = array[index]
-    if callback(value, index, length, array) then
-      n = n + 1
-      result[n] = value
-    end
-  end
-  return result
-end
-
-local function reduce(array, callback, initial_value) -- reducer(accumulator, value, index, length, array)
-  local accumulator = initial_value
-  local length = #array
-  for index = 1, length do
-    local value = array[index]
-    if accumulator == nil then
-      accumulator = value
-    else
-      accumulator = callback(accumulator, value, index, length, array)
-    end
-  end
-  return accumulator
-end
-
-local function for_each(array, callback) -- callback(value, index, length, array)
-  local length = #array
-  for index = 1, length do
-    local value = array[index]
-    callback(value, index, length, array)
-  end
-end
-
-local function every(array, callback) -- callback(value, index, length, array)
-  local length = #array
-  for index = 1, length do
-    local value = array[index]
-    if not callback(value, index, length, array) then
-      return false, index
-    end
-  end
-  return true, nil
-end
-
-local function some(array, callback) -- callback(value, index, length, array)
-  local length = #array
-  for index = 1, length do
-    local value = array[index]
-    if callback(value, index, length, array) then
-      return true, index
-    end
-  end
-  return false, nil
-end
-
-local function find(array, callback) -- callback(value, index, length, array)
-  local length = #array
-  for index = 1, length do
-    local value = array[index]
-    if callback(value, index, length, array) then
-      return value, index
-    end
-  end
-  return nil, nil
-end
-
 local function erase_if(array, callback) -- callback(value, index, length, array)
   local erased = 0
   local length = #array
@@ -392,13 +313,6 @@ local function add(array, item, comparator)
 end
 
 return {
-  map = map,
-  filter = filter,
-  reduce = reduce,
-  for_each = for_each,
-  every = every,
-  some = some,
-  find = find,
   erase_if = erase_if,
   displace = displace,
   generate = generate,
