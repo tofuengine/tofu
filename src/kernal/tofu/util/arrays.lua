@@ -253,11 +253,11 @@ local function merged(a, b)
   local n = 0
   for index = 1, #a do
     n = n + 1
-    a[n] = a[index]
+    result[n] = a[index]
   end
   for index = 1, #b do
     n = n + 1
-    a[n] = b[index]
+    result[n] = b[index]
   end
   return result
 end
