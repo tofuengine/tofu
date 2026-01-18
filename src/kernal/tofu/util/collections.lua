@@ -58,7 +58,7 @@ end
 local function reduce(collection, callback, initial_value) -- reducer(accumulator, value, key, collection)
   local accumulator = initial_value
   for k, v in pairs(collection) do
-    if not accumulator then
+    if accumulator == nil then
       accumulator = v
     else
       accumulator = callback(accumulator, v, k, collection)

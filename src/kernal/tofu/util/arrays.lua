@@ -112,7 +112,7 @@ local function rotated(array, amount)
   local length <const> = #array
   amount = amount % length
   -- Don't bail out for zero amount, since we need to copy the array!
-  if amount < 0 then -- fix the amount if negative
+  while amount < 0 do -- fix the amount if negative
     amount = amount + length
   end
   for index = 1, length do
@@ -184,7 +184,7 @@ local function uniqued(array)
   local previous = nil
   for index = 1, length do
     local current <const> = array[index]
-    if not previous or previous ~= current then
+    if previous == nil or previous ~= current then
       n = n + 1
       result[n] = current;
     end
@@ -197,10 +197,11 @@ local function unique(array)
   local previous = nil
   for index = #array, 1, -1 do
     local current <const> = array[index]
-    if previous and previous == current then
+    if previous ~= nil and previous == current then
       table.remove(array, index)
+    else
+      previous = current
     end
-    previous = current
   end
 end
 
@@ -236,28 +237,6 @@ local function copy(array, from, to)
   for index = from or 1, to or #array do
     n = n + 1
     result[n] = array[index]
-  end
-  return result
-end
-
-local function merge(a, b)
-  local n = #a
-  for index = 1, #b do
-    n = n + 1
-    a[n] = b[index]
-  end
-end
-
-local function merged(a, b)
-  local result <const> = {}
-  local n = 0
-  for index = 1, #a do
-    n = n + 1
-    result[n] = a[index]
-  end
-  for index = 1, #b do
-    n = n + 1
-    result[n] = b[index]
   end
   return result
 end
@@ -328,8 +307,6 @@ return {
   new = new,
   equals = equals,
   copy = copy,
-  merge = merge,
-  merged = merged,
   split = split,
   sort_range = sort_range,
   sort = sort,

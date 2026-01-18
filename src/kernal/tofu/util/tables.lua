@@ -50,6 +50,21 @@ local function erase_if(t, callback) -- callback(value, key, t)
   return #to_be_erased
 end
 
+local function generate(callback)
+  local result <const> = {}
+  local index = 0
+  while true do
+    local key <const>, value <const> = callback(index)
+    if value == nil then
+      break
+    end
+    result[key] = value
+    index = index + 1
+  end
+  return result
+end
+
 return {
   erase_if = erase_if,
+  generate = generate,
 }
