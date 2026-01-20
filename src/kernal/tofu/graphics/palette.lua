@@ -38,7 +38,8 @@ SOFTWARE.
 local Palette <const> = {}
 
 function Palette.default(id)
-  local palette <const> = require(string.format("assets/lua/palettes/%s", id))
+  local file <const> = string.format("assets/lua/palettes/%s", id)
+  local palette <const> = require(file)
   return Palette.new(palette)
 end
 
