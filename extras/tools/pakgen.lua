@@ -173,18 +173,19 @@ local function optimize_files(flags, files)
   return true
 end
 
-local function fetch_files(paths, flags)
+local function fetch_files(paths, exclude, flags)
   local files = {}
+  local excluded = {}
   for _, path in ipairs(paths) do
     if not flags.quiet then
       print(string.format("Fetching files from path `%s`", path))
     end
 
-    for _, file in ipairs(attrdir(path, nil, {})) do
+    for _, file in ipairs(attrdir(path, nil, {}, exclude, excluded)) do
       table.insert(files, file)
     end
   end
-  return files
+  return files, excluded
 end
 
 --[[
@@ -365,6 +366,11 @@ local function main(arg)
   parser:argument("input")
     :description("Paths to be added to the package. Can be either single files or directories (which are recursively scanned).")
     :args("+")
+  parser:option("-x --exclude")
+    :description("Paths to be excluded from the package. Can be either single files or directories (which are recursively scanned).")
+    :default({})
+    :count("*")
+    :args(1)
   parser:option("-o --output")
     :description("Name of the the generated package file.")
     :default("aout.pak")
@@ -378,24 +384,68 @@ local function main(arg)
     :description("Tells whether the package should be encrypted.")
   parser:flag("-s --sorted")
     :description("Tells whether the package should be sorted.")
+  parser:flag("-n --dry-run")
+    :description("Prints the files that would be packaged without writing an archive.")
   local args = parser:parse(arg)
 
   local flags = {}
-  for _, flag in ipairs({ "quiet", "detailed", "encrypted", "sorted" }) do
+  for _, flag in ipairs({ "quiet", "detailed", "encrypted", "sorted", "dry_run" }) do
     flags[flag] = args[flag] and true or false
   end
 
   if not flags.quiet then
-    print("PakGen v0.7.0")
+    print("PakGen v0.8.0")
     print("=============")
   end
 
-  local files = fetch_files(args.input, flags)
+  local exclude = {}
+  for _, path in ipairs(args.exclude) do
+    table.insert(exclude, path)
+  end
+
+  local files, excluded = fetch_files(args.input, exclude, flags)
 
   if not flags.quiet then
     local optimization = flags.sorted and "sorted" or "sorted"
     local annotation = flags.encrypted and "encrypted" or "plain"
-    print(string.format("Creating %s %s archive `%s` w/ %d entries", optimization, annotation, args.output, #files))
+    if flags.dry_run then
+      print(string.format("Dry-run: %s %s archive `%s` w/ %d entries", optimization, annotation, args.output, #files))
+    else
+      print(string.format("Creating %s %s archive `%s` w/ %d entries", optimization, annotation, args.output, #files))
+    end
+  end
+
+  if flags.dry_run then
+    local total_size = 0
+    for _, file in ipairs(files) do
+      total_size = total_size + file.size
+    end
+
+    for index, file in ipairs(files) do
+      if flags.detailed and not flags.quiet then
+        print(string.format("> file `%s`\n  name: `%s`\n  size: %d",
+          file.pathfile, file.name, file.size))
+      elseif not flags.quiet then
+        print(string.format("[%04x] `%s`", index, file.name))
+      end
+    end
+
+    if not flags.quiet then
+      print(string.format("Total size: %d bytes", total_size))
+    end
+
+    if not flags.quiet and #excluded > 0 then
+      print("Excluded files:")
+      for index, file in ipairs(excluded) do
+        if flags.detailed then
+          print(string.format("- `%s` (%s)", file.name, file.pathfile))
+        else
+          print(string.format("- `%s`", file.name))
+        end
+      end
+    end
+
+    return true
   end
 
   local success = emit(args.output, flags, files)
@@ -408,7 +458,8 @@ local function main(arg)
     end
   end
 
-  os.exit(not success and -1 or 0)
+  return success
 end
 
-main(arg)
+local success = main(arg)
+os.exit(not success and -1 or 0)
