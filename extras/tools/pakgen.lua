@@ -127,7 +127,33 @@ local function null_cipher(_)
   end
 end
 
-local function attrdir(path, name, files)
+local function is_excluded(path, name, exclude)
+  if not exclude or #exclude == 0 then
+    return false
+  end
+
+  for _, ex in ipairs(exclude) do
+    if path ~= nil then
+      if path == ex or path:starts_with(ex .. "/") or path:match(ex) then
+        return true
+      end
+    end
+    if name ~= nil then
+      if name == ex or name:starts_with(ex .. "/") or name:match(ex) then
+        return true
+      end
+    end
+  end
+
+  return false
+end
+
+local function attrdir(path, name, files, exclude, excluded)
+  if is_excluded(path, name, exclude) then
+    table.insert(excluded, { pathfile = path, name = not name and path or name })
+    return files
+  end
+
   local mode = lfs.attributes(path, "mode")
   if mode == "file" then
     local size = lfs.attributes(path, "size")
@@ -139,7 +165,7 @@ local function attrdir(path, name, files)
     if entry ~= "." and entry ~= ".." then
       local subpath = path .. "/" .. entry
       local subname = not name and entry or name .. "/" .. entry
-      attrdir(subpath, subname, files)
+      attrdir(subpath, subname, files, exclude, excluded)
     end
   end
   return files
