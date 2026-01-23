@@ -57,11 +57,8 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
     #define _READER_CONTEXT_BUFFER_SIZE 1024
 #endif  /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
 
-#if defined(DEBUG)
-    #define _BOOT_SCRIPT "boot-debug"
-#else   /* DEBUG */
-    #define _BOOT_SCRIPT "boot-release"
-#endif  /* DEBUG */
+#define _BOOT_SCRIPT "boot"
+
 static const char *_kickstart_lua = "return require(\"" _BOOT_SCRIPT "\")";
 
 typedef enum Entry_Point_Methods_e {

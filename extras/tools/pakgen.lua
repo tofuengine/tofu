@@ -171,7 +171,7 @@ local function attrdir(path, name, files, exclude, excluded)
   return files
 end
 
-local function optimize_files(flags, files)
+local function optimize_files(flags, files, rename)
   local hash = {}
 
   if not flags.quiet then
@@ -182,6 +182,13 @@ local function optimize_files(flags, files)
 
   for _, file in ipairs(files) do
     local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
+
+    if rename[name] then -- Apply renaming, if any. Actually, we then just create the id from the new name.
+      name = rename[name]
+      if not flags.quiet then
+        print(string.format("Renaming `%s` to `%s`", file.name, name))
+      end
+    end
     local id = luazen.md5(name)
 
     if hash[id] then -- Check whether the (normalized) entry name appears twice.
@@ -190,7 +197,7 @@ local function optimize_files(flags, files)
     end
     hash[id] = file.name
 
-    file.id = luazen.md5(file.name)
+    file.id = id
     file.offset = offset
 
     offset = offset + file.size
@@ -346,8 +353,8 @@ local function emit_entries(writer, flags, files)
   return true
 end
 
-local function emit(output, flags, files)
-  local optimized = optimize_files(flags, files)
+local function emit(output, flags, files, rename)
+  local optimized = optimize_files(flags, files, rename)
   if not optimized then
     return false
   end
@@ -397,6 +404,11 @@ local function main(arg)
     :default({})
     :count("*")
     :args(1)
+  parser:option("-r --rename")
+    :description("Paths to be renamed in the package.")
+    :default({})
+    :count("*")
+    :args(1)
   parser:option("-o --output")
     :description("Name of the the generated package file.")
     :default("aout.pak")
@@ -420,11 +432,22 @@ local function main(arg)
   end
 
   if not flags.quiet then
-    print("PakGen v0.8.0")
+    print("PakGen v0.9.0")
     print("=============")
   end
 
-  local exclude = {}
+  local rename = {} -- TODO: move to a separate function.
+  for _, mapping in ipairs(args.rename) do
+    local index <const> = mapping:find(":", 1, true)
+    if not index then
+      error("rename mapping is malformed")
+    end
+    local src <const> = mapping:sub(1, index - 1)
+    local dst <const> = mapping:sub(index + 1)
+    rename[src] = dst
+  end
+
+  local exclude = {} -- TODO: move to a separate function.
   for _, path in ipairs(args.exclude) do
     table.insert(exclude, path)
   end
@@ -474,7 +497,7 @@ local function main(arg)
     return true
   end
 
-  local success = emit(args.output, flags, files)
+  local success = emit(args.output, flags, files, rename)
 
   if not flags.quiet then
     if success then

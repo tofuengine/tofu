@@ -302,6 +302,15 @@ OBJECTS:=$(SOURCES:%.c=%.o)
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
 RESOURCES:=$(shell find $(srcdir)/kernal -type f)
 
+ifeq ($(BUILD),release)
+	BOOT_SCRIPT=boot-release.lua
+	PACKER_EXCLUDE=panic.lua
+else
+	BOOT_SCRIPT=boot-debug.lua
+	PACKER_EXCLUDE=$^
+endif
+PACKER_RENAME=$(BOOT_SCRIPT):boot.lua
+
 # Setting the docker-image dependencies.
 DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
 
@@ -362,7 +371,7 @@ $(builddir):
 
 $(builddir)/$(KERNAL): $(RESOURCES) Makefile
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
-	@$(PACKER) $(PACKERFLAGS) $(srcdir)/kernal --output=$(builddir)/$(KERNAL)
+	@$(PACKER) $(PACKERFLAGS) $(srcdir)/kernal --output=$(builddir)/$(KERNAL) --rename=$(PACKER_RENAME) --exclude=$(PACKER_EXCLUDE)
 	@echo "Kernal packed!"
 
 $(builddir)/$(TARGET): $(OBJECTS) Makefile
