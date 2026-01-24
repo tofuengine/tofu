@@ -171,6 +171,10 @@ local function attrdir(path, name, files, exclude, excluded)
   return files
 end
 
+-- Scans the files and assigns IDs and offsets, checking for duplicates (which
+-- are not allowed). Renaming is also applied here, which affects the ID and
+-- not the actual file name (an optional alias is stored in the `alias` field
+-- of the file table entry).
 local function optimize_files(flags, files, rename)
   local hash = {}
 
@@ -184,18 +188,21 @@ local function optimize_files(flags, files, rename)
     local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
 
     if rename[name] then -- Apply renaming, if any. Actually, we then just create the id from the new name.
-      name = rename[name]
+      local alias <const> = rename[name]
       if not flags.quiet then
-        print(string.format("Renaming `%s` to `%s`", file.name, name))
+        print(string.format("Renaming `%s` to `%s`", file.name, alias))
       end
-    end
-    local id = luazen.md5(name)
+      file.alias = alias
 
+      name = alias
+    end
+
+    local id = luazen.md5(name)
     if hash[id] then -- Check whether the (normalized) entry name appears twice.
       print(string.format("*** entry w/ name `%s` is duplicated (id `%s` already used for `%s`)", file.name, string.to_hex(id), hash[id]))
       return false
     end
-    hash[id] = file.name
+    hash[id] = file.name -- We won't be using it, but it's useful for debugging.
 
     file.id = id
     file.offset = offset
@@ -311,7 +318,7 @@ local function emit_entry(writer, flags, file)
     return false
   end
 
-  local key <const> = luazen.md5(file.id)
+  local key <const> = luazen.md5(file.id) -- (Naive) Key derivation from the entry ID.
   local cipher = flags.encrypted and xor_cipher(key) or null_cipher(key)
 
   while true do
@@ -354,11 +361,6 @@ local function emit_entries(writer, flags, files)
 end
 
 local function emit(output, flags, files, rename)
-  local optimized = optimize_files(flags, files, rename)
-  if not optimized then
-    return false
-  end
-
   local writer = io.open(output, "wb")
   if not writer then
     print(string.format("*** can't create file `%s`", output))
@@ -389,6 +391,41 @@ local function emit(output, flags, files, rename)
   writer:close()
 
   return true
+end
+
+local function list_files(flags, files, excluded)
+  local total_size = 0
+  for _, file in ipairs(files) do
+    total_size = total_size + file.size
+  end
+
+  if not flags.quiet then
+    print("Archive contents:")
+  end
+
+  for index, file in ipairs(files) do
+    if flags.detailed and not flags.quiet then
+      print(string.format("> file `%s`\n  name: `%s` (`%s`)\n  size: %d\n  offset: %d\n  id: `%s`",
+        file.pathfile, file.name, file.alias or file.name, file.size, file.offset, string.to_hex(file.id)))
+    elseif not flags.quiet then
+      print(string.format("[%04x] `%s`", index, file.alias or file.name))
+    end
+  end
+
+  if not flags.quiet then
+    print(string.format("Total size: %d bytes", total_size))
+  end
+
+  if not flags.quiet and #excluded > 0 then
+    print("Excluded files:")
+    for _, file in ipairs(excluded) do
+      if flags.detailed then
+        print(string.format("- `%s` (%s)", file.name, file.pathfile))
+      else
+        print(string.format("- `%s`", file.name))
+      end
+    end
+  end
 end
 
 local function main(arg)
@@ -422,18 +459,23 @@ local function main(arg)
     :description("Tells whether the package should be encrypted.")
   parser:flag("-s --sorted")
     :description("Tells whether the package should be sorted.")
+  parser:flag("-l --list")
+    :description("Lists the contents of the package.")
   parser:flag("-n --dry-run")
-    :description("Prints the files that would be packaged without writing an archive.")
+    :description("Don't write the archive, just simulate the process.")
   local args = parser:parse(arg)
 
   local flags = {}
-  for _, flag in ipairs({ "quiet", "detailed", "encrypted", "sorted", "dry_run" }) do
+  for _, flag in ipairs({ "quiet", "detailed", "encrypted", "sorted", "list", "dry_run" }) do
     flags[flag] = args[flag] and true or false
   end
 
   if not flags.quiet then
-    print("PakGen v0.9.0")
-    print("=============")
+    print("PakGen v0.10.0")
+    print("==============")
+    if flags.dry_run then
+      print("!!! DRY-RUN MODE ENABLED !!!")
+    end
   end
 
   local rename = {} -- TODO: move to a separate function.
@@ -455,45 +497,21 @@ local function main(arg)
   local files, excluded = fetch_files(args.input, exclude, flags)
 
   if not flags.quiet then
-    local optimization = flags.sorted and "sorted" or "sorted"
+    local optimization = flags.sorted and "optimized" or "sequential"
     local annotation = flags.encrypted and "encrypted" or "plain"
-    if flags.dry_run then
-      print(string.format("Dry-run: %s %s archive `%s` w/ %d entries", optimization, annotation, args.output, #files))
-    else
-      print(string.format("Creating %s %s archive `%s` w/ %d entries", optimization, annotation, args.output, #files))
-    end
+    print(string.format("Archive `%s` is %s and %s w/ %d entries", args.output, optimization, annotation, #files))
+  end
+
+  local optimized = optimize_files(flags, files, rename)
+  if not optimized then
+    return false
+  end
+
+  if flags.list then
+    list_files(flags, files, excluded)
   end
 
   if flags.dry_run then
-    local total_size = 0
-    for _, file in ipairs(files) do
-      total_size = total_size + file.size
-    end
-
-    for index, file in ipairs(files) do
-      if flags.detailed and not flags.quiet then
-        print(string.format("> file `%s`\n  name: `%s`\n  size: %d",
-          file.pathfile, file.name, file.size))
-      elseif not flags.quiet then
-        print(string.format("[%04x] `%s`", index, file.name))
-      end
-    end
-
-    if not flags.quiet then
-      print(string.format("Total size: %d bytes", total_size))
-    end
-
-    if not flags.quiet and #excluded > 0 then
-      print("Excluded files:")
-      for index, file in ipairs(excluded) do
-        if flags.detailed then
-          print(string.format("- `%s` (%s)", file.name, file.pathfile))
-        else
-          print(string.format("- `%s`", file.name))
-        end
-      end
-    end
-
     return true
   end
 
