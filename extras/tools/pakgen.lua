@@ -161,13 +161,28 @@ local function attrdir(path, name, files, exclude, excluded)
     return files
   end
 
+  -- We scan the directory entries and sort them so that files come before
+  -- directories, and both are sorted alphabetically.
+  local entries = {}
   for entry in lfs.dir(path) do
     if entry ~= "." and entry ~= ".." then
       local subpath = path .. "/" .. entry
       local subname = not name and entry or name .. "/" .. entry
-      attrdir(subpath, subname, files, exclude, excluded)
+      table.insert(entries, { entry = entry, path = subpath, name = subname })
     end
   end
+
+  table.sort(entries, function(lhs, rhs)
+      local lhs_mode = lfs.attributes(lhs.path, "mode")
+      local rhs_mode = lfs.attributes(rhs.path, "mode")
+      return (lhs_mode == "file" and rhs_mode == "directory")
+        or (lhs_mode == rhs_mode and lhs.path < rhs.path)
+    end)
+
+  for _, entry in ipairs(entries) do
+    attrdir(entry.path, entry.name, files, exclude, excluded)
+  end
+
   return files
 end
 
@@ -176,14 +191,11 @@ end
 -- not the actual file name (an optional alias is stored in the `alias` field
 -- of the file table entry).
 local function optimize_files(flags, files, rename)
-  local hash = {}
-
   if not flags.quiet then
     print(string.format("Optimizing..."))
   end
 
-  local offset = HEADER_SIZE + #files * ENTRY_HEADER_SIZE
-
+  local hash = {}
   for _, file in ipairs(files) do
     local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
 
@@ -205,8 +217,24 @@ local function optimize_files(flags, files, rename)
     hash[id] = file.name -- We won't be using it, but it's useful for debugging.
 
     file.id = id
-    file.offset = offset
+  end
 
+  if flags.sorted then -- If sorting is requested, sort the files by their ID (to enabled binary search).
+    if not flags.quiet then
+      print(string.format("Sorting by ID..."))
+    end
+    table.sort(files, function(lhs, rhs)
+        return lhs.id < rhs.id
+      end)
+  end
+
+  if not flags.quiet then
+    print(string.format("Assigning offsets..."))
+  end
+
+  local offset = HEADER_SIZE + #files * ENTRY_HEADER_SIZE -- Assign the offsets, after the directory has been sorted.
+  for _, file in ipairs(files) do
+    file.offset = offset
     offset = offset + file.size
   end
 
@@ -285,19 +313,7 @@ end
 
 ]]
 local function emit_directory(writer, flags, files)
-  -- Create a copy, we don't want to sort the files table so that we don't mess
-  -- with the output order.
-  local directory = {}
-  for i, v in ipairs(files) do directory[i] = v end
-
-  if flags.sorted then
-    if not flags.quiet then
-      print(string.format("Sorting..."))
-    end
-    table.sort(directory, function(lhs, rhs) return lhs.id < rhs.id end)
-  end
-
-  for index, entry in ipairs(directory) do
+  for index, entry in ipairs(files) do
     if not flags.quiet then
       print(string.format("[%04x] `%s` -> `%s`",
         index, string.to_hex(entry.id), entry.name))
@@ -405,8 +421,8 @@ local function list_files(flags, files, excluded)
 
   for index, file in ipairs(files) do
     if flags.detailed and not flags.quiet then
-      print(string.format("> file `%s`\n  name: `%s` (`%s`)\n  size: %d\n  offset: %d\n  id: `%s`",
-        file.pathfile, file.name, file.alias or file.name, file.size, file.offset, string.to_hex(file.id)))
+      print(string.format("> file `%s`\n  name: `%s` (`%s`)\n  size: %d\n  id: `%s`",
+        file.pathfile, file.name, file.alias or file.name, file.size, string.to_hex(file.id)))
     elseif not flags.quiet then
       print(string.format("[%04x] `%s`", index, file.alias or file.name))
     end
@@ -471,7 +487,7 @@ local function main(arg)
   end
 
   if not flags.quiet then
-    print("PakGen v0.10.0")
+    print("PakGen v0.11.0")
     print("==============")
     if flags.dry_run then
       print("!!! DRY-RUN MODE ENABLED !!!")
