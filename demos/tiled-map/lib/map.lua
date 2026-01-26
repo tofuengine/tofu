@@ -37,7 +37,6 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local Bank = require("tofu.graphics.bank")
-local Image = require("tofu.graphics.image")
 local File = require("tofu.io.file")
 local Grid2D = require("tofu.util.grid2d")
 
@@ -81,7 +80,7 @@ function Map.from_file(file)
     end
   end
 
-  local bank = Bank.new(Image.new(tokens[1]), tonumber(tokens[2]), tonumber(tokens[3]))
+  local bank = Bank.from_image(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
   local grid = Grid2D.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
 
   return Map.new(bank, grid)

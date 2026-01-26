@@ -43,7 +43,6 @@ local Tweener = require("tofu.generators.tweener")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -63,8 +62,8 @@ local BRAKE <const> = 25.0
 local Game = Class.define()
 
 function Game:__ctor()
-  self.bank = Bank.new(Image.new("assets/images/racing-car-tiny-red.img"), 16, 16)
---  self.bank = Bank.new(Image.new("assets/images/racing-car-small-red.img"), 32, 32)
+  self.bank = Bank.from_image("assets/images/racing-car-tiny-red.img", 16, 16)
+--  self.bank = Bank.from_image("assets/images/racing-car-small-red.img", 32, 32)
   self.tweener = Tweener.new("sine-out")
 
   self.sprites = {}

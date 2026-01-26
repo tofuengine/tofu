@@ -41,7 +41,6 @@ local Controller = require("tofu.input.controller")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -64,7 +63,7 @@ function Main:__ctor()
   canvas:transparent({ ["0"] = false, ["11"] = true })
 
   self.bunnies = {}
-  self.bank = Bank.new(Image.new("assets/bunnies.img"), "assets/bunnies.sheet")
+  self.bank = Bank.from_image("assets/bunnies.img", "assets/bunnies.sheet")
   self.speed = 1.0
   self.running = true
   self.static = true

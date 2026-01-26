@@ -43,7 +43,6 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local PALETTE <const> = Palette.default("pico-8")
@@ -78,7 +77,7 @@ function Main:__ctor()
   local x0, y0 = WIDTH * 0.25, HEIGHT * 0
   self.area = { x = x0, y = y0, width = WIDTH * 0.50, height = HEIGHT * 1 }
 
-  self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
+  self.bank = Bank.from_image("assets/sheet.img", 8, 8)
   self.wave = Wave.new("triangle", PERIOD)
 end
 

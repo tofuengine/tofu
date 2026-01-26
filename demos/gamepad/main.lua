@@ -39,7 +39,6 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
-local Image = require("tofu.graphics.image")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
@@ -68,7 +67,7 @@ local INDICES <const> = {
 local Main = Class.define()
 
 function Main:__ctor()
-  self.bank = Bank.new(Image.new("assets/sheet.img"), 12, 12)
+  self.bank = Bank.from_image("assets/sheet.img", 12, 12)
   self.down = {}
   self.scale = {}
 end

@@ -41,7 +41,6 @@ local Controller = require("tofu.input.controller")
 local Cursor = require("tofu.input.cursor")
 local Bank = require("tofu.graphics.bank")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
@@ -56,7 +55,7 @@ local Main = Class.define()
 
 function Main:__ctor()
   self.background = Image.new("assets/background.img")
-  self.bank = Bank.new(Image.new("assets/sheet.img"), 32, 32)
+  self.bank = Bank.from_image("assets/sheet.img", 32, 32)
   self.velocity = { x = 0, y = 0 }
   self.position = { x = 0, y = 0 }
   self.cursor = { x = 0, y = 0 }

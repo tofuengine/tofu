@@ -40,7 +40,6 @@ local System = require("tofu.core.system")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 local Controller = require("tofu.input.controller")
@@ -61,7 +60,7 @@ local Main = Class.define()
 
 function Main:__ctor()
   self.bunnies = {}
-  self.bank = Bank.new(Image.new("assets/bunnies.img"), "assets/bunnies.sheet")
+  self.bank = Bank.from_image("assets/bunnies.img", "assets/bunnies.sheet")
 
   self.world = World.new(0.0, 200.0)
 

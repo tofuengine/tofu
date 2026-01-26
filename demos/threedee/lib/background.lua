@@ -38,7 +38,6 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Bank = require("tofu.graphics.bank")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Program = require("tofu.graphics.program")
 
 local config = require("config")
@@ -54,7 +53,7 @@ local SKY <const> = {
 local Background = Class.define()
 
 function Background:__ctor(camera, index)
-  self.skyline = Bank.new(Image.new("assets/skyline.img"))
+  self.skyline = Bank.from_image("assets/skyline.img")
   self.camera = camera
   self.index = index
   self.program = Program.new()

@@ -42,7 +42,6 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local PALETTE <const> = Palette.default("nes")
@@ -53,7 +52,7 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local Main = Class.define()
 
 function Main:__ctor()
-  self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
+  self.bank = Bank.from_image("assets/sprites.img", 16, 16)
 
   self.x, self.y = 0, 0
   self.x_speed, self.y_speed = 0, 0

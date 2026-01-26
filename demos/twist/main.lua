@@ -40,7 +40,6 @@ local System = require("tofu.core.system")
 local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
@@ -52,7 +51,7 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local Main = Class.define()
 
 function Main:__ctor()
-  self.bank = Bank.new(Image.new("assets/sheet.img"), 8, 8)
+  self.bank = Bank.from_image("assets/sheet.img", 8, 8)
 
   local cw, ch = self.bank:size(Bank.NIL)
   self.columns = WIDTH / cw

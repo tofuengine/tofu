@@ -38,7 +38,6 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local Bank = require("tofu.graphics.bank")
-local Image = require("tofu.graphics.image")
 local Arrays = require("tofu.util.arrays")
 
 local STAR_WIDTH = 23
@@ -52,7 +51,7 @@ function Stars:__ctor(width, height, _, pool)
   local area = { x0 = 0, y0 = 0, x1 = width - 1, y1 = height - 1 }
 
   self.pool = {}
-  self.bank = Bank.new(Image.new("assets/images/atlas.img"), STAR_WIDTH, STAR_HEIGHT)
+  self.bank = Bank.from_image("assets/images/atlas.img", STAR_WIDTH, STAR_HEIGHT)
   self.timer = pool:spawn(0.5, 0, function(_)
       if #self.pool >= MAX_STARS_COUNT then
         return

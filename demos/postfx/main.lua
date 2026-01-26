@@ -42,7 +42,6 @@ local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local Sprite = require("lib/sprite")
@@ -58,7 +57,7 @@ local Main = Class.define()
 
 function Main:__ctor()
   self.sprites = {}
-  self.bank = Bank.new(Image.new("assets/images/diamonds.img"), 16, 16)
+  self.bank = Bank.from_image("assets/images/diamonds.img", 16, 16)
   self.speed = 1.0
   self.running = true
 end

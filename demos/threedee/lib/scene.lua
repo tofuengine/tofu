@@ -37,7 +37,6 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local Bank = require("tofu.graphics.bank")
-local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Arrays = require("tofu.util.arrays")
 
@@ -129,7 +128,7 @@ end
 
 function Scene:__ctor(camera, palette, index)
   self.camera = camera
-  self.bank = Bank.new(Image.new("assets/texture.img"), "assets/texture.sheet")
+  self.bank = Bank.from_image("assets/texture.img", "assets/texture.sheet")
 
   self.lut = _build_table(palette, FOG_LEVELS, FOG_COLOR, { index })
 

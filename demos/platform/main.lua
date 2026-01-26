@@ -81,9 +81,9 @@ end
 
 function Main:__ctor()
   self.atlas = Image.new(1, 1)
-  self.pixies = Bank.new(self.atlas, 1, 1)
-  self.bank = Bank.new(Image.new("assets/sprites.img"), 16, 16)
-  self.tileset = Bank.new(Image.new("assets/tileset.img"), 16, 16)
+  self.pixies = Bank.new(self.atlas)
+  self.bank = Bank.from_image("assets/sprites.img", 16, 16)
+  self.tileset = Bank.from_image("assets/tileset.img", 16, 16)
 
   self.animations = {
       ["sleeping-right"] = Animation.new(self.bank, { 12 }, 0, nil, false, false),
