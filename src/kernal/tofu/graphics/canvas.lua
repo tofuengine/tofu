@@ -41,6 +41,17 @@ local Canvas <const> = {}
 
 local _default = nil
 
+function Canvas.from_image(...)
+  local args <const> = { ... }
+  if #args == 1 then -- name
+    return Canvas.new(Image.new(args[1]))
+  elseif #args == 2 then -- width, height
+    return Canvas.new(Image.new(args[1], args[2]))
+  else
+    error("invalid arguments for `from_image` method", 2)
+  end
+end
+
 function Canvas.default()
   if not _default then
     local image <const> = Image.new() -- Get a reference to the VRAM as an `Image`.

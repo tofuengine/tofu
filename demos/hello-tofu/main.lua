@@ -40,11 +40,13 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
+local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
-local Image = require("tofu.graphics.image")
+local Palette = require("tofu.graphics.palette")
 local XForm = require("tofu.graphics.xform")
 
 -- Define some constants.
+local PALETTE <const> = Palette.default("pico-8")
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
@@ -56,7 +58,7 @@ local MESSAGE <const> = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Create a new canvas with the default image size.
-  self.canvas = Canvas.new(Image.new(WIDTH, HEIGHT))
+  self.canvas = Canvas.from_image(WIDTH, HEIGHT)
 
   -- Load a custom 8x8 font from file.
   -- Please note that, as default, palette colour `0` is set as transparent. This
@@ -75,6 +77,7 @@ function Main:__ctor()
 end
 
 function Main:init()
+  Display.palette(PALETTE)
 end
 
 function Main:deinit()

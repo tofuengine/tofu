@@ -39,7 +39,6 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Controller = require("tofu.input.controller")
@@ -52,7 +51,7 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local Main = Class.define()
 
 function Main:__ctor()
-  self.buffer = Canvas.new(Image.new(WIDTH, HEIGHT))
+  self.buffer = Canvas.from_image(WIDTH, HEIGHT)
 
   for x = 0, WIDTH - 1 do
     self.buffer:line(x, 0, x, HEIGHT - 1, x % 16)

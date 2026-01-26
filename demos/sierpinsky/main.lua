@@ -39,7 +39,6 @@ local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
-local Image = require("tofu.graphics.image")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
@@ -62,7 +61,7 @@ local function _mid_point(a, b)
 end
 
 function Main:__ctor()
-  self.buffer = Canvas.new(Image.new(WIDTH, HEIGHT))
+  self.buffer = Canvas.from_image(WIDTH, HEIGHT)
 
   self.age = math.huge
 end
