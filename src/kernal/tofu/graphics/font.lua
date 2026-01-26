@@ -36,7 +36,6 @@ SOFTWARE.
 ]]--
 
 local Bank <const> = require("tofu.graphics.bank")
-local Image <const> = require("tofu.graphics.image")
 
 local Font <const> = {}
 
@@ -68,15 +67,15 @@ end
 function Font.from_image(...)
   local args <const> = { ... }
   if #args == 2 then -- file, cells_file
-    return Font.new(Bank.new(Image.new(args[1]), args[2]))
+    return Font.new(Bank.from_image(args[1], args[2]))
   elseif #args == 3 then
     if type(args[2]) == 'string' then -- file, cells_file, alphabet
-      return Font.new(Bank.new(Image.new(args[1]), args[2]), args[3])
+      return Font.new(Bank.from_image(args[1], args[2]), args[3])
     else -- file, width, height
-      return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]))
+      return Font.new(Bank.from_image(args[1], args[2], args[3]))
     end
   elseif #args == 4 then -- file, width, height, alphabet
-    return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]), args[4])
+    return Font.new(Bank.from_image(args[1], args[2], args[3]), args[4])
   else
     error("invalid arguments for `from_image` method", 2)
   end
