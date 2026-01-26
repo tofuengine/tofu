@@ -61,7 +61,7 @@ function Font.default(...)
     local font = FONTS[args[1]]
     return Font.from_image(font.file, font.width, font.height)
   else
-    error("invalid arguments for default font")
+    error("invalid arguments for default font", 2)
   end
 end
 
@@ -78,7 +78,7 @@ function Font.from_image(...)
   elseif #args == 4 then -- file, width, height, alphabet
     return Font.new(Bank.new(Image.new(args[1]), args[2], args[3]), args[4])
   else
-    error("invalid arguments for `from_image` method")
+    error("invalid arguments for `from_image` method", 2)
   end
 end
 

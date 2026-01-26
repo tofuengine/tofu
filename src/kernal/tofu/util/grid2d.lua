@@ -41,13 +41,13 @@ local Grid2D <const> = {}
 function Grid2D.parse(content)
   local columns <const>, rows <const>, data <const> = string.match(content, "^(%d+)|(%d+)|(.+)$")
   if not columns or not rows or not data then
-    error("grid content is malformed")
+    error("grid content is malformed", 2)
   end
 
   local width <const> = math.tointeger(columns)
   local height <const> = math.tointeger(rows)
   if width <= 0 or height <= 0 then
-    error("grid dimensions must be positive")
+    error("grid dimensions must be positive", 2)
   end
 
   local grid <const> = Grid2D.new(width, height, {})
