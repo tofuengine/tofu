@@ -49,9 +49,10 @@ local XForm = require("tofu.graphics.xform")
 local PALETTE <const> = Palette.default("pico-8")
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 -- The entry point is a class, we are creating with a helper function.
-local Main = Class.define()
+local Main <const> = Class.define()
 
 -- The message we are displaying, as a "constant".
 local MESSAGE <const> = "Hello, Tofu!"
@@ -86,13 +87,12 @@ end
 function Main:handle_input()
   local recompute = false
 
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     self.running = not self.running
-  elseif controller:is_pressed("y") then
+  elseif CONTROLLER:is_pressed("y") then
     self.factor = self.factor + 0.1
     recompute = true
-  elseif controller:is_pressed("x") then
+  elseif CONTROLLER:is_pressed("x") then
     self.factor = self.factor - 0.1
     recompute = true
   end
@@ -108,20 +108,20 @@ end
 
 function Main:render(canvas, _)
   -- Query current time since the start, expressed in seconds (as a floating point number).
-  local t = System.time()
+  local t <const> = System.time()
 
   -- Get a reference to the off-screen canvas (i.e. the the virtual-screen).
-  local offscreen = self.canvas
+  local offscreen <const> = self.canvas
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
-  local image = offscreen:image()
+  local image <const> = offscreen:image()
   image:clear(0)
 
   -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.
-  local canvas_width, canvas_height = image:size()
-  local text_width, text_height = self.font:size(MESSAGE)
-  local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
+  local canvas_width <const>, canvas_height <const> = image:size()
+  local text_width <const>, text_height <const> = self.font:size(MESSAGE)
+  local x <const>, y <const> = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
   canvas:rectangle("fill", 2, 2, canvas_width - 4, canvas_height - 4, 3)
 
@@ -129,20 +129,20 @@ function Main:render(canvas, _)
   -- to change color for each character.
   for i = 1, #MESSAGE do
     -- Get the i-th string character.
-    local c = MESSAGE:sub(i, i)
+    local c <const> = MESSAGE:sub(i, i)
 
     -- Query for font char width/height, we'll use it for offsetting the characters.
-    local char_width, char_height = self.font:size(c)
+    local char_width <const>, char_height <const> = self.font:size(c)
 
     -- Compute the vertical offset using a sine wave, each character with a different value.
-    local dx = math.cos(t * 1.5           ) * 2 * char_width + (i - 1) * char_width
-    local dy = math.sin(t * 2.5 + i * 0.25) * 2 * char_height
+    local dx <const> = math.cos(t * 1.5           ) * 2 * char_width + (i - 1) * char_width
+    local dy <const> = math.sin(t * 2.5 + i * 0.25) * 2 * char_height
 
     -- Convert the time to an integer (speeding it up a bit) and get a different
     -- colour for each character. Then instruct the engine that colour `15` need to be
     -- remapped to colour `index`.
-    local index = (tonumber(t * 5) + i) % 16
-    offscreen:shift(15, index)
+    local index <const> = (tonumber(t * 5) + i) % 16
+    offscreen:shift(1, index)
 
     -- Draw the i-th character, accounting for vertical offset.
     offscreen:write(x + dx, y + dy, self.font, c)
