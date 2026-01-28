@@ -461,37 +461,24 @@ local function write_image(path, image, palette, transparent)
   return true
 end
 
--- Load and parse a palette file in the simple hexadecimal format where each
--- line contains a RGB hex triplet (e.g. `ff00ff` for magenta).
---
--- See: https://lospec.com/palette-list
+-- The palette is a Lua file that return, as a module, a table of RGB colors.
 local function load_and_parse_palette(path)
-  local reader = io.open(path, "rb")
-  if not reader then
-    log("*** can't open palette file `%s`", path)
+  local palette_module = dofile(path)
+  if not palette_module then
+    log("*** can't load palette module `%s`", path)
     return nil
   end
 
   local palette = {}
-  while true do
-    local line = reader:read("*l")
-    if not line then
-      break
-    end
-    local rgb = tonumber(line, 16)
-
+  for index, color in ipairs(palette_module) do
     if #palette == 256 then
       log("*** too many colors in the palette (max 256)")
-      reader:close()
       return nil
     end
 
-    local r, g, b = from_rgba32(rgb)
-    log_debug("new palette entry found: %02x%02x%02x", r, g, b)
-    table.insert(palette, { r = r, g = g, b = b })
+    log_debug("new palette entry found: %02x%02x%02x", color[1], color[2], color[3])
+    table.insert(palette, { r = color[1], g = color[2], b = color[3] })
   end
-
-  reader:close()
 
   return palette
 end
