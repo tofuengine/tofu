@@ -258,6 +258,17 @@
 // performances.
 #define TOFU_GRAPHICS_OPTIMIZED_ROTATIONS
 
+// Switches on automatic palette optimizations. When enabled, any change to the
+// palette state (i.e. shifting and/or transparency) will immediately update the
+// internal mapping table used during the blitting process. Otherwise, the
+// mapping table will be updated only when the palette state is "commited"
+// explicitly with a call to `gl_palette_state_commit()`.
+//
+// It's suggested to enable this macro unless you want to accumulate state
+// changes and commit them all at once, for example when rendering many frames
+// with the same palette state.
+#define TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS
+
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:

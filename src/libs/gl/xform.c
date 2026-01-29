@@ -128,10 +128,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-#if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
-    const GL_Bool_t *transparent = state->transparent;
-#endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
+    const uint16_t *state_map = state->palette_state.map;
 
     const GL_XForm_Table_Entry_t *table = xform->table;
     const GL_XForm_Wraps_t wrap = xform->wrap;
@@ -301,14 +298,14 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 sy += area.y;
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
-                GL_Pixel_t index = shifting[*sptr];
+                uint16_t mapped = state_map[*sptr];
 #if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
-                if (!transparent[index]) {
-                    *dptr = index;
+                if (mapped != GL_PALETTE_SKIP) {
+                    *dptr = (GL_Pixel_t)mapped;
                 }
 #else
                 // NOTE: no transparency in Mode-7!
-                *dptr = index;
+                *dptr = (GL_Pixel_t)mapped;
 #endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
             }
 

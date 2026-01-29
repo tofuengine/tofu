@@ -35,38 +35,45 @@
  * SOFTWARE.
  */
 
-#ifndef TOFU_LIBS_GL_CONTEXT_H
-#define TOFU_LIBS_GL_CONTEXT_H
+#ifndef TOFU_LIBS_GL_PALETTE_STATE_H
+#define TOFU_LIBS_GL_PALETTE_STATE_H
 
 #include "common.h"
-#include "palette.h"
-#include "palette_state.h"
-#include "surface.h"
+
+#include <core/config.h>
+#include <core/platform.h>
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-typedef struct GL_State_s {
-    GL_Quad_t clipping_region;
-    GL_Palette_State_t palette_state;
-} GL_State_t;
+typedef struct GL_Palette_State_s {
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS]; // Remap a color into another
 
-typedef struct GL_Context_s {
-    const GL_Surface_t *surface;
-    struct {
-        GL_State_t current;
-        GL_State_t *stack;
-    } state;
-} GL_Context_t;
+    bool transparent[GL_MAX_PALETTE_COLORS]; // Transparency flag per color
 
-extern GL_Context_t *GL_context_create(const GL_Surface_t *surface);
-extern void GL_context_destroy(GL_Context_t *context);
+    // The LUT map for fast access during drawing. It combines shifting
+    // and transparency:
+    // 0x0000 = SKIP
+    // 0x0100 | index = WRITE idx (index into lower 8 bits)
+    uint16_t map[GL_MAX_PALETTE_COLORS];
 
-extern void GL_context_reset(GL_Context_t *context);
-extern void GL_context_push(GL_Context_t *context);
-extern void GL_context_pop(GL_Context_t *context, size_t levels);
+#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
+    bool dirty; // Dirty-flag, the map needs to be recomputed
+#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
+} GL_Palette_State_t;
 
-extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
-extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
-extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+#define GL_PALETTE_TRANSPARENT_MASK     0xFF00
+#define GL_PALETTE_SHIFTING_MASK        0x00FF
 
-#endif  /* TOFU_LIBS_GL_CONTEXT_H */
+#define GL_PALETTE_SKIP                 0x0000
+
+extern void gl_palette_state_init(GL_Palette_State_t *state);
+extern void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to);
+extern void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent);
+extern void gl_palette_state_reset(GL_Palette_State_t *state);
+#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
+extern void gl_palette_state_commit(GL_Palette_State_t *state);
+#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
+
+#endif  /* TOFU_LIBS_GL_PALETTE_STATE_H */

@@ -50,15 +50,13 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 }
 #endif
 
-
 // https://lodev.org/cgtutor/floodfill.html
 void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index, bool transparency)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
 
     if (seed.x < clipping_region->x0 || seed.x >= clipping_region->x1
         || seed.y < clipping_region->y0 || seed.y >= clipping_region->y1) {
@@ -71,12 +69,13 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     const size_t dskip = dwidth;
 
-    const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
-    const GL_Pixel_t replacement = shifting[index];
-
-    if (transparency && transparent[replacement]) {
+    uint16_t mapped = state_map[index];
+    if (transparency && mapped == GL_PALETTE_SKIP) {
         return;
     }
+
+    const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
+    const GL_Pixel_t replacement = (GL_Pixel_t)mapped;
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
@@ -134,8 +133,7 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = area.x,
@@ -175,11 +173,11 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
     for (int i = height; i; --i) {
         int x = drawing_region.x0; // TODO: optimize?
         for (int j = width; j; --j) {
-            const GL_Pixel_t index = shifting[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
-            if (transparent[index]) {
+            uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
+            if (mapped == GL_PALETTE_SKIP) {
                 ++dptr;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = (GL_Pixel_t)mapped;
             }
             x += 1;
         }
@@ -193,8 +191,7 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = area.y;
@@ -245,11 +242,12 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
         for (int j = width; j; --j) {
             const GL_Pixel_t from = *dptr;
             const GL_Pixel_t to = *(sptr++);
-            const GL_Pixel_t index = shifting[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
-            if (transparent[index]) {
+
+            uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
+            if (mapped == GL_PALETTE_SKIP) {
                 ++dptr;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = (GL_Pixel_t)mapped;
             }
             x += 1;
         }
@@ -370,8 +368,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
+    const uint16_t *state_map = state->palette_state.map; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
@@ -434,11 +431,13 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t value = *(mptr++);
-            const GL_Pixel_t index = shifting[*(sptr++)];
-            if (transparent[index] || !should_write(value, threshold)) {
+
+            uint16_t mapped = state_map[*(sptr)];;
+            if (mapped == GL_PALETTE_SKIP
+                || !should_write(value, threshold)) {
                 ++dptr;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = (GL_Pixel_t)mapped;
             }
         }
         sptr += sskip;
@@ -523,8 +522,7 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
     const GL_Pixel_Function_t blend = _pixel_functions[function];
 
     int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
@@ -575,11 +573,11 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            const GL_Pixel_t index = shifting[blend(*dptr, *(sptr++))];
-            if (transparent[index]) {
+            uint16_t mapped = state_map[blend(*dptr, *(sptr++))];
+            if (mapped == GL_PALETTE_SKIP) {
                 ++dptr;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = (GL_Pixel_t)mapped;
             }
         }
         sptr += sskip;

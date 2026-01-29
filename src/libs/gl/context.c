@@ -54,15 +54,14 @@ static void _reset(GL_Context_t *context)
                 .x1 = (int)surface->width,
                 .y1 = (int)surface->height
             },
-            .shifting = { 0 },
-            .transparent = { 0 }
+#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
+            .palette_state = (GL_Palette_State_t){ { 0 }, { 0 }, { 0 }, true }
+#else
+            .palette_state = (GL_Palette_State_t){ { 0 }, { 0 }, { 0 } }
+#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
         };
 
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state.shifting[i] = (GL_Pixel_t)i;
-        state.transparent[i] = GL_BOOL_FALSE;
-    }
-    state.transparent[0] = GL_BOOL_TRUE;
+    gl_palette_state_init(&state.palette_state);
 
     context->state.current = state;
 }
@@ -149,13 +148,16 @@ void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, cons
     GL_State_t *state = &context->state.current;
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            state->shifting[i] = (GL_Pixel_t)i;
+            gl_palette_state_shifting(&state->palette_state, (GL_Pixel_t)i, (GL_Pixel_t)i);
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
-            state->shifting[from[i]] = to[i];
+            gl_palette_state_shifting(&state->palette_state, from[i], to[i]);
         }
     }
+#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
+    gl_palette_state_commit(&state->palette_state);
+#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
 
 void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
@@ -163,14 +165,16 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
     GL_State_t *state = &context->state.current;
     if (!indexes) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            state->transparent[i] = GL_BOOL_FALSE;
+            gl_palette_state_transparent(&state->palette_state, (GL_Pixel_t)i, i == 0);
         }
-        state->transparent[0] = GL_BOOL_TRUE;
     } else {
         for (size_t i = 0; i < count; ++i) {
-            state->transparent[indexes[i]] = transparent[i];
+            gl_palette_state_transparent(&state->palette_state, indexes[i], transparent[i]);
         }
     }
+#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
+    gl_palette_state_commit(&state->palette_state);
+#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transparency)
@@ -178,8 +182,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
 
     const int width = clipping_region->x1 - clipping_region->x0;
     const int height = clipping_region->y1 - clipping_region->y0;
@@ -188,11 +191,11 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     }
     // FIXME: remove this early bailing out everywhere? Null for-loop suffices and is better due to lack of branch?
 
-    index = shifting[index];
-
-    if (transparency && transparent[index]) {
+    uint16_t mapped = state_map[index];
+    if (mapped == GL_PALETTE_SKIP) {
         return;
     }
+    index = (GL_Pixel_t)mapped;
 
     GL_Pixel_t *ddata = surface->data;
 

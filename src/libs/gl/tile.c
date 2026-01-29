@@ -52,8 +52,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
 
     int skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = offset.y;
@@ -109,11 +108,11 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            const GL_Pixel_t index = shifting[srow[u]];
-            if (transparent[index]) {
+            uint16_t mapped = state_map[srow[u]];
+            if (mapped == GL_PALETTE_SKIP) {
                 ++dptr;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = (GL_Pixel_t)mapped;
             }
             u = (u + 1) % (int)area.width; // Prefer modulo over branch.
         }
@@ -127,8 +126,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
+    const uint16_t *state_map = state->palette_state.map;
 
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);
@@ -209,11 +207,11 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            GL_Pixel_t index = shifting[srow[u]];
-            if (transparent[index]) {
+            uint16_t mapped = state_map[srow[u]];
+            if (mapped == GL_PALETTE_SKIP) {
                 ++dptr;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = (GL_Pixel_t)mapped;
             }
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
