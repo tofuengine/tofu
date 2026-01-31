@@ -41,12 +41,18 @@
 
 static inline void _compute_map_entry(GL_Palette_State_t *state, GL_Pixel_t index)
 {
+#if defined(TOFU_GRAPHICS_PALETTE_SHITFING_AWARE_TRANSPARENCY)
     GL_Pixel_t to = state->shifting[index]; // We test the transparency on the target color!
     if (state->transparent[to]) {
         state->map[index] = GL_PALETTE_SKIP;
     } else {
         state->map[index] = (uint16_t)(_WRITE_PIXEL | to);
     }
+#else
+    state->map[index] = state->transparent[index]
+        ? GL_PALETTE_SKIP
+        : (uint16_t)(_WRITE_PIXEL | state->shifting[index]);
+#endif
 }
 
 void gl_palette_state_init(GL_Palette_State_t *state)
@@ -62,6 +68,7 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
         return;
     }
     state->shifting[from] = to;
+
     _compute_map_entry(state, from);
 }
 
@@ -71,15 +78,16 @@ void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, b
         return;
     }
     state->transparent[index] = is_transparent;
+
     _compute_map_entry(state, index);
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
 {
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        bool is_transparent = i == 0;
         state->shifting[i] = (uint8_t)i;
-        state->transparent[i] = is_transparent;
-        state->map[i] = (uint16_t)((is_transparent ? 0 : _WRITE_PIXEL) | i);
+        state->transparent[i] = i == 0;
+
+        _compute_map_entry(state, i);
     }
 }
