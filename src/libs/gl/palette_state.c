@@ -62,11 +62,7 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
         return;
     }
     state->shifting[from] = to;
-#if defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
     _compute_map_entry(state, from);
-#else
-    state->dirty = true;
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
@@ -75,11 +71,7 @@ void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, b
         return;
     }
     state->transparent[index] = is_transparent;
-#if defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
     _compute_map_entry(state, index);
-#else
-    state->dirty = true;
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
@@ -90,22 +82,4 @@ void gl_palette_state_reset(GL_Palette_State_t *state)
         state->transparent[i] = is_transparent;
         state->map[i] = (uint16_t)((is_transparent ? 0 : _WRITE_PIXEL) | i);
     }
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-    state->dirty = false;
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
-
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-void gl_palette_state_commit(GL_Palette_State_t *state)
-{
-    if (!state->dirty) {
-        return;
-    }
-
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        _compute_map_entry(state, (GL_Pixel_t)i);
-    }
-
-    state->dirty = false;
-}
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */

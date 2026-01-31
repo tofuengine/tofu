@@ -57,10 +57,6 @@ typedef struct GL_Palette_State_s {
     // 0x0000 = SKIP
     // 0x0100 | index = WRITE idx (index into lower 8 bits)
     uint16_t map[GL_MAX_PALETTE_COLORS];
-
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-    bool dirty; // Dirty-flag, the map needs to be recomputed
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 } GL_Palette_State_t;
 
 #define GL_PALETTE_TRANSPARENT_MASK     0xFF00
@@ -72,8 +68,5 @@ extern void gl_palette_state_init(GL_Palette_State_t *state);
 extern void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to);
 extern void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent);
 extern void gl_palette_state_reset(GL_Palette_State_t *state);
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-extern void gl_palette_state_commit(GL_Palette_State_t *state);
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 
 #endif  /* TOFU_LIBS_GL_PALETTE_STATE_H */

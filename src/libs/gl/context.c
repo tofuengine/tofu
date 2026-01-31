@@ -54,11 +54,7 @@ static void _reset(GL_Context_t *context)
                 .x1 = (int)surface->width,
                 .y1 = (int)surface->height
             },
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-            .palette_state = (GL_Palette_State_t){ { 0 }, { 0 }, { 0 }, true }
-#else
             .palette_state = (GL_Palette_State_t){ { 0 }, { 0 }, { 0 } }
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
         };
 
     gl_palette_state_init(&state.palette_state);
@@ -155,9 +151,6 @@ void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, cons
             gl_palette_state_shifting(&state->palette_state, from[i], to[i]);
         }
     }
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-    gl_palette_state_commit(&state->palette_state);
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
 
 void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
@@ -172,9 +165,6 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
             gl_palette_state_transparent(&state->palette_state, indexes[i], transparent[i]);
         }
     }
-#if !defined(TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS)
-    gl_palette_state_commit(&state->palette_state);
-#endif  /* TOFU_GRAPHICS_PALETTE_AUTOMATIC_OPTIMIZATIONS */
 }
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transparency)
