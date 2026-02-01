@@ -258,17 +258,6 @@
 // performances.
 #define TOFU_GRAPHICS_OPTIMIZED_ROTATIONS
 
-// We leave the chance to the user to decide whether palette mapping should
-// take into account the shifting of a color and THEN check for transparency on
-// the resulting color, or if the transparency check should be done on the
-// original color BEFORE shifting.
-//
-// The former approach is the one `Tofu Engine` has always used, but the latter
-// is the one used also in Pico-8 and TIC-80 fantasy consoles.
-//
-// The latter method is, also, faster.
-#undef  TOFU_GRAPHICS_PALETTE_SHITFING_AWARE_TRANSPARENCY
-
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:

@@ -48,9 +48,6 @@
 #include <stdint.h>
 
 typedef struct GL_Palette_State_s {
-    uint8_t flags[GL_MAX_PALETTE_COLORS];
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS]; // Remap a color into another
-
     // The LUT map for fast access during drawing. It combines shifting
     // and transparency:
     // 0x0000 = SKIP
