@@ -329,7 +329,7 @@ void GL_context_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -345,7 +345,7 @@ void GL_context_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, 
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -361,7 +361,7 @@ void GL_context_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, 
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -377,7 +377,7 @@ void GL_context_polyline(const GL_Context_t *context, const GL_Point_t *vertices
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -402,7 +402,7 @@ void GL_context_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rec
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -462,7 +462,7 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -563,7 +563,7 @@ void GL_context_filled_circle(const GL_Context_t *context, GL_Point_t center, si
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;
@@ -602,7 +602,7 @@ void GL_context_circle(const GL_Context_t *context, GL_Point_t center, size_t ra
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped == GL_PALETTE_SKIP) {
+    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
         return;
     }
     index = (GL_Pixel_t)mapped;

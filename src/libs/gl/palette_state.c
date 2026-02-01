@@ -37,21 +37,15 @@
 
 #include "palette_state.h"
 
-#define _WRITE_PIXEL 0x0100
+#define _FLAG_IS_TRANSPARENT 0x01
 
 static inline void _compute_map_entry(GL_Palette_State_t *state, GL_Pixel_t index)
 {
 #if defined(TOFU_GRAPHICS_PALETTE_SHITFING_AWARE_TRANSPARENCY)
-    GL_Pixel_t to = state->shifting[index]; // We test the transparency on the target color!
-    if (state->transparent[to]) {
-        state->map[index] = GL_PALETTE_SKIP;
-    } else {
-        state->map[index] = (uint16_t)(_WRITE_PIXEL | to);
-    }
+    GL_Pixel_t to = state->shifting[index]; // We test the flags on the target color!
+    state->map[index] = (uint16_t)((state->flags[to] << 8) | to);
 #else
-    state->map[index] = state->transparent[index]
-        ? GL_PALETTE_SKIP
-        : (uint16_t)(_WRITE_PIXEL | state->shifting[index]);
+    state->map[index] = (uint16_t)((state->flags[index] << 8) | state->shifting[index]);
 #endif
 }
 
@@ -77,7 +71,8 @@ void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, b
     if (state->transparent[index] == is_transparent) {
         return;
     }
-    state->transparent[index] = is_transparent;
+    state->flags[index] = (state->flags[index] & ~_FLAG_IS_TRANSPARENT)
+        | (is_transparent ? _FLAG_IS_TRANSPARENT : 0);
 
     _compute_map_entry(state, index);
 }
@@ -85,8 +80,8 @@ void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, b
 void gl_palette_state_reset(GL_Palette_State_t *state)
 {
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state->shifting[i] = (uint8_t)i;
-        state->transparent[i] = i == 0;
+        state->flags[i] = i == 0 ? _FLAG_IS_TRANSPARENT : 0;
+        state->shifting[i] = (GL_Pixel_t)i;
 
         _compute_map_entry(state, i);
     }

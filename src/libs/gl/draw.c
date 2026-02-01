@@ -70,7 +70,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     const size_t dskip = dwidth;
 
     uint16_t mapped = state_map[index];
-    if (transparency && mapped == GL_PALETTE_SKIP) {
+    if (transparency && (mapped & GL_PALETTE_FLAG_TRANSPARENT)) {
         return;
     }
 
@@ -174,7 +174,7 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
         int x = drawing_region.x0; // TODO: optimize?
         for (int j = width; j; --j) {
             uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
-            if (mapped == GL_PALETTE_SKIP) {
+            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
                 ++dptr;
             } else {
                 *(dptr++) = (GL_Pixel_t)mapped;
@@ -244,7 +244,7 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
             const GL_Pixel_t to = *(sptr++);
 
             uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
-            if (mapped == GL_PALETTE_SKIP) {
+            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
                 ++dptr;
             } else {
                 *(dptr++) = (GL_Pixel_t)mapped;
@@ -433,7 +433,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
             const GL_Pixel_t value = *(mptr++);
 
             uint16_t mapped = state_map[*(sptr)];;
-            if (mapped == GL_PALETTE_SKIP
+            if ((mapped & GL_PALETTE_FLAG_TRANSPARENT)
                 || !should_write(value, threshold)) {
                 ++dptr;
             } else {
@@ -574,7 +574,7 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             uint16_t mapped = state_map[blend(*dptr, *(sptr++))];
-            if (mapped == GL_PALETTE_SKIP) {
+            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
                 ++dptr;
             } else {
                 *(dptr++) = (GL_Pixel_t)mapped;
