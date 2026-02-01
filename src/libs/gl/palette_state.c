@@ -68,11 +68,12 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
 {
-    if (state->transparent[index] == is_transparent) {
+    uint8_t flags = (state->flags[index] & ~_FLAG_IS_TRANSPARENT)
+        | (is_transparent ? _FLAG_IS_TRANSPARENT : 0);
+    if (state->flags[index] == flags) {
         return;
     }
-    state->flags[index] = (state->flags[index] & ~_FLAG_IS_TRANSPARENT)
-        | (is_transparent ? _FLAG_IS_TRANSPARENT : 0);
+    state->flags[index] = flags;
 
     _compute_map_entry(state, index);
 }
