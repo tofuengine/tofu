@@ -182,7 +182,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     // FIXME: remove this early bailing out everywhere? Null for-loop suffices and is better due to lack of branch?
 
     uint16_t mapped = state_map[index];
-    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
+    if (transparency && GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
     index = GL_PALETTE_GET_SHIFTING(mapped);
