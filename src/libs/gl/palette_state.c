@@ -53,14 +53,14 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
 {
-    state->map[index] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENT : 0)
-        | (state->map[index] & ~GL_PALETTE_FLAG_TRANSPARENT);
+    state->map[index] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
+        | (state->map[index] & ~GL_PALETTE_FLAG_TRANSPARENCY);
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
 {
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state->map[i] = (i == 0 ? GL_PALETTE_FLAG_TRANSPARENT : 0)
+        state->map[i] = (i == 0 ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
             | (GL_Pixel_t)i;
     }
 }

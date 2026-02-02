@@ -329,10 +329,10 @@ void GL_context_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     _point(surface, clipping_region, position.x, position.y, index);
 }
@@ -345,10 +345,10 @@ void GL_context_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, 
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     _hline(surface, clipping_region, origin.x, origin.y, w, index);
 }
@@ -361,10 +361,10 @@ void GL_context_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, 
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     _vline(surface, clipping_region, origin.x, origin.y, h, index);
 }
@@ -377,10 +377,10 @@ void GL_context_polyline(const GL_Context_t *context, const GL_Point_t *vertices
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     if (count < 2) {
         return;
@@ -402,10 +402,10 @@ void GL_context_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rec
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
@@ -462,10 +462,10 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = imin(imin(v0.x, v1.x), v2.x),
@@ -563,10 +563,10 @@ void GL_context_filled_circle(const GL_Context_t *context, GL_Point_t center, si
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     const int cx = center.x;
     const int cy = center.y;
@@ -602,10 +602,10 @@ void GL_context_circle(const GL_Context_t *context, GL_Point_t center, size_t ra
     const uint16_t *state_map = state->palette_state.map;
 
     uint16_t mapped = state_map[index];
-    if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+    if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = (GL_Pixel_t)mapped;
+    index = GL_PALETTE_GET_SHIFTING(mapped);
 
     const int cx = center.x;
     const int cy = center.y;

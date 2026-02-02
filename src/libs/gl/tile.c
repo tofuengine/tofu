@@ -109,10 +109,10 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             uint16_t mapped = state_map[srow[u]];
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
             u = (u + 1) % (int)area.width; // Prefer modulo over branch.
         }
@@ -208,10 +208,10 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             uint16_t mapped = state_map[srow[u]];
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.

@@ -41,24 +41,33 @@
 #include "common.h"
 
 #include <core/config.h>
-#include <core/platform.h>
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
 typedef struct GL_Palette_State_s {
-    // The LUT map for fast access during drawing. It combines shifting
-    // and transparency:
-    // 0x0000 = SKIP
-    // 0x0100 | index = WRITE idx (index into lower 8 bits)
+    // This LUT dictates how to treat each palette index during drawing.
+    // It is a precomputed combination of `flags` and `shifting` into a single
+    // `uint16_t` value. The idea is to have a single look-up and avoid
+    // multiple memory accesses per pixel during drawing with a single access.
+    //
+    // The layout is as follows:
+    //   - 0xFF00 (MSB): flags
+    //     - Bit #0: transparency
+    //   - 0x00FF (LSB): shifting
     uint16_t map[GL_MAX_PALETTE_COLORS];
 } GL_Palette_State_t;
 
-#define GL_PALETTE_FLAGS_MASK     0xFF00
-#define GL_PALETTE_SHIFTING_MASK  0x00FF
+#define GL_PALETTE_FLAGS_MASK    0xFF00
+#define GL_PALETTE_SHIFTING_MASK 0x00FF
 
-#define GL_PALETTE_FLAG_TRANSPARENT     0x0100
+#define GL_PALETTE_FLAG_TRANSPARENCY 0x0100
+
+#define GL_PALETTE_IS_TRANSPARENT(entry) \
+    (((entry) & GL_PALETTE_FLAG_TRANSPARENCY) != 0)
+
+#define GL_PALETTE_GET_SHIFTING(entry) \
+    ((GL_Pixel_t)(entry))
 
 extern void gl_palette_state_init(GL_Palette_State_t *state);
 extern void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to);

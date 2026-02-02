@@ -70,12 +70,12 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     const size_t dskip = dwidth;
 
     uint16_t mapped = state_map[index];
-    if (transparency && (mapped & GL_PALETTE_FLAG_TRANSPARENT)) {
+    if (transparency && GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
-    const GL_Pixel_t replacement = (GL_Pixel_t)mapped;
+    const GL_Pixel_t replacement = GL_PALETTE_GET_SHIFTING(mapped);
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
@@ -174,10 +174,10 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
         int x = drawing_region.x0; // TODO: optimize?
         for (int j = width; j; --j) {
             uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
             x += 1;
         }
@@ -244,10 +244,10 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
             const GL_Pixel_t to = *(sptr++);
 
             uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
             x += 1;
         }
@@ -433,11 +433,11 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
             const GL_Pixel_t value = *(mptr++);
 
             uint16_t mapped = state_map[*(sptr)];;
-            if ((mapped & GL_PALETTE_FLAG_TRANSPARENT)
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)
                 || !should_write(value, threshold)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
         }
         sptr += sskip;
@@ -574,10 +574,10 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             uint16_t mapped = state_map[blend(*dptr, *(sptr++))];
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
         }
         sptr += sskip;

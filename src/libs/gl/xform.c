@@ -300,12 +300,12 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 uint16_t mapped = state_map[*sptr];
 #if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
-                if (!(mapped & GL_PALETTE_FLAG_TRANSPARENT)) {
-                    *dptr = (GL_Pixel_t)mapped;
+                if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                    *dptr = GL_PALETTE_GET_SHIFTING(mapped);
                 }
 #else
                 // NOTE: no transparency in Mode-7!
-                *dptr = (GL_Pixel_t)mapped;
+                *dptr = GL_PALETTE_GET_SHIFTING(mapped);
 #endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
             }
 

@@ -112,10 +112,10 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             // const GL_Pixel_t dindex = *dptr;
             // *(dptr++) = dindex ^ ((dindex ^ sindex) & mask);
             uint16_t mapped = state_map[*(sptr++)];;
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
         }
         sptr += sskip;
@@ -208,10 +208,10 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             const int x = ITRUNC(u); // Ditto.
 
             uint16_t mapped = state_map[sptr[x]];
-            if (mapped & GL_PALETTE_FLAG_TRANSPARENT) {
+            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = (GL_Pixel_t)mapped;
+                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
 
             u += du;
@@ -369,8 +369,8 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
                     const GL_Pixel_t *sptr = sdata + y * swidth + x;
 
                     uint16_t mapped = state_map[*sptr];
-                    if (!(mapped & GL_PALETTE_FLAG_TRANSPARENT)) {
-                        *dptr = (GL_Pixel_t)mapped;
+                    if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                        *dptr = GL_PALETTE_GET_SHIFTING(mapped);
                     }
                 }
 #if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
