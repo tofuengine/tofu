@@ -54,6 +54,7 @@ local PALETTE <const> = Palette.new(COLORS)
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local FOREGROUND <const> = 3
 
@@ -71,12 +72,11 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     System.quit()
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.mode = (self.mode % 10) + 1
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.mode = ((self.mode + 8) % 10) + 1
   end
 end

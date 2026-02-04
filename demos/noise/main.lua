@@ -49,6 +49,7 @@ local PALETTE <const> = Palette.new(256)
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local NOISES <const> = {
     "perlin",
@@ -77,17 +78,16 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("right") then
+  if CONTROLLER:is_pressed("right") then
     self.current = (self.current % #NOISES) + 1
     self.noise:type(NOISES[self.current])
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.current = ((self.current + (#NOISES - 2)) % #NOISES) + 1
     self.noise:type(NOISES[self.current])
   end
-  if controller:is_pressed("up") then
+  if CONTROLLER:is_pressed("up") then
     self.frequency = self.frequency + 1
-  elseif controller:is_pressed("down") then
+  elseif CONTROLLER:is_pressed("down") then
     self.frequency = self.frequency - 1
   end
 end

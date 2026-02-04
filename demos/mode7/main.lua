@@ -49,6 +49,7 @@ local PALETTE <const> = Palette.default("famicube")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local WRAP_MODES <const> = {
   "repeat", "edge", "border", "mirror-repeat", "mirror-edge", "mirror-border"
@@ -85,36 +86,35 @@ end
 function Main:handle_input()
   local recompute = false
 
-  local controller = Controller.default()
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.speed = 1.0
-  elseif controller:is_pressed("start") then
+  elseif CONTROLLER:is_pressed("start") then
     self.running = not self.running
-  elseif controller:is_pressed("y") then
+  elseif CONTROLLER:is_pressed("y") then
     self.elevation = self.elevation + 4.0
     recompute = true
-  elseif controller:is_pressed("x") then
+  elseif CONTROLLER:is_pressed("x") then
     self.elevation = self.elevation - 4.0
     recompute = true
-  elseif controller:is_pressed("a") then -- STRAFE
+  elseif CONTROLLER:is_pressed("a") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x + math.cos(a) * 8
     self.y = self.y + math.sin(a) * 8
-  elseif controller:is_pressed("b") then -- STRAFE
+  elseif CONTROLLER:is_pressed("b") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x - math.cos(a) * 8
     self.y = self.y - math.sin(a) * 8
-  elseif controller:is_pressed("rt") then
+  elseif CONTROLLER:is_pressed("rt") then
     self.wrap = (self.wrap % #WRAP_MODES) + 1
     self.xform:wrap(WRAP_MODES[self.wrap])
-  elseif controller:is_pressed("up") then
+  elseif CONTROLLER:is_pressed("up") then
     self.speed = self.speed + 16.0
-  elseif controller:is_pressed("down") then
+  elseif CONTROLLER:is_pressed("down") then
     self.speed = self.speed - 16.0
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.angle = self.angle - math.pi * 0.05
     recompute = true
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.angle = self.angle + math.pi * 0.05
     recompute = true
   end

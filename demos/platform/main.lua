@@ -54,6 +54,7 @@ local PALETTE <const> = Palette.default("nes")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local WATER_DISPLACEMENT = 1.5
 
@@ -140,27 +141,25 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-
   local vx, vy = self.velocity:unpack()
-  if self.jumps < 2 and controller:is_pressed("up") then
+  if self.jumps < 2 and CONTROLLER:is_pressed("up") then
     vy = 128
     self.jumps = self.jumps + 1
     self.idle_time = nil
-  elseif controller:is_down("right") then
+  elseif CONTROLLER:is_down("right") then
     self.facing = "right"
     vx = 64
     self.idle_time = nil
-  elseif controller:is_down("left") then
+  elseif CONTROLLER:is_down("left") then
     self.facing = "left"
     vx = -64
     self.idle_time = nil
-  elseif controller:is_released("right") or controller:is_released("left") then
+  elseif CONTROLLER:is_released("right") or CONTROLLER:is_released("left") then
     vx = 0
     self.idle_time = 0
   end
   self.velocity:assign(vx, vy)
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     self.map = generate_map(50)
     self.shake_time = 5
   end

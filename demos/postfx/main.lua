@@ -50,6 +50,7 @@ local PALETTE <const> = Palette.default("nes")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, _ <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local LITTER_SIZE = 64
 
@@ -70,20 +71,19 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
       table.insert(self.sprites, Sprite.new(Canvas.default(), self.bank, #self.sprites))
     end
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.speed = self.speed * 0.5
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.speed = self.speed * 2.0
-  elseif controller:is_pressed("down") then
+  elseif CONTROLLER:is_pressed("down") then
     self.speed = 1.0
-  elseif controller:is_pressed("select") then
+  elseif CONTROLLER:is_pressed("select") then
     self.sprites = {}
-  elseif controller:is_pressed("y") then
+  elseif CONTROLLER:is_pressed("y") then
     self.running = not self.running
   end
 end

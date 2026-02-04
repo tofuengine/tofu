@@ -49,6 +49,8 @@ local PALETTE <const> = Palette.default("pico-8")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
+local CURSOR <const> = Cursor.default()
 
 local IDS <const> = {
     "a", "b", "x", "y",
@@ -80,11 +82,9 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-
   for _, id in ipairs(IDS) do
-    self.down[id] = controller:is_down(id)
-    if controller:is_pressed(id) then
+    self.down[id] = CONTROLLER:is_down(id)
+    if CONTROLLER:is_pressed(id) then
       self.scale[id] = 3.0
     end
   end
@@ -140,19 +140,19 @@ function Main:render(canvas, _)
     x = x + cw
   end
 
-  local controller = Controller.default()
   local cy = HEIGHT * 0.5
-  local lx, ly, la, lm = controller:stick("left")
-  local rx, ry, ra, rm = controller:stick("right")
-  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, controller:is_down("lt"))
-  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, controller:is_down("rt"))
-  local tl, tr = controller:triggers()
+  local lx, ly, la, lm = CONTROLLER:stick("left")
+  local rx, ry, ra, rm = CONTROLLER:stick("right")
+  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, CONTROLLER:is_down("lt"))
+  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, CONTROLLER:is_down("rt"))
+  local tl, tr = CONTROLLER:triggers()
   draw_trigger(canvas, 24, cy + 12, 8, tl)
   draw_trigger(canvas, 232, cy + 12, 8, tr)
+  local vx, vy = CONTROLLER:vector()
+  canvas:line(16, 16, 16 + vx * 8, 16 + vy * 8, 5)
 
-  local cursor = Cursor.default()
-  local mx, my = cursor:position()
-  local index = cursor:is_down("left") and 3 or 2
+  local mx, my = CURSOR:position()
+  local index = CURSOR:is_down("left") and 3 or 2
   canvas:line(mx - 3, my, mx - 1, my, index)
   canvas:line(mx + 1, my, mx + 3, my, index)
   canvas:line(mx, my - 3, mx, my - 1, index)

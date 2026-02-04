@@ -50,6 +50,7 @@ local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local HALF_WIDTH <const>, HALF_HEIGHT <const> = WIDTH * 0.5, HEIGHT * 0.5
+local CONTROLLER <const> = Controller.default()
 
 -- See: https://en.wikipedia.org/wiki/Lissajous_curve
 
@@ -85,22 +86,20 @@ function Main:deinit()
 end
 
 function Main:handle_input(_)
-  local controller = Controller.default()
-
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     local canvas = Canvas.default()
     canvas:image():clear(0)
   end
 
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.a = self.a + 1
-  elseif controller:is_down("left") then
+  elseif CONTROLLER:is_down("left") then
     self.a = self.a - 1
   end
 
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.b = self.b + 1
-  elseif controller:is_down("up") then
+  elseif CONTROLLER:is_down("up") then
     self.b = self.b - 1
   end
 end

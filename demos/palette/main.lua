@@ -53,6 +53,7 @@ local PALETTE <const> = Palette.default("pico-8")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local AMOUNT <const> = 16
 local PALETTES <const> = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
@@ -60,7 +61,7 @@ local PALETTES <const> = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 local Main = Class.define()
 
 function Main:__ctor()
-  self.bank = Bank.from_image("assets/sheet.img", 8, 8, 12)
+  self.bank = Bank.from_image("assets/sheet.img", 8, 8)
   self.wave = Wave.new("triangle", 10.0, 128.0)
   self.x_size = WIDTH / AMOUNT
   self.y_size = HEIGHT / AMOUNT
@@ -114,23 +115,22 @@ function Main:_change_palette(palette)
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("down") then
+  if CONTROLLER:is_pressed("down") then
     self.scale_y = 1.0
     self.y = self.y + 1
-  elseif controller:is_pressed("up") then
+  elseif CONTROLLER:is_pressed("up") then
     self.scale_y = -1.0
     self.y = self.y - 1
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.scale_x = 1.0
     self.x = self.x + 1
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.scale_x = -1.0
     self.x = self.x - 1
-  elseif controller:is_pressed("y") then
+  elseif CONTROLLER:is_pressed("y") then
     print("Y")
     self.mode = (self.mode + 1) % 10
-  elseif controller:is_pressed("x") then
+  elseif CONTROLLER:is_pressed("x") then
     print("X")
     self.clipping = not self.clipping
     if self.clipping then

@@ -52,6 +52,7 @@ local PALETTE <const> = Palette.default("famicube")
 local FONT <const> = Font.from_image("assets/images/font-8x8.img", FONT_WIDTH, FONT_HEIGHT)
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local GRADIENTS <const> = 32
 local STEP <const> = 2
@@ -118,8 +119,7 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.running = not self.running
   end
 end

@@ -48,6 +48,7 @@ local PALETTE <const> = Palette.default("pico-8-ext")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local SIZE <const> = 4
 local RADIUS <const> = SIZE * 0.5
@@ -66,10 +67,9 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default() -- TODO: move after the require calls?
-  if controller:is_pressed("left") then
+  if CONTROLLER:is_pressed("left") then
     self.factor = self.factor - 0.01
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.factor = self.factor + 0.01
   end
 end

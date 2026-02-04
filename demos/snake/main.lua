@@ -49,6 +49,7 @@ local PALETTE <const> = Palette.default("gameboy")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local INITIAL_LENGTH <const> = 5
 local SPEED_RATIO <const> = 5
@@ -139,22 +140,20 @@ function Main:reset()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-
   if self.state == "game-over" then
-    if controller:is_pressed("start") then
+    if CONTROLLER:is_pressed("start") then
       self:reset()
     end
     return
   end
 
-  if controller:is_pressed("up") and self.direction ~= "down" then
+  if CONTROLLER:is_pressed("up") and self.direction ~= "down" then
     self.direction = "up"
-  elseif controller:is_pressed("down") and self.direction ~= "up"then
+  elseif CONTROLLER:is_pressed("down") and self.direction ~= "up"then
     self.direction = "down"
-  elseif controller:is_pressed("left") and self.direction ~= "right" then
+  elseif CONTROLLER:is_pressed("left") and self.direction ~= "right" then
     self.direction = "left"
-  elseif controller:is_pressed("right") and self.direction ~= "left" then
+  elseif CONTROLLER:is_pressed("right") and self.direction ~= "left" then
     self.direction = "right"
   end
 end

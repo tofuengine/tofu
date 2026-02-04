@@ -50,6 +50,7 @@ local PALETTE <const> = Palette.default("famicube")
 local FONT <const> = Font.default()
 -- local CANVAS <const> = Canvas.default()
 -- local WIDTH, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local LIFE <const> = 2.0
 
@@ -93,22 +94,20 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller <const> = Controller.default()
-
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     collectgarbage("collect")
   end
 
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.dx = 1
-  elseif controller:is_down("left") then
+  elseif CONTROLLER:is_down("left") then
     self.dx = -1
   else
     self.dx = 0
   end
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.dy = 1
-  elseif controller:is_down("up") then
+  elseif CONTROLLER:is_down("up") then
     self.dy = -1
   else
     self.dy = 0

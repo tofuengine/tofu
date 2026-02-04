@@ -47,6 +47,7 @@ local PALETTE <const> = Palette.default("pico-8")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local Main = Class.define()
 
@@ -68,14 +69,13 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("down") then
+  if CONTROLLER:is_pressed("down") then
     self.offset.y = self.offset.y + 1
-  elseif controller:is_pressed("up") then
+  elseif CONTROLLER:is_pressed("up") then
     self.offset.y = self.offset.y - 1
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.offset.x = self.offset.x + 1
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.offset.x = self.offset.x - 1
   end
 

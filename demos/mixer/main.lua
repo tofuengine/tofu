@@ -48,6 +48,7 @@ local PALETTE <const> = Palette.default("pico-8")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local SOURCES <const> = {
   { name = "assets/flac/1ch-22050-16.flac", type = "sample" },
@@ -88,8 +89,7 @@ end
 local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("a") then
+  if CONTROLLER:is_pressed("a") then
     local source = self.sources[self.current]
     if self.property == 1 then
       source.instance:play()
@@ -101,7 +101,7 @@ function Main:handle_input()
       local ll, lr, rl, rr = source.instance:mix()
       source.instance:mix(lr, ll, rr, rl)
     end
-  elseif controller:is_pressed("x") then
+  elseif CONTROLLER:is_pressed("x") then
     local source = self.sources[self.current]
     if self.property == 4 then
       local gain = source.instance:gain()
@@ -113,7 +113,7 @@ function Main:handle_input()
       source.balance = math.max(-1.0, source.balance - 0.05)
       source.instance:balance(source.balance)
     end
-  elseif controller:is_pressed("y") then
+  elseif CONTROLLER:is_pressed("y") then
     local source = self.sources[self.current]
     if self.property == 4 then
       local gain = source.instance:gain()
@@ -125,13 +125,13 @@ function Main:handle_input()
       source.balance = math.min(1.0, source.balance + 0.05)
       source.instance:balance(source.balance)
     end
-  elseif controller:is_pressed("up") then
+  elseif CONTROLLER:is_pressed("up") then
     self.current = math.max(self.current - 1, 1)
-  elseif controller:is_pressed("down") then
+  elseif CONTROLLER:is_pressed("down") then
     self.current = math.min(self.current + 1, #self.sources)
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.property = math.max(self.property - 1, 1)
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.property = math.min(self.property + 1, #PROPERTIES)
   end
 end

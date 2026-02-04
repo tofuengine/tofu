@@ -43,8 +43,9 @@ local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
-local PALETTE <const> = Palette.default("famicube")
+local PALETTE <const> = Palette.default("6-bit-rgb")
 local FONT <const> = Font.default()
+local CONTROLLER <const> = Controller.default()
 
 local COMPARATORS <const> = {
   "never",
@@ -79,16 +80,15 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.mode = (self.mode + 1) % 2
-  elseif controller:is_pressed("up") then
+  elseif CONTROLLER:is_pressed("up") then
     self.comparator = math.min(self.comparator + 1, #COMPARATORS)
-  elseif controller:is_pressed("down") then
+  elseif CONTROLLER:is_pressed("down") then
     self.comparator = math.max(self.comparator - 1, 1)
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.threshold = self.mode == 1 and self.threshold or math.min(self.threshold + 1, self.limit)
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.threshold = self.mode == 1 and self.threshold or math.max(self.threshold - 1, 0)
   end
 end

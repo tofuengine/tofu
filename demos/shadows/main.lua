@@ -41,11 +41,14 @@ local Controller = require("tofu.input.controller")
 local Cursor = require("tofu.input.cursor")
 local Bank = require("tofu.graphics.bank")
 local Display = require("tofu.graphics.display")
+local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
 local PALETTE <const> = Palette.default("nes")
 local FONT <const> = Font.default()
+local CONTROLLER <const> = Controller.default()
+local CURSOR <const> = Cursor.default()
 
 local SPEED <const> = 32
 
@@ -69,22 +72,21 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_down("up") then
+  if CONTROLLER:is_down("up") then
     self.velocity.y = -SPEED
-  elseif controller:is_down("down") then
+  elseif CONTROLLER:is_down("down") then
     self.velocity.y = SPEED
   else
     self.velocity.y = 0
   end
-  if controller:is_down("left") then
+  if CONTROLLER:is_down("left") then
     self.velocity.x = -SPEED
-  elseif controller:is_down("right") then
+  elseif CONTROLLER:is_down("right") then
     self.velocity.x = SPEED
   else
     self.velocity.x = 0
   end
-  if controller:is_down("a") then
+  if CONTROLLER:is_down("a") then
     self.apply = true
   else
     self.apply = false
@@ -97,8 +99,7 @@ function Main:update(delta_time)
   self.position.x = self.position.x + self.velocity.x * delta_time
   self.position.y = self.position.y + self.velocity.y * delta_time
 
-  local cursor = Cursor.default()
-  self.cursor.x, self.cursor.y = cursor:position()
+  self.cursor.x, self.cursor.y = CURSOR:position()
 end
 
 function Main:render(canvas, _)

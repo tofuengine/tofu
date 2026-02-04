@@ -47,6 +47,7 @@ local PALETTE <const> = Palette.new(3, 3, 2) --"famicube")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local STEPS = PALETTE:size()
 local LEVELS = STEPS
@@ -85,8 +86,7 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("y") then
+  if CONTROLLER:is_pressed("y") then
     self.mode = (self.mode + 1) % 10
   end
 end

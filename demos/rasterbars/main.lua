@@ -50,8 +50,9 @@ local FONT <const> = Font.default()
 local BIG_FONT <const> = Font.default("32x64")
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
-local Main = Class.define()
+local Main <const> = Class.define()
 
 function Main:__ctor()
   self.bank = Bank.from_image("assets/sprites.img", 16, 16)
@@ -71,23 +72,22 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("y") then
+  if CONTROLLER:is_pressed("y") then
     self.running = not self.running
   end
 
   self.dx = 0
   self.dy = 0
-  if controller:is_down("up") then
+  if CONTROLLER:is_down("up") then
     self.dy = self.dy - 1
   end
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.dy = self.dy + 1
   end
-  if controller:is_down("left") then
+  if CONTROLLER:is_down("left") then
     self.dx = self.dx - 1
   end
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.dx = self.dx + 1
   end
 end

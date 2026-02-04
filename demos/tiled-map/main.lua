@@ -46,6 +46,7 @@ local Map = require("lib/map")
 
 local PALETTE <const> = Palette.default("gameboy")
 local FONT <const> = Font.default()
+local CONTROLLER <const> = Controller.default()
 
 local CAMERA_SPEED = 128.0
 
@@ -79,20 +80,18 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller <const> = Controller.default()
-
   self.dx = 0
   self.dy = 0
-  if controller:is_down("left") then
+  if CONTROLLER:is_down("left") then
     self.dx = self.dx - 1
   end
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.dx = self.dx + 1
   end
-  if controller:is_down("up") then
+  if CONTROLLER:is_down("up") then
     self.dy = self.dy - 1
   end
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.dy = self.dy + 1
   end
 end

@@ -52,6 +52,7 @@ local PALETTE <const> = Palette.default("pico-8-ext")
 local CANVAS <const> = Canvas.default()
 local FONT <const> = Font.default()
 local WIDTH <const>, _ <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local CHUNK_SIZE <const> = 1
 
@@ -96,8 +97,7 @@ function Game:handle_input()
   self.force = 0
   self.torque = 0
 
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     local cx, cy = Canvas.default():image():center()
     for _ = 1, CHUNK_SIZE do
       local sprite = Sprite.new(self.bank, 15, 11, 1, PALETTE)
@@ -106,22 +106,22 @@ function Game:handle_input()
       table.insert(self.sprites, sprite)
     end
   end
-  if controller:is_down("up") then
+  if CONTROLLER:is_down("up") then
     self.force = self.force + THROTTLE
   end
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.force = self.force - BRAKE
   end
-  if controller:is_down("left") then
+  if CONTROLLER:is_down("left") then
     self.torque = self.torque - TORQUE * Math.sign(self.force)
   end
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.torque = self.torque + TORQUE * Math.sign(self.force)
   end
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.sprites = {}
   end
-  if controller:is_pressed("y") then
+  if CONTROLLER:is_pressed("y") then
     self.running = not self.running
   end
 end

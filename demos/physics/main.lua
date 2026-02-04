@@ -51,6 +51,7 @@ local PALETTE <const> = Palette.default("nes")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local INITIAL_BUNNIES <const> = 1
 local LITTER_SIZE <const> = 5
@@ -95,15 +96,14 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(FONT, self.bank, self.world))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
     end
-  elseif controller:is_pressed("select") then
+  elseif CONTROLLER:is_pressed("select") then
     for _, bunny in ipairs(self.bunnies) do
       self.world:remove(bunny.body)
     end

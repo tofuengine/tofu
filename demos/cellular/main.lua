@@ -51,6 +51,8 @@ local PALETTE <const> = Palette.default("famicube")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
+local CURSOR <const> = Cursor.default()
 
 local SAND <const> = PALETTE:match(255, 255, 0)
 local CURSOR <const> = PALETTE:match(255, 255, 255)
@@ -74,20 +76,18 @@ function Main:reset()
 end
 
 function Main:handle_input()
-  local controller <const> = Controller.default()
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.windy = not self.windy
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.damping = self.damping - 0.1
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.damping = self.damping + 0.1
-  elseif controller:is_pressed("start") then
+  elseif CONTROLLER:is_pressed("start") then
     self:reset()
   end
 
-  local cursor <const> = Cursor.default()
-  if cursor:is_down("left") then
-    local x, y = cursor:position()
+  if CURSOR:is_down("left") then
+    local x, y = CURSOR:position()
     self.grid:poke(x, y, 1)
   end
 end
@@ -129,8 +129,7 @@ function Main:render(canvas, _)
       end
     end)
 
-  local cursor <const> = Cursor.default()
-  local cx, cy = cursor:position()
+  local cx, cy = CURSOR:position()
   draw_cursor(canvas, cx, cy, 2, CURSOR)
 
   canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))

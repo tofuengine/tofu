@@ -55,6 +55,7 @@ local PALETTE <const> = Palette.new(COLORS)
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local STEPS <const> = 64
 
@@ -87,15 +88,13 @@ function Main:reset()
 end
 
 function Main:handle_input()
-  local controller <const> = Controller.default()
-
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.windy = not self.windy
-  elseif controller:is_pressed("left") then
+  elseif CONTROLLER:is_pressed("left") then
     self.damping = self.damping - 0.1
-  elseif controller:is_pressed("right") then
+  elseif CONTROLLER:is_pressed("right") then
     self.damping = self.damping + 0.1
-  elseif controller:is_pressed("start") then
+  elseif CONTROLLER:is_pressed("down") then
     self:reset()
   end
 end

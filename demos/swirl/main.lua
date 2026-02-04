@@ -48,6 +48,7 @@ local PALETTE <const> = Palette.default("pico-8")
 local CANVAS <const> = Canvas.default()
 local FONT <const> = Font.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local function square(canvas, x, y, s, r, g, b)
 --  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
@@ -75,8 +76,7 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     self.fan = not self.fan
   end
 end

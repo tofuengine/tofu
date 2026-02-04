@@ -53,6 +53,7 @@ local config = require("config")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local CAMERA_FIELD_OF_VIEW <const> = config.camera.field_of_view or math.pi / 4
 local CAMERA_NEAR <const> = config.camera.near or 1
@@ -78,32 +79,30 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller <const> = Controller.default()
-
   local camera <const> = self.camera
 
-  if controller:is_pressed("y") then
+  if CONTROLLER:is_pressed("y") then
     local field_of_view = math.min(camera.field_of_view + math.pi / 32, math.pi)
     camera:set_field_of_view(field_of_view)
-  elseif controller:is_pressed("x") then
+  elseif CONTROLLER:is_pressed("x") then
     local field_of_view = math.max(camera.field_of_view - math.pi / 32, 0)
     camera:set_field_of_view(field_of_view)
   end
-  if controller:is_pressed("b") then
+  if CONTROLLER:is_pressed("b") then
     local far = math.min(camera.far + 50.0, 5000.0)
     camera:set_clipping_planes(camera.near, far)
-  elseif controller:is_pressed("a") then
+  elseif CONTROLLER:is_pressed("a") then
     local far = math.max(camera.far - 50.0, 0)
     camera:set_clipping_planes(camera.near, far)
   end
-  if controller:is_pressed("start") then
+  if CONTROLLER:is_pressed("start") then
     self.player.pause = not self.player.pause
   end
-  if controller:is_pressed("select") then
+  if CONTROLLER:is_pressed("select") then
     self.running = not self.running
   end
 
-  self.player:handle_input(controller)
+  self.player:handle_input(CONTROLLER)
 end
 
 function Main:update(delta_time)

@@ -59,6 +59,7 @@ local PALETTE <const> = Palette.default("famicube")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CURSOR <const> = Cursor.default()
 
 local FOREGROUND <const> = PALETTE:match(255, 255, 255)
 
@@ -92,16 +93,15 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local cursor = Cursor.default()
-  local cx, cy = cursor:position()
+  local cx, cy = CURSOR:position()
   self.c.x = cx
   self.c.y = cy
 
-  if cursor:is_down("left") then
+  if CURSOR:is_down("left") then
     self.a.x = cx
     self.a.y = cy
     self.changed = true
-  elseif cursor:is_down("right") then
+  elseif CURSOR:is_down("right") then
     self.b.x = cx
     self.b.y = cy
     self.changed = true
