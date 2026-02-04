@@ -432,7 +432,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
 #endif
             const GL_Pixel_t value = *(mptr++);
 
-            uint16_t mapped = state_map[*(sptr)];;
+            uint16_t mapped = state_map[*(sptr++)];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)
                 || !should_write(value, threshold)) {
                 ++dptr;
