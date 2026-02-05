@@ -37,6 +37,8 @@
 
 #include "palette.h"
 
+#include "color.h"
+
 #include <core/config.h>
 #include <libs/imath.h>
 #include <libs/fmath.h>
@@ -86,12 +88,12 @@ static inline uint8_t _quantize(size_t value, size_t values, size_t count)
 void GL_palette_set_greyscale(GL_Color_t *palette, size_t size)
 {
     for (size_t i = 0; i < size; ++i) {
-        uint8_t y = _quantize(i, 256, size);
-        palette[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255 };
+        uint8_t y = _quantize(i, 256, size); // 256 is the amount of different values for component (bits per pixel)
+        palette[i] = gl_color_from_rgba(y, y, y, 255);
     }
 
     for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) {
-        palette[i] = (GL_Color_t){ .r = 0, .g = 0, .b = 0, .a = 255 };
+        palette[i] = gl_color_from_rgba(0, 0, 0, 255);
     }
 }
 
@@ -116,13 +118,13 @@ void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green
             uint8_t g8 = (g << green_lower_bits) | _quantize(g, green_lower_values, green_values);
             for (size_t b = 0; b < blue_values; ++b) {
                 uint8_t b8 = (b << blue_lower_bits) | _quantize(b, blue_lower_values, blue_values);
-                palette[size++] = (GL_Color_t){ .r = r8, .g = g8, .b = b8, .a = 255 };
+                palette[size++] = gl_color_from_rgba(r8, g8, b8, 255);
             }
         }
     }
 
     for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) {
-        palette[i] = (GL_Color_t){ .r = 0, .g = 0, .b = 0, .a = 255 };
+        palette[i] = gl_color_from_rgba(0, 0, 0, 255);
     }
 }
 
@@ -164,7 +166,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Color_t c
     GL_Pixel_t index = 0;
     float minimum = __FLT_MAX__;
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        const GL_Color_t *current = &palette[i];
+        const GL_Color_t current = palette[i];
 
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_EUCLIDIAN
         const float delta_r = (float)(color.r - current->r);
@@ -176,11 +178,11 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Color_t c
             + delta_b * delta_b;
 #elif TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_WEIGHTED
         // https://www.compuphase.com/cmetric.htm
-        const float delta_r = (float)(color.r - current->r);
-        const float delta_g = (float)(color.g - current->g);
-        const float delta_b = (float)(color.b - current->b);
+        const float delta_r = (float)(gl_color_get_r(color) - gl_color_get_r(current));
+        const float delta_g = (float)(gl_color_get_g(color) - gl_color_get_g(current));
+        const float delta_b = (float)(gl_color_get_b(color) - gl_color_get_b(current));
 
-        const float r_mean = (float)(color.r + current->r) * 0.5f;
+        const float r_mean = (float)(gl_color_get_r(color) + gl_color_get_r(current)) * 0.5f;
 
         const float distance = (delta_r * delta_r) * (2.0f + (r_mean / 255.0f))
             + (delta_g * delta_g) * 4.0f
@@ -211,12 +213,11 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Color_t c
 
 GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio)
 {
-    return (GL_Color_t){
-            .r = (uint8_t)FLERP((float)from.r, (float)to.r, ratio),
-            .g = (uint8_t)FLERP((float)from.g, (float)to.g, ratio),
-            .b = (uint8_t)FLERP((float)from.b, (float)to.b, ratio),
-            .a = 255
-        };
+    uint8_t r = (uint8_t)FLERP((float)gl_color_get_r(from), (float)gl_color_get_r(to), ratio);
+    uint8_t g = (uint8_t)FLERP((float)gl_color_get_g(from), (float)gl_color_get_g(to), ratio);
+    uint8_t b = (uint8_t)FLERP((float)gl_color_get_b(from), (float)gl_color_get_b(to), ratio);
+
+    return gl_color_from_rgba(r, g, b, 255);
 }
 
 void GL_palette_copy(GL_Color_t *palette, const GL_Color_t *source)

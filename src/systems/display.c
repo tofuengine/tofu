@@ -33,10 +33,18 @@
 
 #include <time.h>
 
+#if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #define _PIXEL_FORMAT GL_BGRA
 #else
     #define _PIXEL_FORMAT GL_RGBA
+#endif
+    #define _PIXEL_TYPE   GL_UNSIGNED_BYTE
+#elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
+    #define _PIXEL_FORMAT GL_RGB
+    #define _PIXEL_TYPE   GL_UNSIGNED_SHORT_5_6_5
+#else
+    #error "unsupported TOFU_GRAPHICS_PIXEL_FORMAT"
 #endif
 
 typedef enum Uniforms_t {
@@ -528,8 +536,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     LOG_D("graphics surface %p created", display->canvas.surface);
 
-    // TODO: implement a small boot effect?
-
     display->canvas.clear_index = configuration->clear_index;
     LOG_D("display clear index set to %d", display->canvas.clear_index);
 
@@ -559,6 +565,9 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         goto error_free_vram;
     }
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Tight packing (no padding), we are only transferring data (one time set)
+    LOG_D("pixel unpack alignment set to 1");
+
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -566,7 +575,13 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
+    glTexImage2D(GL_TEXTURE_2D,
+            0, // Mipmap level, 0 is the base level.
+            GL_RGB,
+            (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
+            0, // Border, must be 0.
+            _PIXEL_FORMAT, _PIXEL_TYPE,
+            NULL); // Create the storage
     LOG_D("texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -703,7 +718,7 @@ void Display_present(const Display_t *display)
     const GL_Surface_t *surface = display->canvas.surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    GL_processor_surface_to_rgba(display->canvas.processor, surface, pixels);
+    GL_processor_surface_to_pixels(display->canvas.processor, surface, pixels);
 
     // We need to restore the drawing state, which includes (1) the shader program, (2) the vertices attributes, and (3)
     // the texture to be drawn.
@@ -711,7 +726,12 @@ void Display_present(const Display_t *display)
     glBindVertexArray(display->vao);
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, _PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D,
+            0, // Level of detail
+            0, 0, // Note: the size of the texture is the same as the canvas, so we can update the whole texture with a single call.
+            (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
+            _PIXEL_FORMAT, _PIXEL_TYPE,
+            pixels);
 
     // glEnable(GL_SCISSOR_TEST);
     // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.

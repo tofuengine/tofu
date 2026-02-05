@@ -67,6 +67,9 @@
 #define PANNING_LAW_CONSTANT_POWER_SINCOS   1
 #define PANNING_LAW_CONSTANT_POWER_SQRT     2
 
+#define PIXEL_FORMAT_RGBA8888 0
+#define PIXEL_FORMAT_RGB565   1
+
 // #############
 // ### Audio ###
 // #############
@@ -215,6 +218,23 @@
 // ################
 // ### Graphics ###
 // ################
+
+// This macro defines the pixel format used for the internal VRAM texture.
+// Valid choices are:
+//
+// - PIXEL_FORMAT_RGBA8888
+// - PIXEL_FORMAT_RGB565
+//
+// The default is `PIXEL_FORMAT_RGB565`, as it offers a good compromise
+// between quality and performance. Since this is and pixel-arts oriented engine
+// the loss of color depth is generally not an issue.
+//
+// `PIXEL_FORMAT_RGBA8888` is the original format used by the engine, but it
+// is generally overkill for the kind of graphics the engine is supposed to
+// handle. However, it requires not conversion at all from the GPU when
+// transferring the VRAM texture to the screen, so it could be useful in some
+// specific cases.
+#define TOFU_GRAPHICS_PIXEL_FORMAT PIXEL_FORMAT_RGB565
 
 // Enables additional debug information for the `Graphics` sub-system. This
 // should normally be disabled in *both* the `DEBUG` and the `RELEASE` builds

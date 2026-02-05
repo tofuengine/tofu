@@ -49,11 +49,11 @@ typedef struct GL_Processor_State_s {
     GL_Program_t *program;
 } GL_Processor_State_t;
 
-typedef void (*GL_Processor_Surface_To_Rgba_t)(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels);
+typedef void (*GL_Processor_Surface_To_Pixels_t)(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels);
 
 typedef struct GL_Processor_s {
     GL_Processor_State_t state;
-    GL_Processor_Surface_To_Rgba_t surface_to_rgba;
+    GL_Processor_Surface_To_Pixels_t surface_to_pixels;
 } GL_Processor_t;
 
 extern GL_Processor_t *GL_processor_create(void);
@@ -67,6 +67,6 @@ extern void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t
 extern void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program);
 
-extern void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels);
+extern void GL_processor_surface_to_pixels(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels);
 
 #endif  /* TOFU_LIBS_GL_PROCESSOR_H */

@@ -154,7 +154,7 @@ static int palette_new_1t_1o(lua_State *L)
 
         lua_pop(L, 3); // T N T I I I -> T N T
 
-        palette[i] = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+        palette[i] = gl_color_from_rgba(r, g, b, 255);
 
         lua_pop(L, 1); // T N T -> T N
     }
@@ -199,12 +199,11 @@ static int palette_new_1s_1o(lua_State *L)
             LOG_D("palette `%s` has %d colors", name, i);
             break;
         }
-        palette[size] = (GL_Color_t){
-                .r = hex_to_uint8(&hex[0]),
-                .g = hex_to_uint8(&hex[2]),
-                .b = hex_to_uint8(&hex[4]),
-                .a = 255
-            };
+        palette[size] = gl_color_from_rgba(
+                hex_to_uint8(&hex[0]),
+                hex_to_uint8(&hex[2]),
+                hex_to_uint8(&hex[4]),
+                255);
         size += 1;
         if (size >= GL_MAX_PALETTE_COLORS) {
             LOG_W("palette has too many colors - clamping to %d", GL_MAX_PALETTE_COLORS);
@@ -316,11 +315,11 @@ static int palette_colors_1o_1t(lua_State *L)
         const GL_Color_t color = palette[i];
 
         lua_createtable(L, 3, 0);
-        lua_pushinteger(L, (lua_Integer)color.r);
+        lua_pushinteger(L, (lua_Integer)gl_color_get_r(color));
         lua_rawseti(L, -2, 1);
-        lua_pushinteger(L, (lua_Integer)color.g);
+        lua_pushinteger(L, (lua_Integer)gl_color_get_g(color));
         lua_rawseti(L, -2, 2);
-        lua_pushinteger(L, (lua_Integer)color.b);
+        lua_pushinteger(L, (lua_Integer)gl_color_get_b(color));
         lua_rawseti(L, -2, 3);
 
         lua_rawseti(L, -2, (lua_Integer)(i + 1));
@@ -353,9 +352,9 @@ int palette_peek_2on_3nnn(lua_State *L)
     const GL_Color_t *palette = self->palette;
     GL_Color_t color = palette[index];
 
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
+    lua_pushinteger(L, (lua_Integer)gl_color_get_r(color));
+    lua_pushinteger(L, (lua_Integer)gl_color_get_g(color));
+    lua_pushinteger(L, (lua_Integer)gl_color_get_b(color));
 
     return 3;
 }
@@ -376,7 +375,7 @@ int palette_poke_5onnnn_0(lua_State *L)
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
 
     GL_Color_t *palette = self->palette;
-    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
     palette[index] = color;
 
     return 0;
@@ -397,7 +396,7 @@ static int palette_lerp_5onnnN_0(lua_State *L)
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
     float ratio = LUAX_OPTIONAL_NUMBER(L, 5, 0.5f);
 
-    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
 
     GL_Color_t *palette = self->palette;
     GL_palette_lerp(palette, color, ratio);
@@ -444,7 +443,7 @@ static int palette_match_4onnn_1n(lua_State *L)
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
 
-    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
 
     const GL_Color_t *palette = self->palette;
     const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
@@ -473,14 +472,14 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
     uint8_t bb = (uint8_t)LUAX_INTEGER(L, 6);
     float ratio = LUAX_OPTIONAL_NUMBER(L, 7, 0.5f);
 
-    const GL_Color_t a = (GL_Color_t){ .r = ar, .g = ag, .b = ab, .a = 255 };
-    const GL_Color_t b = (GL_Color_t){ .r = br, .g = bg, .b = bb, .a = 255 };
+    const GL_Color_t a = gl_color_from_rgba(ar, ag, ab, 255);
+    const GL_Color_t b = gl_color_from_rgba(br, bg, bb, 255);
 
     const GL_Color_t color = GL_palette_mix(a, b, ratio);
 
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
+    lua_pushinteger(L, (lua_Integer)gl_color_get_r(color));
+    lua_pushinteger(L, (lua_Integer)gl_color_get_g(color));
+    lua_pushinteger(L, (lua_Integer)gl_color_get_b(color));
 
     return 3;
 }

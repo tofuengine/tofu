@@ -38,6 +38,7 @@
 #ifndef TOFU_LIBS_GL_COMMON_H
 #define TOFU_LIBS_GL_COMMON_H
 
+#include <core/config.h>
 #include <core/platform.h>
 
 #include <stdbool.h>
@@ -89,6 +90,7 @@ typedef struct GL_Quad_s {
     // TODO: optimize by adding `width` and `height` fields?
 } GL_Quad_t;
 
+#if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
 #pragma pack(push, 1)
 typedef struct GL_Color_s {
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -98,6 +100,11 @@ typedef struct GL_Color_s {
 #endif
 } GL_Color_t;
 #pragma pack(pop)
+#elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
+typedef uint16_t GL_Color_t;
+#else
+    #error "unsupported TOFU_GRAPHICS_PIXEL_FORMAT"
+#endif
 
 #pragma pack(push, 1)
 typedef struct GL_Rectangle32_s {

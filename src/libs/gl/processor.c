@@ -136,7 +136,7 @@ void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from
     }
 }
 
-static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
+static void _surface_to_pixels(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
     const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
@@ -169,7 +169,7 @@ static void _surface_to_rgba(const GL_Processor_State_t *state, const GL_Surface
 
 // TODO: use array of function pointers instead of mega-switch?
 // TODO: ditch wait-x? processor operations changes only once per scanline?
-void _surface_to_rgba_program(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
+void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
     GL_Color_t palette[GL_MAX_PALETTE_COLORS];
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
@@ -325,10 +325,10 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
         LOG_D("processor program at %p copied at %p", program, processor->program);
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
     }
-    processor->surface_to_rgba = program ? _surface_to_rgba_program : _surface_to_rgba;
+    processor->surface_to_pixels = program ? _surface_to_pixels_program : _surface_to_pixels;
 }
 
-void GL_processor_surface_to_rgba(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels)
+void GL_processor_surface_to_pixels(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    processor->surface_to_rgba(&processor->state, surface, pixels);
+    processor->surface_to_pixels(&processor->state, surface, pixels);
 }

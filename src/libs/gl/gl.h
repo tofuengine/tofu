@@ -39,6 +39,7 @@
 #define TOFU_LIBS_GL_H
 
 #include "blit.h"
+#include "color.h"
 #include "common.h"
 #include "context.h"
 #include "draw.h"
