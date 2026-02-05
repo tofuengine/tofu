@@ -51,6 +51,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// This is the amount of textures in the circular buffer used to decouple the
+// rendering and transferring phases.
+#define DISPLAY_BUFFERS_COUNT 3
+
 typedef struct Display_Configuration_s {
     struct {
         const char *title;
@@ -84,7 +88,8 @@ typedef struct Display_s {
     } canvas;
 
     struct {
-        GLuint texture;
+        GLuint textures[DISPLAY_BUFFERS_COUNT];
+        int current_texture; // The index of the current (last displayed) texture. Used to access the ring-buffer.
         GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
         GL_Point_t position; // Destination position, normalized to the final screen size.
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
@@ -104,7 +109,7 @@ extern bool Display_update(Display_t *display, float delta_time);
 
 extern void Display_clear(Display_t *display);
 
-extern void Display_present(const Display_t *display);
+extern void Display_present(Display_t *display);
 
 extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `processor` field directly?
 

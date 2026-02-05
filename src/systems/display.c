@@ -559,30 +559,34 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     LOG_D("%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
 
-    glGenTextures(1, &display->vram.texture); //allocate the memory for texture
-    if (display->vram.texture == 0) {
+    glGenTextures(DISPLAY_BUFFERS_COUNT, display->vram.textures); //allocate the memory for texture
+    if (display->vram.textures[0] == 0) {
         LOG_F("can't allocate VRAM texture");
         goto error_free_vram;
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Tight packing (no padding), we are only transferring data (one time set)
     LOG_D("pixel unpack alignment set to 1");
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    LOG_D("pixel unpack row length set to 0");
 
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexImage2D(GL_TEXTURE_2D,
-            0, // Mipmap level, 0 is the base level.
-            GL_RGB,
-            (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
-            0, // Border, must be 0.
-            _PIXEL_FORMAT, _PIXEL_TYPE,
-            NULL); // Create the storage
-    LOG_D("texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
+    for (int i = 0; i < DISPLAY_BUFFERS_COUNT; ++i) {
+        glBindTexture(GL_TEXTURE_2D, display->vram.textures[i]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        glTexImage2D(GL_TEXTURE_2D,
+                0, // Mipmap level, 0 is the base level.
+                GL_RGB,
+                (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
+                0, // Border, must be 0.
+                _PIXEL_FORMAT, _PIXEL_TYPE,
+                NULL); // Create the storage
+        LOG_D("texture created w/ id #%d (%dx%d)", display->vram.textures[i], display->canvas.size.width, display->canvas.size.height);
+    }
     glBindTexture(GL_TEXTURE_2D, 0);
 
     bool shader = _shader_initialize(display, configuration->effect);
@@ -618,7 +622,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 error_destroy_shader:
     shader_destroy(display->shader);
 error_delete_buffers:
-    glDeleteBuffers(1, &display->vram.texture);
+    glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures);
 error_free_vram:
     free(display->vram.pixels);
 error_destroy_processor:
@@ -644,8 +648,8 @@ void Display_destroy(Display_t *display)
     shader_destroy(display->shader);
     LOG_D("shader %p destroyed", display->shader);
 
-    glDeleteBuffers(1, &display->vram.texture);
-    LOG_D("texture w/ id #%d deleted", display->vram.texture);
+    glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures);
+    LOG_D("texture w/ id #%d deleted", display->vram.textures);
 
     free(display->vram.pixels);
     LOG_D("VRAM buffer %p freed", display->vram.pixels);
@@ -704,8 +708,20 @@ void Display_clear(Display_t *display)
     GL_surface_clear(display->canvas.surface, display->canvas.clear_index);
 }
 
-void Display_present(const Display_t *display)
+static inline void _cycle_textures(Display_t *display, GLint *writing_texture, GLint *reading_texture)
 {
+    int index = display->vram.current_texture;
+    *reading_texture = display->vram.textures[index];
+    index = (index + 1) % DISPLAY_BUFFERS_COUNT;
+    *writing_texture = display->vram.textures[index];
+    display->vram.current_texture = index;
+}
+
+void Display_present(Display_t *display)
+{
+    GLint writing_texture, reading_texture;
+    _cycle_textures(display, &writing_texture, &reading_texture);
+
     // It is advisable to clear the colour buffer even if the framebuffer will be
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
@@ -716,12 +732,7 @@ void Display_present(const Display_t *display)
 
     GL_processor_surface_to_pixels(display->canvas.processor, surface, pixels);
 
-    // We need to restore the drawing state, which includes (1) the shader program, (2) the vertices attributes, and (3)
-    // the texture to be drawn.
-    shader_use(display->shader);
-    glBindVertexArray(display->vao);
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
-
+    glBindTexture(GL_TEXTURE_2D, writing_texture);
     glTexSubImage2D(GL_TEXTURE_2D,
             0, // Level of detail
             0, 0, // Note: the size of the texture is the same as the canvas, so we can update the whole texture with a single call.
@@ -732,6 +743,11 @@ void Display_present(const Display_t *display)
     // glEnable(GL_SCISSOR_TEST);
     // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.
 
+    // We need to restore the drawing state, which includes (1) the shader program, (2) the vertices attributes, and (3)
+    // the texture to be drawn.
+    shader_use(display->shader);
+    glBindVertexArray(display->vao);
+    glBindTexture(GL_TEXTURE_2D, reading_texture);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glBindTexture(GL_TEXTURE_2D, 0);
