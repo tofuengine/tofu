@@ -243,9 +243,15 @@
 #undef  TOFU_GRAPHICS_DEBUG_ENABLED
 
 // Optionally logs any access to an undefined shader uniform variable. It is
-// advisable to define this macro only occasionaly to clean/spot any unused
+// advisable to define this macro only occasionally to clean/spot any unused
 // variable.
 #undef  TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
+
+// Also, we can check for runtime errors coming from the OpenGL system. The
+// underlying usage of the `glGetError()` API can introduce stalls in the GPU
+// operations, so we don't call it on each frame. Also, this will be disabled
+// in the `RELEASE` build.
+#define TOFU_GRAPHICS_REPORT_OPENGL_ERRORS
 
 // OpenGL model-view-projection matrix is used only in the projection shader,
 // so we are not required to store a copy of it. Anyway, in some cases it might
@@ -514,6 +520,7 @@
   #undef TOFU_ENGINE_SCRIPT_LEVEL_PROFILING
   #undef TOFU_FILE_DEBUG_ENABLED
   #undef TOFU_GRAPHICS_REPORT_SHADERS_ERRORS
+  #undef TOFU_GRAPHICS_REPORT_OPENGL_ERRORS
   #undef TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS
   #undef TOFU_INTERPRETER_PROTECTED_CALLS
 #endif

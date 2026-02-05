@@ -137,7 +137,7 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
 // reason we change OpenGL's state only temporarily and revert it back to "blank" when finished to reduce
 // the state dependencies.
 
-#if defined(DEBUG)
+#if defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS)
 static bool _has_errors(void)
 {
     bool result = false;
@@ -607,7 +607,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_I("version: %s", glGetString(GL_VERSION));
     LOG_I("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-#if defined(DEBUG)
+#if defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS)
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
@@ -691,10 +691,6 @@ bool Display_update(Display_t *display, float delta_time)
     shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
     shader_use(NULL);
-
-#if defined(DEBUG)
-    _has_errors(); // Display pending OpenGL errors.
-#endif
 
     return true;
 }
