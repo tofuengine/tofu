@@ -53,7 +53,21 @@
 
 // This is the amount of textures in the circular buffer used to decouple the
 // rendering and transferring phases.
-#define DISPLAY_BUFFERS_COUNT 3
+#if defined(TOFU_GRAPHICS_RENDER_BUFFERS_COUNT)
+    #define DISPLAY_BUFFERS_COUNT TOFU_GRAPHICS_RENDER_BUFFERS_COUNT
+#else
+    #define DISPLAY_BUFFERS_COUNT 2
+#endif
+
+// And this the the number of (circular) upload buffers we plan to use to
+// have an async operation.
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
+    #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT)
+        #define DISPLAY_PBO_RING_SIZE TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT
+    #else
+        #define DISPLAY_PBO_RING_SIZE 3
+    #endif
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
 
 typedef struct Display_Configuration_s {
     struct {
@@ -88,9 +102,20 @@ typedef struct Display_s {
     } canvas;
 
     struct {
-        GLuint textures[DISPLAY_BUFFERS_COUNT];
-        int current_texture; // The index of the current (last displayed) texture. Used to access the ring-buffer.
-        GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+        struct {
+            GL_Color_t *bytes; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+            size_t count;
+        } pixels;
+        struct {
+            GLuint ids[DISPLAY_BUFFERS_COUNT];
+            int index; // The index of the current (last displayed) texture. Used to access the ring-buffer.
+        } textures;
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
+        struct {
+            GLuint buffers[DISPLAY_PBO_RING_SIZE];
+            int index;
+        }  pbo;
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
         GL_Point_t position; // Destination position, normalized to the final screen size.
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;

@@ -222,8 +222,8 @@
 // This macro defines the pixel format used for the internal VRAM texture.
 // Valid choices are:
 //
-// - PIXEL_FORMAT_RGBA8888
-// - PIXEL_FORMAT_RGB565
+// - `PIXEL_FORMAT_RGBA8888`
+// - `PIXEL_FORMAT_RGB565`
 //
 // The default is `PIXEL_FORMAT_RGB565`, as it offers a good compromise
 // between quality and performance. Since this is and pixel-arts oriented engine
@@ -235,6 +235,36 @@
 // transferring the VRAM texture to the screen, so it could be useful in some
 // specific cases.
 #define TOFU_GRAPHICS_PIXEL_FORMAT PIXEL_FORMAT_RGB565
+
+// The rendering system features texture buffering, to decouple the UPLOAD
+// (RAM to texture) and DRAW (texture to framebuffer) phases. This is convenient
+// to avoid the chance the DRAW stalls because the upload is still in progress
+// for the texture.
+//
+// Usually a DOUBLE buffering system is more than enough, especially considered
+// this is 2D low-res game engine.
+#define TOFU_GRAPHICS_RENDER_BUFFERS_COUNT 2
+
+// Even by adopting a texture buffering technique the UPLOAD to the texture
+// (CPU-to-GPU) can become a potential synchronization that stalls the rendering
+// for a while as the CPU will wait for the transfer to be completed before
+// resuming execution. We can "detach" the whole process by mean of *pixel
+// buffer objects*.
+//
+// These involved macros are the following:
+//
+//   - `TOFU_GRAPHICS_ASYNC_UPLOAD`, to activate the UPLOAD async
+//     transfer,
+#define TOFU_GRAPHICS_ASYNC_UPLOAD
+//   - `TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT`, to set the amount of slots
+//     in the upload ring-buffer (default is `3` if not set),
+#define TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT 3
+//   - `TOFU_GRAPHICS_ASYNC_UPLOAD_ORPHAN_RECOVERING`, controls the behaviour
+//     in the unfortunate chance the upload process can't complete. If set
+//     the old buffer is "orphaned" and a new one is requested. This is very
+//     unlikely to happen, but nonetheless is nice to have it (since it's
+//     trivial to implement).
+#define TOFU_GRAPHICS_ASYNC_UPLOAD_ORPHAN_RECOVERING
 
 // Enables additional debug information for the `Graphics` sub-system. This
 // should normally be disabled in *both* the `DEBUG` and the `RELEASE` builds

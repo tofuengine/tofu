@@ -40,9 +40,11 @@
     #define _PIXEL_FORMAT GL_RGBA
 #endif
     #define _PIXEL_TYPE   GL_UNSIGNED_BYTE
+    #define _PIXEL_BPP    4
 #elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
     #define _PIXEL_FORMAT GL_RGB
     #define _PIXEL_TYPE   GL_UNSIGNED_SHORT_5_6_5
+    #define _PIXEL_BPP    2
 #else
     #error "unsupported TOFU_GRAPHICS_PIXEL_FORMAT"
 #endif
@@ -138,6 +140,19 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
 // the state dependencies.
 
 #if defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS)
+#if 0
+static void _opengl_debug_proc(GLenum source,
+            GLenum type,
+            GLuint id,
+            GLenum severity,
+            GLsizei length,
+            const GLchar *message,
+            const void *userParam)
+{
+    LOG_E("OpenGL error #%04x: %s", code, message);
+}
+#endif
+
 static bool _has_errors(void)
 {
     bool result = false;
@@ -528,11 +543,72 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     display->vram.position = (GL_Point_t){ .x = vram_rectangle.x, .y = vram_rectangle.y };
     display->vram.size = (GL_Size_t){ .width = vram_rectangle.width, .height = vram_rectangle.height };
+    display->vram.pixels.count = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
+    display->vram.pixels.bytes = malloc(display->vram.pixels.count);
+    if (!display->vram.pixels.bytes) {
+        LOG_F("can't allocate VRAM buffer");
+        goto error_unload_glad;
+    }
+    LOG_D("%d bytes VRAM allocated at %p (%dx%d)", display->vram.pixels.count, display->vram.pixels.bytes, display->canvas.size.width, display->canvas.size.height);
+
+    glGenTextures(DISPLAY_BUFFERS_COUNT, display->vram.textures.ids);
+    if (display->vram.textures.ids[DISPLAY_BUFFERS_COUNT - 1] == 0) { // Check the last one, to be safe :>
+        LOG_F("can't allocate VRAM texture buffers");
+        goto error_free_vram;
+    }
+
+    for (int i = 0; i < DISPLAY_BUFFERS_COUNT; ++i) {
+        glBindTexture(GL_TEXTURE_2D, display->vram.textures.ids[i]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        glTexImage2D(GL_TEXTURE_2D,
+                0, // Mipmap level, 0 is the base level.
+                GL_RGB,
+                (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
+                0, // Border, must be 0.
+                _PIXEL_FORMAT, _PIXEL_TYPE,
+                NULL); // Create the storage
+        LOG_D("texture buffer w/ id #%d created (%dx%d)", display->vram.textures.ids[i], display->canvas.size.width, display->canvas.size.height);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
+    glGenBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
+//    if (display->vram.pbo.buffers[DISPLAY_PBO_RING_SIZE - 1] == 0) { // Check the last one, to be safe :>
+//        LOG_F("can't allocate VRAM texture buffers");
+//        goto error_free_texture_buffers;
+//    }
+    for (int i = 0; i < DISPLAY_PBO_RING_SIZE; ++i) {
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->vram.pbo.buffers[i]);
+        glBufferData(GL_PIXEL_UNPACK_BUFFER, display->vram.pixels.count, NULL, GL_STREAM_DRAW);
+    }
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Tight packing (no padding), we are only transferring data (one time set)
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    LOG_D("pixel unpack alignment and row-length set to 1/0");
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+
+    bool shader = _shader_initialize(display, configuration->effect);
+    if (!shader) {
+        LOG_F("can't initialize shader");
+        goto error_delete_buffers;
+    }
+
+    bool vertices = _initialize_vertices(display);
+    if (!vertices) {
+        LOG_F("can't initialize vertices");
+        goto error_destroy_shader;
+    }
 
     display->canvas.surface = GL_surface_create(display->canvas.size.width, display->canvas.size.height);
     if (!display->canvas.surface) {
         LOG_F("can't create graphics surface");
-        goto error_destroy_window;
+        goto error_destroy_vertices;
     }
     LOG_D("graphics surface %p created", display->canvas.surface);
 
@@ -551,56 +627,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         LOG_D("processor %p palette set", display->canvas.processor);
     }
 
-    size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
-    display->vram.pixels = malloc(size);
-    if (!display->vram.pixels) {
-        LOG_F("can't allocate VRAM buffer");
-        goto error_destroy_processor;
-    }
-    LOG_D("%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
-
-    glGenTextures(DISPLAY_BUFFERS_COUNT, display->vram.textures); //allocate the memory for texture
-    if (display->vram.textures[0] == 0) {
-        LOG_F("can't allocate VRAM texture");
-        goto error_free_vram;
-    }
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Tight packing (no padding), we are only transferring data (one time set)
-    LOG_D("pixel unpack alignment set to 1");
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    LOG_D("pixel unpack row length set to 0");
-
-    for (int i = 0; i < DISPLAY_BUFFERS_COUNT; ++i) {
-        glBindTexture(GL_TEXTURE_2D, display->vram.textures[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-        glTexImage2D(GL_TEXTURE_2D,
-                0, // Mipmap level, 0 is the base level.
-                GL_RGB,
-                (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
-                0, // Border, must be 0.
-                _PIXEL_FORMAT, _PIXEL_TYPE,
-                NULL); // Create the storage
-        LOG_D("texture created w/ id #%d (%dx%d)", display->vram.textures[i], display->canvas.size.width, display->canvas.size.height);
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    bool shader = _shader_initialize(display, configuration->effect);
-    if (!shader) {
-        LOG_F("can't initialize shader");
-        goto error_delete_buffers;
-    }
-
-    bool vertices = _initialize_vertices(display);
-    if (!vertices) {
-        LOG_F("can't initialize vertices");
-        goto error_destroy_shader;
-    }
-
     LOG_I("GLFW: %s", glfwGetVersionString());
     LOG_I("GLFW platform: %d", glfwGetPlatform());
 #if !defined(GLAD_OPTION_GL_ON_DEMAND)
@@ -611,6 +637,19 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_I("version: %s", glGetString(GL_VERSION));
     LOG_I("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+#if 0
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+
+    GLint flags = 0;
+    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    bool is_debug = (flags & GL_CONTEXT_FLAG_DEBUG_BIT) != 0;
+    is_debug = is_debug;
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // opzionale: può costare; valutalo
+    glDebugMessageCallback(_opengl_debug_proc, NULL);
+#endif
+
 #if defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS)
     _has_errors(); // Display pending OpenGL errors.
 #endif
@@ -619,16 +658,24 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     return display;
 
+error_destroy_surface:
+    GL_surface_destroy(display->canvas.surface);
+error_destroy_vertices:
+    glDeleteBuffers(1, &display->vbo);
+    glDeleteVertexArrays(1, &display->vao);
 error_destroy_shader:
     shader_destroy(display->shader);
 error_delete_buffers:
-    glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures);
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
+    glDeleteBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+    glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures.ids);
 error_free_vram:
-    free(display->vram.pixels);
-error_destroy_processor:
-    GL_processor_destroy(display->canvas.processor);
-error_destroy_surface:
-    GL_surface_destroy(display->canvas.surface);
+    free(display->vram.pixels.bytes);
+error_unload_glad:
+#if defined(GLAD_OPTION_GL_LOADER)
+    gladLoaderUnloadGL();
+#endif  /* GLAD_OPTION_GL_LOADER */
 error_destroy_window:
     _window_destroy(display->window);
 error_free_display:
@@ -641,6 +688,12 @@ void Display_destroy(Display_t *display)
 {
     LOG_D("destroying display %p", display);
 
+    GL_processor_destroy(display->canvas.processor);
+    LOG_D("processor %p destroyed", display->canvas.processor);
+
+    GL_surface_destroy(display->canvas.surface);
+    LOG_D("graphics surface %p destroyed", display->canvas.surface);
+
     glDeleteBuffers(1, &display->vbo);
     glDeleteVertexArrays(1, &display->vao);
     LOG_D("VAO/VBO deleted");
@@ -648,17 +701,14 @@ void Display_destroy(Display_t *display)
     shader_destroy(display->shader);
     LOG_D("shader %p destroyed", display->shader);
 
-    glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures);
-    LOG_D("texture w/ id #%d deleted", display->vram.textures);
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
+    glDeleteBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+    glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures.ids);
+    LOG_D("texture buffers deleted");
 
-    free(display->vram.pixels);
-    LOG_D("VRAM buffer %p freed", display->vram.pixels);
-
-    GL_processor_destroy(display->canvas.processor);
-    LOG_D("processor %p destroyed", display->canvas.processor);
-
-    GL_surface_destroy(display->canvas.surface);
-    LOG_D("graphics surface %p destroyed", display->canvas.surface);
+    free(display->vram.pixels.bytes);
+    LOG_D("VRAM buffer %p freed", display->vram.pixels.bytes);
 
 #if defined(GLAD_OPTION_GL_LOADER)
     gladLoaderUnloadGL();
@@ -667,9 +717,6 @@ void Display_destroy(Display_t *display)
 
     _window_destroy(display->window);
     LOG_D("window %p destroyed", display->window);
-
-    glfwTerminate();
-    LOG_D("display terminated");
 
     free(display);
     LOG_D("display freed");
@@ -710,11 +757,17 @@ void Display_clear(Display_t *display)
 
 static inline void _cycle_textures(Display_t *display, GLint *writing_texture, GLint *reading_texture)
 {
-    int index = display->vram.current_texture;
-    *reading_texture = display->vram.textures[index];
+    int index = display->vram.textures.index;
+#if DISPLAY_BUFFERS_COUNT == 2
+    *reading_texture = display->vram.textures.ids[index];
+    index = 1 - index;
+    *writing_texture = display->vram.textures.ids[index];
+#else
+    *reading_texture = display->vram.textures.ids[index];
     index = (index + 1) % DISPLAY_BUFFERS_COUNT;
-    *writing_texture = display->vram.textures[index];
-    display->vram.current_texture = index;
+    *writing_texture = display->vram.textures.ids[index];
+#endif
+    display->vram.textures.index = index;
 }
 
 void Display_present(Display_t *display)
@@ -726,33 +779,94 @@ void Display_present(Display_t *display)
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Convert the offscreen surface to a texture. The actual function changes when a processor is defined.
+    // --------------------------------
+    // ----------:: UPLOAD ::----------
+    // --------------------------------
+    glBindTexture(GL_TEXTURE_2D, writing_texture);
+
+    // Convert the offscreen surface to a texture. The actual function changes
+    // when a processor is defined.
+    //
+    // Note: we might be interested in converting to a temporary `pixels`
+    //       buffer since the conversion is not trivial. The memory pointer
+    //       returned for the PBO need to be accessed as quick as possible,
+    //       and a straight `memcpy()` call is the best option we have. So, the
+    //       suggested sequence is
+    //          CPU buffer -> memcpy -> PBO -> TexSubImage2D
+    //       Also, this way we can control the PBO usage with a macro. :)
     const GL_Surface_t *surface = display->canvas.surface;
-    GL_Color_t *pixels = display->vram.pixels;
+    GL_Color_t *pixels = display->vram.pixels.bytes;
 
     GL_processor_surface_to_pixels(display->canvas.processor, surface, pixels);
 
-    glBindTexture(GL_TEXTURE_2D, writing_texture);
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
+    int pbo_index = display->vram.pbo.index; // Cycle through the ring buffer
+    const GLuint pbo = display->vram.pbo.buffers[pbo_index];
+    display->vram.pbo.index = (pbo_index + 1) % DISPLAY_PBO_RING_SIZE;
+
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
+
+    void *staging_buffer = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, display->vram.pixels.count,
+            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+#if defined(TOFU_GRAPHICS_ASYNC_UPLOAD_ORPHAN_RECOVERING)
+    if (!staging_buffer) {
+        // In the RARE case the driver can't give us a pointer to the buffer,
+        // we recover by asking for a new one (discarding the previous one for
+        // good). We keep this ONLY just as recovery strategy since "orphaning"
+        // (when performed as per-frame basis) would just add unneeded overhead
+        // with not benefits). We leave the decision to the driver
+        //
+        // NOTE: relying on a per-frame orphaning and using a single PBO won't
+        //       solve sync issues as it would work on "most" drivers, but not
+        //       always. Also the continue requests to orphan stress the driver
+        //       and make it stall. With a PBO ring this is unlikely to happen.
+        LOG_W("orphaning the PBO and recovering...");
+
+        glBufferData(GL_PIXEL_UNPACK_BUFFER, display->vram.pixels.count, NULL, GL_STREAM_DRAW); // Orphaning (i.e. discard the previous buffer)!
+        staging_buffer = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, display->vram.pixels.count,
+                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+    }
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD_ORPHAN_RECOVERING */
+    if (staging_buffer) {
+        memcpy(staging_buffer, pixels, display->vram.pixels.count); // Stage from the CPU buffer, as quick as possible!
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+    } else {
+        LOG_E("can't retrieve the PBO upload pointer");
+    }
+
+    glTexSubImage2D(GL_TEXTURE_2D, // Asynchronously transfer from the staging are to the texture.
+            0,
+            0, 0,
+            display->canvas.size.width, display->canvas.size.height,
+            _PIXEL_FORMAT, _PIXEL_TYPE,
+            NULL); // Transferring from the PBO!
+
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+#else   /* TOFU_GRAPHICS_ASYNC_UPLOAD */
     glTexSubImage2D(GL_TEXTURE_2D,
             0, // Level of detail
             0, 0, // Note: the size of the texture is the same as the canvas, so we can update the whole texture with a single call.
             (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
             _PIXEL_FORMAT, _PIXEL_TYPE,
             pixels);
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
 
-    // glEnable(GL_SCISSOR_TEST);
-    // glScissor(0, 0, 800, 600); // Coordinates are relative to the left-bottom corner of the window.
+    // --------------------------------
+    // -----------:: DRAW ::-----------
+    // --------------------------------
+    glBindTexture(GL_TEXTURE_2D, reading_texture);
 
-    // We need to restore the drawing state, which includes (1) the shader program, (2) the vertices attributes, and (3)
-    // the texture to be drawn.
+    // We need to restore the drawing state, which includes (1) the shader
+    // program, (2) the vertices attributes, and (3) the texture to be drawn.
     shader_use(display->shader);
     glBindVertexArray(display->vao);
-    glBindTexture(GL_TEXTURE_2D, reading_texture);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // The VAO knows everything ;)
+
     glBindVertexArray(0);
     shader_use(NULL);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glfwSwapBuffers(display->window);
 }
