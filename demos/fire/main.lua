@@ -43,6 +43,7 @@ local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Grid2D = require("tofu.util.grid2d")
+local Pool = require("tofu.timers.pool")
 
 local COLORS <const> = {
     { 0x00, 0x00, 0x00 }, { 0x24, 0x00, 0x00 }, { 0x48, 0x00, 0x00 }, { 0x6D, 0x00, 0x00 },
@@ -56,6 +57,7 @@ local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
+local POOL <const> = Pool.new()
 
 local STEPS <const> = 64
 
@@ -66,6 +68,7 @@ function Main:__ctor()
   self.y_size = HEIGHT / STEPS
   self.windy = false
   self.damping = 1.0
+  self.timer = nil
   self.grid = Grid2D.new(STEPS, STEPS, { 0 })
 
   self:reset()
@@ -95,11 +98,27 @@ function Main:handle_input()
   elseif CONTROLLER:is_pressed("right") then
     self.damping = self.damping + 0.1
   elseif CONTROLLER:is_pressed("down") then
+    local damping <const> = self.damping
+    self.damping = 0.0
+    self.timer = POOL:spawn(0.05, 0, function(event)
+      if event ~= "fired" then
+        return
+      end
+
+      self.damping = self.damping + 0.025
+      if self.damping >= damping then
+        self.damping = damping
+        self.timer:cancel()
+      end
+    end)
+  elseif CONTROLLER:is_pressed("start") then
     self:reset()
   end
 end
 
-function Main:update(_)
+function Main:update(delta_time)
+  POOL:update(delta_time)
+
   self:handle_input()
 
   local windy = self.windy

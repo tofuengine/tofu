@@ -215,13 +215,13 @@ function Main:render(canvas, _)
     canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   elseif self.mode == 9 then
     canvas:push()
-    canvas:transparent({ [0] = false })
-    canvas:shift(self.shifting)
-    local noise = self.noise
-    canvas:scan(function(x, y, _)
-        local v = noise:generate(x, y, time * 5.0)
-        return math.tointeger(v * 15)
-      end)
+      canvas:transparent(0, false)
+      canvas:shift(self.shifting)
+      local noise = self.noise
+      canvas:scan(function(x, y, _)
+          local v = noise:generate(x, y, time * 5.0)
+          return math.tointeger(v * 15)
+        end)
     canvas:pop()
   end
 

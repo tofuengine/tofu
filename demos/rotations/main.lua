@@ -48,6 +48,7 @@ local PALETTE <const> = Palette.default("nes")
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local CONTROLLER <const> = Controller.default()
 
 local CX <const> = WIDTH * 0.5
 local CY <const> = HEIGHT * 0.5
@@ -75,36 +76,34 @@ function Main:deinit()
 end
 
 function Main:handle_input()
-  local controller = Controller.default()
-
   self.scale_speed = 0
-  if controller:is_down("up") then
+  if CONTROLLER:is_down("up") then
     self.scale_speed = self.scale_speed + 2
   end
-  if controller:is_down("down") then
+  if CONTROLLER:is_down("down") then
     self.scale_speed = self.scale_speed - 2
   end
 
   self.rotation_speed = 0
-  if controller:is_down("left") then
+  if CONTROLLER:is_down("left") then
     self.rotation_speed = self.rotation_speed - 32
   end
-  if controller:is_down("right") then
+  if CONTROLLER:is_down("right") then
     self.rotation_speed = self.rotation_speed + 32
   end
 
   self.anchor_speed = 0
-  if controller:is_down("a") then
+  if CONTROLLER:is_down("a") then
     self.anchor_speed = self.anchor_speed - 1
   end
-  if controller:is_down("b") then
+  if CONTROLLER:is_down("b") then
     self.anchor_speed = self.anchor_speed + 1
   end
 
-  if controller:is_pressed("x") then
+  if CONTROLLER:is_pressed("x") then
     self.flip_x = not self.flip_x
   end
-  if controller:is_pressed("y") then
+  if CONTROLLER:is_pressed("y") then
     self.flip_y = not self.flip_y
   end
 end

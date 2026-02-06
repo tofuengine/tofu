@@ -50,7 +50,7 @@ local CANVAS <const> = Canvas.default()
 local FONT <const> = Font.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
-local EASINGS = {
+local EASINGS <const> = {
     "linear",
     "quadratic-in", "quadratic-out", "quadratic-in-out",
     "cubic-in", "cubic-out", "cubic-in-out",

@@ -43,7 +43,7 @@ local Program = require("tofu.graphics.program")
 
 local Background = Class.define()
 
--- We conventiently use the transparent index to create a rasterbar-like
+-- We conveniently use the transparent index to create a rasterbar-like
 -- gradient effect.
 
 function Background:__ctor(_, height, palette, pool)
@@ -100,8 +100,12 @@ function Background:render(canvas)
 --]]
   local width, _ = canvas:image():size()
 
-  canvas:write(width, 0, self.font, string.format("%d FPS", System.fps()), "right", "top")
---  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
+  canvas:push()
+    canvas:transparent(0, true)
+    canvas:transparent(1, false)
+    canvas:shift(1, 15)
+    canvas:write(width, 0, self.font, string.format("%d FPS", System.fps()), "right", "top")
+  canvas:pop()
 end
 
 return Background
