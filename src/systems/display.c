@@ -587,11 +587,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         glBufferData(GL_PIXEL_UNPACK_BUFFER, display->vram.pixels.count, NULL, GL_STREAM_DRAW);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Tight packing (no padding), we are only transferring data (one time set)
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     LOG_D("pixel unpack alignment and row-length set to 1/0");
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
 
     bool shader = _shader_initialize(display, configuration->effect);
     if (!shader) {
