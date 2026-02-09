@@ -46,7 +46,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 ## Features
 
 * [x] Fully scripted in [Lua](https://www.lua.org/).
-* [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
+* [x] Straight multimedia support, no intermediate third-party libraries (*OpenGL 3.3 Core* required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
 * [x] Tweakable run-time parameters, either from the configuration file and/or command-line arguments (w/ parameters override through command-line arguments).
 * [x] Array of predefined common/famous resolutions (e.g. C64, Capcom's arcades, Nintendo DS, Sony PSP, etc...).
@@ -62,7 +62,8 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Automatic clear of the default image buffer on each loop (configurable).
 * [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
-* [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
+* [x] Internal 16-bit (RGB565) pixel format used for indexed-to-texture rendering, matching [X68000](https://en.wikipedia.org/wiki/X68000) aesthetics.
+* [x] Per-color transparency and re-indexing (*shifting*), in this order, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] Multiple (offscreen) canvas w/ drawing state stack support.
 * [x] SNES' Mode7-like transforms, with scanline based ([HDMA](https://wiki.superfamicom.org/grog's-guide-to-dma-and-hdma-on-the-snes)) changes.
 * [x] Amiga's Copper-like programs, with pixel-wide resolution.
