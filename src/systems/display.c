@@ -830,16 +830,16 @@ void Display_present(Display_t *display)
     if (staging_buffer) {
         memcpy(staging_buffer, pixels, display->vram.pixels.count); // Stage from the CPU buffer, as quick as possible!
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-    } else {
-        LOG_E("can't retrieve the PBO upload pointer");
-    }
 
-    glTexSubImage2D(GL_TEXTURE_2D, // Asynchronously transfer from the staging are to the texture.
-            0,
-            0, 0,
-            display->canvas.size.width, display->canvas.size.height,
-            _PIXEL_FORMAT, _PIXEL_TYPE,
-            NULL); // Transferring from the PBO!
+        glTexSubImage2D(GL_TEXTURE_2D, // Asynchronously transfer from the staging are to the texture.
+                0,
+                0, 0,
+                display->canvas.size.width, display->canvas.size.height,
+                _PIXEL_FORMAT, _PIXEL_TYPE,
+                NULL); // Transferring from the PBO!
+    } else {
+        LOG_E("can't retrieve the PBO upload pointer, skipping the frame");
+    }
 
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 #else   /* TOFU_GRAPHICS_ASYNC_UPLOAD */
