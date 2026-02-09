@@ -111,7 +111,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             // const GL_Pixel_t sindex = shifting[pixel & 0x7f];
             // const GL_Pixel_t dindex = *dptr;
             // *(dptr++) = dindex ^ ((dindex ^ sindex) & mask);
-            uint16_t mapped = state_map[*(sptr++)];;
+            uint16_t mapped = state_map[*(sptr++)];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
