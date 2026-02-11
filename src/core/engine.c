@@ -124,7 +124,7 @@ static inline void _information(void)
     // TODO: display also the free RAM
 }
 
-static bool _parse_palette(const char *definition, GL_Color_t palette[GL_MAX_PALETTE_COLORS])
+static bool _parse_palette(const char *definition, GL_Color_t palette[GL_PALETTE_MAX_COLORS])
 {
     if (definition[0] != '[') {
         LOG_W("not an inline palette");
@@ -132,7 +132,7 @@ static bool _parse_palette(const char *definition, GL_Color_t palette[GL_MAX_PAL
     }
     size_t index = 0;
     const char *cursor = definition + 1; // Skip initial '['
-    while (*cursor != ']' && *cursor != '\0' && index < GL_MAX_PALETTE_COLORS) {
+    while (*cursor != ']' && *cursor != '\0' && index < GL_PALETTE_MAX_COLORS) {
         if (isspace(*cursor) || *cursor == ',') {
             ++cursor; // Skip comma
         }
@@ -150,7 +150,7 @@ static bool _parse_palette(const char *definition, GL_Color_t palette[GL_MAX_PAL
     return index > 0;
 }
 
-static bool _load_palette(Storage_t *storage, const char *name, GL_Color_t palette[GL_MAX_PALETTE_COLORS])
+static bool _load_palette(Storage_t *storage, const char *name, GL_Color_t palette[GL_PALETTE_MAX_COLORS])
 {
     FS_Handle_t *handle = Storage_open(storage, name);
     if (!handle) {
@@ -158,7 +158,7 @@ static bool _load_palette(Storage_t *storage, const char *name, GL_Color_t palet
         return false;
     }
 
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         char hex[16] = { 0 };
         size_t bytes_read = FS_gets(handle, hex, 16);
         if (bytes_read == 0) {
@@ -174,7 +174,7 @@ static bool _load_palette(Storage_t *storage, const char *name, GL_Color_t palet
     return true;
 }
 
-static bool _load_or_parse_palette(Storage_t *storage, const char *name, GL_Color_t palette[GL_MAX_PALETTE_COLORS])
+static bool _load_or_parse_palette(Storage_t *storage, const char *name, GL_Color_t palette[GL_PALETTE_MAX_COLORS])
 {
     return name
         && name[0] != '\0'
@@ -239,7 +239,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("mappings `%s` loaded", engine->configuration->system.mappings);
 
-    GL_Color_t palette[GL_MAX_PALETTE_COLORS] = { 0 };
+    GL_Color_t palette[GL_PALETTE_MAX_COLORS] = { 0 };
     bool has_palette = _load_or_parse_palette(engine->storage, engine->configuration->display.palette, palette);
 
     engine->display = Display_create(&(const Display_Configuration_t){

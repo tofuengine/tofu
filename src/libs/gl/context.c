@@ -143,7 +143,7 @@ void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, cons
 {
     GL_State_t *state = &context->state.current;
     if (!from) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
             gl_palette_state_shifting(&state->palette_state, (GL_Pixel_t)i, (GL_Pixel_t)i);
         }
     } else {
@@ -157,7 +157,7 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
 {
     GL_State_t *state = &context->state.current;
     if (!indexes) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
             gl_palette_state_transparent(&state->palette_state, (GL_Pixel_t)i, i == 0);
         }
     } else {

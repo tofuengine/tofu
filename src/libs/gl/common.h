@@ -51,7 +51,17 @@
 // FIXME: does this makes sense?
 #define GL_CELL_NIL     ((GL_Cell_t)-1)
 
-#define GL_MAX_PALETTE_COLORS   256
+// The palette originally supported up-to 256 entries. However, we lowered this
+// limit to 128 colors to free the MSB which is now used an alpha-bit (with
+// inverted value, when `1` the pixel is transparent).
+// However the amount of slot in the LUT is, still, `2^8`. We use this "padding"
+// 128 entries to tell if a pixel is transparent just with a single LUT access
+// (and not by testing the alpha-bit).
+#define GL_PALETTE_MAX_COLORS   256
+
+#define GL_PALETTE_LAST_INDEX   127
+
+#define GL_PALETTE_COLOR_MASK   0x7F
 
 typedef struct GL_IO_Callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);

@@ -44,8 +44,8 @@
 #include "surface.h"
 
 typedef struct GL_Processor_State_s {
-    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
+    GL_Color_t palette[GL_PALETTE_MAX_COLORS];
+    GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS];
     GL_Program_t *program;
 } GL_Processor_State_t;
 

@@ -46,21 +46,29 @@ void gl_palette_state_init(GL_Palette_State_t *state)
 
 void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to)
 {
-    state->map[from] = (state->map[from] & GL_PALETTE_FLAGS_MASK)
-        | to;
+    if (from > GL_PALETTE_LAST_INDEX || to > GL_PALETTE_LAST_INDEX) {
+        return;
+    }
+    state->map[from & GL_PALETTE_COLOR_MASK] = (state->map[from & GL_PALETTE_COLOR_MASK] & GL_PALETTE_FLAGS_MASK)
+        | (to & GL_PALETTE_COLOR_MASK);
 
 }
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
 {
-    state->map[index] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
-        | (state->map[index] & ~GL_PALETTE_FLAG_TRANSPARENCY);
+    if (index > GL_PALETTE_LAST_INDEX) {
+        return;
+    }
+    state->map[index & GL_PALETTE_COLOR_MASK] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
+        | (state->map[index & GL_PALETTE_COLOR_MASK] & ~GL_PALETTE_FLAG_TRANSPARENCY);
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
 {
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state->map[i] = (i == 0 ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
-            | (GL_Pixel_t)i;
+    // Colors greater that `127` are transparent by definition (as they have the
+    // MSB set).
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
+        state->map[i] = (i > GL_PALETTE_LAST_INDEX ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
+            | (GL_Pixel_t)(i & GL_PALETTE_COLOR_MASK);
     }
 }

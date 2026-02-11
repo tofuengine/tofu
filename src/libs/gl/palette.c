@@ -92,7 +92,7 @@ void GL_palette_set_greyscale(GL_Color_t *palette, size_t size)
         palette[i] = gl_color_from_rgba(y, y, y, 255);
     }
 
-    for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = size; i < GL_PALETTE_MAX_COLORS; ++i) {
         palette[i] = gl_color_from_rgba(0, 0, 0, 255);
     }
 }
@@ -123,7 +123,7 @@ void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green
         }
     }
 
-    for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = size; i < GL_PALETTE_MAX_COLORS; ++i) {
         palette[i] = gl_color_from_rgba(0, 0, 0, 255);
     }
 }
@@ -165,7 +165,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Color_t c
 
     GL_Pixel_t index = 0;
     float minimum = __FLT_MAX__;
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         const GL_Color_t current = palette[i];
 
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_EUCLIDIAN
@@ -222,12 +222,12 @@ GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio)
 
 void GL_palette_copy(GL_Color_t *palette, const GL_Color_t *source)
 {
-    memcpy(palette, source, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS);
+    memcpy(palette, source, sizeof(GL_Color_t) * GL_PALETTE_MAX_COLORS);
 }
 
 static bool _contains(const GL_Color_t *palette, GL_Color_t color)
 {
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         if (memcmp(&palette[i], &color, sizeof(GL_Color_t)) == 0) {
             return true;
         }
@@ -239,7 +239,7 @@ size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other,
 {
     size_t to_i = to;
     for (size_t i = 0; i < count; ++i) {
-        if (to_i == GL_MAX_PALETTE_COLORS) {
+        if (to_i == GL_PALETTE_MAX_COLORS) {
             LOG_W("maximum palette size reached when merging palette %p w/ %p", palette, other);
             break;
         }
@@ -254,7 +254,7 @@ size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other,
 
 void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio)
 {
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         palette[i] = GL_palette_mix(palette[i], color, ratio);
     }
 }

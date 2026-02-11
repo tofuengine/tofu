@@ -57,25 +57,25 @@ GL_Processor_t *GL_processor_create(void)
 #endif  /* TOFU_CORE_VERBOSE_DEBUG */
 
 #if defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED)
-    LOG_W("setting default to %d color(s) quantized palette", GL_MAX_PALETTE_COLORS);
-    #if GL_MAX_PALETTE_COLORS == 256
+    LOG_W("setting default to %d color(s) quantized palette", GL_PALETTE_MAX_COLORS);
+    #if GL_PALETTE_MAX_COLORS == 256
     GL_palette_set_quantized(processor->state.palette, 3, 3, 2);
-    #elif GL_MAX_PALETTE_COLORS == 128
+    #elif GL_PALETTE_MAX_COLORS == 128
     GL_palette_set_quantized(processor->state.palette, 2, 3, 2);
-    #elif GL_MAX_PALETTE_COLORS == 64
+    #elif GL_PALETTE_MAX_COLORS == 64
     GL_palette_set_quantized(processor->state.palette, 2, 2, 2);
-    #elif GL_MAX_PALETTE_COLORS == 32
+    #elif GL_PALETTE_MAX_COLORS == 32
     GL_palette_set_quantized(processor->state.palette, 2, 2, 1);
-    #elif GL_MAX_PALETTE_COLORS == 16
+    #elif GL_PALETTE_MAX_COLORS == 16
     GL_palette_set_quantized(processor->state.palette, 1, 2, 1);
-    #elif GL_MAX_PALETTE_COLORS == 8
+    #elif GL_PALETTE_MAX_COLORS == 8
     GL_palette_set_quantized(processor->state.palette, 1, 1, 1);
     #else
         #error "Too few palette entries"
     #endif
 #else
-    LOG_W("setting default to %d color(s) greyscale palette", GL_MAX_PALETTE_COLORS);
-    GL_palette_set_greyscale(processor->state.palette, GL_MAX_PALETTE_COLORS);
+    LOG_W("setting default to %d color(s) greyscale palette", GL_PALETTE_MAX_COLORS);
+    GL_palette_set_greyscale(processor->state.palette, GL_PALETTE_MAX_COLORS);
 #endif
 
     GL_processor_reset(processor);
@@ -126,7 +126,7 @@ void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palet
 void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
             processor->state.shifting[i] = (GL_Pixel_t)i;
         }
     } else {
@@ -171,10 +171,10 @@ static void _surface_to_pixels(const GL_Processor_State_t *state, const GL_Surfa
 // TODO: ditch wait-x? processor operations changes only once per scanline?
 void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surface_t *surface, GL_Color_t *pixels)
 {
-    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS); // Make a local copy, the processor could change it.
-    memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
+    GL_Color_t palette[GL_PALETTE_MAX_COLORS];
+    GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS];
+    memcpy(palette, state->palette, sizeof(GL_Color_t) * GL_PALETTE_MAX_COLORS); // Make a local copy, the processor could change it.
+    memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_PALETTE_MAX_COLORS);
 
     size_t wait_index = 0;
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)

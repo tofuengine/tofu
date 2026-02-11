@@ -87,11 +87,11 @@ static int palette_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_END
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = GL_MAX_PALETTE_COLORS
+            .size = GL_PALETTE_MAX_COLORS
         }, OBJECT_TYPE_PALETTE);
 
-    GL_palette_set_greyscale(self->palette, GL_MAX_PALETTE_COLORS);
-    LOG_D("greyscale palette %p allocated w/ %d color(s)", self, GL_MAX_PALETTE_COLORS);
+    GL_palette_set_greyscale(self->palette, GL_PALETTE_MAX_COLORS);
+    LOG_D("greyscale palette %p allocated w/ %d color(s)", self, GL_PALETTE_MAX_COLORS);
 
     return 1;
 }
@@ -130,12 +130,12 @@ static int palette_new_1t_1o(lua_State *L)
     if (size == 0) {
         return luaL_error(L, "palette can't be empty!");
     } else
-    if (size > GL_MAX_PALETTE_COLORS) {
-        LOG_W("palette has too many colors (%d) - clamping to %d", size, GL_MAX_PALETTE_COLORS);
-        size = GL_MAX_PALETTE_COLORS;
+    if (size > GL_PALETTE_MAX_COLORS) {
+        LOG_W("palette has too many colors (%d) - clamping to %d", size, GL_PALETTE_MAX_COLORS);
+        size = GL_PALETTE_MAX_COLORS;
     }
 
-    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
+    GL_Color_t palette[GL_PALETTE_MAX_COLORS];
     lua_pushnil(L); // T -> T N
     for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
@@ -159,7 +159,7 @@ static int palette_new_1t_1o(lua_State *L)
         lua_pop(L, 1); // T N T -> T N
     }
 
-    for (size_t i = size; i < GL_MAX_PALETTE_COLORS; ++i) { // Fill the remaining part of the palette with the last color (to fix color matching).
+    for (size_t i = size; i < GL_PALETTE_MAX_COLORS; ++i) { // Fill the remaining part of the palette with the last color (to fix color matching).
         palette[i] = palette[size - 1];
     }
 
@@ -190,9 +190,9 @@ static int palette_new_1s_1o(lua_State *L)
     }
     LOG_D("handle %p opened for file `%s`", handle, name);
 
-    GL_Color_t palette[GL_MAX_PALETTE_COLORS];
+    GL_Color_t palette[GL_PALETTE_MAX_COLORS];
     size_t size = 0;
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         char hex[16] = { 0 };
         size_t bytes_read = FS_gets(handle, hex, 16);
         if (bytes_read == 0) {
@@ -205,8 +205,8 @@ static int palette_new_1s_1o(lua_State *L)
                 hex_to_uint8(&hex[4]),
                 255);
         size += 1;
-        if (size >= GL_MAX_PALETTE_COLORS) {
-            LOG_W("palette has too many colors - clamping to %d", GL_MAX_PALETTE_COLORS);
+        if (size >= GL_PALETTE_MAX_COLORS) {
+            LOG_W("palette has too many colors - clamping to %d", GL_PALETTE_MAX_COLORS);
             break;
         }
     }
@@ -259,7 +259,7 @@ static int palette_new_3n_1o(lua_State *L)
     if (size == 0) {
         return luaL_error(L, "at least one bit is required (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     } else
-    if (size > GL_MAX_PALETTE_COLORS) {
+    if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "too many bits to fit palette (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     }
 
@@ -310,8 +310,8 @@ static int palette_colors_1o_1t(lua_State *L)
 
     const GL_Color_t *palette = self->palette;
 
-    lua_createtable(L, GL_MAX_PALETTE_COLORS, 0);
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+    lua_createtable(L, GL_PALETTE_MAX_COLORS, 0);
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         const GL_Color_t color = palette[i];
 
         lua_createtable(L, 3, 0);

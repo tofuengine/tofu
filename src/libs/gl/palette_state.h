@@ -55,7 +55,7 @@ typedef struct GL_Palette_State_s {
     //   - 0xFF00 (MSB): flags
     //     - Bit #0: transparency
     //   - 0x00FF (LSB): shifting
-    uint16_t map[GL_MAX_PALETTE_COLORS];
+    uint16_t map[GL_PALETTE_MAX_COLORS];
 } GL_Palette_State_t;
 
 #define GL_PALETTE_FLAGS_MASK    0xFF00
