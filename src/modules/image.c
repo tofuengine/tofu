@@ -55,6 +55,7 @@ static int image_center_1o_2nn(lua_State *L);
 static int image_peek_3onn_1n(lua_State *L);
 static int image_poke_4onnn_0(lua_State *L);
 static int image_clear_2oN_0(lua_State *L);
+static int image_remap_2ot_0(lua_State *L);
 //static int image_grab(lua_State *L);
 
 int image_loader(lua_State *L)
@@ -71,6 +72,8 @@ int image_loader(lua_State *L)
             // -- mutators --
             { "poke", image_poke_4onnn_0 },
             { "clear", image_clear_2oN_0 },
+            // -- operations --
+            { "remap", image_remap_2ot_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -297,6 +300,35 @@ static int image_clear_2oN_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
 
     GL_surface_clear(self->surface, index);
+
+    return 0;
+}
+
+static int image_remap_2ot_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+    const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
+    // idx #2: LUA_TTABLE
+
+    GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS] = { 0 };
+    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) { // Initialize with a "null" mapping
+        shifting[i] = i;
+    }
+
+    lua_pushnil(L);
+    while (lua_next(L, 2)) {
+        GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
+        GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, -1);
+
+        shifting[from] = to;
+
+        lua_pop(L, 1);
+    }
+
+    GL_surface_remap(self->surface, shifting);
 
     return 0;
 }

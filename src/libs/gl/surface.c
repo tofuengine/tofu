@@ -222,3 +222,12 @@ void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_
 {
     surface->data[position.y * surface->width + position.x] = index;
 }
+
+void GL_surface_remap(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_PALETTE_COLOR_MASK])
+{
+    GL_Pixel_t *dst = surface->data;
+    for (size_t i = surface->data_size; i; --i) {
+        GL_Pixel_t index = shifting[*dst];
+        *(dst++) = index;
+    }
+}
