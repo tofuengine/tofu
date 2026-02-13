@@ -34,6 +34,7 @@
 static int font_new_2oS_1o(lua_State *L);
 static int font_gc_1o_0(lua_State *L);
 static int font_size_4osNN_2nn(lua_State *L);
+static int font_bank_1o_1o(lua_State *L);
 
 int font_loader(lua_State *L)
 {
@@ -44,6 +45,7 @@ int font_loader(lua_State *L)
             { "__gc", font_gc_1o_0 },
             // -- accessors --
             { "size", font_size_4osNN_2nn },
+            { "bank", font_bank_1o_1o },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -149,4 +151,16 @@ static int font_size_4osNN_2nn(lua_State *L)
     lua_pushinteger(L, (lua_Integer)size.height);
 
     return 2;
+}
+
+static int font_bank_1o_1o(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
+
+    luaX_pushref(L, self->bank.reference); // Push the actual Lua object/userdata, from the reference!
+
+    return 1;
 }
