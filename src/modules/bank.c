@@ -50,6 +50,7 @@
 static int bank_new_v_1o(lua_State *L);
 static int bank_gc_1o_0(lua_State *L);
 static int bank_size_4onNN_2nn(lua_State *L);
+static int bank_image_1o_1o(lua_State *L);
 
 int bank_loader(lua_State *L)
 {
@@ -60,6 +61,7 @@ int bank_loader(lua_State *L)
             { "__gc", bank_gc_1o_0 },
             // -- accessors --
             { "size", bank_size_4onNN_2nn },
+            { "image", bank_image_1o_1o },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -179,4 +181,16 @@ static int bank_size_4onNN_2nn(lua_State *L)
     lua_pushinteger(L, (lua_Integer)((float)cell->height * fabsf(scale_y)));
 
     return 2;
+}
+
+int bank_image_1o_1o(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+
+    luaX_pushref(L, self->atlas.reference); // Push the actual Lua object/userdata, from the reference!
+
+    return 1;
 }
