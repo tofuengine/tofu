@@ -52,4 +52,8 @@ function Bank.from_image(...)
   end
 end
 
+function Bank:remap(shifting)
+  self:image():remap(shifting)
+end
+
 return Bank

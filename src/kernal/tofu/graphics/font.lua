@@ -99,4 +99,8 @@ function Font:wrap(text, width)
   return lines
 end
 
+function Font:remap(shifting)
+  self:bank():remap(shifting)
+end
+
 return Font
