@@ -73,22 +73,14 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
 {
     const char *value = lua_tostring(L, idx);
     if (!value) {
-#if defined(DEBUG)
-        return luaL_error(L, "value at argument #%d is null", idx), 0;
-#else   /* DEBUG */
-        return -1;
-#endif  /* DEBUG */
+        return luaL_error(L, "value at argument #%d is null", idx);
     }
     for (int i = 0; ids[i]; ++i) {
         if (strcmp(value, ids[i]) == 0) {
             return i;
         }
     }
-#if defined(DEBUG)
-    return luaL_error(L, "argument #%d w/ value `%s` is not a valid enumeration", idx, value), -1;
-#else   /* DEBUG */
-    return -1;
-#endif  /* DEBUG */
+    return luaL_error(L, "argument #%d w/ value `%s` is not a valid enumeration", idx, value);
 }
 
 #if defined(_LUAX_RTTI)
@@ -318,7 +310,7 @@ int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const lu
     // Note: upvalues have already been consumed by `luaL_setfuncs()`. No need to clear the stack.
     //       Now the top of the stack contains the table of the module.
 
-    lua_getfield(L, -1, "__init");
+    lua_getfield(L, -1, "__init"); // Call the module initializer, if any.
     if (!lua_isnil(L, -1)) {
         lua_call(L, 0, 0);
     } else {
