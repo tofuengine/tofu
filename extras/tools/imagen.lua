@@ -45,7 +45,7 @@ SOFTWARE.
 --   [0-7]     : (8 bytes) Signature `TOFUIMG!`
 --   [8-9]     : (2 bytes) Width (little-endian)
 --   [10-11]   : (2 bytes) Height (little-endian)
---   [12-13]   : (2 bytes) Palette length, up to 256 entries (little-endian)
+--   [12-13]   : (2 bytes) Palette length (little-endian)
 --   [14-...]  : (palette length * 3 bytes) Palette data (RGB triplets)
 --   [...-end] : (width * height bytes) Pixel data (each byte is an 8-bit index in the palette)
 
@@ -143,8 +143,12 @@ local function compute_histogram(image)
   local histogram = {}
   for_each_pixel(image,
     function(x, y, r, g, b, a)
-        local rgb = to_rgba32(r, g, b)
-        histogram[rgb] = (histogram[rgb] or 0) + 1
+      if a < 255 then
+        log_debug("Skipping transparent pixel at (%d, %d)", x, y)
+        return
+      end
+      local rgb = to_rgba32(r, g, b)
+      histogram[rgb] = (histogram[rgb] or 0) + 1
     end)
 
   local colors = {}
@@ -379,14 +383,10 @@ end
 -- The best matching color is the one with the smallest Euclidean distance
 -- in the RGB color space.
 -- If no color is found (which should not happen), returns palette index 0.
-local function match_color_in_palette(r, g, b, palette, exclude)
+local function match_color_in_palette(r, g, b, palette)
   local best_index = 0
   local best_distance = math.huge
   for index, color in ipairs(palette) do
-    if exclude and index - 1 == exclude then -- Transparent color can be `nil` if disabled
-      log_debug("  skipping excluded palette index %d", index - 1)
-      goto continue
-    end
     local dr = r - color.r
     local dg = g - color.g
     local db = b - color.b
@@ -395,7 +395,6 @@ local function match_color_in_palette(r, g, b, palette, exclude)
       best_distance = distance
       best_index = index - 1 -- Palette index is zero-based.
     end
-    ::continue::
   end
   return best_index
 end
@@ -403,6 +402,9 @@ end
 -- -----------------------------------------------------------------------------
 -- I/O FUNCTIONS ---------------------------------------------------------------
 -- -----------------------------------------------------------------------------
+
+local PALETTE_MAX_LENGTH <const> = 128
+local TRANSPARENCY_FLAG <const> = 0x80
 
 local function emit_header(writer, header)
   writer:write(string.pack("c8", "TOFUIMG!"))
@@ -412,35 +414,36 @@ local function emit_header(writer, header)
   for _, color in ipairs(header.palette) do
     writer:write(string.pack("BBB", color.r, color.g, color.b))
   end
-  for index = #header.palette + 1, 256 do
+  for index = #header.palette + 1, PALETTE_MAX_LENGTH do
     local pixel = index - 1
-    writer:write(string.pack("BBB", pixel, pixel, pixel)) -- Pad the palette to 256 entries.
+    writer:write(string.pack("BBB", pixel, pixel, pixel)) -- Pad the palette
   end
 end
 
-local function emit_data(writer, image, palette, transparent)
+local function emit_data(writer, image, palette)
   local cache = {} -- Memoization cache for color lookups.
 
   for_each_pixel(image,
     function(x, y, r, g, b, a)
-        if transparent and a < 255 then
-          writer:write(string.pack("B", transparent))
-          return
-        end
-
         local rgb = to_rgba32(r, g, b)
 
         local index = cache[rgb]
         if not index then -- Not cached yet. Find (the best matching) color in palette.
-          index = match_color_in_palette(r, g, b, palette, transparent)
+          index = match_color_in_palette(r, g, b, palette)
           cache[rgb] = index -- Cache it for later use.
+        end
+
+        -- If the pixel is transparent, we set the high bit of the color index
+        -- to indicate that this pixel should be rendered as transparent.
+        if a < 255 then
+          index = index | TRANSPARENCY_FLAG
         end
 
         writer:write(string.pack("B", index))
     end)
 end
 
-local function write_image(path, image, palette, transparent)
+local function write_image(path, image, palette)
   local writer = io.open(path, "wb")
   if not writer then
     log("*** can't create file `%s`", path)
@@ -454,7 +457,7 @@ local function write_image(path, image, palette, transparent)
   }
 
   emit_header(writer, header)
-  emit_data(writer, image, palette, transparent)
+  emit_data(writer, image, palette)
 
   writer:close()
 
@@ -471,8 +474,8 @@ local function load_and_parse_palette(path)
 
   local palette = {}
   for index, color in ipairs(palette_module) do
-    if #palette == 256 then
-      log("*** too many colors in the palette (max 256)")
+    if #palette == PALETTE_MAX_LENGTH then
+      log("*** too many colors in the palette (max %d)", PALETTE_MAX_LENGTH)
       return nil
     end
 
@@ -508,14 +511,14 @@ end
 -- COMMANDS --------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
 
-local function convert_command(input, palette, colors, sort, transparent)
+local function convert_command(input, palette, colors, sort)
   local image = load_image(input)
 
   log("Converting image %s", input)
 
   local palette = #palette > 0
     and load_and_parse_palette(palette)
-    or calculate_palette(image, colors or 256)
+    or calculate_palette(image, colors or PALETTE_MAX_LENGTH)
 
   if not palette then
     log("*** failed to obtain the palette")
@@ -539,7 +542,7 @@ local function convert_command(input, palette, colors, sort, transparent)
   -- The output file name is the same of the input, but with `.img` extension.
   local output = input:gsub("%.%w+$", "") .. ".img"
   log("Writing output image `%s`", output)
-  local success = write_image(output, image, palette, transparent)
+  local success = write_image(output, image, palette)
 
   log(success and "Done!" or "Failed!")
 
@@ -605,7 +608,7 @@ local function main(arg)
     :args(1)
   parser:option("-c --colors")
     :description("Sets the size of the palette.")
-    :default("256")
+    :default(string.format("%d", PALETTE_MAX_LENGTH))
     :args(1)
     :count(1)
     :convert(math.tointeger)
@@ -614,14 +617,6 @@ local function main(arg)
     :default("")
     :args(1)
     :count(1)
-  parser:option("-t --transparent")
-    :description("Index of the transparent index in the palette.")
-    :default("0")
-    :args(1)
-    :count(1)
-    :convert(math.tointeger)
-  parser:flag("-o --opaque")
-    :description("Don't consider the transparent index.")
   parser:flag("-s --sort")
     :description("Sort the palette entries before converting the image.")
   parser:flag("-q --quiet")
@@ -636,7 +631,7 @@ local function main(arg)
 
   log_init(args)
 
-  log("ImageN v0.3.0")
+  log("ImageN v0.4.0")
   log("=============")
 
   local paths = {}
@@ -645,7 +640,7 @@ local function main(arg)
   local success = false
   for _, path in ipairs(paths) do
     if args.command == "convert" then
-      success = convert_command(path, args.palette, args.colors, args.sort, not args.opaque and args.transparent or nil)
+      success = convert_command(path, args.palette, args.colors, args.sort)
     elseif args.command == "inspect" then
       success = command_inspect(path)
     end
