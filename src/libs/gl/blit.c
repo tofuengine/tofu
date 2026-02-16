@@ -42,6 +42,17 @@
 #include <libs/imath.h>
 #include <libs/sincos.h>
 
+//#define _BRANCHLESS_BLIT_EXPERIMENTAL
+//#define _BRANCHLESS_BLIT_EXPERIMENTAL_XOR
+
+#if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
+#ifdef _BRANCHLESS_BLIT_EXPERIMENTAL_XOR
+    #define _BLIT_BLEND(dindex, sindex, mask) ((dindex) ^ (((dindex) ^ (sindex)) & (mask)))
+#else
+    #define _BLIT_BLEND(dindex, sindex, mask) (((dindex) & ~(mask)) | ((sindex) & (mask)))
+#endif
+#endif
+
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
@@ -106,17 +117,23 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            // const GL_Pixel_t pixel = *(sptr++) | 0x80;
-            // const GL_Pixel_t mask = -(pixel >> 7);
-            // const GL_Pixel_t sindex = shifting[pixel & 0x7f];
-            // const GL_Pixel_t dindex = *dptr;
-            // *(dptr++) = dindex ^ ((dindex ^ sindex) & mask);
+#if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
+            const GL_Pixel_t pixel = *(sptr++);
+            const uint16_t mapped = state_map[pixel];
+            const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
+            const GL_Pixel_t draw = 1 - skip;
+            const GL_Pixel_t mask = (GL_Pixel_t)-draw;
+            const GL_Pixel_t sindex = GL_PALETTE_GET_SHIFTING(mapped);
+            const GL_Pixel_t dindex = *dptr;
+            *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
+#else
             uint16_t mapped = state_map[*(sptr++)];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
                 *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
+#endif
         }
         sptr += sskip;
         dptr += dskip;
@@ -207,12 +224,23 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
 #endif
             const int x = ITRUNC(u); // Ditto.
 
+#if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
+            const GL_Pixel_t pixel = sptr[x];
+            const uint16_t mapped = state_map[pixel];
+            const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
+            const GL_Pixel_t draw = 1 - skip;
+            const GL_Pixel_t mask = (GL_Pixel_t)-draw;
+            const GL_Pixel_t sindex = GL_PALETTE_GET_SHIFTING(mapped);
+            const GL_Pixel_t dindex = *dptr;
+            *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
+#else
             uint16_t mapped = state_map[sptr[x]];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
                 *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
             }
+#endif
 
             u += du;
         }
@@ -368,10 +396,21 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 #endif
                     const GL_Pixel_t *sptr = sdata + y * swidth + x;
 
+#if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
+                    const GL_Pixel_t pixel = *sptr;
+                    const uint16_t mapped = state_map[pixel];
+                    const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
+                    const GL_Pixel_t draw = 1 - skip;
+                    const GL_Pixel_t mask = (GL_Pixel_t)-draw;
+                    const GL_Pixel_t sindex = GL_PALETTE_GET_SHIFTING(mapped);
+                    const GL_Pixel_t dindex = *dptr;
+                    *dptr = _BLIT_BLEND(dindex, sindex, mask);
+#else
                     uint16_t mapped = state_map[*sptr];
                     if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                         *dptr = GL_PALETTE_GET_SHIFTING(mapped);
                     }
+#endif
                 }
 #if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
             }
