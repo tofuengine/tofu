@@ -49,9 +49,11 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
     if (from > GL_PALETTE_LAST_INDEX || to > GL_PALETTE_LAST_INDEX) {
         return;
     }
-    state->map[from & GL_PALETTE_COLOR_MASK] = (state->map[from & GL_PALETTE_COLOR_MASK] & GL_PALETTE_FLAGS_MASK)
-        | (to & GL_PALETTE_COLOR_MASK);
-
+    // Always limit the access to the map for the actually used colors. The
+    // upper half of the map is reserved for transparent pixels (as they have
+    // the MSB set).
+    state->map[from & GL_PIXEL_COLOR_MASK] = (state->map[from & GL_PIXEL_COLOR_MASK] & GL_PALETTE_FLAGS_MASK)
+        | (to & GL_PIXEL_COLOR_MASK);
 }
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
@@ -59,16 +61,16 @@ void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, b
     if (index > GL_PALETTE_LAST_INDEX) {
         return;
     }
-    state->map[index & GL_PALETTE_COLOR_MASK] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
-        | (state->map[index & GL_PALETTE_COLOR_MASK] & ~GL_PALETTE_FLAG_TRANSPARENCY);
+    state->map[index & GL_PIXEL_COLOR_MASK] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
+        | (state->map[index & GL_PIXEL_COLOR_MASK] & ~GL_PALETTE_FLAG_TRANSPARENCY);
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
 {
-    // Colors greater that `127` are transparent by definition (as they have the
-    // MSB set).
+    // Colors in the upper half of the map are reserved for transparent pixels
+    // (as they have the MSB set).
     for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
         state->map[i] = (i > GL_PALETTE_LAST_INDEX ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
-            | (GL_Pixel_t)(i & GL_PALETTE_COLOR_MASK);
+            | (GL_Pixel_t)(i & GL_PIXEL_COLOR_MASK);
     }
 }

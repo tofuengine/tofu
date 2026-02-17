@@ -61,7 +61,11 @@
 
 #define GL_PALETTE_LAST_INDEX   127
 
-#define GL_PALETTE_COLOR_MASK   0x7F
+#define GL_PIXEL_TRANSPARENCY_MASK 0x80
+#define GL_PIXEL_COLOR_MASK        0x7F
+
+#define GL_PIXEL_IS_TRANSPARENT(pixel) ((pixel) & 0x80)
+#define GL_PIXEL_GET_INDEX(pixel)      ((pixel) & 0x7F)
 
 typedef struct GL_IO_Callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);

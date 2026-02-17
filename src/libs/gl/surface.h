@@ -78,6 +78,6 @@ extern void GL_surface_destroy(GL_Surface_t *surface);
 extern void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index);
 extern GL_Pixel_t GL_surface_peek(const GL_Surface_t *surface, GL_Point_t position);
 extern void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_t index);
-extern void GL_surface_remap(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_PALETTE_COLOR_MASK]);
+extern void GL_surface_remap(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS]);
 
 #endif  /* TOFU_LIBS_GL_SURFACE_H */
