@@ -326,9 +326,9 @@ void GL_context_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -342,9 +342,9 @@ void GL_context_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -358,9 +358,9 @@ void GL_context_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -374,9 +374,9 @@ void GL_context_polyline(const GL_Context_t *context, const GL_Point_t *vertices
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -399,9 +399,9 @@ void GL_context_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rec
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -459,9 +459,9 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -560,9 +560,9 @@ void GL_context_filled_circle(const GL_Context_t *context, GL_Point_t center, si
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
@@ -599,9 +599,9 @@ void GL_context_circle(const GL_Context_t *context, GL_Point_t center, size_t ra
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }

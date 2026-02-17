@@ -172,7 +172,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     const int width = clipping_region->x1 - clipping_region->x0;
     const int height = clipping_region->y1 - clipping_region->y0;
@@ -181,7 +181,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     }
     // FIXME: remove this early bailing out everywhere? Null for-loop suffices and is better due to lack of branch?
 
-    uint16_t mapped = state_map[index];
+    uint8_t mapped = state_map[index];
     if (transparency && GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }

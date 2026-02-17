@@ -128,7 +128,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     const GL_XForm_Table_Entry_t *table = xform->table;
     const GL_XForm_Wraps_t wrap = xform->wrap;
@@ -298,7 +298,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 sy += area.y;
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
-                uint16_t mapped = state_map[*sptr];
+                uint8_t mapped = state_map[*sptr];
 #if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
                 if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                     *dptr = GL_PALETTE_GET_SHIFTING(mapped);

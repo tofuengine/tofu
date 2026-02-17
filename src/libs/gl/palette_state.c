@@ -37,6 +37,9 @@
 
 #include "palette_state.h"
 
+#define _LOG_TAG "gl-palette_state"
+#include <libs/log.h>
+
 void gl_palette_state_init(GL_Palette_State_t *state)
 {
     *state = (GL_Palette_State_t){ 0 };
@@ -46,23 +49,27 @@ void gl_palette_state_init(GL_Palette_State_t *state)
 
 void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to)
 {
-    if (from > GL_PALETTE_LAST_INDEX || to > GL_PALETTE_LAST_INDEX) {
+    if (from > GL_PALETTE_LAST_INDEX || to > GL_PALETTE_LAST_INDEX) { // Protect the upper half of the map.
+        LOG_W("palette index out of range (from: %u, to: %u), skipping shifting", from, to);
         return;
     }
     // Always limit the access to the map for the actually used colors. The
     // upper half of the map is reserved for transparent pixels (as they have
     // the MSB set).
-    state->map[from & GL_PIXEL_COLOR_MASK] = (state->map[from & GL_PIXEL_COLOR_MASK] & GL_PALETTE_FLAGS_MASK)
-        | (to & GL_PIXEL_COLOR_MASK);
+    state->map[from] = (state->map[from] & GL_PALETTE_FLAGS_MASK) | to;
 }
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
 {
-    if (index > GL_PALETTE_LAST_INDEX) {
+    if (index > GL_PALETTE_LAST_INDEX) { // Ditto.
+        LOG_W("palette index %u out of range, skipping transparency setting", index);
         return;
     }
-    state->map[index & GL_PIXEL_COLOR_MASK] = (is_transparent ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
-        | (state->map[index & GL_PIXEL_COLOR_MASK] & ~GL_PALETTE_FLAG_TRANSPARENCY);
+    if (is_transparent) { // We operate on the single flag, leaving the shifting part of the map entry unchanged.
+        state->map[index] |= GL_PALETTE_FLAG_TRANSPARENCY;
+    } else {
+        state->map[index] &= ~GL_PALETTE_FLAG_TRANSPARENCY;
+    }
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
@@ -70,7 +77,14 @@ void gl_palette_state_reset(GL_Palette_State_t *state)
     // Colors in the upper half of the map are reserved for transparent pixels
     // (as they have the MSB set).
     for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
-        state->map[i] = (i > GL_PALETTE_LAST_INDEX ? GL_PALETTE_FLAG_TRANSPARENCY : 0)
-            | (GL_Pixel_t)(i & GL_PIXEL_COLOR_MASK);
+        if (i > GL_PALETTE_LAST_INDEX) {
+            // To be precise, the shifting part of the map entry is not relevant
+            // for transparent pixels as the transparency flag is set. However,
+            // we set it to the original color index just for consistency and
+            // debugging purposes (e.g. when dumping the palette state).
+            state->map[i] = GL_PALETTE_FLAG_TRANSPARENCY | (i & GL_PIXEL_COLOR_MASK);
+        } else {
+            state->map[i] = i & GL_PIXEL_COLOR_MASK;
+        }
     }
 }

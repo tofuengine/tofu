@@ -52,7 +52,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     int skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = offset.y;
@@ -108,7 +108,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            uint16_t mapped = state_map[srow[u]];
+            uint8_t mapped = state_map[srow[u]];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
@@ -126,7 +126,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);
@@ -207,7 +207,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            uint16_t mapped = state_map[srow[u]];
+            uint8_t mapped = state_map[srow[u]];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {

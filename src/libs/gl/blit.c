@@ -67,7 +67,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = area.y;
@@ -119,7 +119,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 #endif
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
             const GL_Pixel_t pixel = *(sptr++);
-            const uint16_t mapped = state_map[pixel];
+            const uint8_t mapped = state_map[pixel];
             const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
             const GL_Pixel_t draw = 1 - skip;
             const GL_Pixel_t mask = (GL_Pixel_t)-draw;
@@ -127,7 +127,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             const GL_Pixel_t dindex = *dptr;
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
 #else
-            uint16_t mapped = state_map[*(sptr++)];
+            uint8_t mapped = state_map[*(sptr++)];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
@@ -151,7 +151,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     const size_t drawing_width = (size_t)ITRUNC(area.width * fabsf(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
     const size_t drawing_height = (size_t)ITRUNC(area.height * fabsf(scale_y));
@@ -226,7 +226,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
             const GL_Pixel_t pixel = sptr[x];
-            const uint16_t mapped = state_map[pixel];
+            const uint8_t mapped = state_map[pixel];
             const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
             const GL_Pixel_t draw = 1 - skip;
             const GL_Pixel_t mask = (GL_Pixel_t)-draw;
@@ -234,7 +234,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             const GL_Pixel_t dindex = *dptr;
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
 #else
-            uint16_t mapped = state_map[sptr[x]];
+            uint8_t mapped = state_map[sptr[x]];
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
@@ -261,7 +261,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint16_t *state_map = state->palette_state.map;
+    const uint8_t *state_map = state->palette_state.map;
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
@@ -398,7 +398,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
                     const GL_Pixel_t pixel = *sptr;
-                    const uint16_t mapped = state_map[pixel];
+                    const uint8_t mapped = state_map[pixel];
                     const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
                     const GL_Pixel_t draw = 1 - skip;
                     const GL_Pixel_t mask = (GL_Pixel_t)-draw;
@@ -406,7 +406,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
                     const GL_Pixel_t dindex = *dptr;
                     *dptr = _BLIT_BLEND(dindex, sindex, mask);
 #else
-                    uint16_t mapped = state_map[*sptr];
+                    uint8_t mapped = state_map[*sptr];
                     if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                         *dptr = GL_PALETTE_GET_SHIFTING(mapped);
                     }
