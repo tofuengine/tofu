@@ -403,6 +403,13 @@ end
 -- I/O FUNCTIONS ---------------------------------------------------------------
 -- -----------------------------------------------------------------------------
 
+-- This the maximum number of colors in a palette. Since the game-engine
+-- supports only 8-bit color indices, the maximum palette size is 256.
+local PALETTE_SIZE <const> = 256
+
+-- The actual maximum palette size is 128, because we need to reserve the high
+-- bit of the color index to indicate transparency. This means that we can have
+-- at most 128 colors in a palette.
 local PALETTE_MAX_LENGTH <const> = 128
 local TRANSPARENCY_FLAG <const> = 0x80
 
@@ -414,7 +421,7 @@ local function emit_header(writer, header)
   for _, color in ipairs(header.palette) do
     writer:write(string.pack("BBB", color.r, color.g, color.b))
   end
-  for index = #header.palette + 1, PALETTE_MAX_LENGTH do
+  for index = #header.palette + 1, PALETTE_SIZE do
     local pixel = index - 1
     writer:write(string.pack("BBB", pixel, pixel, pixel)) -- Pad the palette
   end
