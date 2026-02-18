@@ -129,6 +129,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     const GL_XForm_Table_Entry_t *table = xform->table;
     const GL_XForm_Wraps_t wrap = xform->wrap;
@@ -301,11 +302,11 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 uint8_t mapped = state_map[*sptr];
 #if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
                 if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                    *dptr = GL_PALETTE_GET_SHIFTING(mapped);
+                    *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                 }
 #else
                 // NOTE: no transparency in Mode-7!
-                *dptr = GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
 #endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
             }
 

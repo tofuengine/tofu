@@ -128,10 +128,8 @@ function Main:handle_input()
     self.scale_x = -1.0
     self.x = self.x - 1
   elseif CONTROLLER:is_pressed("y") then
-    print("Y")
     self.mode = (self.mode + 1) % 10
   elseif CONTROLLER:is_pressed("x") then
-    print("X")
     self.clipping = not self.clipping
     if self.clipping then
       CANVAS:clipping(32, 32, 64, 64)
@@ -215,7 +213,6 @@ function Main:render(canvas, _)
     canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   elseif self.mode == 9 then
     canvas:push()
-      canvas:transparent(0, false)
       canvas:shift(self.shifting)
       local noise = self.noise
       canvas:scan(function(x, y, _)

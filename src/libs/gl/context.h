@@ -48,6 +48,7 @@
 typedef struct GL_State_s {
     GL_Quad_t clipping_region;
     GL_Palette_State_t palette_state;
+    uint8_t palette_bank;
 } GL_State_t;
 
 typedef struct GL_Context_s {
@@ -68,5 +69,6 @@ extern void GL_context_pop(GL_Context_t *context, size_t levels);
 extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
 extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+extern void GL_context_set_bank(GL_Context_t *context, size_t bank);
 
 #endif  /* TOFU_LIBS_GL_CONTEXT_H */

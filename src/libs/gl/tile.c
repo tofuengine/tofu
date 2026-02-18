@@ -53,6 +53,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     int skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = offset.y;
@@ -112,7 +113,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
             u = (u + 1) % (int)area.width; // Prefer modulo over branch.
         }
@@ -127,6 +128,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);
@@ -211,7 +213,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.

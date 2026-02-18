@@ -57,6 +57,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     if (seed.x < clipping_region->x0 || seed.x >= clipping_region->x1
         || seed.y < clipping_region->y0 || seed.y >= clipping_region->y1) {
@@ -75,7 +76,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     }
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
-    const GL_Pixel_t replacement = GL_PALETTE_GET_SHIFTING(mapped);
+    const GL_Pixel_t replacement = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
@@ -134,6 +135,7 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = area.x,
@@ -177,7 +179,7 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
             x += 1;
         }
@@ -192,6 +194,7 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = area.y;
@@ -247,7 +250,7 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
             x += 1;
         }
@@ -369,6 +372,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
+    const uint8_t bank_mask = state->palette_bank;
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
@@ -437,7 +441,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
                 || !should_write(value, threshold)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
         }
         sptr += sskip;
@@ -524,6 +528,7 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
     const GL_Pixel_Function_t blend = _pixel_functions[function];
+    const uint8_t bank_mask = state->palette_bank;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = area.y;
@@ -577,7 +582,7 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
         }
         sptr += sskip;

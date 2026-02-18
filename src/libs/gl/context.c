@@ -54,7 +54,8 @@ static void _reset(GL_Context_t *context)
                 .x1 = (int)surface->width,
                 .y1 = (int)surface->height
             },
-            .palette_state = (GL_Palette_State_t){ { 0 } }
+            .palette_state = (GL_Palette_State_t){ { 0 } },
+            .palette_bank = 0
         };
 
     gl_palette_state_init(&state.palette_state);
@@ -173,6 +174,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     const int width = clipping_region->x1 - clipping_region->x0;
     const int height = clipping_region->y1 - clipping_region->y0;
@@ -185,7 +187,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     if (transparency && GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = GL_PALETTE_GET_SHIFTING(mapped);
+    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
 
     GL_Pixel_t *ddata = surface->data;
 
@@ -201,4 +203,16 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
         }
         dptr += dskip;
     }
+}
+
+void GL_context_set_bank(GL_Context_t *context, size_t bank)
+{
+    if (bank > GL_PALETTE_LAST_BANK) {
+        LOG_W("palette bank %u out of range, skipping bank setting", bank);
+        return;
+    }
+
+    // Precompute the bank mask, so that we have it ready during the drawing
+    // operation.
+    context->state.current.palette_bank = (uint8_t)bank << GL_PALETTE_BANK_SHIFT;
 }

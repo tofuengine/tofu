@@ -68,6 +68,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = area.y;
@@ -123,7 +124,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
             const GL_Pixel_t draw = 1 - skip;
             const GL_Pixel_t mask = (GL_Pixel_t)-draw;
-            const GL_Pixel_t sindex = GL_PALETTE_GET_SHIFTING(mapped);
+            const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             const GL_Pixel_t dindex = *dptr;
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
 #else
@@ -131,7 +132,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
 #endif
         }
@@ -152,6 +153,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     const size_t drawing_width = (size_t)ITRUNC(area.width * fabsf(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
     const size_t drawing_height = (size_t)ITRUNC(area.height * fabsf(scale_y));
@@ -230,7 +232,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
             const GL_Pixel_t draw = 1 - skip;
             const GL_Pixel_t mask = (GL_Pixel_t)-draw;
-            const GL_Pixel_t sindex = GL_PALETTE_GET_SHIFTING(mapped);
+            const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             const GL_Pixel_t dindex = *dptr;
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
 #else
@@ -238,7 +240,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 ++dptr;
             } else {
-                *(dptr++) = GL_PALETTE_GET_SHIFTING(mapped);
+                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
 #endif
 
@@ -262,6 +264,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const uint8_t *state_map = state->palette_state.map;
+    const uint8_t bank_mask = state->palette_bank;
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
@@ -402,13 +405,13 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
                     const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
                     const GL_Pixel_t draw = 1 - skip;
                     const GL_Pixel_t mask = (GL_Pixel_t)-draw;
-                    const GL_Pixel_t sindex = GL_PALETTE_GET_SHIFTING(mapped);
+                    const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                     const GL_Pixel_t dindex = *dptr;
                     *dptr = _BLIT_BLEND(dindex, sindex, mask);
 #else
                     uint8_t mapped = state_map[*sptr];
                     if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                        *dptr = GL_PALETTE_GET_SHIFTING(mapped);
+                        *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                     }
 #endif
                 }

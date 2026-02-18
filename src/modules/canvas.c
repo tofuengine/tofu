@@ -55,6 +55,7 @@ static int canvas_reset_1o_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
+static int canvas_bank_2on_0(lua_State *L);
 static int canvas_clear_2onB_0(lua_State *L);
 static int canvas_fill_4onnnB_0(lua_State *L);
 static int canvas_point_4onnn_0(lua_State *L);
@@ -96,6 +97,7 @@ int canvas_loader(lua_State *L)
             { "clipping", canvas_clipping_v_0 },
             { "shift", canvas_shift_v_0 },
             { "transparent", canvas_transparent_v_0 },
+            { "bank", canvas_bank_2on_0 },
             // -- operations --
             { "clear", canvas_clear_2onB_0 }, // canvas only
             { "fill", canvas_fill_4onnnB_0 },
@@ -386,6 +388,20 @@ static int canvas_transparent_v_0(lua_State *L)
         LUAX_OVERLOAD_BY_ARITY(canvas_transparent_2ot_0, 2)
         LUAX_OVERLOAD_BY_ARITY(canvas_transparent_3onb_0, 3)
     LUAX_OVERLOAD_END
+}
+
+static int canvas_bank_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    size_t bank = (size_t)LUAX_UNSIGNED(L, 2);
+
+    GL_context_set_bank(self->context, bank);
+
+    return 0;
 }
 
 static int canvas_clear_2onB_0(lua_State *L)
