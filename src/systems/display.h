@@ -140,7 +140,7 @@ extern void Display_reset(Display_t *display); // FIXME: remove these six, and a
 
 extern void Display_set_clear_index(Display_t *display, int index);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
-extern void Display_set_palette(Display_t *display, const GL_Color_t *palette);
+extern void Display_set_palette(Display_t *display, const GL_Color_t *palette, size_t bank);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void Display_set_program(Display_t *display, const GL_Program_t *program);
 

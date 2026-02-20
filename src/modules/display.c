@@ -31,7 +31,7 @@
 #include <systems/display.h>
 
 static int display_size_0_2nn(lua_State *L);
-static int display_palette_1o_0(lua_State *L);
+static int display_palette_2oN_0(lua_State *L);
 static int display_clear_1n_0(lua_State *L);
 static int display_offset_2NN_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
@@ -45,7 +45,7 @@ int display_loader(lua_State *L)
             // -- getters/setters --
             { "size", display_size_0_2nn },
             // -- mutators --
-            { "palette", display_palette_1o_0 },
+            { "palette", display_palette_2oN_0 },
             { "clear", display_clear_1n_0 },
             { "offset", display_offset_2NN_0 },
             { "shift", display_shift_v_0 },
@@ -72,16 +72,18 @@ static int display_size_0_2nn(lua_State *L)
     return 2;
 }
 
-static int display_palette_1o_0(lua_State *L)
+static int display_palette_2oN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
+    size_t bank = LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
 
     Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
-    Display_set_palette(display, palette->palette);
+    Display_set_palette(display, palette->palette, bank);
 
     return 0;
 }

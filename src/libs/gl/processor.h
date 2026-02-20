@@ -43,9 +43,17 @@
 #include "program.h"
 #include "surface.h"
 
+// During the blitting phase, we combine the pixel index with the palette bank
+// to get the actual color index. So, if we have `N` banks, each with `M`
+// colors, we can have up to `N * M` colors in the palette. However, the amount
+// of color index is still `2^8`, so we need to limit the amount of colors per
+// bank to `2^8 / N`. For example, if we have 4 banks, we can have up to 64
+// colors per bank, for a total of 256 colors in the palette.
+#define GL_PROCESSOR_MAX_COLORS (GL_PALETTE_MAX_COLORS * GL_PALETTE_MAX_BANKS)
+
 typedef struct GL_Processor_State_s {
-    GL_Color_t palette[GL_PALETTE_MAX_COLORS];
-    GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS];
+    GL_Color_t palette[GL_PROCESSOR_MAX_COLORS];
+    GL_Pixel_t shifting[GL_PROCESSOR_MAX_COLORS];
     GL_Program_t *program;
 } GL_Processor_State_t;
 
@@ -63,7 +71,7 @@ extern void GL_processor_reset(GL_Processor_t *processor);
 
 extern const GL_Color_t *GL_processor_get_palette(const GL_Processor_t *processor);
 
-extern void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette);
+extern void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palette, size_t bank);
 extern void GL_processor_set_shifting(GL_Processor_t *processor, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *program);
 

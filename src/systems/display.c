@@ -623,7 +623,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_D("processor %p created", display->canvas.processor);
 
     if (configuration->palette) {
-        GL_processor_set_palette(display->canvas.processor, configuration->palette);
+        GL_processor_set_palette(display->canvas.processor, configuration->palette, 1);
         LOG_D("processor %p palette set", display->canvas.processor);
     }
 
@@ -901,9 +901,9 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
     shader_use(NULL);
 }
 
-void Display_set_palette(Display_t *display, const GL_Color_t *palette)
+void Display_set_palette(Display_t *display, const GL_Color_t *palette, size_t bank)
 {
-    GL_processor_set_palette(display->canvas.processor, palette);
+    GL_processor_set_palette(display->canvas.processor, palette, bank);
 }
 
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)

@@ -57,9 +57,16 @@
 // However the amount of slot in the LUT is, still, `2^8`. We use this "padding"
 // 128 entries to tell if a pixel is transparent just with a single LUT access
 // (and not by testing the alpha-bit).
-#define GL_PALETTE_MAX_COLORS   256
-
+#define GL_PALETTE_MAX_COLORS   128
 #define GL_PALETTE_LAST_INDEX   127
+
+// Palette banks need to be a power of two, as they are used as bit-shift
+// values, and merged with the pixel color index, to determine the actual
+// palette index to use during the transferring to the framebuffer.
+#define GL_PALETTE_MAX_BANKS     2
+#define GL_PALETTE_LAST_BANK     1
+
+#define GL_PALETTE_BANK_SHIFT    7
 
 #define GL_PIXEL_TRANSPARENCY_MASK 0x80
 #define GL_PIXEL_COLOR_MASK        0x7F
