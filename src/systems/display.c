@@ -623,7 +623,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_D("processor %p created", display->canvas.processor);
 
     if (configuration->palette) {
-        GL_processor_set_palette(display->canvas.processor, configuration->palette, 1);
+        GL_processor_set_palette(display->canvas.processor, configuration->palette, GL_PALETTE_DEFAULT_BANK);
         LOG_D("processor %p palette set", display->canvas.processor);
     }
 

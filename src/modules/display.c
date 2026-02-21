@@ -79,7 +79,7 @@ static int display_palette_2oN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    size_t bank = LUAX_OPTIONAL_UNSIGNED(L, 2, 0);
+    size_t bank = LUAX_OPTIONAL_UNSIGNED(L, 2, GL_PALETTE_DEFAULT_BANK);
 
     Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 

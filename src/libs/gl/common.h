@@ -65,7 +65,10 @@
 // palette index to use during the transferring to the framebuffer.
 #define GL_PALETTE_MAX_BANKS     2
 #define GL_PALETTE_LAST_BANK     1
+#define GL_PALETTE_DEFAULT_BANK  0
 
+// Bit #7 is used to encode the bank number, so we can have up to 128 colors
+// per bank, for a total of 256.
 #define GL_PALETTE_BANK_SHIFT    7
 
 #define GL_PIXEL_TRANSPARENCY_MASK 0x80
