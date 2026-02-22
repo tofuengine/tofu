@@ -223,11 +223,12 @@ void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_
     surface->data[position.y * surface->width + position.x] = index;
 }
 
-void GL_surface_remap(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS])
+void GL_surface_remap(const GL_Surface_t *surface, const GL_Pixel_t *shifting)
 {
     GL_Pixel_t *dst = surface->data;
     for (size_t i = surface->data_size; i; --i) {
-        GL_Pixel_t index = shifting[*dst];
-        *(dst++) = index;
+        GL_Pixel_t pixel = *dst;
+        GL_Pixel_t index = shifting[GL_PIXEL_GET_INDEX(pixel)];
+        *(dst++) = index | (pixel & GL_PIXEL_TRANSPARENCY_MASK); // Preserve transparency bit.
     }
 }
