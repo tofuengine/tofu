@@ -235,10 +235,10 @@ static bool _contains(const GL_Color_t *palette, GL_Color_t color)
     return false;
 }
 
-size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates)
+void GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, size_t from, size_t count, bool remove_duplicates)
 {
-    size_t to_i = to;
     for (size_t i = 0; i < count; ++i) {
+        size_t to_i = to + i;
         if (to_i == GL_PALETTE_MAX_COLORS) {
             LOG_W("maximum palette size reached when merging palette %p w/ %p", palette, other);
             break;
@@ -247,9 +247,8 @@ size_t GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other,
         if (remove_duplicates && _contains(palette, other[from_i])) {
             continue;
         }
-        palette[to_i++] = other[from_i];
+        palette[to_i] = other[from_i];
     }
-    return to_i;
 }
 
 void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio)

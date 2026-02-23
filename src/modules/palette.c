@@ -87,7 +87,7 @@ static int palette_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_END
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = GL_PALETTE_MAX_COLORS
+            .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_greyscale(self->palette, GL_PALETTE_MAX_COLORS);
@@ -106,9 +106,12 @@ static int palette_new_1n_1o(lua_State *L)
     if (levels == 0) {
         return luaL_error(L, "palette can't be empty!");
     }
+    if (levels > GL_PALETTE_MAX_COLORS) {
+        return luaL_error(L, "palette has too many colors (%d) - max is %d", levels, GL_PALETTE_MAX_COLORS);
+    }
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = levels
+            .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_greyscale(self->palette, levels);
@@ -131,8 +134,7 @@ static int palette_new_1t_1o(lua_State *L)
         return luaL_error(L, "palette can't be empty!");
     } else
     if (size > GL_PALETTE_MAX_COLORS) {
-        LOG_W("palette has too many colors (%d) - clamping to %d", size, GL_PALETTE_MAX_COLORS);
-        size = GL_PALETTE_MAX_COLORS;
+        return luaL_error(L, "palette has too many colors (%d) - max is %d", size, GL_PALETTE_MAX_COLORS);
     }
 
     GL_Color_t palette[GL_PALETTE_MAX_COLORS];
@@ -164,7 +166,7 @@ static int palette_new_1t_1o(lua_State *L)
     }
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = size
+            .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, palette);
@@ -214,7 +216,7 @@ static int palette_new_1s_1o(lua_State *L)
     Storage_close(storage, handle);
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = size
+            .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, palette);
@@ -233,7 +235,7 @@ static int palette_new_1o_1o(lua_State *L)
     LOG_D("cloning palette %p", other);
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = other->size
+            .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, other->palette);
@@ -266,7 +268,7 @@ static int palette_new_3n_1o(lua_State *L)
     LOG_D("generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .size = size
+            .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_quantized(self->palette, red_bits, green_bits, blue_bits);
@@ -334,8 +336,9 @@ static int palette_size_1o_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
+    LUAX_UNUSED(self);
 
-    lua_pushinteger(L, (lua_Integer)self->size);
+    lua_pushinteger(L, (lua_Integer)GL_PALETTE_MAX_COLORS);
 
     return 1;
 }
@@ -373,6 +376,12 @@ int palette_poke_5onnnn_0(lua_State *L)
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
+
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
+    if (index >= GL_PALETTE_MAX_COLORS) {
+        return luaL_error(L, "palette index %d is out of bounds (max is %d)", index, GL_PALETTE_MAX_COLORS - 1);
+    }
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     GL_Color_t *palette = self->palette;
     const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
@@ -421,11 +430,26 @@ static int palette_merge_6ononnB_0(lua_State *L)
     size_t count = LUAX_UNSIGNED(L, 5);
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
-    GL_Color_t *palette = self->palette;
-    size_t size = GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
+    if (to >= GL_PALETTE_MAX_COLORS) {
+        return luaL_error(L, "target palette index %d is out of bounds (max is %d)", to, GL_PALETTE_MAX_COLORS - 1);
+    }
+    if (from >= GL_PALETTE_MAX_COLORS) {
+        return luaL_error(L, "source palette index %d is out of bounds (max is %d)", from, GL_PALETTE_MAX_COLORS - 1);
+    }
+    if (count == 0) {
+        return luaL_error(L, "at least one color is required to merge");
+    }
+    if (to + count > GL_PALETTE_MAX_COLORS) {
+        return luaL_error(L, "too many colors to merge into target palette (to %d + count %d > max %d)", to, count, GL_PALETTE_MAX_COLORS);
+    }
+    if (from + count > GL_PALETTE_MAX_COLORS) {
+        return luaL_error(L, "too many colors to merge from source palette (from %d + count %d > max %d)", from, count, GL_PALETTE_MAX_COLORS);
+    }
+#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
 
-    self->size = size;
-    LOG_D("palette %p has now %d color(s)", self, size);
+    GL_Color_t *palette = self->palette;
+    GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
 
     return 0;
 }
