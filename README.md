@@ -60,7 +60,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Palette selection from the configuration file or run-time redefined.
 * [x] Automatic clear of the default image buffer on each loop (configurable).
-* [x] Banked palette support w/ color bias during VRAM transfer.
+* [x] Banked palette support (two banks of 128-color palettes) w/ color bias during VRAM transfer.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
 * [x] Internal 16-bit (RGB565) pixel format used for indexed-to-texture rendering, matching [X68000](https://en.wikipedia.org/wiki/X68000) aesthetics.
 * [x] Per-color transparency and re-indexing (*shifting*), in this order, affecting drawing operations (both per-draw and during VRAM transfer).
@@ -101,14 +101,14 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [2dengine/profile.lua](https://github.com/2dengine/profile.lua)
 * [cglm](https://github.com/recp/cglm) v0.9.6
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.13.2, v0.7.3, v0.14.3
+* [dr_libs](https://github.com/mackron/dr_libs) v0.13.3, v0.7.3, v0.14.4
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://gen.glad.sh/) v2.0.8
 * [GLFW](https://www.glfw.org/) v3.4.0
 * [libspng](https://libspng.org/) v0.7.4
 * [libxmp](https://xmp.sourceforge.net/) v4.6.3
 * [Lua](https://lua.org/) v5.5.0
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.23
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.24
 * [miniz](https://github.com/richgel999/miniz) v3.0.2
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
