@@ -43,7 +43,6 @@
 #include <libs/hex.h>
 #define _LOG_TAG "palette"
 #include <libs/log.h>
-#include <systems/storage.h>
 
 static int palette_new_v_1o(lua_State *L);
 static int palette_gc_1o_0(lua_State *L);
@@ -384,7 +383,7 @@ int palette_poke_5onnnn_0(lua_State *L)
 #endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     GL_Color_t *palette = self->palette;
-    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
+    const GL_Color_t color = gl_color_from_rgb(r, g, b);
     palette[index] = color;
 
     return 0;
@@ -405,7 +404,7 @@ static int palette_lerp_5onnnN_0(lua_State *L)
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
     float ratio = LUAX_OPTIONAL_NUMBER(L, 5, 0.5f);
 
-    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
+    const GL_Color_t color = gl_color_from_rgb(r, g, b);
 
     GL_Color_t *palette = self->palette;
     GL_palette_lerp(palette, color, ratio);
@@ -467,7 +466,7 @@ static int palette_match_4onnn_1n(lua_State *L)
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
 
-    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
+    const GL_Color_t color = gl_color_from_rgb(r, g, b);
 
     const GL_Color_t *palette = self->palette;
     const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
@@ -496,8 +495,8 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
     uint8_t bb = (uint8_t)LUAX_INTEGER(L, 6);
     float ratio = LUAX_OPTIONAL_NUMBER(L, 7, 0.5f);
 
-    const GL_Color_t a = gl_color_from_rgba(ar, ag, ab, 255);
-    const GL_Color_t b = gl_color_from_rgba(br, bg, bb, 255);
+    const GL_Color_t a = gl_color_from_rgb(ar, ag, ab);
+    const GL_Color_t b = gl_color_from_rgb(br, bg, bb);
 
     const GL_Color_t color = GL_palette_mix(a, b, ratio);
 

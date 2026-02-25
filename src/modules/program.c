@@ -254,7 +254,7 @@ static int program_color_6onnnnN_0(lua_State *L)
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
     int position = LUAX_OPTIONAL_INTEGER(L, 6, -1);
 
-    const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
+    const GL_Color_t color = gl_color_from_rgb(r, g, b);
 
     GL_program_color(self->program, position, index, color);
 
@@ -369,7 +369,7 @@ static int program_gradient_4ontN_0(lua_State *L)
         lua_pop(L, 1); // O N T N T -> O N T N
     }
 
-    const GL_Color_t color = gl_color_from_rgba(current_r, current_g, current_b, 255);
+    const GL_Color_t color = gl_color_from_rgb(current_r, current_g, current_b);
     GL_program_color(self->program, _INC_IF_VALID(position), index, color);
 
     return 0;
@@ -412,7 +412,7 @@ static int program_palette_5onntN_0(lua_State *L)
 
         lua_pop(L, 3); // O T N T I I I -> O T N T
 
-        const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
+        const GL_Color_t color = gl_color_from_rgb(r, g, b);
         GL_program_color(self->program, _INC_IF_VALID(position), index, color);
 
         lua_pop(L, 1); // O T N N N T -> O T N N N

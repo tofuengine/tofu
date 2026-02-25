@@ -42,6 +42,7 @@
 
 #include <stdint.h>
 
+extern GL_Color_t gl_color_from_rgb(uint8_t r, uint8_t g, uint8_t b);
 extern GL_Color_t gl_color_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 extern uint8_t gl_color_get_r(GL_Color_t color);
 extern uint8_t gl_color_get_g(GL_Color_t color);

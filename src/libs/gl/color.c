@@ -39,6 +39,11 @@
 
 #include <core/config.h>
 
+GL_Color_t gl_color_from_rgb(uint8_t r, uint8_t g, uint8_t b)
+{
+    return gl_color_from_rgba(r, g, b, 255); // Always opaque.
+}
+
 GL_Color_t gl_color_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
 #if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888

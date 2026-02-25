@@ -89,11 +89,11 @@ void GL_palette_set_greyscale(GL_Color_t *palette, size_t size)
 {
     for (size_t i = 0; i < size; ++i) {
         uint8_t y = _quantize(i, 256, size); // 256 is the amount of different values for component (bits per pixel)
-        palette[i] = gl_color_from_rgba(y, y, y, 255);
+        palette[i] = gl_color_from_rgb(y, y, y);
     }
 
     for (size_t i = size; i < GL_PALETTE_MAX_COLORS; ++i) {
-        palette[i] = gl_color_from_rgba(0, 0, 0, 255);
+        palette[i] = gl_color_from_rgb(0, 0, 0);
     }
 }
 
@@ -118,13 +118,13 @@ void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green
             uint8_t g8 = (g << green_lower_bits) | _quantize(g, green_lower_values, green_values);
             for (size_t b = 0; b < blue_values; ++b) {
                 uint8_t b8 = (b << blue_lower_bits) | _quantize(b, blue_lower_values, blue_values);
-                palette[size++] = gl_color_from_rgba(r8, g8, b8, 255);
+                palette[size++] = gl_color_from_rgb(r8, g8, b8);
             }
         }
     }
 
     for (size_t i = size; i < GL_PALETTE_MAX_COLORS; ++i) {
-        palette[i] = gl_color_from_rgba(0, 0, 0, 255);
+        palette[i] = gl_color_from_rgb(0, 0, 0);
     }
 }
 
@@ -217,7 +217,7 @@ GL_Color_t GL_palette_mix(GL_Color_t from, GL_Color_t to, float ratio)
     uint8_t g = (uint8_t)FLERP((float)gl_color_get_g(from), (float)gl_color_get_g(to), ratio);
     uint8_t b = (uint8_t)FLERP((float)gl_color_get_b(from), (float)gl_color_get_b(to), ratio);
 
-    return gl_color_from_rgba(r, g, b, 255);
+    return gl_color_from_rgb(r, g, b);
 }
 
 void GL_palette_copy(GL_Color_t *palette, const GL_Color_t *source)
