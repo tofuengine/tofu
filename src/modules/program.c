@@ -333,16 +333,17 @@ static int program_gradient_4ontN_0(lua_State *L)
 
     lua_pushnil(L); // O N T -> O N T N
     for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
+        int item_stack_index = lua_gettop(L); // Obtain the stack index of the current item, to access it balistically. :D
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
-        size_t count = lua_rawlen(L, 5);
+        size_t count = lua_rawlen(L, item_stack_index);
         if (count != 4) {
             luaL_error(L, "marker #%d has %d components (out of 4 required)", i, count);
         }
 #endif /* TOFU_CORE_DEFENSIVE_CHECKS */
-        lua_rawgeti(L, 5, 1); // O N T N T -> O N T N T I
-        lua_rawgeti(L, 5, 2); // O N T N T I -> O N T N T I I
-        lua_rawgeti(L, 5, 3); // O N T N T I I -> O N T N T I I I
-        lua_rawgeti(L, 5, 4); // O N T N T I I -> O N T N T I I I I
+        lua_rawgeti(L, item_stack_index, 1); // O N T N T -> O N T N T I
+        lua_rawgeti(L, item_stack_index, 2); // O N T N T I -> O N T N T I I
+        lua_rawgeti(L, item_stack_index, 3); // O N T N T I I -> O N T N T I I I
+        lua_rawgeti(L, item_stack_index, 4); // O N T N T I I -> O N T N T I I I I
 
         const size_t wait_y = LUAX_UNSIGNED(L, -4);
         const uint8_t wait_r = (uint8_t)LUAX_INTEGER(L, -3);
@@ -356,7 +357,7 @@ static int program_gradient_4ontN_0(lua_State *L)
             const uint8_t r = (uint8_t)FLERP(current_r, wait_r, ratio);
             const uint8_t g = (uint8_t)FLERP(current_g, wait_g, ratio);
             const uint8_t b = (uint8_t)FLERP(current_b, wait_b, ratio);
-            const GL_Color_t color = gl_color_from_rgba(r, g, b, 255);
+            const GL_Color_t color = gl_color_from_rgb(r, g, b);
             GL_program_color(self->program, _INC_IF_VALID(position), index, color);
             GL_program_skip(self->program, _INC_IF_VALID(position), 0, 1); // Skip to next after changing the color.
         }
@@ -394,17 +395,19 @@ static int program_palette_5onntN_0(lua_State *L)
 
     lua_pushnil(L); // O T N N -> O T N N N
     for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
+        int item_stack_index = lua_gettop(L); // Obtain the stack index of the current item, to access it balistically. :D
+
         const GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
-        size_t count = lua_rawlen(L, 6);
+        size_t count = lua_rawlen(L, item_stack_index);
         if (count != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
         }
 #endif /* TOFU_CORE_DEFENSIVE_CHECKS */
-        lua_rawgeti(L, 6, 1); // O T N N N T -> O T N N N T I
-        lua_rawgeti(L, 6, 2); // O T N N N T I -> O T N N N T I I
-        lua_rawgeti(L, 6, 3); // O T N N N T I I -> O T N N N T I I I
+        lua_rawgeti(L, item_stack_index, 1); // O T N N N T -> O T N N N T I
+        lua_rawgeti(L, item_stack_index, 2); // O T N N N T I -> O T N N N T I I
+        lua_rawgeti(L, item_stack_index, 3); // O T N N N T I I -> O T N N N T I I I
 
         const uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
         const uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
