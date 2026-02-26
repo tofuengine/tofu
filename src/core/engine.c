@@ -142,7 +142,7 @@ static bool _parse_palette(const char *definition, GL_Color_t palette[GL_PALETTE
             hex[i++] = *cursor++;
         }
         if (i == 6) {
-            palette[index++] = gl_color_from_rgba(hex_to_uint8(&hex[0]), hex_to_uint8(&hex[2]), hex_to_uint8(&hex[4]), 255);
+            palette[index++] = gl_color_from_rgb(hex_to_uint8(&hex[0]), hex_to_uint8(&hex[2]), hex_to_uint8(&hex[4]));
         }
     }
 
@@ -165,7 +165,7 @@ static bool _load_palette(Storage_t *storage, const char *name, GL_Color_t palet
             LOG_D("palette `%s` has %d colors", name, i);
             break;
         }
-        palette[i] = gl_color_from_rgba(hex_to_uint8(&hex[0]), hex_to_uint8(&hex[2]), hex_to_uint8(&hex[4]), 255);
+        palette[i] = gl_color_from_rgb(hex_to_uint8(&hex[0]), hex_to_uint8(&hex[2]), hex_to_uint8(&hex[4]));
     }
 
     Storage_close(storage, handle);
