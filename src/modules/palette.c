@@ -144,12 +144,14 @@ static int palette_new_1t_1o(lua_State *L)
     size_t size = lua_rawlen(L, 1);
     LOG_D("setting custom palette of %d color(s)", size);
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (size == 0) {
         return luaL_error(L, "palette can't be empty!");
     } else
     if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "palette has too many colors (%d) - max is %d", size, GL_PALETTE_MAX_COLORS);
     }
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = { 0 }
@@ -200,6 +202,7 @@ static int palette_new_1o_1o(lua_State *L)
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, other->palette);
+
     LOG_D("palette %p allocated", self);
 
     return 1;
@@ -219,12 +222,14 @@ static int palette_new_3n_1o(lua_State *L)
     size_t bits = red_bits + green_bits + blue_bits;
     const size_t size = 1 << bits;
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (size == 0) {
         return luaL_error(L, "at least one bit is required (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     } else
     if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "too many bits to fit palette (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     }
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     LOG_D("generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
 
