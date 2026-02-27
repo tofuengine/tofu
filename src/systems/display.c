@@ -578,13 +578,15 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
 #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
     glGenBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
-//    if (display->vram.pbo.buffers[DISPLAY_PBO_RING_SIZE - 1] == 0) { // Check the last one, to be safe :>
-//        LOG_F("can't allocate VRAM texture buffers");
-//        goto error_free_texture_buffers;
-//    }
+    if (display->vram.pbo.buffers[DISPLAY_PBO_RING_SIZE - 1] == 0) { // Check the last one, to be safe :>
+        LOG_F("can't allocate VRAM ring buffers");
+        goto error_delete_texture_buffers;
+    }
+
     for (int i = 0; i < DISPLAY_PBO_RING_SIZE; ++i) {
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->vram.pbo.buffers[i]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, display->vram.pixels.count, NULL, GL_STREAM_DRAW);
+        glBufferData(GL_PIXEL_UNPACK_BUFFER, display->vram.pixels.count, NULL, GL_STREAM_DRAW); // Allocate the buffer, but don't fill it with data (we will update it later with `glBufferSubData()`).
+        LOG_D("ring buffer w/ id #%d created (%d bytes)", display->vram.pbo.buffers[i], display->vram.pixels.count);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 #endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
@@ -596,7 +598,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     bool shader = _shader_initialize(display, configuration->effect);
     if (!shader) {
         LOG_F("can't initialize shader");
-        goto error_delete_buffers;
+        goto error_delete_ring_buffers;
     }
 
     bool vertices = _initialize_vertices(display);
@@ -665,10 +667,11 @@ error_destroy_vertices:
     glDeleteVertexArrays(1, &display->vao);
 error_destroy_shader:
     shader_destroy(display->shader);
-error_delete_buffers:
+error_delete_ring_buffers:
 #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
     glDeleteBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
 #endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+error_delete_texture_buffers:
     glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures.ids);
 error_free_vram:
     free(display->vram.pixels.bytes);
