@@ -41,13 +41,8 @@
 
 GL_Color_t gl_color_from_rgb(uint8_t r, uint8_t g, uint8_t b)
 {
-    return gl_color_from_rgba(r, g, b, 255); // Always opaque.
-}
-
-GL_Color_t gl_color_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-{
 #if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
-    return (GL_Color_t){ .r = r, .g = g, .b = b, .a = a };
+    return (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 #elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
     //      1
     // 5432109876543210
