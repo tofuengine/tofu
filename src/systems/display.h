@@ -77,7 +77,6 @@ typedef struct Display_Configuration_s {
     bool fullscreen;
     bool vertical_sync;
     bool quit_on_close;
-    const GL_Color_t *palette;
     int clear_index; // Actually a `GL_Pixel_t`, but using `int` to allow `-1` as "no clear".
     const char *effect;
 } Display_Configuration_t;

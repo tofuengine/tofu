@@ -124,64 +124,6 @@ static inline void _information(void)
     // TODO: display also the free RAM
 }
 
-static bool _parse_palette(const char *definition, GL_Color_t palette[GL_PALETTE_MAX_COLORS])
-{
-    if (definition[0] != '[') {
-        LOG_W("not an inline palette");
-        return false;
-    }
-    size_t index = 0;
-    const char *cursor = definition + 1; // Skip initial '['
-    while (*cursor != ']' && *cursor != '\0' && index < GL_PALETTE_MAX_COLORS) {
-        if (isspace(*cursor) || *cursor == ',') {
-            ++cursor; // Skip comma
-        }
-        char hex[6] = { 0 };
-        size_t i = 0;
-        while (isxdigit(*cursor) && i < 6) {
-            hex[i++] = *cursor++;
-        }
-        if (i == 6) {
-            palette[index++] = gl_color_from_rgb(hex_to_uint8(&hex[0]), hex_to_uint8(&hex[2]), hex_to_uint8(&hex[4]));
-        }
-    }
-
-    LOG_I("inline palette parsed with %d colors", index);
-    return index > 0;
-}
-
-static bool _load_palette(Storage_t *storage, const char *name, GL_Color_t palette[GL_PALETTE_MAX_COLORS])
-{
-    FS_Handle_t *handle = Storage_open(storage, name);
-    if (!handle) {
-        LOG_W("can't open palette `%s`, using default", name);
-        return false;
-    }
-
-    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
-        char hex[16] = { 0 };
-        size_t bytes_read = FS_gets(handle, hex, 16);
-        if (bytes_read == 0) {
-            LOG_D("palette `%s` has %d colors", name, i);
-            break;
-        }
-        palette[i] = gl_color_from_rgb(hex_to_uint8(&hex[0]), hex_to_uint8(&hex[2]), hex_to_uint8(&hex[4]));
-    }
-
-    Storage_close(storage, handle);
-
-    LOG_I("palette `%s` loaded", name);
-    return true;
-}
-
-static bool _load_or_parse_palette(Storage_t *storage, const char *name, GL_Color_t palette[GL_PALETTE_MAX_COLORS])
-{
-    return name
-        && name[0] != '\0'
-        && (_parse_palette(name, palette)
-            || _load_palette(storage, name, palette));
-}
-
 Engine_t *Engine_create(const Engine_Options_t *options)
 {
     Engine_t *engine = malloc(sizeof(Engine_t));
@@ -239,9 +181,6 @@ Engine_t *Engine_create(const Engine_Options_t *options)
     }
     LOG_I("mappings `%s` loaded", engine->configuration->system.mappings);
 
-    GL_Color_t palette[GL_PALETTE_MAX_COLORS] = { 0 };
-    bool has_palette = _load_or_parse_palette(engine->storage, engine->configuration->display.palette, palette);
-
     engine->display = Display_create(&(const Display_Configuration_t){
             .window = {
                 .title = engine->configuration->display.title,
@@ -253,7 +192,6 @@ Engine_t *Engine_create(const Engine_Options_t *options)
             .vertical_sync = engine->configuration->display.vertical_sync,
             .quit_on_close = engine->configuration->system.quit_on_close,
             .clear_index = engine->configuration->display.clear_index,
-            .palette = has_palette ? palette : NULL,
             .effect = SR_SCHARS(effect)
         });
     if (!engine->display) {
