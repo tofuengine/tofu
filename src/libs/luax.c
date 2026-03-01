@@ -57,6 +57,24 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
+int luaX_isinrangei(lua_State *L, int idx, lua_Integer min, lua_Integer max)
+{
+    lua_Integer n = lua_tointeger(L, idx);
+    return n >= min && n <= max;
+}
+
+int luaX_isinrangeu(lua_State *L, int idx, lua_Unsigned min, lua_Unsigned max)
+{
+    lua_Unsigned n = (lua_Unsigned)lua_tointeger(L, idx);
+    return n >= min && n <= max;
+}
+
+int luaX_isinrangen(lua_State *L, int idx, lua_Number min, lua_Number max)
+{
+    lua_Number n = lua_tonumber(L, idx);
+    return n >= min && n <= max;
+}
+
 luaX_String luaX_tolstring(lua_State *L, int idx)
 {
     luaX_String s;
