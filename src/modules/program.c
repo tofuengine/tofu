@@ -269,11 +269,11 @@ static int program_shift_3otN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    // idx #2: LUA_TTABLE
+    int shift_table = LUAX_TABLE(L, 2);
     int position = LUAX_OPTIONAL_INTEGER(L, 3, -1);
 
     lua_pushnil(L);
-    while (lua_next(L, 2)) {
+    while (lua_next(L, shift_table)) {
         const GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
         const GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, -1);
 
@@ -323,7 +323,7 @@ static int program_gradient_4ontN_0(lua_State *L)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
-    // idx #3: LUA_TTABLE
+    int gradient_table = LUAX_TABLE(L, 3);
     int position = LUAX_OPTIONAL_INTEGER(L, 4, -1);
 
     size_t current_y = 0;
@@ -332,7 +332,7 @@ static int program_gradient_4ontN_0(lua_State *L)
     GL_program_wait(self->program, _INC_IF_VALID(position), 0, current_y);
 
     lua_pushnil(L); // O N T -> O N T N
-    for (size_t i = 0; lua_next(L, 3); ++i) { // O N T N -> O N T N T
+    for (size_t i = 0; lua_next(L, gradient_table); ++i) { // O N T N -> O N T N T
         int item_stack_index = lua_gettop(L); // Obtain the stack index of the current item, to access it balistically. :D
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
         size_t count = lua_rawlen(L, item_stack_index);
@@ -386,7 +386,7 @@ static int program_palette_5onntN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
-    // idx #2: LUA_TTABLE
+    int palette_table = LUAX_TABLE(L, 2);
     size_t x = LUAX_UNSIGNED(L, 3);
     size_t y = LUAX_UNSIGNED(L, 4);
     int position = LUAX_OPTIONAL_INTEGER(L, 5, -1);
@@ -394,7 +394,7 @@ static int program_palette_5onntN_0(lua_State *L)
     GL_program_wait(self->program, _INC_IF_VALID(position), x, y);
 
     lua_pushnil(L); // O T N N -> O T N N N
-    for (size_t i = 0; lua_next(L, 2); ++i) { // O T N N N -> O T N N N T
+    for (size_t i = 0; lua_next(L, palette_table); ++i) { // O T N N N -> O T N N N T
         int item_stack_index = lua_gettop(L); // Obtain the stack index of the current item, to access it balistically. :D
 
         const GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);

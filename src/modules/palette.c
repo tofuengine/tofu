@@ -139,9 +139,9 @@ static int palette_new_1t_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    // idx #1: LUA_TTABLE
+    int colors_table = LUAX_TABLE(L, 1);
 
-    size_t size = lua_rawlen(L, 1);
+    size_t size = lua_rawlen(L, colors_table);
     LOG_D("setting custom palette of %d color(s)", size);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
@@ -158,7 +158,7 @@ static int palette_new_1t_1o(lua_State *L)
         }, OBJECT_TYPE_PALETTE);
 
     lua_pushnil(L); // T O -> T O N
-    for (size_t i = 0; lua_next(L, 1); ++i) { // T O N -> T O N T
+    for (size_t i = 0; lua_next(L, colors_table); ++i) { // T O N -> T O N T
         int item_stack_index = lua_gettop(L); // Obtain the stack index of the current item, to access it balistically. :D
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
         size_t components = lua_rawlen(L, item_stack_index);

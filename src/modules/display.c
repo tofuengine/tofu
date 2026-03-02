@@ -135,13 +135,13 @@ static int display_shift_1t_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    // idx #1: LUA_TTABLE
+    int shift_table = LUAX_TABLE(L, 1);
 
     GL_Pixel_t *from = NULL;
     GL_Pixel_t *to = NULL;
 
     lua_pushnil(L);
-    while (lua_next(L, 2)) {
+    while (lua_next(L, shift_table)) {
         arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
         arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
 

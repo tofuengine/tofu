@@ -311,7 +311,7 @@ static int image_remap_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
-    // idx #2: LUA_TTABLE
+    int shifting_table = LUAX_TABLE(L, 2);
 
     GL_Pixel_t shifting[GL_PALETTE_MAX_COLORS] = { 0 };
     for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) { // Initialize with a "null" mapping
@@ -319,7 +319,7 @@ static int image_remap_2ot_0(lua_State *L)
     }
 
     lua_pushnil(L);
-    while (lua_next(L, 2)) {
+    while (lua_next(L, shifting_table)) {
         GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, -2);
         GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, -1);
 

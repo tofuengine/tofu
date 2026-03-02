@@ -279,13 +279,13 @@ static int canvas_shift_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    // idx #2: LUA_TTABLE
+    int shift_table = LUAX_TABLE(L, 2);
 
     GL_Pixel_t *from = NULL;
     GL_Pixel_t *to = NULL;
 
     lua_pushnil(L);
-    while (lua_next(L, 2)) {
+    while (lua_next(L, shift_table)) {
         arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
         arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
 
@@ -344,13 +344,13 @@ static int canvas_transparent_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    // idx #2: LUA_TTABLE
+    int transparency_table = LUAX_TABLE(L, 2);
 
     GL_Pixel_t *indexes = NULL;
     GL_Bool_t *transparent = NULL;
 
     lua_pushnil(L);
-    while (lua_next(L, 2)) {
+    while (lua_next(L, transparency_table)) {
         arrpush(indexes, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
         arrpush(transparent, LUAX_BOOLEAN(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE);
 
@@ -552,10 +552,10 @@ static int canvas_polyline_3otn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    // idx #2: LUA_TTABLE
+    int vertices_table = LUAX_TABLE(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
 
-    GL_Point_t *vertices = _fetch(L, 2);
+    GL_Point_t *vertices = _fetch(L, vertices_table);
 
     size_t count = arrlenu(vertices);
     if (count < 2) {

@@ -160,9 +160,9 @@ static int grid2d_fill_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    // idx #2: LUA_TTABLE
+    int values_table = LUAX_TABLE(L, 2);
 
-    size_t length = lua_rawlen(L, 2);
+    size_t length = lua_rawlen(L, values_table);
     if (length == 0) {
         return luaL_error(L, "table can't be empty");
     }
@@ -171,7 +171,7 @@ static int grid2d_fill_2ot_0(lua_State *L)
 
     for (size_t i = 0; i < self->data_size; ++i) {
         size_t index = ((i % length) + 1);
-        lua_rawgeti(L, 2, (lua_Integer)index);
+        lua_rawgeti(L, values_table, (lua_Integer)index);
 
         Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
         *(ptr++) = value;
