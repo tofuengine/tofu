@@ -90,27 +90,12 @@ static int grid2d_new_3nnT_1o(lua_State *L)
     LUAX_SIGNATURE_END
     size_t width = LUAX_UNSIGNED(L, 1);
     size_t height = LUAX_UNSIGNED(L, 2);
-    size_t length = LUAX_OPTIONAL_TABLE(L, 3, 0);
+    int data_table = LUAX_OPTIONAL_TABLE(L, 3, 0);
 
     size_t data_size = width * height;
     Grid_Object_Value_t *data = malloc(sizeof(Grid_Object_Value_t) * data_size);
     if (!data) {
         return luaL_error(L, "can't allocate %dx%d grid", width, height);
-    }
-
-    if (length > 0) {
-        Grid_Object_Value_t *ptr = data;
-        for (size_t i = 0; i < data_size; ++i) {
-            size_t index = ((i % length) + 1);
-            lua_rawgeti(L, 3, (lua_Integer)index);
-
-            Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
-            *(ptr++) = value;
-
-            lua_pop(L, 1);
-        }
-    } else {
-        LOG_W("grid content left uninitialized");
     }
 
     Grid_Object_t *self = (Grid_Object_t *)udt_newobject(L, sizeof(Grid_Object_t), &(Grid_Object_t){
@@ -119,6 +104,25 @@ static int grid2d_new_3nnT_1o(lua_State *L)
             .data = data,
             .data_size = data_size
         }, OBJECT_TYPE_GRID);
+
+    if (data_table != LUAX_NIL_TABLE) {
+        size_t length = lua_rawlen(L, data_table);
+        if (length > data_size) {
+            return luaL_error(L, "table is too long for grid data (table has %d items, but grid data-size is %d)", length, data_size);
+        }
+
+        Grid_Object_Value_t *ptr = data;
+        lua_pushnil(L);
+        while (lua_next(L, data_table)) {
+            Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
+
+            *(ptr++) = value;
+
+            lua_pop(L, 1);
+        }
+    } else {
+        LOG_W("grid content left uninitialized");
+    }
 
     LOG_D("grid %p allocated w/ data %p", self, data);
 
@@ -160,20 +164,19 @@ static int grid2d_fill_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    int values_table = LUAX_TABLE(L, 2);
+    int data_table = LUAX_TABLE(L, 2);
 
-    size_t length = lua_rawlen(L, values_table);
-    if (length == 0) {
-        return luaL_error(L, "table can't be empty");
+    size_t length = lua_rawlen(L, data_table);
+    if (length > self->data_size) {
+        return luaL_error(L, "table is too long for grid data (table has %d items, but grid data-size is %d)", length, self->data_size);
     }
 
     Grid_Object_Value_t *ptr = self->data;
 
-    for (size_t i = 0; i < self->data_size; ++i) {
-        size_t index = ((i % length) + 1);
-        lua_rawgeti(L, values_table, (lua_Integer)index);
-
+    lua_pushnil(L);
+    while (lua_next(L, data_table)) {
         Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, -1);
+
         *(ptr++) = value;
 
         lua_pop(L, 1);
