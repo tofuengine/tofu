@@ -166,10 +166,12 @@ static int grid2d_fill_2ot_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     int data_table = LUAX_TABLE(L, 2);
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     size_t length = lua_rawlen(L, data_table);
     if (length > self->data_size) {
         return luaL_error(L, "table is too long for grid data (table has %d items, but grid data-size is %d)", length, self->data_size);
     }
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Grid_Object_Value_t *ptr = self->data;
 
@@ -194,9 +196,11 @@ static int grid2d_copy_2oo_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     const Grid_Object_t *other = (const Grid_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_GRID);
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (self->data_size != other->data_size) {
         return luaL_error(L, "grid data-size don't match");
     }
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Grid_Object_Value_t *dptr = self->data;
     const Grid_Object_Value_t *sptr = other->data;
@@ -216,11 +220,12 @@ static int grid2d_peek_2on_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t offset = LUAX_UNSIGNED(L, 2);
-#if defined(DEBUG)
+
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
     }
-#endif
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Grid_Object_Value_t value = self->data[offset];
 
@@ -239,14 +244,15 @@ static int grid2d_peek_3onn_1n(lua_State *L)
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t column = LUAX_UNSIGNED(L, 2);
     size_t row = LUAX_UNSIGNED(L, 3);
-#if defined(DEBUG)
+
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
     } else
     if (row >= self->height) {
         return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
     }
-#endif
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Grid_Object_Value_t value = self->data[row * self->width + column];
 
@@ -273,11 +279,12 @@ static int grid2d_poke_3onn_0(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     size_t offset = LUAX_UNSIGNED(L, 2);
     Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, 3);
-#if defined(DEBUG)
+
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range [0, %d)", offset, self->data_size);
     }
-#endif
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     self->data[offset] = value;
 
@@ -296,14 +303,15 @@ static int grid2d_poke_4onnn_0(lua_State *L)
     size_t column = LUAX_UNSIGNED(L, 2);
     size_t row = LUAX_UNSIGNED(L, 3);
     Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, 4);
-#if defined(DEBUG)
+
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range [0, %d)", column, self->width);
     } else
     if (row >= self->height) {
         return luaL_error(L, "row %d is out of range [0, %d)", row, self->height);
     }
-#endif
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     self->data[row * self->width + column] = value;
 
