@@ -110,6 +110,13 @@ int luaX_totable(lua_State *L, int idx)
     return idx > 0 ? idx : lua_gettop(L) + idx + 1;
 }
 
+int luaX_tofunction(lua_State *L, int idx)
+{
+    // Functions are also values on the stack, so we can use the same logic
+    // as `luaX_totable` to obtain a stable reference to it.
+    return luaX_totable(L, idx);
+}
+
 #if defined(_LUAX_RTTI)
 typedef struct luaX_Object_s {
     int type;

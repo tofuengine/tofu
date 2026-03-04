@@ -325,7 +325,7 @@ static int grid2d_scan_2of_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-//    luaX_Reference callback = luaX_tofunction(L, 2);
+    int callback_index = LUAX_FUNCTION(L, 2);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
@@ -333,7 +333,7 @@ static int grid2d_scan_2of_0(lua_State *L)
 
     for (size_t row = 0; row < self->height; ++row) {
         for (size_t column = 0; column < self->width; ++column) {
-            lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+            lua_pushvalue(L, callback_index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
             lua_pushinteger(L, (lua_Integer)column);
             lua_pushinteger(L, (lua_Integer)row);
             lua_pushnumber(L, (lua_Number)*(data++));
@@ -351,7 +351,7 @@ static int grid2d_process_2of_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-//    luaX_Reference callback = luaX_tofunction(L, 2);
+    int callback_index = LUAX_FUNCTION(L, 2);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
@@ -364,7 +364,7 @@ static int grid2d_process_2of_0(lua_State *L)
 
     for (size_t row = 0; row < height; ++row) {
         for (size_t column = 0; column < width; ++column) {
-            lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+            lua_pushvalue(L, callback_index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
             lua_pushinteger(L, (lua_Integer)column);
             lua_pushinteger(L, (lua_Integer)row);
             lua_pushnumber(L, (lua_Number)*(ptr++));

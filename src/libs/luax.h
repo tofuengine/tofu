@@ -86,6 +86,9 @@ typedef struct luaX_String_s {
 #define LUA_TOBJECT     LUA_TUSERDATA
 #define LUA_TLOBJECT    LUA_TTABLE
 
+#define LUAX_NIL_INDEX    (0)
+#define LUAX_NIL_FUNCTION LUAX_NIL_INDEX
+
 #if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_SIGNATURE_BEGIN(L) \
         do { \
@@ -160,6 +163,7 @@ typedef struct luaX_String_s {
 #define LUAX_IS_TABLE(L, idx)       (lua_istable((L), (idx)))
 #define LUAX_IS_USERDATA(L, idx)    (lua_isuserdata((L), (idx)))
 #define LUAX_IS_OBJECT(L, idx, t)   (luaX_isobject((L), (idx), (t)))
+#define LUAX_IS_FUNCTION(L, idx)    (lua_isfunction((L), (idx)))
 
 #if defined(LUAX_RUNTIME_CHECKS)
     #define LUAX_BOOLEAN(L, idx)                  (!LUAX_IS_BOOLEAN((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
@@ -175,6 +179,7 @@ typedef struct luaX_String_s {
     #define LUAX_TABLE(L, idx)                    (!LUAX_IS_TABLE((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_rawlen((L), (idx)))
     #define LUAX_USERDATA(L, idx)                 (!LUAX_IS_USERDATA((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)                (!LUAX_IS_OBJECT((l), (idx), (t)) ? luaL_error((l), "argument #%d has wrong type (expected #%d)", (idx), (t)), NULL : luaX_toobject((l), (idx), (t)))
+    #define LUAX_FUNCTION(l, idx)                 (!LUAX_IS_FUNCTION((l), (idx)) ? luaL_error((l), "argument #%d has wrong type", (idx)), LUAX_NIL_FUNCTION : luaX_tofunction((l), (idx)))
 #else
     #define LUAX_BOOLEAN(L, idx)                  (lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                  (lua_tointeger((L), (idx)))
@@ -189,6 +194,7 @@ typedef struct luaX_String_s {
     #define LUAX_TABLE(L, idx)                    (lua_rawlen((L), (idx)))
     #define LUAX_USERDATA(L, idx)                 (lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)                (luaX_toobject((L), (idx), (t)))
+    #define LUAX_FUNCTION(l, idx)                 (luaX_tofunction((L), (idx)))
 #endif
 
 #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)                  (lua_isnoneornil((L), (idx)) ? (def) : LUAX_BOOLEAN((L), (idx)))
@@ -204,6 +210,7 @@ typedef struct luaX_String_s {
 #define LUAX_OPTIONAL_TABLE(L, idx, def)                    (lua_isnoneornil((L), (idx)) ? (def) : LUAX_TABLE((L), (idx)))
 #define LUAX_OPTIONAL_USERDATA(L, idx, def)                 (lua_isnoneornil((L), (idx)) ? (def) : LUAX_USERDATA((L), (idx)))
 #define LUAX_OPTIONAL_OBJECT(l, idx, t, def)                (lua_isnoneornil((L), (idx)) ? (def) : LUAX_OBJECT((L), (idx), (t)))
+#define LUAX_OPTIONAL_FUNCTION(l, idx, def)                 (lua_isnoneornil((L), (idx)) ? (def) : LUAX_FUNCTION((L), (idx)))
 
 // The following macros offers a simple way to check and validate if the Lua's
 // VM stack is corrupted/unbalanced.
@@ -226,8 +233,6 @@ typedef struct luaX_String_s {
 
 #define luaX_dump(L) luaX_stackdump((L), __FILE__, __LINE__)
 
-#define luaX_tofunction(L, idx) luaX_ref((L), (idx))
-
 extern int luaX_isinrangei(lua_State *L, int idx, lua_Integer min, lua_Integer max);
 extern int luaX_isinrangeu(lua_State *L, int idx, lua_Unsigned min, lua_Unsigned max);
 extern int luaX_isinrangen(lua_State *L, int idx, lua_Number min, lua_Number max);
@@ -238,6 +243,7 @@ extern int luaX_isenum(lua_State *L, int idx);
 extern int luaX_toenum(lua_State *L, int idx, const char **ids);
 
 extern int luaX_totable(lua_State *L, int idx);
+extern int luaX_tofunction(lua_State *L, int idx);
 
 extern void *luaX_newobject(lua_State *L, size_t size, const void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);
