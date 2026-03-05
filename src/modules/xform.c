@@ -277,12 +277,12 @@ static int xform_table_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
-    int values_table = LUAX_TABLE(L, 2);
+    int operations_table = LUAX_TABLE(L, 2);
 
     GL_XForm_Table_Entry_t *table = NULL;
 
     lua_pushnil(L);
-    while (lua_next(L, values_table)) {
+    while (lua_next(L, operations_table)) {
         int index = LUAX_INTEGER(L, -2);
         GL_XForm_Table_Entry_t table_entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
 

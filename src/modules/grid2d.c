@@ -219,7 +219,7 @@ static int grid2d_peek_2on_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t offset = LUAX_UNSIGNED(L, 2);
+    size_t offset = LUAX_UNSIGNED_RANGE(L, 2, 0, self->data_size);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (offset >= self->data_size) {
@@ -242,8 +242,8 @@ static int grid2d_peek_3onn_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t column = LUAX_UNSIGNED(L, 2);
-    size_t row = LUAX_UNSIGNED(L, 3);
+    size_t column = LUAX_UNSIGNED_RANGE(L, 2, 0, self->width);
+    size_t row = LUAX_UNSIGNED_RANGE(L, 3, 0, self->height);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (column >= self->width) {
@@ -277,7 +277,7 @@ static int grid2d_poke_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t offset = LUAX_UNSIGNED(L, 2);
+    size_t offset = LUAX_UNSIGNED_RANGE(L, 2, 0, self->data_size);
     Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, 3);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
@@ -300,8 +300,8 @@ static int grid2d_poke_4onnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
-    size_t column = LUAX_UNSIGNED(L, 2);
-    size_t row = LUAX_UNSIGNED(L, 3);
+    size_t column = LUAX_UNSIGNED_RANGE(L, 2, 0, self->width);
+    size_t row = LUAX_UNSIGNED_RANGE(L, 3, 0, self->height);
     Grid_Object_Value_t value = (Grid_Object_Value_t)LUAX_NUMBER(L, 4);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)

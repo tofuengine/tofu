@@ -373,7 +373,7 @@ static int canvas_transparent_3onb_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
     GL_Bool_t transparent = LUAX_BOOLEAN(L, 3) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 
     GL_context_set_transparent(self->context, &index, &transparent, 1);
@@ -412,7 +412,7 @@ static int canvas_clear_2onB_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
     bool transparency = LUAX_OPTIONAL_BOOLEAN(L, 3, false);
 
     GL_context_clear(self->context, index, transparency);

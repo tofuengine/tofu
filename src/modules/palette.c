@@ -42,6 +42,7 @@
 #include <core/config.h>
 #include <libs/hex.h>
 #define _LOG_TAG "palette"
+#include <libs/imath.h>
 #include <libs/log.h>
 
 static int palette_new_v_1o(lua_State *L);
@@ -112,14 +113,19 @@ static int palette_new_1n_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t levels = LUAX_UNSIGNED(L, 1);
+    size_t levels = LUAX_UNSIGNED_RANGE(L, 1, 2, GL_PALETTE_MAX_COLORS);
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (levels == 0) {
         return luaL_error(L, "palette can't be empty!");
+    }
+    if (levels == 1) {
+        return luaL_error(L, "palette with 1 color is not useful for color matching - at least 2 colors are required");
     }
     if (levels > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "palette has too many colors (%d) - max is %d", levels, GL_PALETTE_MAX_COLORS);
     }
+#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = { 0 }
@@ -215,9 +221,9 @@ static int palette_new_3n_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t red_bits = LUAX_UNSIGNED(L, 1);
-    size_t green_bits = LUAX_UNSIGNED(L, 2);
-    size_t blue_bits = LUAX_UNSIGNED(L, 3);
+    size_t red_bits = LUAX_UNSIGNED_RANGE(L, 1, 1, 8);
+    size_t green_bits = LUAX_UNSIGNED_RANGE(L, 2, 1, 8);
+    size_t blue_bits = LUAX_UNSIGNED_RANGE(L, 3, 1, 8);
 
     size_t bits = red_bits + green_bits + blue_bits;
     const size_t size = 1 << bits;
@@ -231,18 +237,15 @@ static int palette_new_3n_1o(lua_State *L)
     }
 #endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
-    LOG_D("generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, size);
-
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = { 0 }
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_quantized(self->palette, red_bits, green_bits, blue_bits);
-    LOG_D("palette %p allocated w/ %d colors(s)", self, size);
 
-    lua_pushinteger(L, size);
+    LOG_D("quantized palette R%d:G%d:B%d generated (%d color(s))", red_bits, green_bits, blue_bits, size);
 
-    return 2;
+    return 1;
 }
 
 static int palette_new_v_1o(lua_State *L)
@@ -315,7 +318,7 @@ int palette_peek_2on_3nnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
 
     const GL_Color_t *palette = self->palette;
     GL_Color_t color = palette[index];
@@ -337,7 +340,7 @@ int palette_poke_5onnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
@@ -389,10 +392,10 @@ static int palette_merge_6ononnB_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    size_t to = LUAX_UNSIGNED(L, 2);
+    size_t to = LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_PALETTE);
-    size_t from = LUAX_UNSIGNED(L, 4);
-    size_t count = LUAX_UNSIGNED(L, 5);
+    size_t from = LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_MAX_COLORS - 1);
+    size_t count = LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - IMAX(from, to) - 1);
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
