@@ -304,6 +304,9 @@ typedef struct Vector2D_Object_s {
     float x, y;
 } Vector2D_Object_t;
 
+#define UDT_BATCH_BANK(batch) ((batch)->bank.instance)
+#define UDT_BANK_CELLS_COUNT(bank) ((bank)->sheet->count)
+
 extern void udt_preload_modules(lua_State *L, const void *userdatas[], const luaL_Reg *modules);
 extern int udt_newmodule(lua_State *L, const luaL_Reg *f, const luaX_Const *c);
 extern void *udt_newobject(lua_State *L, size_t size, const void *state, int type);

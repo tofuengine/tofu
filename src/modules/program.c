@@ -249,9 +249,9 @@ static int program_color_6onnnnN_0(lua_State *L)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
+    uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_COLOR_LAST_VALUE);
+    uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
+    uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_COLOR_LAST_VALUE);
     int position = LUAX_OPTIONAL_INTEGER(L, 6, -1);
 
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
@@ -346,9 +346,9 @@ static int program_gradient_4ontN_0(lua_State *L)
         lua_rawgeti(L, item_stack_index, 4); // O N T N T I I -> O N T N T I I I I
 
         const size_t wait_y = LUAX_UNSIGNED(L, -4);
-        const uint8_t wait_r = (uint8_t)LUAX_INTEGER(L, -3);
-        const uint8_t wait_g = (uint8_t)LUAX_INTEGER(L, -2);
-        const uint8_t wait_b = (uint8_t)LUAX_INTEGER(L, -1);
+        const uint8_t wait_r = (uint8_t)LUAX_UNSIGNED_RANGE(L, -3, 0, GL_COLOR_LAST_VALUE);
+        const uint8_t wait_g = (uint8_t)LUAX_UNSIGNED_RANGE(L, -2, 0, GL_COLOR_LAST_VALUE);
+        const uint8_t wait_b = (uint8_t)LUAX_UNSIGNED_RANGE(L, -1, 0, GL_COLOR_LAST_VALUE);
 
         lua_pop(L, 4); // O N T N T I I I I -> O N T N T
 
@@ -409,9 +409,9 @@ static int program_palette_5onntN_0(lua_State *L)
         lua_rawgeti(L, item_stack_index, 2); // O T N N N T I -> O T N N N T I I
         lua_rawgeti(L, item_stack_index, 3); // O T N N N T I I -> O T N N N T I I I
 
-        const uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
-        const uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
-        const uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
+        const uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, -3, 0, GL_COLOR_LAST_VALUE);
+        const uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, -2, 0, GL_COLOR_LAST_VALUE);
+        const uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, -1, 0, GL_COLOR_LAST_VALUE);
 
         lua_pop(L, 3); // O T N T I I I -> O T N T
 

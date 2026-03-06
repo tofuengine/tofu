@@ -176,9 +176,9 @@ static int palette_new_1t_1o(lua_State *L)
         lua_rawgeti(L, item_stack_index, 2); // T O N T I -> T O N T I I
         lua_rawgeti(L, item_stack_index, 3); // T O N T I I -> T O N T I I I
 
-        uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
-        uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
-        uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
+        uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, -3, 0, GL_COLOR_LAST_VALUE);
+        uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, -2, 0, GL_COLOR_LAST_VALUE);
+        uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, -1, 0, GL_COLOR_LAST_VALUE);
 
         lua_pop(L, 3); // T O N T I I I -> T O N T
 
@@ -341,9 +341,9 @@ int palette_poke_5onnnn_0(lua_State *L)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
+    uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_COLOR_LAST_VALUE);
+    uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
+    uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_COLOR_LAST_VALUE);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (index >= GL_PALETTE_MAX_COLORS) {
@@ -368,9 +368,9 @@ static int palette_lerp_5onnnN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
+    uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_COLOR_LAST_VALUE);
+    uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_COLOR_LAST_VALUE);
+    uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
     float ratio = LUAX_OPTIONAL_NUMBER(L, 5, 0.5f);
 
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
@@ -431,9 +431,9 @@ static int palette_match_4onnn_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
+    uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_COLOR_LAST_VALUE);
+    uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_COLOR_LAST_VALUE);
+    uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
 
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
 
@@ -456,12 +456,12 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    uint8_t ar = (uint8_t)LUAX_INTEGER(L, 1);
-    uint8_t ag = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t ab = (uint8_t)LUAX_INTEGER(L, 3);
-    uint8_t br = (uint8_t)LUAX_INTEGER(L, 4);
-    uint8_t bg = (uint8_t)LUAX_INTEGER(L, 5);
-    uint8_t bb = (uint8_t)LUAX_INTEGER(L, 6);
+    uint8_t ar = (uint8_t)LUAX_UNSIGNED_RANGE(L, 1, 0, GL_COLOR_LAST_VALUE);
+    uint8_t ag = (uint8_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_COLOR_LAST_VALUE);
+    uint8_t ab = (uint8_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_COLOR_LAST_VALUE);
+    uint8_t br = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
+    uint8_t bg = (uint8_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_COLOR_LAST_VALUE);
+    uint8_t bb = (uint8_t)LUAX_UNSIGNED_RANGE(L, 6, 0, GL_COLOR_LAST_VALUE);
     float ratio = LUAX_OPTIONAL_NUMBER(L, 7, 0.5f);
 
     const GL_Color_t a = gl_color_from_rgb(ar, ag, ab);

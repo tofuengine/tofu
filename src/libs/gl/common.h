@@ -60,6 +60,8 @@
 #define GL_PALETTE_MAX_COLORS   128
 #define GL_PALETTE_LAST_INDEX   127
 
+#define GL_COLOR_LAST_VALUE     255
+
 // Palette banks need to be a power of two, as they are used as bit-shift
 // values, and merged with the pixel color index, to determine the actual
 // palette index to use during the transferring to the framebuffer.

@@ -432,7 +432,7 @@ static int canvas_fill_4onnnB_0(lua_State *L)
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_MAX_COLORS - 1);
     bool transparency = LUAX_OPTIONAL_BOOLEAN(L, 5, false);
 
     GL_context_fill(self->context, (GL_Point_t){ .x = x, .y = y }, index, transparency); // TODO: pass `GL_INDEX_COLOR` fake?
@@ -451,7 +451,7 @@ static int canvas_point_4onnn_0(lua_State *L)
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_context_point(self->context, (GL_Point_t){ .x = x, .y = y }, index);
 
@@ -471,7 +471,7 @@ static int canvas_hline_5onnnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t width = LUAX_UNSIGNED(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_context_hline(self->context, (GL_Point_t){ .x = x, .y = y }, width, index);
 
@@ -491,7 +491,7 @@ static int canvas_vline_5onnnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t height = LUAX_UNSIGNED(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 5);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_context_vline(self->context, (GL_Point_t){ .x = x, .y = y }, height, index);
 
@@ -513,7 +513,7 @@ static int canvas_line_6onnnnn_0(lua_State *L)
     int y0 = LUAX_INTEGER(L, 3);
     int x1 = LUAX_INTEGER(L, 4);
     int y1 = LUAX_INTEGER(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 6, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_context_polyline(self->context, (GL_Point_t[]){
             (GL_Point_t){ .x = x0, .y = y0 },
@@ -553,7 +553,7 @@ static int canvas_polyline_3otn_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int vertices_table = LUAX_TABLE(L, 2);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_Point_t *vertices = _fetch(L, vertices_table);
 
@@ -591,7 +591,7 @@ static int canvas_triangle_9osnnnnnnn_0(lua_State *L)
     int y1 = LUAX_INTEGER(L, 6);
     int x2 = LUAX_INTEGER(L, 7);
     int y2 = LUAX_INTEGER(L, 8);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 9);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 9, 0, GL_PALETTE_MAX_COLORS - 1);
 
     if (mode[0] == 'f') {
         GL_context_filled_triangle(self->context,
@@ -626,7 +626,7 @@ static int canvas_rectangle_7osnnnnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     size_t width = LUAX_UNSIGNED(L, 5);
     size_t height = LUAX_UNSIGNED(L, 6);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 7);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 7, 0, GL_PALETTE_MAX_COLORS - 1);
 
     if (mode[0] == 'f') {
         GL_context_filled_rectangle(self->context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
@@ -663,7 +663,7 @@ static int canvas_circle_6osnnnn_0(lua_State *L)
     int cx = LUAX_INTEGER(L, 3);
     int cy = LUAX_INTEGER(L, 4);
     size_t radius = LUAX_UNSIGNED(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 6);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 6, 0, GL_PALETTE_MAX_COLORS - 1);
 
     if (radius < 1) { // Null radius, just a point regardless mode!
         GL_context_point(self->context, (GL_Point_t){ .x = cx, .y = cy }, index);
@@ -779,8 +779,8 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 7, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, image->surface->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, image->surface->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, UDT_IMAGE_SURFACE(image)->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, UDT_IMAGE_SURFACE(image)->height);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
@@ -1195,7 +1195,7 @@ static int canvas_sprite_5onnon_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
 
     const GL_Context_t *context = self->context;
     const GL_Sheet_t *sheet = bank->sheet;
@@ -1219,7 +1219,7 @@ static int canvas_sprite_6onnonn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
     int rotation = LUAX_INTEGER(L, 6);
 
     const GL_Context_t *context = self->context;
@@ -1245,7 +1245,7 @@ static int canvas_sprite_7onnonnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_NUMBER(L, 7);
 
@@ -1275,7 +1275,7 @@ static int canvas_sprite_10onnonnnnNN_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_NUMBER(L, 7);
     int rotation = LUAX_INTEGER(L, 8);
@@ -1318,7 +1318,7 @@ static int canvas_tile_7onnonnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
     int offset_x = LUAX_INTEGER(L, 6);
     int offset_y = LUAX_INTEGER(L, 7);
 
@@ -1347,7 +1347,7 @@ static int canvas_tile_9onnonnnnN_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
     int offset_x = LUAX_INTEGER(L, 6);
     int offset_y = LUAX_INTEGER(L, 7);
     int scale_x = LUAX_INTEGER(L, 8);

@@ -283,7 +283,7 @@ static int image_poke_4onnn_0(lua_State *L)
     const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 4);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_surface_poke(self->surface, (GL_Point_t){ .x = x, .y = y }, index);
 
@@ -297,7 +297,7 @@ static int image_clear_2oN_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
 
     GL_surface_clear(self->surface, index);
 
