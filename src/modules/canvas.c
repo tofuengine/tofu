@@ -712,7 +712,7 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-    // idx #2: LUA_TFUNCTION
+    int callback_index = LUAX_FUNCTION(L, 2);
     int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 5, self->context->surface->width);
@@ -721,7 +721,7 @@ static int canvas_scan_6ofNNNN_0(lua_State *L)
     const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
     GL_context_scan(self->context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height },
-        _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 2 });
+        _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = callback_index });
 
     return 0;
 }
@@ -774,7 +774,7 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_IMAGE);
-    // idx #3: LUA_TFUNCTION
+    int callback_index = LUAX_FUNCTION(L, 3);
     int x = LUAX_OPTIONAL_INTEGER(L, 4, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 6, 0);
@@ -786,7 +786,7 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
 
     GL_context_process(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 3 });
+        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = callback_index });
 
     return 0;
 }
@@ -1406,7 +1406,7 @@ static int canvas_text_5onnos_2nn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
@@ -1446,7 +1446,7 @@ static int canvas_text_7onnosnN_2nn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
