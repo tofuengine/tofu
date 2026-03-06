@@ -87,6 +87,7 @@ typedef struct luaX_String_s {
 #define LUA_TLOBJECT    LUA_TTABLE
 
 #define LUAX_NIL_INDEX    (0)
+#define LUAX_NIL_TABLE    LUAX_NIL_INDEX
 #define LUAX_NIL_FUNCTION LUAX_NIL_INDEX
 
 #if defined(LUAX_RUNTIME_CHECKS)
@@ -176,22 +177,22 @@ typedef struct luaX_String_s {
     #define LUAX_STRING(L, idx)                   (!LUAX_IS_STRING((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
     #define LUAX_LSTRING(L, idx)                  (!LUAX_IS_LSTRING((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), (luaX_String){ 0 } : luaX_tolstring((L), (idx)))
     #define LUAX_ENUM(L, idx, ids)                (!LUAX_IS_ENUM((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : luaX_toenum((L), (idx), (ids)))
-    #define LUAX_TABLE(L, idx)                    (!LUAX_IS_TABLE((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), 0 : lua_rawlen((L), (idx)))
+    #define LUAX_TABLE(L, idx)                    (!LUAX_IS_TABLE((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), LUAX_NIL_TABLE : luaX_totable((L), (idx)))
     #define LUAX_USERDATA(L, idx)                 (!LUAX_IS_USERDATA((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)                (!LUAX_IS_OBJECT((l), (idx), (t)) ? luaL_error((l), "argument #%d has wrong type (expected #%d)", (idx), (t)), NULL : luaX_toobject((l), (idx), (t)))
     #define LUAX_FUNCTION(l, idx)                 (!LUAX_IS_FUNCTION((l), (idx)) ? luaL_error((l), "argument #%d has wrong type", (idx)), LUAX_NIL_FUNCTION : luaX_tofunction((l), (idx)))
 #else
     #define LUAX_BOOLEAN(L, idx)                  (lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                  (lua_tointeger((L), (idx)))
-    #define LUAX_INTEGER_RANGE(L, idx, min, max)  (lua_tointeger((L), (idx)))
+    #define LUAX_INTEGER_RANGE(L, idx, min, max)  (LUAX_INTEGER((L), (idx)))
     #define LUAX_UNSIGNED(L, idx)                 ((lua_Unsigned)lua_tointeger((L), (idx)))
-    #define LUAX_UNSIGNED_RANGE(L, idx, min, max) ((lua_Unsigned)lua_tointeger((L), (idx)))
+    #define LUAX_UNSIGNED_RANGE(L, idx, min, max) (LUAX_UNSIGNED((L), (idx)))
     #define LUAX_NUMBER(L, idx)                   (lua_tonumber((L), (idx)))
-    #define LUAX_NUMBER_RANGE(L, idx, min, max)   (lua_tonumber((L), (idx)))
+    #define LUAX_NUMBER_RANGE(L, idx, min, max)   (LUAX_NUMBER((L), (idx)))
     #define LUAX_STRING(L, idx)                   (lua_tostring((L), (idx)))
     #define LUAX_LSTRING(L, idx)                  (luaX_tolstring((L), (idx)))
     #define LUAX_ENUM(L, idx, ids)                (luaX_toenum((L), (idx), (ids)))
-    #define LUAX_TABLE(L, idx)                    (lua_rawlen((L), (idx)))
+    #define LUAX_TABLE(L, idx)                    (luaX_totable((L), (idx)))
     #define LUAX_USERDATA(L, idx)                 (lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)                (luaX_toobject((L), (idx), (t)))
     #define LUAX_FUNCTION(l, idx)                 (luaX_tofunction((L), (idx)))
