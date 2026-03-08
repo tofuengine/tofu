@@ -51,6 +51,11 @@
 // FIXME: does this makes sense?
 #define GL_CELL_NIL     ((GL_Cell_t)-1)
 
+// In any case, we are using an 8-bit-per-pixel color representation, so we can
+// have up to 256 colors in the palette. This is the single hard limit we are
+// imposing on the palette,
+#define GL_PALETTE_AVAILABLE_COLORS 256
+
 // The palette originally supported up-to 256 entries. However, we lowered this
 // limit to 128 colors to free the MSB which is now used an alpha-bit (with
 // inverted value, when `1` the pixel is transparent).

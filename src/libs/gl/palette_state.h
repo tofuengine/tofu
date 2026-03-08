@@ -59,7 +59,7 @@ typedef struct GL_Palette_State_s {
     // (128-255) is reserved for transparent pixels (as they have the MSB
     // set). This allows us to determine if a pixel is transparent just with
     // a single LUT access (and not by testing the alpha-bit).
-    uint8_t map[GL_PALETTE_MAX_COLORS];
+    uint8_t map[GL_PALETTE_AVAILABLE_COLORS];
 } GL_Palette_State_t;
 
 #define GL_PALETTE_FLAGS_MASK    0x80
