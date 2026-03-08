@@ -779,8 +779,8 @@ static int canvas_process_9oofNNNNNN_0(lua_State *L)
     int y = LUAX_OPTIONAL_INTEGER(L, 5, 0);
     int ox = LUAX_OPTIONAL_INTEGER(L, 6, 0);
     int oy = LUAX_OPTIONAL_INTEGER(L, 7, 0);
-    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, UDT_IMAGE_SURFACE(image)->width);
-    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, UDT_IMAGE_SURFACE(image)->height);
+    size_t width = LUAX_OPTIONAL_UNSIGNED(L, 8, image->surface->width);
+    size_t height = LUAX_OPTIONAL_UNSIGNED(L, 9, image->surface->height);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)udt_get_userdata(L, USERDATA_INTERPRETER);
 
