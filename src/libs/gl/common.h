@@ -58,7 +58,7 @@
 // 128 entries to tell if a pixel is transparent just with a single LUT access
 // (and not by testing the alpha-bit).
 #define GL_PALETTE_MAX_COLORS   128
-#define GL_PALETTE_LAST_INDEX   127
+#define GL_PALETTE_LAST_INDEX   (GL_PALETTE_MAX_COLORS - 1)
 
 #define GL_COLOR_LAST_VALUE     255
 
@@ -66,7 +66,7 @@
 // values, and merged with the pixel color index, to determine the actual
 // palette index to use during the transferring to the framebuffer.
 #define GL_PALETTE_MAX_BANKS     2
-#define GL_PALETTE_LAST_BANK     1
+#define GL_PALETTE_LAST_BANK     (GL_PALETTE_MAX_BANKS - 1)
 #define GL_PALETTE_DEFAULT_BANK  0
 
 // Bit #7 is used to encode the bank number, so we can have up to 128 colors
@@ -74,10 +74,10 @@
 #define GL_PALETTE_BANK_SHIFT    7
 
 #define GL_PIXEL_TRANSPARENCY_MASK 0x80
-#define GL_PIXEL_COLOR_MASK        0x7F
+#define GL_PIXEL_INDEX_MASK        0x7F
 
-#define GL_PIXEL_IS_TRANSPARENT(pixel) ((pixel) & 0x80)
-#define GL_PIXEL_GET_INDEX(pixel)      ((pixel) & 0x7F)
+#define GL_PIXEL_IS_TRANSPARENT(pixel) ((pixel) & GL_PIXEL_TRANSPARENCY_MASK)
+#define GL_PIXEL_GET_INDEX(pixel)      ((pixel) & GL_PIXEL_INDEX_MASK)
 
 typedef struct GL_IO_Callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
