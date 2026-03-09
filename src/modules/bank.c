@@ -171,7 +171,7 @@ static int bank_size_4onNN_2nn(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 2, 0, UDT_BANK_CELLS_COUNT(self) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 2, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(self) - 1);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 

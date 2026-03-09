@@ -1195,7 +1195,7 @@ static int canvas_sprite_5onnon_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 5, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(bank) - 1);
 
     const GL_Context_t *context = self->context;
     const GL_Sheet_t *sheet = bank->sheet;
@@ -1219,7 +1219,7 @@ static int canvas_sprite_6onnonn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 5, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(bank) - 1);
     int rotation = LUAX_INTEGER(L, 6);
 
     const GL_Context_t *context = self->context;
@@ -1245,7 +1245,7 @@ static int canvas_sprite_7onnonnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 5, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(bank) - 1);
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_NUMBER(L, 7);
 
@@ -1275,7 +1275,7 @@ static int canvas_sprite_10onnonnnnNN_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 5, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(bank) - 1);
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_NUMBER(L, 7);
     int rotation = LUAX_INTEGER(L, 8);
@@ -1318,7 +1318,7 @@ static int canvas_tile_7onnonnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 5, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(bank) - 1);
     int offset_x = LUAX_INTEGER(L, 6);
     int offset_y = LUAX_INTEGER(L, 7);
 
@@ -1347,7 +1347,7 @@ static int canvas_tile_9onnonnnnN_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_BANK);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 5, 0, UDT_BANK_CELLS_COUNT(bank) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 5, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(bank) - 1);
     int offset_x = LUAX_INTEGER(L, 6);
     int offset_y = LUAX_INTEGER(L, 7);
     int scale_x = LUAX_INTEGER(L, 8);

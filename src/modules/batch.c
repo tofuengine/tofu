@@ -162,7 +162,7 @@ static int batch_clear_1o_0(lua_State *L)
     return 0;
 }
 
-static int batch_add_4onNN_0(lua_State *L)
+static int batch_add_4onNN_0(lua_State *L) // FIXME: rename to `push()`?
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -171,7 +171,7 @@ static int batch_add_4onNN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 2, 0, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 2, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
     int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
 
@@ -196,7 +196,7 @@ static int batch_add_5onnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 2, 0, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 2, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     int rotation = LUAX_INTEGER(L, 5);
@@ -223,7 +223,7 @@ static int batch_add_6onnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 2, 0, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 2, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
@@ -254,7 +254,7 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_UNSIGNED_RANGE(L, 2, 0, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER_RANGE(L, 2, GL_CELL_NIL, UDT_BANK_CELLS_COUNT(UDT_BATCH_BANK(self)) - 1);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
