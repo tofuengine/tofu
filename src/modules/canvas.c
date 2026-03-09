@@ -56,7 +56,8 @@ static int canvas_clipping_v_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
 static int canvas_bank_2on_0(lua_State *L);
-static int canvas_clear_2onB_0(lua_State *L);
+static int canvas_clear_2on_0(lua_State *L);
+static int canvas_erase_3onB_0(lua_State *L);
 static int canvas_fill_4onnnB_0(lua_State *L);
 static int canvas_point_4onnn_0(lua_State *L);
 static int canvas_hline_5onnnn_0(lua_State *L);
@@ -99,7 +100,8 @@ int canvas_loader(lua_State *L)
             { "transparent", canvas_transparent_v_0 },
             { "bank", canvas_bank_2on_0 },
             // -- operations --
-            { "clear", canvas_clear_2onB_0 }, // canvas only
+            { "clear", canvas_clear_2on_0 }, // canvas only
+            { "erase", canvas_erase_3onB_0 },
             { "fill", canvas_fill_4onnnB_0 },
             { "point", canvas_point_4onnn_0 }, // primitives
             { "hline", canvas_hline_5onnnn_0 },
@@ -404,7 +406,27 @@ static int canvas_bank_2on_0(lua_State *L)
     return 0;
 }
 
-static int canvas_clear_2onB_0(lua_State *L)
+// Faster clear method, it doesn't use the `GL_context` API, but directly the
+// `GL_surface` one, so it doesn't take into account any clipping region or
+// shifting/transparent configuration. It is intended to be used when you want
+// to clear the whole canvas with a single color, without caring about any of
+// the current context state (e.g. at the beginning of the frame `render()`
+// call).
+static int canvas_clear_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
+
+    GL_surface_clear(self->image.instance->surface, index);
+
+    return 0;
+}
+
+static int canvas_erase_3onB_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
