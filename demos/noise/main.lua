@@ -134,6 +134,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local scale = 255 / (self.max - self.min)
   canvas:scan(function(x, y, _)
       local v = self.grid:peek(x, y)

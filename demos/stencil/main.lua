@@ -103,6 +103,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   canvas:copy(self.bottom)
   -- self.top:process(function(x, y, from, to)
   --     local pixel = self.mask:peek(x, y)

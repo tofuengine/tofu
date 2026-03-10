@@ -86,6 +86,8 @@ function Main:update(_) -- delta_time
 end
 
 function Main:render(canvas, _) -- ratio
+  canvas:clear(0)
+
   if self.mode == 0 then
     local cx, cy = 8, 32
     for r = 0, 12 do

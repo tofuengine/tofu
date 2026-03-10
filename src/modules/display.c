@@ -32,7 +32,6 @@
 
 static int display_size_0_2nn(lua_State *L);
 static int display_palette_2oN_0(lua_State *L);
-static int display_clear_1n_0(lua_State *L);
 static int display_offset_2NN_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
 static int display_program_1O_0(lua_State *L);
@@ -46,7 +45,6 @@ int display_loader(lua_State *L)
             { "size", display_size_0_2nn },
             // -- mutators --
             { "palette", display_palette_2oN_0 },
-            { "clear", display_clear_1n_0 },
             { "offset", display_offset_2NN_0 },
             { "shift", display_shift_v_0 },
             { "program", display_program_1O_0 },
@@ -84,20 +82,6 @@ static int display_palette_2oN_0(lua_State *L)
     Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
     Display_set_palette(display, palette->palette, bank);
-
-    return 0;
-}
-
-static int display_clear_1n_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    int index = LUAX_INTEGER_RANGE(L, 1, -1, GL_PALETTE_MAX_COLORS - 1);
-
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
-    Display_set_clear_index(display, index);
 
     return 0;
 }

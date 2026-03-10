@@ -69,6 +69,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local time = System.time() * 7.5
 
   local cw, ch = self.bank:size(Bank.NIL)

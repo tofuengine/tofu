@@ -149,6 +149,8 @@ function Main:update(_) -- delta_time
 end
 
 function Main:render(canvas, _) -- ratio
+  canvas:clear(0)
+
   for _, line in ipairs(self.lines) do
     canvas:polyline(line.points, line.color)
   end

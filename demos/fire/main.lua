@@ -149,6 +149,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local w = self.x_size
   local h = self.y_size
   self.grid:scan(function(column, row, value)

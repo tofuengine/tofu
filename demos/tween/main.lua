@@ -98,6 +98,8 @@ function Main:_evaluate(t)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local ratio = self:_evaluate(System.time()) -- The waves have values in the range [-1, +1].
 
   local area = self.area

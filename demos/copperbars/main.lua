@@ -95,6 +95,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
 end
 

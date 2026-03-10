@@ -137,6 +137,8 @@ function Game:update(delta_time)
 end
 
 function Game:render(canvas, _)
+  canvas:clear(0)
+
   for _, sprite in ipairs(self.sprites) do
     sprite:render(canvas)
   end

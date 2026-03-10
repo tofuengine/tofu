@@ -141,6 +141,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local x, y = 0, 0
   for index, source in ipairs(self.sources) do
       local text = string.format("%s%s %.3f %.3f",

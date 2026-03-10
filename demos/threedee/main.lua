@@ -125,6 +125,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(59)
+
   local camera <const> = self.camera
 
   self.background:render(canvas)

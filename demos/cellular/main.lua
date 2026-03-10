@@ -123,6 +123,8 @@ local function draw_cursor(canvas, x, y, size, color)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   self.grid:scan(function(column, row, value)
       if value == 1 then
         canvas:point(column, row, SAND)

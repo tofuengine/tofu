@@ -125,6 +125,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   self.map:draw(canvas)
 
   local camera = self.map:camera_from_id("right")

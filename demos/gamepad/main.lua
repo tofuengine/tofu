@@ -119,6 +119,8 @@ local function draw_trigger(canvas, cx, cy, radius, magnitude)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local t = System.time()
 
   local cw, ch = self.bank:size(Bank.NIL)

@@ -124,6 +124,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   for _, object in ipairs(self.objects) do
     object:draw(canvas)
   end

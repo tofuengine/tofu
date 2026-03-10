@@ -100,6 +100,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end

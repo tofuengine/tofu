@@ -139,6 +139,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local x <const> = WIDTH * 0.5
   local y <const> = self.offset
   local lines_on_screen <const> = math.tointeger(math.ceil((HEIGHT - self.offset) / FONT_HEIGHT))

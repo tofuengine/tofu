@@ -166,6 +166,8 @@ function Main:draw_player(canvas)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   self:draw_blocks(canvas)
   self:draw_player(canvas)
 

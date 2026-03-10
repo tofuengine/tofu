@@ -152,6 +152,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local time = System.time()
 
   if self.mode == 0 then

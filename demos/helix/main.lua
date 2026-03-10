@@ -79,6 +79,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local x = WIDTH * 0.5
 
   for y = 0, HEIGHT, SIZE * 2 do

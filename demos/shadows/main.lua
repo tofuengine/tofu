@@ -103,6 +103,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
 --  local time = System.time()
 
   canvas:copy(self.background)

@@ -614,9 +614,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     LOG_D("graphics surface %p created", display->canvas.surface);
 
-    display->canvas.clear_index = configuration->clear_index;
-    LOG_D("display clear index set to %d", display->canvas.clear_index);
-
     display->canvas.processor = GL_processor_create();
     if (!display->canvas.processor) {
         LOG_F("can't create processor");
@@ -744,15 +741,6 @@ bool Display_update(Display_t *display, float delta_time)
     return true;
 }
 
-// TODO: adopt a `clear_function_t` to remove the branch?
-void Display_clear(Display_t *display)
-{
-    if (display->canvas.clear_index < 0) {
-        return; // No clear required.
-    }
-    GL_surface_clear(display->canvas.surface, display->canvas.clear_index);
-}
-
 static inline void _cycle_textures(Display_t *display, GLint *writing_texture, GLint *reading_texture)
 {
     int index = display->vram.textures.index;
@@ -874,13 +862,6 @@ void Display_reset(Display_t *display)
     Display_set_offset(display, (GL_Point_t){ 0, 0 });
 
     GL_processor_reset(display->canvas.processor);
-
-    display->canvas.clear_index = display->configuration.clear_index;
-}
-
-void Display_set_clear_index(Display_t *display, int index)
-{
-    display->canvas.clear_index = index;
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)

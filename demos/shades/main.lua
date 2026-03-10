@@ -96,6 +96,8 @@ function Main:update(_)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local image <const> = canvas:image()
 
   for i = 0, STEPS - 1 do

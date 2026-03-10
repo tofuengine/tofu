@@ -78,6 +78,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   --local x = X.new()
   canvas:circle("fill", self.x, self.y, 5, 15)
 end

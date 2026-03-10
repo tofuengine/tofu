@@ -68,7 +68,6 @@ typedef struct Configuration_s {
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
-        int clear_index;
         char effect[CONFIGURATION_MAX_VALUE_LENGTH];
     } display;
     struct {

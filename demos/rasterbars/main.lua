@@ -139,6 +139,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   local t = self.time
   local y = math.sin(t * 0.5) * HEIGHT * 0.125 + HEIGHT * 0.25
   canvas:write(0, y, BIG_FONT, "TOFU ENGINE")

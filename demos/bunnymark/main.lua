@@ -119,6 +119,8 @@ function Main:update(delta_time)
 end
 
 function Main:render(canvas, _)
+  canvas:clear(0)
+
   for _, bunny in ipairs(self.bunnies) do
     bunny:render(canvas)
   end
