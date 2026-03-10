@@ -185,7 +185,8 @@ typedef struct _img_header_s {
     uint8_t magic[8]; // "TOFUIMG!"
     uint16_t width; // Width of the image in pixels (max 65535)
     uint16_t height; // Height of the image in pixels (max 65535)
-    uint16_t palette_length; // Actual number of used palette entries
+    uint8_t palette_offset; // Offset of the first used palette entry (0-127, as the palette has a max of 128 entries)
+    uint8_t palette_length; // Actual number of used palette entries
     uint8_t palette[256 * 3]; // Max 256 RGB entries
 } _img_header_t;
 #pragma pack(pop)

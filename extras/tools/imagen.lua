@@ -413,21 +413,22 @@ local PALETTE_SIZE <const> = 256
 local PALETTE_MAX_LENGTH <const> = 128
 local TRANSPARENCY_FLAG <const> = 0x80
 
-local function emit_header(writer, header)
+local function emit_header(writer, image, palette, offset)
   writer:write(string.pack("c8", "TOFUIMG!"))
-  writer:write(string.pack("<I2", header.width))
-  writer:write(string.pack("<I2", header.height))
-  writer:write(string.pack("<I2", #header.palette))
-  for _, color in ipairs(header.palette) do
+  writer:write(string.pack("<I2", image:width()))
+  writer:write(string.pack("<I2", image:height()))
+  writer:write(string.pack("<I1", offset))
+  writer:write(string.pack("<I1", #palette))
+  for _, color in ipairs(palette) do
     writer:write(string.pack("BBB", color.r, color.g, color.b))
   end
-  for index = #header.palette + 1, PALETTE_SIZE do
+  for index = #palette + 1, PALETTE_SIZE do
     local pixel = index - 1
     writer:write(string.pack("BBB", pixel, pixel, pixel)) -- Pad the palette
   end
 end
 
-local function emit_data(writer, image, palette)
+local function emit_data(writer, image, palette, offset)
   local cache = {} -- Memoization cache for color lookups.
 
   for_each_pixel(image,
@@ -440,6 +441,14 @@ local function emit_data(writer, image, palette)
           cache[rgb] = index -- Cache it for later use.
         end
 
+        -- Account for the offset for the pixel index. This is useful when we
+        -- want to pack multiple palettes in the 128 available entries. We
+        -- separate in multiple-palettes (one after the other). The offset is
+        -- the index of the first palette entry for the current image, and it is
+        -- added to the color index to get the actual palette index for the
+        -- pixel.
+        index = index + offset
+
         -- If the pixel is transparent, we set the high bit of the color index
         -- to indicate that this pixel should be rendered as transparent.
         if a < 255 then
@@ -450,21 +459,15 @@ local function emit_data(writer, image, palette)
     end)
 end
 
-local function write_image(path, image, palette)
+local function write_image(path, image, palette, offset)
   local writer = io.open(path, "wb")
   if not writer then
     log("*** can't create file `%s`", path)
     return false
   end
 
-  local header = {
-    width = image:width(),
-    height = image:height(),
-    palette = palette
-  }
-
-  emit_header(writer, header)
-  emit_data(writer, image, palette)
+  emit_header(writer, image, palette, offset)
+  emit_data(writer, image, palette, offset)
 
   writer:close()
 
@@ -518,7 +521,7 @@ end
 -- COMMANDS --------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
 
-local function convert_command(input, palette, colors, sort)
+local function convert_command(input, palette, colors, offset, sort)
   local image = load_image(input)
 
   log("Converting image %s", input)
@@ -549,7 +552,7 @@ local function convert_command(input, palette, colors, sort)
   -- The output file name is the same of the input, but with `.img` extension.
   local output = input:gsub("%.%w+$", "") .. ".img"
   log("Writing output image `%s`", output)
-  local success = write_image(output, image, palette)
+  local success = write_image(output, image, palette, offset)
 
   log(success and "Done!" or "Failed!")
 
@@ -619,6 +622,12 @@ local function main(arg)
     :args(1)
     :count(1)
     :convert(math.tointeger)
+  parser:option("-o --offset")
+    :description("Sets the offset for the color-indexes of the palette (0-based).")
+    :default("0")
+    :args(1)
+    :count(1)
+    :convert(math.tointeger)
   parser:option("-p --palette")
     :description("Path of the palette file.")
     :default("")
@@ -638,7 +647,7 @@ local function main(arg)
 
   log_init(args)
 
-  log("ImageN v0.4.0")
+  log("ImageN v0.4.1")
   log("=============")
 
   local paths = {}
@@ -647,7 +656,7 @@ local function main(arg)
   local success = false
   for _, path in ipairs(paths) do
     if args.command == "convert" then
-      success = convert_command(path, args.palette, args.colors, args.sort)
+      success = convert_command(path, args.palette, args.colors, args.offset, args.sort)
     elseif args.command == "inspect" then
       success = command_inspect(path)
     end
