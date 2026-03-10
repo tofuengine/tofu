@@ -73,28 +73,26 @@ end
 function Canvas:write(x, y, font, text, h_align, v_align, scale_x, scale_y)
   local width <const>, height <const> = font:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
-  local dx, dy
   if h_align == "center" then
-    dx = tonumber(width * 0.5)
+    x = x - tonumber(width * 0.5)
   elseif h_align == "right" then
-    dx = width
-  else
-    dx = 0
+    x = x - width
   end
   if v_align == "middle" then
-    dy = tonumber(height * 0.5)
+    y = y - tonumber(height * 0.5)
   elseif v_align == "bottom" then
-    dy = height
-  else
-    dy = 0
+    y = y - height
   end
 
-  if scale_y then
-    return self:text(x - dx, y - dy, font, text, scale_x, scale_y)
-  elseif scale_x then
-    return self:text(x - dx, y - dy, font, text, scale_x)
+  -- Scaling is not the usual scenario, so be invert the checking order to
+  -- avoid the extra checks when not needed (we will enter the first branch
+  -- most of the times).
+  if not scale_x then
+    return self:text(x, y, font, text)
+  elseif not scale_y then
+    return self:text(x, y, font, text, scale_x)
   else
-    return self:text(x - dx, y - dy, font, text)
+    return self:text(x, y, font, text, scale_x, scale_y)
   end
 end
 
