@@ -479,3 +479,14 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 As a common convention, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display.palette()` method.
 
 > Achtung! Don't use the main class constructor to setup the initial palette. The constructor of the class should be used only to initialize the game internal structure/objects. Of course, 'though, it will work flawlessy anyway. :)
+
+### Image Assets Policies
+
+Recently we added the support for native pixel-transparency (bit #7 in the 8-bits-per-pixel packed format). Along with
+the policy of having at most 128 colors in a palette we devised the following policies:
+
+- images are stored into PNGs with transparency (which is automatically converted by our tool);
+- *mega-palettes* can be achieved by packing palettes one after the other (the `offset` argument of our tool can be used to ensure the each image cohabit each other and will use the correct color-index);
+- Aseprite color-index-remapping can be used to use the correct palette but BEWARE of color transparency (color #0 is typically "consumed");
+- fonts are NO LONGER two-color images, but on-color (typically, white) with transparency.
+- also, debug messages are RENDERED by using bank #1

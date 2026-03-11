@@ -117,7 +117,20 @@ typedef struct luaX_String_s {
     #define LUAX_SIGNATURE_END
 #endif
 
-#if defined(__LUAX_ARITY_OVERLOAD_ONLY__)
+// We can either check overloads by arity only, or by types. The latter is
+// the default.
+//
+// Checking by arity is simpler and faster, but less flexible (e.g. it doesn't
+// allow multiple overloads with the same arity, but different types). Checking
+// by types is more flexible, but also more complex and slower (it has to check
+// the types of the arguments at runtime, which can be expensive, and requires
+// the usage of `if-else` chains instead of a `switch` statement).
+//
+// In practice, type-overloading is used only in the constructors of our
+// classes, which are called only a few times during the program execution.
+// This means the the overall impact is negligible, and the flexibility is worth
+// the cost.
+#if defined(LUAX_ARITY_OVERLOAD_ONLY)
     #define LUAX_OVERLOAD_BEGIN(L) \
         do { \
             lua_State *_L = (L); \
