@@ -57,8 +57,8 @@ function Stars:__ctor(width, height, _, pool)
         return
       end
 
-      local scale = math.random(1, 10) * 0.5
-      local vx = math.random(-5, 5) * 7
+      local scale = math.random(1, 16) * 0.5
+      local vx = math.random(1, 5) * 7 * (math.random(0, 1) > 0.5 and -1 or 1)
       local vy = math.random(3, 5) * 11
 
       local w, h = STAR_WIDTH * scale * 0.5, STAR_HEIGHT * scale * 0.5

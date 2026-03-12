@@ -43,8 +43,9 @@ local Program = require("tofu.graphics.program")
 
 local Background = Class.define()
 
--- We conveniently use the transparent index to create a rasterbar-like
+-- We use the last palette color conveniently to create a rasterbar-like
 -- gradient effect.
+local BACKGROUND_INDEX <const> = 127
 
 function Background:__ctor(_, height, palette, pool)
   local half_height = height // 2
@@ -53,9 +54,9 @@ function Background:__ctor(_, height, palette, pool)
   self.font = Font.from_image("assets/images/font-8x8.img", 8, 8)
 
   self.timer = pool:spawn(10, 0, function(_)
-      local length = palette:size()
+      local length = 64
       local program = Program.new()
-      program:gradient(0, { -- `0` is the transparent index!
+      program:gradient(BACKGROUND_INDEX, {
           { 0, palette:peek(math.random(0, length)) },
           { quarter_height - 1, palette:peek(math.random(0, length)) },
           { half_height - 1, palette:peek(math.random(0, length)) },
@@ -72,6 +73,8 @@ function Background:update(_)
 end
 
 function Background:render(canvas)
+  canvas:clear(BACKGROUND_INDEX)
+
 --[[
   self.canvas:push()
   local x, y = 0, 0
@@ -101,9 +104,7 @@ function Background:render(canvas)
   local width, _ = canvas:image():size()
 
   canvas:push()
-    canvas:transparent(0, true)
-    canvas:transparent(1, false)
-    canvas:shift(1, 15)
+    canvas:shift(0, 15)
     canvas:write(width, 0, self.font, string.format("%d FPS", System.fps()), "right", "top")
   canvas:pop()
 end
