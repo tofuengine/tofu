@@ -63,7 +63,8 @@ function Pool:update(delta_time)
       table.remove(timers, index)
     else
       timer.age = timer.age + timer.rate * delta_time
-      while timer.age >= timer.period do
+      while not timer.cancelled
+        and timer.age >= timer.period do
         timer.callback("fired")
 
         timer.age = timer.age - timer.period
@@ -73,7 +74,6 @@ function Pool:update(delta_time)
           timer.loops = timer.loops - 1;
           if timer.loops == 0 then
               timer:cancel() -- Remove on the next iteration.
-              break
           end
         end
       end
