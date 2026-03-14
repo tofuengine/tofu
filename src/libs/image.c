@@ -35,6 +35,8 @@
 
 #define _BYTES_PER_PIXEL 4
 
+#define _PALETTE_MAX_LENGTH 128
+
 typedef struct _io_callbacks_closure_s {
     const image_io_callbacks_t *callbacks;
     void *user_data;
@@ -185,8 +187,11 @@ typedef struct _img_header_s {
     uint8_t magic[8]; // "TOFUIMG!"
     uint16_t width; // Width of the image in pixels (0-65535)
     uint16_t height; // Height of the image in pixels (0-65535)
-    uint16_t palette_length; // Actual number of used palette entries (0-255)
-    uint8_t palette[256 * 3]; // Max 256 RGB entries
+    struct {
+        uint8_t from; // First palette index used in the image (0-255)
+        uint8_t to; // Last palette index used in the image (0-255)
+        uint8_t entries[_PALETTE_MAX_LENGTH * 3]; // Max 128 RGB entries
+    } palette;
 } _img_header_t;
 #pragma pack(pop)
 
@@ -213,7 +218,7 @@ static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
         goto error_exit;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette, header.palette_length);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette.entries, _PALETTE_MAX_LENGTH);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;
