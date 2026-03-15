@@ -418,16 +418,14 @@ local function emit_header(writer, image, palette, offset)
   writer:write(string.pack("<I2", image:height()))
   writer:write(string.pack("<I1", from))
   writer:write(string.pack("<I1", to))
-  for index = 1, from do
-    local pixel = index - 1
-    writer:write(string.pack("BBB", pixel, pixel, pixel)) -- Pad the palette with empty colors for the offset.
+  for index = 0, from - 1 do
+    writer:write(string.pack("BBB", index, index, index)) -- Pad the palette with empty colors for the offset.
   end
   for _, color in ipairs(palette) do
     writer:write(string.pack("BBB", color.r, color.g, color.b))
   end
-  for index = to + 1, PALETTE_MAX_LENGTH do
-    local pixel = index - 1
-    writer:write(string.pack("BBB", pixel, pixel, pixel)) -- Pad the palette
+  for index = to + 1, PALETTE_MAX_LENGTH - 1 do
+    writer:write(string.pack("BBB", index, index, index)) -- Pad the palette
   end
 end
 
