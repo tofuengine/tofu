@@ -35,7 +35,9 @@
 
 #define _BYTES_PER_PIXEL 4
 
-#define _PALETTE_MAX_LENGTH 128
+#define _IMG_PALETTE_MAX_LENGTH 128
+#define _IMG_PIXEL_TO_PALETTE_INDEX(pixel) ((pixel) & 0x7F)
+#define _IMG_PIXEL_IS_TRANSPARENT(pixel) (((pixel) & 0x80) != 0)
 
 typedef struct _io_callbacks_closure_s {
     const image_io_callbacks_t *callbacks;
@@ -182,16 +184,34 @@ error_exit:
     return false;
 }
 
+// "TOFUIMG!" is the proprietary image format designed for Tofu Engine.
+//
+// At it's core is a simple indexed-color format where each pixel occupies
+// a single byte.
+//
+// Each pixel represents as index into a palette of up to 128 colors. This
+// is due to the fact that the high bit of the pixel byte is reserved to
+// indicate transparency. So, basically
+//
+//              +++++++---> palette index (0-127)
+//              |||||||
+//     pixel = 76543210
+//             |
+//             +--> transparency flag (0 or 1)
+//
+// The maximum palette size is 128 colors, which are more that enough for the
+// kind of pixel-art graphics that Tofu Engine is designed to handle.
+//
+// The file format includes a header that limits the maximum image size to
+// 65535x65535 pixels, which is more than enough for any scenario we can
+// imagine.
+
 #pragma pack(push, 1)
 typedef struct _img_header_s {
     uint8_t magic[8]; // "TOFUIMG!"
     uint16_t width; // Width of the image in pixels (0-65535)
     uint16_t height; // Height of the image in pixels (0-65535)
-    struct {
-        uint8_t from; // First palette index used in the image (0-255)
-        uint8_t to; // Last palette index used in the image (0-255)
-        uint8_t entries[_PALETTE_MAX_LENGTH * 3]; // Max 128 RGB entries
-    } palette;
+    uint8_t palette[_IMG_PALETTE_MAX_LENGTH * 3]; // Max 128 RGB entries
 } _img_header_t;
 #pragma pack(pop)
 
@@ -218,7 +238,7 @@ static bool _img_decode_from_callbacks(const image_io_callbacks_t *io_callbacks,
         goto error_exit;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette.entries, _PALETTE_MAX_LENGTH);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette, _IMG_PALETTE_MAX_LENGTH);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;

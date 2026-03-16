@@ -416,8 +416,6 @@ local function emit_header(writer, image, palette, offset)
   writer:write(string.pack("c8", "TOFUIMG!"))
   writer:write(string.pack("<I2", image:width()))
   writer:write(string.pack("<I2", image:height()))
-  writer:write(string.pack("<I1", from))
-  writer:write(string.pack("<I1", to))
   for index = 0, from - 1 do
     writer:write(string.pack("BBB", index, index, index)) -- Pad the palette with empty colors for the offset.
   end
