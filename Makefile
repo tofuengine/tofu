@@ -141,11 +141,9 @@ CWARNINGS=-std=c99 \
 
 CFLAGS=-D_DEFAULT_SOURCE \
 	-DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DLUA_SANDBOX_MODE \
-	-DSTB_IMAGE_WRITE_FLIP_VERTICALLY -DSTBI_ONLY_PNG -DSTBI_NO_STDIO \
 	-DDR_FLAC_NO_STDIO \
 	-DMA_NO_CUSTOM -DMA_USE_STDINT -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DMA_NO_NODE_GRAPH -DMA_NO_RESOURCE_MANAGER \
 	-DLIBXMP_BUILDING_STATIC \
-	-DSPNG_USE_MINIZ \
 	-DMINIZ_NO_STDIO -DMINIZ_NO_TIME -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_ARCHIVE_WRITING_APIS -DMINIZ_NO_ZLIB_COMPATIBLE_NAME -DMINIZ_NO_MALLOC \
 	-I$(srcdir) \
 	-I$(externaldir)
@@ -240,7 +238,6 @@ SOURCES+=$(wildcard $(externaldir)/cglm/*.c) \
 	$(wildcard $(externaldir)/miniz/*.c) \
 	$(wildcard $(externaldir)/noise/*.c) \
 	$(wildcard $(externaldir)/spleen/*.c) \
-	$(wildcard $(externaldir)/spng/*.c) \
 	$(wildcard $(externaldir)/xmp-lite/*.c)
 # Include files list (src)
 INCLUDES:=$(wildcard $(srcdir)/*.h) \
@@ -264,7 +261,6 @@ INCLUDES+=$(wildcard $(externaldir)/cglm/*.h) \
 	$(wildcard $(externaldir)/miniz/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
-	$(wildcard $(externaldir)/spng/*.h) \
 	$(wildcard $(externaldir)/stb/*.h) \
 	$(wildcard $(externaldir)/xmp-lite/*.h)
 
