@@ -29,6 +29,33 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// "TOFUIMG!" is the proprietary image format designed for Tofu Engine.
+//
+// At it's core is a simple indexed-color format where each pixel occupies
+// a single byte.
+//
+// Each pixel represents as index into a palette of up to 128 colors. This
+// is due to the fact that the high bit of the pixel byte is reserved to
+// indicate transparency. So, basically
+//
+//              +++++++---> palette index (0-127)
+//              |||||||
+//     pixel = 76543210
+//             |
+//             +--> transparency flag (0 or 1)
+//
+// The maximum palette size is 128 colors, which are more that enough for the
+// kind of pixel-art graphics that Tofu Engine is designed to handle.
+//
+// The file format includes a header that limits the maximum image size to
+// 65535x65535 pixels, which is more than enough for any scenario we can
+// imagine.
+
+#define IMG_PALETTE_MAX_COLORS 128
+
+#define IMG_PIXEL_TO_PALETTE_INDEX(pixel) ((pixel) & 0x7F)
+#define IMG_PIXEL_IS_TRANSPARENT(pixel) (((pixel) & 0x80) != 0)
+
 typedef struct image_io_callbacks_s {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
     size_t (*write)(void *user_data, const void *buffer, size_t bytes_to_write);
@@ -36,6 +63,11 @@ typedef struct image_io_callbacks_s {
     long   (*tell)(void *user_data);
     bool   (*eof)(void *user_data);
 } image_io_callbacks_t;
+
+typedef struct image_io_callbacks_closure_s {
+    const image_io_callbacks_t *callbacks;
+    void *user_data;
+} image_io_callbacks_closure_t;
 
 /**
  * The image pixels are either raw RGBA data or indexed data. This can be
@@ -62,7 +94,7 @@ typedef struct image_decode_callbacks_s {
  * TODO: implement support for indexed images (palette passed to `on_initialize()`?).
  */
 typedef struct image_encode_callbacks_s {
-    bool (*on_initialize)(void *user_data, size_t *width, size_t *height);
+    bool (*on_initialize)(void *user_data, size_t *width, size_t *height, const uint8_t *palette, size_t *palette_length);
     bool (*on_scanline)(void *user_data, size_t index, void *pixels);
     void (*on_deinitialize)(void *user_data, bool success);
 } image_encode_callbacks_t;

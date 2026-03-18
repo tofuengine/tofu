@@ -31,45 +31,17 @@
 
 #include <memory.h>
 
-#define _BYTES_PER_PIXEL 4
-
-#define _IMG_PALETTE_MAX_LENGTH 128
-#define _IMG_PIXEL_TO_PALETTE_INDEX(pixel) ((pixel) & 0x7F)
-#define _IMG_PIXEL_IS_TRANSPARENT(pixel) (((pixel) & 0x80) != 0)
-
-
-// "TOFUIMG!" is the proprietary image format designed for Tofu Engine.
-//
-// At it's core is a simple indexed-color format where each pixel occupies
-// a single byte.
-//
-// Each pixel represents as index into a palette of up to 128 colors. This
-// is due to the fact that the high bit of the pixel byte is reserved to
-// indicate transparency. So, basically
-//
-//              +++++++---> palette index (0-127)
-//              |||||||
-//     pixel = 76543210
-//             |
-//             +--> transparency flag (0 or 1)
-//
-// The maximum palette size is 128 colors, which are more that enough for the
-// kind of pixel-art graphics that Tofu Engine is designed to handle.
-//
-// The file format includes a header that limits the maximum image size to
-// 65535x65535 pixels, which is more than enough for any scenario we can
-// imagine.
-
 #pragma pack(push, 1)
 typedef struct _img_header_s {
     uint8_t magic[8]; // "TOFUIMG!"
     uint16_t width; // Width of the image in pixels (0-65535)
     uint16_t height; // Height of the image in pixels (0-65535)
-    uint8_t palette[_IMG_PALETTE_MAX_LENGTH * 3]; // Max 128 RGB entries
+    uint8_t palette[IMG_PALETTE_MAX_COLORS * 3]; // Max 128 RGB entries
 } _img_header_t;
 #pragma pack(pop)
 
-static const char *_img_magic = "TOFUIMG!";
+#define IMG_MAGIC "TOFUIMG!"
+#define IMG_MAGIC_SIZE 8
 
 bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
                                  const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
@@ -80,7 +52,7 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         LOG_E("can't read image header");
         goto error_exit;
     }
-    if (memcmp(header.magic, _img_magic, sizeof(header.magic)) != 0) {
+    if (memcmp(header.magic, IMG_MAGIC, IMG_MAGIC_SIZE) != 0) {
         LOG_E("invalid image header");
         goto error_exit;
     }
@@ -92,7 +64,7 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
         goto error_exit;
     }
 
-    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette, _IMG_PALETTE_MAX_LENGTH);
+    bool allocated = decode_callbacks->on_allocate(decode_user_data, header.width, header.height, header.palette, IMG_PALETTE_MAX_COLORS);
     if (!allocated) {
         LOG_E("can't allocate target buffer");
         goto error_free_row_buffer;
@@ -100,8 +72,7 @@ bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void 
 
     bool success = true;
     for (size_t row_index = 0; success && row_index < header.height; ++row_index) {
-        size_t bytes_read = io_callbacks->read(io_user_data, row_buffer, row_buffer_size);
-        success = bytes_read == row_buffer_size;
+        success = io_callbacks->read(io_user_data, row_buffer, row_buffer_size) == row_buffer_size;
         success = success && decode_callbacks->on_scanline(decode_user_data, row_index, row_buffer);
     }
 
@@ -127,5 +98,57 @@ error_exit:
 bool image_encode_to_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
                                const image_encode_callbacks_t *encode_callbacks, void *encode_user_data)
 {
+    size_t width, height;
+    uint8_t palette[IMG_PALETTE_MAX_COLORS * 3] = { 0 };
+    size_t palette_length = IMG_PALETTE_MAX_COLORS;
+    bool initialized = encode_callbacks->on_initialize(encode_user_data, &width, &height, palette, &palette_length);
+    if (!initialized) {
+        LOG_E("can't initialize encoding");
+        goto error_exit;
+    }
+
+    _img_header_t header = (_img_header_t){
+            .magic = IMG_MAGIC,
+            .width = (uint16_t)width,
+            .height = (uint16_t)height,
+            .palette = { 0 }
+        };
+    memcpy(header.palette, palette, IMG_PALETTE_MAX_COLORS * 3);
+
+    size_t bytes_written = io_callbacks->write(io_user_data, &header, sizeof(header)) == sizeof(header);
+    if (bytes_written != sizeof(header)) {
+        LOG_E("can't write image header");
+        goto error_exit;
+    }
+
+    size_t row_buffer_size = width;
+    void *row_buffer = malloc(row_buffer_size);
+    if (!row_buffer) {
+        LOG_E("can't allocate row buffer");
+        goto error_exit;
+    }
+
+    bool success = true;
+    for (size_t row_index = 0; success && row_index < height; ++row_index) {
+        success = encode_callbacks->on_scanline(encode_user_data, row_index, row_buffer);
+        success = success && io_callbacks->write(io_user_data, row_buffer, row_buffer_size) == row_buffer_size;
+    }
+
+    LOG_IF_D(success, "image encoded");
+
+    encode_callbacks->on_deinitialize(encode_user_data, success);
+
+    if (!success) {
+        LOG_E("can't encode image");
+        goto error_free_row_buffer;
+    }
+
+    free(row_buffer);
+
+    return success;
+
+error_free_row_buffer:
+    free(row_buffer);
+error_exit:
     return false;
 }
