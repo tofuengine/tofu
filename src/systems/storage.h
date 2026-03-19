@@ -51,11 +51,18 @@
 
 #define STORAGE_RESOURCE_ID_LENGTH MD5_SIZE
 
+// Note: in the past we used to have `STORAGE_RESOURCE_IMAGE` as an additional
+// resource type, which was used (for example) for the game icon. However, since
+// we moved to Wayland setting the icon is no longer supported (or, for better
+// saying is responsibility of the app to support `libdecor`). A better approach
+// is to use a `.desktop` file). Also on Windows, however, we can't set the
+// application icon at runtime, so we need to use a `.ico` file (or fuse it
+// as a resource). In both cases, the image resource type is not needed, so we
+// can remove it and simplify the code.
 typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
     // STORAGE_RESOURCE_ENCODED,
     STORAGE_RESOURCE_BLOB,
-    STORAGE_RESOURCE_IMAGE,
     Storage_Resource_Types_t_CountOf
 } Storage_Resource_Types_t;
 

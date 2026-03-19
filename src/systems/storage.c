@@ -310,154 +310,9 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
     return true;
 }
 
-static size_t _fs_read(void *user_data, void *buffer, size_t bytes_to_read)
-{
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
-    return FS_read(handle, buffer, bytes_to_read);
-}
-
-static bool _fs_seek(void *user_data, long offset, int whence)
-{
-    FS_Handle_t *handle = (FS_Handle_t *)user_data;
-    return FS_seek(handle, offset, whence);
-}
-
-static long _fs_tell(void *user_data)
-{
-    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
-    return FS_tell(handle);
-}
-
-static bool _fs_eof(void *user_data)
-{
-    const FS_Handle_t *handle = (const FS_Handle_t *)user_data;
-    return FS_eof(handle);
-}
-
-static const image_io_callbacks_t _image_io_callbacks = {
-    .read = _fs_read,
-    .write = NULL, // Not used in decoding.
-    .seek = _fs_seek,
-    .tell = _fs_tell,
-    .eof  = _fs_eof
-};
-
-// The structure is used for the decode and encode calls.
-typedef struct _image_callbacks_closure_s {
-    size_t width;
-    size_t height;
-    void *pixels;
-    size_t stride;
-    const uint8_t *palette;
-    size_t palette_length;
-} _image_callbacks_closure_t;
-
-static bool _decode_on_allocate(void *user_data, size_t width, size_t height, const uint8_t *palette, size_t palette_length)
-{
-    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
-
-    size_t stride = width * _BYTES_PER_PIXEL;
-
-    void *pixels = malloc(height * stride);
-    if (!pixels) {
-        LOG_E("can't allocate `%dx%d` pixel-data", width, height);
-        return false;
-    }
-
-    *closure = (_image_callbacks_closure_t){
-            .width = width,
-            .height = height,
-            .pixels = pixels,
-            .stride = stride,
-            .palette = palette,
-            .palette_length = palette_length
-        };
-
-    return true;
-}
-
-static bool _decode_on_scanline(void *user_data, size_t index, const void *pixels)
-{
-    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
-
-    void *row_ptr = (uint8_t *)closure->pixels + (index * closure->stride);
-
-    if (closure->palette) { // We have a palette, so we need to expand the pixels. 
-        const uint8_t *palette = closure->palette;
-        const uint8_t *src = (const uint8_t *)pixels;
-        uint8_t *dst = (uint8_t *)row_ptr;
-
-        for (int i = closure->width; i; --i) {
-            size_t palette_index = *(src++);
-            if (palette_index >= closure->palette_length) {
-                LOG_W("pixel index %d is out-of-bounds for palette of size %d", palette_index, closure->palette_length);
-                palette_index = 0; // Fallback to the first palette entry.
-            }
-            const uint8_t *color = &palette[palette_index * 3];
-            *(dst++) = *(color++); // R(ed)
-            *(dst++) = *(color++); // G(reen)
-            *(dst++) = *(color++); // B(lue)
-            *(dst++) = 255;        // A(lpha) is always 255 (opaque).
-        }
-    } else { // No palette, so we can directly copy the pixels.
-        memcpy(row_ptr, pixels, closure->stride);
-    }
-
-    return true; // Continue decoding.
-}
-
-static void _decode_on_free(void *user_data, bool success)
-{
-    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
-
-    if (!success) {
-        LOG_E("decoding failed, destroying surface");
-        free(closure->pixels);
-    } else {
-        LOG_D("image %p decoded", closure->pixels);
-    }
-}
-
-static const image_decode_callbacks_t _image_decode_callbacks = {
-    .on_allocate = _decode_on_allocate,
-    .on_scanline = _decode_on_scanline,
-    .on_free     = _decode_on_free
-};
-
-static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
-{
-    _image_callbacks_closure_t closure = { 0 };
-
-    bool decoded = image_decode_from_callbacks(&_image_io_callbacks, handle,
-        &_image_decode_callbacks, &closure);
-
-    if (!decoded) {
-        LOG_E("can't decode surface from handle `%p`", handle);
-        return NULL;
-    }
-    LOG_D("loaded %dx%d image", closure.width, closure.height);
-
-    *resource = (Storage_Resource_t){
-            .type = STORAGE_RESOURCE_IMAGE,
-            .var = {
-                .image = {
-                    .width = closure.width,
-                    .height = closure.height,
-                    .pixels = closure.pixels
-                }
-            },
-#if defined(TOFU_STORAGE_AUTO_COLLECT)
-            .age = 0.0
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
-        };
-
-    return true;
-}
-
 static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_CountOf] = {
     _load_as_string,
-    _load_as_blob,
-    _load_as_image
+    _load_as_blob
 };
 
 static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type, const FS_Context_t *context)
@@ -613,86 +468,37 @@ error_exit:
     return NULL;
 }
 
-static size_t _stdio_write(void *user_data, const void *buffer, size_t bytes_to_write)
+static bool _store_as_string(const Storage_Resource_t *resource, FILE *stream)
 {
-    FILE *stream = (FILE *)user_data;
-
-    size_t bytes_written = fwrite(buffer, sizeof(uint8_t), bytes_to_write, stream);
-    LOG_IF_E(bytes_written != bytes_to_write, "can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
-
-    return bytes_written;
+    size_t chars_to_write = SR_SLENTGH(resource);
+    size_t chars_written = fwrite(SR_SCHARS(resource), sizeof(char), chars_to_write, stream);
+    return chars_written == chars_to_write;
 }
 
-static bool _stdio_seek(void *user_data, long offset, int whence)
+static bool _store_as_blob(const Storage_Resource_t *resource, FILE *stream)
 {
-    FILE *stream = (FILE *)user_data;
-
-    int result = fseek(stream, offset, whence);
-    LOG_IF_E(result != 0, "can't seek to %ld byte(s) from %d", offset, whence);
-
-    return result == 0;
+    size_t bytes_to_write = SR_BSIZE(resource);
+    size_t bytes_written = fwrite(SR_BPTR(resource), sizeof(uint8_t), bytes_to_write, stream);
+    return bytes_written == bytes_to_write;
 }
 
-static long _stdio_tell(void *user_data)
-{
-    FILE *stream = (FILE *)user_data;
-
-    long position = ftell(stream);
-    LOG_IF_E(position < 0, "can't tell position in stream");
-
-    return position;
-}
-
-static bool _stdio_eof(void *user_data)
-{
-    FILE *stream = (FILE *)user_data;
-
-    int result = feof(stream);
-    LOG_IF_E(result != 0, "can't tell if end-of-file reached");
-
-    return result != 0;
-}
-
-static const image_io_callbacks_t _io_callbacks = {
-    .read = NULL, // Not used in encoding.
-    .write = _stdio_write,
-    .seek = _stdio_seek,
-    .tell = _stdio_tell,
-    .eof = _stdio_eof
+static const Storage_Store_Function_t _store_functions[Storage_Resource_Types_t_CountOf] = {
+    _store_as_string,
+    _store_as_blob
 };
 
-static bool _encode_on_initialize(void *user_data, size_t *width, size_t *height)
+static bool _resource_store(const Storage_Resource_t *resource, const char *path, Storage_Resource_Types_t type)
 {
-    _image_callbacks_closure_t *closure = (_image_callbacks_closure_t *)user_data;
+    FILE *stream = fopen(path, "wb");
+    if (!stream) {
+        return false;
+    }
 
-    *width = closure->width;
-    *height = closure->height;
+    bool stored = _store_functions[resource->type](resource, stream);
 
-    closure->stride = closure->width * _BYTES_PER_PIXEL;
-
-    return true;
+    fclose(stream);
+    return stored;
 }
-
-static bool _encode_on_scanline(void *user_data, size_t index, void *pixels)
-{
-    const _image_callbacks_closure_t *closure = (const _image_callbacks_closure_t *)user_data;
-
-    const uint8_t *data = (const uint8_t *)closure->pixels + (index * closure->stride);
-    memcpy(pixels, data, closure->stride);
-
-    return true;
-}
-
-static void _encode_on_deinitialize(void *user_data, bool success)
-{
-    // Not used in this context.
-}
-
-static image_encode_callbacks_t _encode_callbacks = {
-    .on_initialize = _encode_on_initialize,
-    .on_scanline = _encode_on_scanline,
-    .on_deinitialize = _encode_on_deinitialize
-};
 
 // This function saves a file into the local user-dependent storage. The mount points aren't modified.
 bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource)
@@ -700,42 +506,7 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
     char path[PLATFORM_PATH_MAX] = { 0 };
     path_join(path, storage->path.local, name);
 
-    FILE *stream = fopen(path, "wb");
-    if (!stream) {
-        LOG_E("can't create file `%s`", path);
-        return false;
-    }
-
-    bool result = false;
-
-    switch (resource->type) {
-        case STORAGE_RESOURCE_STRING: {
-            size_t chars_to_write = SR_SLENTGH(resource);
-            size_t chars_written = fwrite(SR_SCHARS(resource), sizeof(char), chars_to_write, stream);
-            result = chars_written == chars_to_write;
-            break;
-        }
-        case STORAGE_RESOURCE_BLOB: {
-            size_t bytes_to_write = SR_BSIZE(resource);
-            size_t bytes_written = fwrite(SR_BPTR(resource), sizeof(uint8_t), bytes_to_write, stream);
-            result = bytes_written == bytes_to_write;
-            break;
-        }
-        case STORAGE_RESOURCE_IMAGE: {
-            result = image_encode_to_callbacks(&_io_callbacks, (void *)stream,
-                                               &_encode_callbacks, (void *)&(_image_callbacks_closure_t){
-                                                       .width = SR_IWIDTH(resource), 
-                                                       .height = SR_IHEIGHT(resource),
-                                                       .pixels = SR_IPIXELS(resource)
-                                                   });
-            break;
-        }
-        default: {
-            break;
-        }
-    }
-
-    fclose(stream);
+    bool result = _resource_store(resource, path, resource->type);
 
     if (!result) {
         LOG_E("can't write resource `%s` w/ type %d to file `%s`", name, resource->type, path);
