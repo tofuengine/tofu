@@ -47,9 +47,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define _BYTES_PER_PIXEL 4
-
 typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
+typedef bool (*Storage_Store_Function_t)(const Storage_Resource_t *resource, FILE *stream);
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
@@ -148,11 +147,6 @@ static void _release(Storage_Resource_t *resource)
         free(resource->var.blob.ptr);
         LOG_D("resource-data %p at %p freed (%d bytes blob)",
             resource, resource->var.blob.ptr, resource->var.blob.size);
-    } else
-    if (resource->type == STORAGE_RESOURCE_IMAGE) {
-        free(resource->var.image.pixels);
-        LOG_D("resource-data %p at %p freed (%dx%d image)",
-            resource, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
     free(resource);
     LOG_D("resource freed");
