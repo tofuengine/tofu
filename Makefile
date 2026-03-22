@@ -102,22 +102,27 @@ PACKERFLAGS=--encrypted --sorted --quiet
 # but only as source for the image (which uses a custom format).
 # In the release builds we also want to exclude the `panic.lua` script (which
 # is used for debugging purposes).
-PACKEROPTIONS=--exclude=^.+%.png$
+PACKEROPTIONS=--exclude=^.+%.png$$
 ifeq ($(BUILD),release)
-	PACKEROPTIONS+=--exclude=^panic%.lua$
-	PACKEROPTIONS+=--exclude=^boot%-debug%.lua$
+	PACKEROPTIONS+=--exclude=^panic%.lua$$
+	PACKEROPTIONS+=--exclude=^boot%-debug%.lua$$
 	BOOT_SCRIPT=boot-release.lua
 else
-	PACKEROPTIONS+=--exclude=^boot%-release%.lua$
+	PACKEROPTIONS+=--exclude=^boot%-release%.lua$$
 	BOOT_SCRIPT=boot-debug.lua
 endif
 PACKEROPTIONS+=--rename=$(BOOT_SCRIPT):boot.lua
 
 LUACHECK=luacheck
-LUACHECKFLAGS=--no-self --std lua54 -q
+LUACHECKFLAGS=--no-self \
+	--std lua54 \
+	-q
 
 VALGRIND=valgrind
-VALGRINDFLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
+VALGRINDFLAGS=--leak-check=full \
+	--show-leak-kinds=all \
+	--track-origins=yes \
+	--verbose
 
 # ------------------------------------------------------------------------------
 # --- Compiler -----------------------------------------------------------------
