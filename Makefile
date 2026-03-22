@@ -97,6 +97,21 @@ KERNAL=kernal.pak
 
 PACKER=$(toolsdir)/pakgen.lua
 PACKERFLAGS=--encrypted --sorted --quiet
+# Rename the boot script according to the build type.
+# PNG files are always excluded, since they are not used directly by the engine,
+# but only as source for the image (which uses a custom format).
+# In the release builds we also want to exclude the `panic.lua` script (which
+# is used for debugging purposes).
+PACKEROPTIONS=--exclude=^.+%.png$
+ifeq ($(BUILD),release)
+	PACKEROPTIONS+=--exclude=^panic%.lua$
+	PACKEROPTIONS+=--exclude=^boot%-debug%.lua$
+	BOOT_SCRIPT=boot-release.lua
+else
+	PACKEROPTIONS+=--exclude=^boot%-release%.lua$
+	BOOT_SCRIPT=boot-debug.lua
+endif
+PACKEROPTIONS+=--rename=$(BOOT_SCRIPT):boot.lua
 
 LUACHECK=luacheck
 LUACHECKFLAGS=--no-self --std lua54 -q
@@ -298,15 +313,6 @@ OBJECTS:=$(SOURCES:%.c=%.o)
 # Everything in the `kernal` sub-folder will be packed into a seperate file.
 RESOURCES:=$(shell find $(srcdir)/kernal -type f)
 
-ifeq ($(BUILD),release)
-	BOOT_SCRIPT=boot-release.lua
-	PACKER_EXCLUDE=panic.lua
-else
-	BOOT_SCRIPT=boot-debug.lua
-	PACKER_EXCLUDE=$^
-endif
-PACKER_RENAME=$(BOOT_SCRIPT):boot.lua
-
 # Setting the docker-image dependencies.
 DOCKER_FILES=$(dockerdir)/Dockerfile $(dockerdir)/docker_context
 
@@ -367,7 +373,7 @@ $(builddir):
 
 $(builddir)/$(KERNAL): $(RESOURCES) Makefile
 	@find $(srcdir)/kernal -name '*.lua' | xargs $(LUACHECK) $(LUACHECKFLAGS)
-	@$(PACKER) $(PACKERFLAGS) $(srcdir)/kernal --output=$(builddir)/$(KERNAL) --rename=$(PACKER_RENAME) --exclude=$(PACKER_EXCLUDE)
+	@$(PACKER) $(PACKERFLAGS) $(srcdir)/kernal --output=$(builddir)/$(KERNAL) $(PACKEROPTIONS)
 	@echo "Kernal packed!"
 
 $(builddir)/$(TARGET): $(OBJECTS) Makefile
