@@ -102,6 +102,9 @@ PACKERFLAGS=--encrypted --sorted --quiet
 # but only as source for the image (which uses a custom format).
 # In the release builds we also want to exclude the `panic.lua` script (which
 # is used for debugging purposes).
+#
+# Note: we need to use `$$` to escape the `$` character, since it's used by 
+#       both `make` and `pakgen`.
 PACKEROPTIONS=--exclude=^.+%.png$$
 ifeq ($(BUILD),release)
 	PACKEROPTIONS+=--exclude=^panic%.lua$$

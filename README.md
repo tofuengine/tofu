@@ -147,7 +147,8 @@ sudo luarocks --lua-version=5.4 install argparse
 sudo luarocks --lua-version=5.4 install luafilesystem
 sudo luarocks --lua-version=5.4 install luacheck
 sudo luarocks --lua-version=5.4 install luazen
-sudo luarocks --lua-version=5.4 install lua-vips luaffi-tkl
+sudo luarocks --lua-version=5.4 install lua-vips
+sudo luarocks --lua-version=5.4 install luaffi-tkl
 ```
 
 Please note that [MinGW](https://en.wikipedia.org/wiki/MinGW) is required only to obtain the Windows build through [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler). One can simply use MinGW on Windows to build the engine binary as it is.
