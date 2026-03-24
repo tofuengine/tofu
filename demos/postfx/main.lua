@@ -106,8 +106,11 @@ function Main:render(canvas, _)
     sprite:render(canvas)
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
+  canvas:push()
+    canvas:shift(0, 11)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
+  canvas:pop()
 end
 
 return Main

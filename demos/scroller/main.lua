@@ -147,13 +147,20 @@ function Main:render(canvas, _)
   local lines_available <const> = #LINES - self.current
   local lines_to_render <const> = math.min(lines_available, lines_on_screen)
 
-  for i = 0, lines_to_render do
-    local index <const> = self.current + i
-    canvas:write(x, y + i * FONT_HEIGHT, FONT, LINES[index], "center", "top")
-  end
+  -- The font image, as usual, features only a single palette index (i.e. #0),
+  -- as the transparency is handler with the alpha-bit. So, we need to remap the
+  -- font palette index to the one we used in the program to emulate the gradient
+  -- through the copperlist.
+  canvas:push()
+    canvas:shift(0, FONT_INDEX)
+    for i = 0, lines_to_render do
+      local index <const> = self.current + i
+      canvas:write(x, y + i * FONT_HEIGHT, FONT, LINES[index], "center", "top")
+    end
+  canvas:pop()
 
   canvas:push()
-    canvas:shift(FONT_INDEX, 31)
+    canvas:shift(0, 31)
     canvas:write(0, 0, FONT, string.format("%d", System.fps()))
   canvas:pop()
 end

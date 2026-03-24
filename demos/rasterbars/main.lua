@@ -141,13 +141,19 @@ end
 function Main:render(canvas, _)
   canvas:clear(0)
 
-  local t = self.time
-  local y = math.sin(t * 0.5) * HEIGHT * 0.125 + HEIGHT * 0.25
-  canvas:write(0, y, BIG_FONT, "TOFU ENGINE")
+  canvas:push()
+    canvas:shift(0, 1)
+    local t = self.time
+    local y = math.sin(t * 0.5) * HEIGHT * 0.125 + HEIGHT * 0.25
+    canvas:write(0, y, BIG_FONT, "TOFU ENGINE")
+  canvas:pop()
 
   canvas:sprite(self.x, self.y, self.bank, 12, 4, 4, 0)
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:push()
+    canvas:shift(0, 11)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:pop()
 end
 
 return Main

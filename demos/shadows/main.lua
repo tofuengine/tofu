@@ -110,7 +110,6 @@ function Main:render(canvas, _)
   canvas:copy(self.background)
 
   canvas:push()
-    canvas:transparent(255, true)
     canvas:sprite(self.position.x, self.position.y, self.bank, 0)
     canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
   canvas:pop()

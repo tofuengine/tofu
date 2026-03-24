@@ -53,16 +53,13 @@ local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 
-local INITIAL_BUNNIES = 15000
-local LITTER_SIZE = 250
-local MAX_BUNNIES = 32768
+local INITIAL_BUNNIES = 65536
+local LITTER_SIZE = 1024
+local MAX_BUNNIES = 131072
 
 local Main = Class.define()
 
 function Main:__ctor()
-  local canvas = Canvas.default()
-  canvas:transparent({ ["0"] = false, ["11"] = true })
-
   self.bunnies = {}
   self.bank = Bank.from_image("assets/bunnies.img", "assets/bunnies.sheet")
   self.speed = 1.0
@@ -77,6 +74,7 @@ end
 
 function Main:init()
   Display.palette(PALETTE)
+  FONT:remap({ [0] = 15 })
 end
 
 function Main:deinit()
@@ -125,8 +123,12 @@ function Main:render(canvas, _)
     bunny:render(canvas)
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
+  --canvas:push()
+    --canvas:shift(0, 12)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(0, 8, FONT, string.format("%d/%d HEAP", System.heap('k')))
+    canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
+  --canvas:pop()
 end
 
 return Main
