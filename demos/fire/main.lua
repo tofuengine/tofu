@@ -53,6 +53,7 @@ local COLORS <const> = {
   }
 
 local PALETTE <const> = Palette.new(COLORS)
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -75,7 +76,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -161,11 +163,11 @@ function Main:render(canvas, _)
       end
     end)
 
-    canvas:push()
-      canvas:shift(1, 12)
-      canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-      canvas:write(WIDTH, 0, FONT, string.format("D: %.2f", self.damping), "right")
-    canvas:pop()
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("D: %.2f", self.damping), "right")
+  canvas:pop()
 end
 
 return Main

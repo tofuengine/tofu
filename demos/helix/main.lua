@@ -45,6 +45,7 @@ local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
 local PALETTE <const> = Palette.default("pico-8-ext")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -60,7 +61,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -109,7 +111,10 @@ function Main:render(canvas, _)
     canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, PALETTE:match(v2, v2, v2))
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:pop()
 end
 
 return Main

@@ -47,6 +47,7 @@ local Palette = require("tofu.graphics.palette")
 local bump = require("lib/bump")
 
 local PALETTE <const> = Palette.default("famicube")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 -- local CANVAS <const> = Canvas.default()
 -- local WIDTH, HEIGHT <const> = CANVAS:image():size()
@@ -87,7 +88,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0) -- Bank #0 is reserved for the sprites
+  Display.palette(PALETTE_FONT, 1) -- Bank #1 is reserved for the font
 end
 
 function Main:deinit()
@@ -172,9 +174,9 @@ function Main:render(canvas, _)
   self:draw_player(canvas)
 
   canvas:push()
-    canvas:shift(1, 2)
+    canvas:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+ canvas:pop()
 end
 
 return Main

@@ -44,6 +44,7 @@ local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 
 local PALETTE <const> = Palette.default("6-bit-rgb")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CONTROLLER <const> = Controller.default()
 
@@ -73,7 +74,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -116,8 +118,11 @@ function Main:render(canvas, _)
   --   end, canvas)
   canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
-  canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
-  canvas:write(0, 8, FONT, string.format("M: %d, T: %d", self.mode, self.threshold))
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
+    canvas:write(0, 8, FONT, string.format("M: %d, T: %d", self.mode, self.threshold))
+  canvas:pop()
 end
 
 return Main

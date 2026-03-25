@@ -46,6 +46,7 @@ local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
 
 local PALETTE <const> = Palette.default("nes")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CONTROLLER <const> = Controller.default()
 local CURSOR <const> = Cursor.default()
@@ -65,7 +66,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -114,7 +116,10 @@ function Main:render(canvas, _)
     canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
   canvas:pop()
 
-  canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)
+  canvas:push()
+    canvas:bank(1)
+    canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)
+  canvas:pop()
 end
 
 return Main

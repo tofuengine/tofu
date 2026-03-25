@@ -50,6 +50,7 @@ local Scene = require("lib/scene")
 
 local config = require("config")
 
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -73,6 +74,7 @@ end
 
 function Main:init()
   Display.palette(self.palette)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -132,8 +134,11 @@ function Main:render(canvas, _)
   self.background:render(canvas)
   self.scene:render(canvas)
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(0, 10, FONT, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(0, 10, FONT, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
+  canvas:pop()
 end
 
 return Main

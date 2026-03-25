@@ -46,6 +46,7 @@ local Palette = require("tofu.graphics.palette")
 local XForm = require("tofu.graphics.xform")
 
 local PALETTE <const> = Palette.default("famicube")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -77,7 +78,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -153,9 +155,12 @@ function Main:render(canvas, _)
   canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, FONT, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
-  canvas:write(WIDTH, HEIGHT, FONT, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
+    canvas:write(WIDTH, HEIGHT, FONT, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
+  canvas:pop()
 end
 
 return Main

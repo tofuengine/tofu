@@ -50,7 +50,7 @@ local Arrays = require("tofu.util.arrays")
 require("preload")
 
 local PALETTE <const> = Palette.default("pico-8")
-local PALETTE_FONT <const> = Palette.new({{ 127, 255, 127 }})
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()

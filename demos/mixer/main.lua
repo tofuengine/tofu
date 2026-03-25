@@ -44,7 +44,7 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Source = require("tofu.sound.source")
 
-local PALETTE <const> = Palette.default("pico-8")
+local PALETTE <const> = Palette.new({{ 0, 0, 0 }, { 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -80,6 +80,10 @@ function Main:__ctor()
 end
 
 function Main:init()
+  -- Remap the font foreground index to the second palette color (green) so 
+  -- that we can have a black background! :D
+  FONT:remap({ [0] = 1 })
+
   Display.palette(PALETTE)
 end
 
@@ -153,7 +157,9 @@ function Main:render(canvas, _)
     y = y + th
   end
 
-  canvas:write(x, y, FONT, PROPERTIES[self.property])
+  -- No need for bank switching since the font is already remapped to use the
+  -- second palette color.
+  anvas:write(x, y, FONT, PROPERTIES[self.property])
   canvas:write(WIDTH, HEIGHT, FONT, string.format("%d FPS", System.fps()), "right", "bottom")
 end
 

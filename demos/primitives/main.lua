@@ -51,6 +51,7 @@ local COLORS <const> = {
   }
 
 local PALETTE <const> = Palette.new(COLORS)
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -65,7 +66,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE) -- "arne-16")
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -167,8 +169,11 @@ function Main:render(canvas, _) -- ratio
     canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, FONT, string.format("mode: %d", self.mode), "right")
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("mode: %d", self.mode), "right")
+  canvas:pop()
 end
 
 return Main

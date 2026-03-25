@@ -46,6 +46,7 @@ local Controller = require("tofu.input.controller")
 local Cursor = require("tofu.input.cursor")
 
 local PALETTE <const> = Palette.default("pico-8")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -75,7 +76,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -160,9 +162,12 @@ function Main:render(canvas, _)
   canvas:line(mx, my - 3, mx, my - 1, index)
   canvas:line(mx, my + 1, mx, my + 3, index)
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, HEIGHT, FONT, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
-    "right", "bottom")
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, HEIGHT, FONT, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+      "right", "bottom")
+  canvas:pop()
 end
 
 return Main

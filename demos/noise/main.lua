@@ -45,7 +45,8 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Grid2D = require("tofu.util.grid2d")
 
-local PALETTE <const> = Palette.new(256)
+local PALETTE <const> = Palette.new(128)
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -71,7 +72,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -142,7 +144,10 @@ function Main:render(canvas, _)
       return math.tointeger((v - self.min) * scale)
     end)
 
-  canvas:write(0, 0, FONT, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
+  canvas:pop()
 end
 
 return Main

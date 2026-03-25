@@ -51,6 +51,7 @@ local Vector2D = require("tofu.util.vector2d")
 local Animation = require("lib/animation")
 
 local PALETTE <const> = Palette.default("nes")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -134,7 +135,8 @@ end
 function Main:init()
   -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
   local palette <const> = Palette.new(_extra_half_brite(PALETTE, { 31, 127, 63 }, 0.5))
-  Display.palette(palette)
+  Display.palette(palette, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -327,7 +329,10 @@ function Main:render(canvas, _)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
-  canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
+  canvas:pop()
 
 --  local a, b, c, d = System.stats()
 --  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)

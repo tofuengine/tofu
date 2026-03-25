@@ -48,6 +48,7 @@ local MovingBunny = require("lib/moving_bunny")
 local StaticBunny = require("lib/static_bunny")
 
 local PALETTE <const> = Palette.default("pico-8")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -73,8 +74,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
-  FONT:remap({ [0] = 15 })
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -123,12 +124,12 @@ function Main:render(canvas, _)
     bunny:render(canvas)
   end
 
-  --canvas:push()
-    --canvas:shift(0, 12)
+  canvas:push()
+    canvas:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(0, 8, FONT, string.format("%d/%d HEAP", System.heap('k')))
     canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
-  --canvas:pop()
+  canvas:pop()
 end
 
 return Main

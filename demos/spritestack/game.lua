@@ -49,8 +49,9 @@ local Font = require("tofu.graphics.font")
 local Sprite = require("lib/sprite")
 
 local PALETTE <const> = Palette.default("pico-8-ext")
-local CANVAS <const> = Canvas.default()
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
 local WIDTH <const>, _ <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 
@@ -143,8 +144,11 @@ function Game:render(canvas, _)
     sprite:render(canvas)
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
+  canvas:pop()
 end
 
 return Game

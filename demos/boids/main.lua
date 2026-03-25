@@ -50,6 +50,7 @@ local Boid = require("lib.boid")
 local Rules = require("lib.rules")
 
 local PALETTE <const> = Palette.default("pico-8")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -95,7 +96,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0) -- Bank #0 is reserved for the sprites
+  Display.palette(PALETTE_FONT, 1) -- Bank #1 is reserved for the font
 end
 
 function Main:deinit()
@@ -130,8 +132,11 @@ function Main:render(canvas, _)
     object:draw(canvas)
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:write(WIDTH, 0, FONT, string.format("#%d objects", #self.objects), "right")
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+    canvas:write(WIDTH, 0, FONT, string.format("#%d objects", #self.objects), "right")
+  canvas:pop()
 end
 
 return Main

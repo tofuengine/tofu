@@ -47,6 +47,7 @@ local XForm = require("tofu.graphics.xform")
 
 -- Define some constants.
 local PALETTE <const> = Palette.default("pico-8")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
@@ -78,7 +79,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -123,7 +125,7 @@ function Main:render(canvas, _)
   local text_width <const>, text_height <const> = self.font:size(MESSAGE)
   local x <const>, y <const> = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
-  canvas:rectangle("fill", 2, 2, canvas_width - 4, canvas_height - 4, 3)
+  canvas:image():clear(3)
 
   -- Scan the message text one char at time. We need the current char index in order
   -- to change color for each character.

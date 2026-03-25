@@ -45,6 +45,7 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 
 local PALETTE <const> = Palette.default("nes")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -69,7 +70,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -126,9 +128,12 @@ function Main:render(canvas, _)
       self.anchor, self.anchor)
   end
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
-  canvas:write(WIDTH, HEIGHT, FONT, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
-    "right", "bottom")
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
+    canvas:write(WIDTH, HEIGHT, FONT, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
+      "right", "bottom")
+  canvas:pop()
 end
 
 return Main

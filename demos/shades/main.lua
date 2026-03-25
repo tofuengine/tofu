@@ -43,7 +43,8 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Controller = require("tofu.input.controller")
 
-local PALETTE <const> = Palette.new(3, 3, 2) --"famicube")
+local PALETTE <const> = Palette.new(2, 3, 2) -- R2G3B2 (7 bits)  -> 128 colors total!
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -79,7 +80,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -130,7 +132,10 @@ function Main:render(canvas, _)
   end
   canvas:pop()
 
-  canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:pop()
 end
 
 return Main

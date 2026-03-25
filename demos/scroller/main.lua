@@ -49,6 +49,7 @@ local FONT_HEIGHT <const> = 8
 local FONT_WIDTH <const> = 8
 
 local PALETTE <const> = Palette.default("famicube")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.from_image("assets/images/font-8x8.img", FONT_WIDTH, FONT_HEIGHT)
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -112,7 +113,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE)
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -160,7 +162,7 @@ function Main:render(canvas, _)
   canvas:pop()
 
   canvas:push()
-    canvas:shift(0, 31)
+    canvas:bank(1)
     canvas:write(0, 0, FONT, string.format("%d", System.fps()))
   canvas:pop()
 end
