@@ -468,6 +468,7 @@ local Boid = require("lib.boid")
 local Rules = require("lib.rules")
 
 local PALETTE <const> = Palette.default("pico-8")
+local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
@@ -476,9 +477,33 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 ### Palette Setup
 
-As a common convention, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display.palette()` method.
+As a common guideline, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display.palette()` method.
 
-> Achtung! Don't use the main class constructor to setup the initial palette. The constructor of the class should be used only to initialize the game internal structure/objects. Of course, 'though, it will work flawlessy anyway. :)
+> Achtung! Don't use the main class constructor to setup the initial palette. The constructor of the class should be used only to initialize the game internal structure/objects. Of course, 'though, it will work flawlessly anyway. :)
+
+As a convention we actually create *two* distinct palettes: one for the game graphics, and one for the overlay/debug text. We leverage the
+game-engine *palette bank* feature to keep them separate so that we can have a simpler drawing process. This way, we don't have to worry about the potential clash in color and re-indexing/shifting when drawing the text.
+
+Following the snippet above, a potential initialization of a game can be the following:
+
+```lua
+function Main:init()
+  Display.palette(PALETTE, 0)
+  Display.palette(PALETTE_FONT, 1)
+end
+```
+
+In the rendering callback, we will activate the second palette (bank #1) to draw the debug text, while the first palette (bank #0) will be used for the game graphics. For example:
+
+```lua
+function Main:render(_, _)
+  -- ... omissis...
+  canvas:push()
+    canvas:bank(1)
+    canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
+  canvas:pop()
+end
+```
 
 ### Image Assets Policies
 
