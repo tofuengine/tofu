@@ -40,11 +40,16 @@ local Timer <const> = require("tofu.timers.timer")
 
 local Pool <const> = Class.define()
 
-function Pool:__ctor()
+function Pool:__ctor(capacity)
+  self.capacity = capacity or math.huge
   self.timers = {}
 end
 
 function Pool:spawn(period, repeats, callback, rate)
+  if #self.timers >= self.capacity then
+    return nil
+  end
+
   local timer <const> = Timer.new(period, repeats, callback, rate)
   table.insert(self.timers, timer)
   return timer
