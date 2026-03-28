@@ -395,8 +395,8 @@ static int palette_merge_6ononnB_0(lua_State *L)
     size_t to = LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_PALETTE);
     size_t from = LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_MAX_COLORS - 1);
-    size_t count = LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - IMAX(from, to) - 1);
-    bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
+    size_t count = LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - IMAX(from, to));
+    bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 6, true);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (to >= GL_PALETTE_MAX_COLORS) {
