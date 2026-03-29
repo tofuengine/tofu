@@ -259,3 +259,14 @@ void GL_palette_lerp(GL_Color_t *palette, size_t from, size_t count, GL_Color_t 
         palette[i] = GL_palette_mix(palette[i], color, ratio);
     }
 }
+
+void GL_palette_pad(GL_Color_t *palette, size_t used_colors, size_t target_size)
+{
+    // Fill the trailing part of the palette with the last color. This is useful
+    // to fix color matching when the palette has less than GL_PALETTE_MAX_COLORS
+    // colors actually defined. Otherwise, the undefined colors would be BLACK,
+    // jeopardizing the color matching.
+    for (size_t i = used_colors; i < target_size; ++i) {
+        palette[i] = palette[used_colors - 1];
+    }
+}

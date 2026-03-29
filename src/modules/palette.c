@@ -53,6 +53,7 @@ static int palette_peek_2on_3nnn(lua_State *L);
 static int palette_poke_5onnnn_0(lua_State *L);
 static int palette_lerp_5onnnN_0(lua_State *L);
 static int palette_merge_6ononnB_0(lua_State *L);
+static int palette_resize_2on(lua_State *L);
 static int palette_match_4onnn_1n(lua_State *L);
 static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
 
@@ -71,6 +72,7 @@ int palette_loader(lua_State *L)
             { "poke", palette_poke_5onnnn_0 },
             { "lerp", palette_lerp_5onnnN_0 },
             { "merge", palette_merge_6ononnB_0 },
+            { "resize", palette_resize_2on },
             // -- operations --
             { "match", palette_match_4onnn_1n },
             { "mix", palette_mix_7nnnnnnN_3nnn },
@@ -426,6 +428,36 @@ static int palette_merge_6ononnB_0(lua_State *L)
     GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
 
     self->used_colors = to + count;
+
+    return 0;
+}
+
+static int palette_resize_2on(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
+    size_t size = LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS);
+
+    // If the next size is smaller than the current one, we just update the used
+    // colors count, effectively "truncating" the palette. The actual colors are
+    // not removed, but they will be ignored by all the functions that rely on
+    // the used colors count.
+    //
+    // Otherwise, if the new size is bigger than the current one we pad the
+    // palette extending the last color until the new size is reached. This way
+    // we ensure that other functions (such as color matching) will work as
+    // expected. Placing in the new slots "empty" colors (e.g. black) would be
+    // arbitrary and an issue since it "alters" the palette's characteristics.
+
+    if (size > self->used_colors) {
+        GL_Color_t *palette = self->palette;
+        GL_palette_pad(palette, self->used_colors, size);
+    }
+
+    self->used_colors = size;
 
     return 0;
 }
