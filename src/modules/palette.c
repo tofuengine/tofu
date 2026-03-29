@@ -87,25 +87,17 @@ static int palette_new_0_1o(lua_State *L)
     LUAX_SIGNATURE_END
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .palette = { 0 }
+            .palette = { 0 },
+            .used_colors = 0
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_greyscale(self->palette, GL_PALETTE_MAX_COLORS);
 
-    LOG_D("greyscale palette %p allocated w/ %d color(s)", self, GL_PALETTE_MAX_COLORS);
+    self->used_colors = GL_PALETTE_MAX_COLORS;
+
+    LOG_D("greyscale palette %p allocated w/ %d color(s)", self, self->used_colors);
 
     return 1;
-}
-
-// Fill the trailing part of the palette with the last color. This is useful
-// to fix color matching when the palette has less than GL_PALETTE_MAX_COLORS
-// colors actually defined. Otherwise, the undefined colors would be BLACK,
-// compromising the color matching.
-static inline void _pad_palette(GL_Color_t *palette, size_t size)
-{
-    for (size_t i = size; i < GL_PALETTE_MAX_COLORS; ++i) {
-        palette[i] = palette[size - 1];
-    }
 }
 
 static int palette_new_1n_1o(lua_State *L)
@@ -128,14 +120,15 @@ static int palette_new_1n_1o(lua_State *L)
 #endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .palette = { 0 }
+            .palette = { 0 },
+            .used_colors = 0
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_greyscale(self->palette, levels);
 
-    _pad_palette(self->palette, levels);
+    self->used_colors = levels; // Levels are actually the amount of colors in the palette.
 
-    LOG_D("palette %p allocated w/ %d color(s)", self, levels);
+    LOG_D("greyscale palette %p allocated w/ %d color(s)", self, self->used_colors);
 
     return 1;
 }
@@ -187,9 +180,9 @@ static int palette_new_1t_1o(lua_State *L)
         lua_pop(L, 1); // T O N T -> T O N
     }
 
-    _pad_palette(self->palette, size);
+    self->used_colors = size;
 
-    LOG_D("palette %p allocated w/ %d color(s)", self, size);
+    LOG_D("palette %p allocated w/ %d color(s)", self, self->used_colors);
 
     return 1;
 }
@@ -204,10 +197,13 @@ static int palette_new_1o_1o(lua_State *L)
     LOG_D("cloning palette %p", other);
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .palette = { 0 }
+            .palette = { 0 },
+            .used_colors = 0
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_copy(self->palette, other->palette);
+
+    self->used_colors = other->used_colors;
 
     LOG_D("palette %p allocated", self);
 
@@ -238,10 +234,13 @@ static int palette_new_3n_1o(lua_State *L)
 #endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .palette = { 0 }
+            .palette = { 0 },
+            .used_colors = 0
         }, OBJECT_TYPE_PALETTE);
 
     GL_palette_set_quantized(self->palette, red_bits, green_bits, blue_bits);
+
+    self->used_colors = size;
 
     LOG_D("quantized palette R%d:G%d:B%d generated (%d color(s))", red_bits, green_bits, blue_bits, size);
 
@@ -280,8 +279,8 @@ static int palette_colors_1o_1t(lua_State *L)
 
     const GL_Color_t *palette = self->palette;
 
-    lua_createtable(L, GL_PALETTE_MAX_COLORS, 0);
-    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
+    lua_createtable(L, self->used_colors, 0);
+    for (size_t i = 0; i < self->used_colors; ++i) {
         const GL_Color_t color = palette[i];
 
         lua_createtable(L, 3, 0);
@@ -306,7 +305,7 @@ static int palette_size_1o_1n(lua_State *L)
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
     LUAX_UNUSED(self);
 
-    lua_pushinteger(L, (lua_Integer)GL_PALETTE_MAX_COLORS);
+    lua_pushinteger(L, (lua_Integer)self->used_colors);
 
     return 1;
 }
@@ -318,7 +317,7 @@ int palette_peek_2on_3nnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, self->used_colors - 1);
 
     const GL_Color_t *palette = self->palette;
     GL_Color_t color = palette[index];
@@ -340,20 +339,24 @@ int palette_poke_5onnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_LAST_INDEX);
     uint8_t r = (uint8_t)LUAX_UNSIGNED_RANGE(L, 3, 0, GL_COLOR_LAST_VALUE);
     uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
     uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_COLOR_LAST_VALUE);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (index >= GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "palette index %d is out of bounds (max is %d)", index, GL_PALETTE_MAX_COLORS - 1);
+        return luaL_error(L, "palette index %d is out of bounds (max is %d)", index, GL_PALETTE_LAST_INDEX);
     }
 #endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     GL_Color_t *palette = self->palette;
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
     palette[index] = color;
+
+    if (index >= self->used_colors) { // Update the colors count if we are peeking beyond the current bounds.
+        self->used_colors = index + 1;
+    }
 
     return 0;
 }
@@ -376,7 +379,7 @@ static int palette_lerp_5onnnN_0(lua_State *L)
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
 
     GL_Color_t *palette = self->palette;
-    GL_palette_lerp(palette, color, ratio);
+    GL_palette_lerp(palette, 0, self->used_colors, color, ratio);
 
     return 0;
 }
@@ -392,18 +395,21 @@ static int palette_merge_6ononnB_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    size_t to = LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_MAX_COLORS - 1);
+    size_t to = LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_LAST_INDEX);
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_PALETTE);
-    size_t from = LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_MAX_COLORS - 1);
+    size_t from = LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_LAST_INDEX);
     size_t count = LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - IMAX(from, to));
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 6, true);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
+    if (self == other) {
+        return luaL_error(L, "can't merge palette into itself");
+    }
     if (to >= GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "target palette index %d is out of bounds (max is %d)", to, GL_PALETTE_MAX_COLORS - 1);
+        return luaL_error(L, "target palette index %d is out of bounds (max is %d)", to, GL_PALETTE_LAST_INDEX);
     }
     if (from >= GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "source palette index %d is out of bounds (max is %d)", from, GL_PALETTE_MAX_COLORS - 1);
+        return luaL_error(L, "source palette index %d is out of bounds (max is %d)", from, GL_PALETTE_LAST_INDEX);
     }
     if (count == 0) {
         return luaL_error(L, "at least one color is required to merge");
@@ -411,13 +417,15 @@ static int palette_merge_6ononnB_0(lua_State *L)
     if (to + count > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "too many colors to merge into target palette (to %d + count %d > max %d)", to, count, GL_PALETTE_MAX_COLORS);
     }
-    if (from + count > GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "too many colors to merge from source palette (from %d + count %d > max %d)", from, count, GL_PALETTE_MAX_COLORS);
+    if (from + count > other->used_colors) {
+        return luaL_error(L, "out of bounds source palette range (from %d + count %d > used colors %d)", from, count, other->used_colors);
     }
 #endif /* TOFU_CORE_DEFENSIVE_CHECKS */
 
     GL_Color_t *palette = self->palette;
     GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);
+
+    self->used_colors = to + count;
 
     return 0;
 }
@@ -438,7 +446,7 @@ static int palette_match_4onnn_1n(lua_State *L)
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
 
     const GL_Color_t *palette = self->palette;
-    const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
+    const GL_Pixel_t index = GL_palette_find_nearest_color(palette, 0, self->used_colors, color);
 
     lua_pushinteger(L, (lua_Integer)index);
 

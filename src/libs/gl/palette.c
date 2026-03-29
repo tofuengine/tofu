@@ -157,15 +157,16 @@ static inline CIELAB_t _rgb_to_cielab(uint8_t r, uint8_t g, uint8_t b)
 }
 #endif
 
-GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, GL_Color_t color)
+GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from, size_t count, GL_Color_t color)
 {
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_PERCEPTUAL
     CIELAB_t color_lab = _rgb_to_cielab(color.r, color.g, color.b);
 #endif
+    size_t to = from + count - 1;
 
     GL_Pixel_t index = 0;
     float minimum = __FLT_MAX__;
-    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
+    for (size_t i = from; i <= to; ++i) {
         const GL_Color_t current = palette[i];
 
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_EUCLIDIAN
@@ -251,9 +252,10 @@ void GL_palette_merge(GL_Color_t *palette, size_t to, const GL_Color_t *other, s
     }
 }
 
-void GL_palette_lerp(GL_Color_t *palette, GL_Color_t color, float ratio)
+void GL_palette_lerp(GL_Color_t *palette, size_t from, size_t count, GL_Color_t color, float ratio)
 {
-    for (size_t i = 0; i < GL_PALETTE_MAX_COLORS; ++i) {
+    size_t to = from + count - 1;
+    for (size_t i = from; i <= to; ++i) {
         palette[i] = GL_palette_mix(palette[i], color, ratio);
     }
 }
