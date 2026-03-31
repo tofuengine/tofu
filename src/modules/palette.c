@@ -109,18 +109,6 @@ static int palette_new_1n_1o(lua_State *L)
     LUAX_SIGNATURE_END
     size_t levels = LUAX_UNSIGNED_RANGE(L, 1, 2, GL_PALETTE_MAX_COLORS);
 
-#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
-    if (levels == 0) {
-        return luaL_error(L, "palette can't be empty!");
-    }
-    if (levels == 1) {
-        return luaL_error(L, "palette with 1 color is not useful for color matching - at least 2 colors are required");
-    }
-    if (levels > GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "palette has too many colors (%d) - max is %d", levels, GL_PALETTE_MAX_COLORS);
-    }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
-
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = { 0 },
             .used_colors = 0
@@ -146,9 +134,6 @@ static int palette_new_1t_1o(lua_State *L)
     LOG_D("setting custom palette of %d color(s)", size);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
-    if (size == 0) {
-        return luaL_error(L, "palette can't be empty!");
-    } else
     if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "palette has too many colors (%d) - max is %d", size, GL_PALETTE_MAX_COLORS);
     }
@@ -346,12 +331,6 @@ int palette_poke_5onnnn_0(lua_State *L)
     uint8_t g = (uint8_t)LUAX_UNSIGNED_RANGE(L, 4, 0, GL_COLOR_LAST_VALUE);
     uint8_t b = (uint8_t)LUAX_UNSIGNED_RANGE(L, 5, 0, GL_COLOR_LAST_VALUE);
 
-#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
-    if (index >= GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "palette index %d is out of bounds (max is %d)", index, GL_PALETTE_LAST_INDEX);
-    }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
-
     GL_Color_t *palette = self->palette;
     const GL_Color_t color = gl_color_from_rgb(r, g, b);
     palette[index] = color;
@@ -406,15 +385,6 @@ static int palette_merge_6ononnB_0(lua_State *L)
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     if (self == other) {
         return luaL_error(L, "can't merge palette into itself");
-    }
-    if (to >= GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "target palette index %d is out of bounds (max is %d)", to, GL_PALETTE_LAST_INDEX);
-    }
-    if (from >= GL_PALETTE_MAX_COLORS) {
-        return luaL_error(L, "source palette index %d is out of bounds (max is %d)", from, GL_PALETTE_LAST_INDEX);
-    }
-    if (count == 0) {
-        return luaL_error(L, "at least one color is required to merge");
     }
     if (to + count > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "too many colors to merge into target palette (to %d + count %d > max %d)", to, count, GL_PALETTE_MAX_COLORS);
