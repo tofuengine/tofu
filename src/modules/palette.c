@@ -204,9 +204,9 @@ static int palette_new_3n_1o(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t red_bits = LUAX_UNSIGNED_RANGE(L, 1, 1, 8);
-    size_t green_bits = LUAX_UNSIGNED_RANGE(L, 2, 1, 8);
-    size_t blue_bits = LUAX_UNSIGNED_RANGE(L, 3, 1, 8);
+    size_t red_bits = LUAX_UNSIGNED_RANGE(L, 1, 0, 8);
+    size_t green_bits = LUAX_UNSIGNED_RANGE(L, 2, 0, 8);
+    size_t blue_bits = LUAX_UNSIGNED_RANGE(L, 3, 0, 8);
 
     size_t bits = red_bits + green_bits + blue_bits;
     const size_t size = 1 << bits;
@@ -229,7 +229,7 @@ static int palette_new_3n_1o(lua_State *L)
 
     self->used_colors = size;
 
-    LOG_D("quantized palette R%d:G%d:B%d generated (%d color(s))", red_bits, green_bits, blue_bits, size);
+    LOG_D("quantized palette %p R%d:G%d:B%d generated (%d color(s))", self, red_bits, green_bits, blue_bits, size);
 
     return 1;
 }
@@ -378,7 +378,7 @@ static int palette_merge_6ononnB_0(lua_State *L)
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
     size_t to = LUAX_UNSIGNED_RANGE(L, 2, 0, GL_PALETTE_LAST_INDEX);
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 3, OBJECT_TYPE_PALETTE);
-    size_t from = LUAX_UNSIGNED_RANGE(L, 4, 0, GL_PALETTE_LAST_INDEX);
+    size_t from = LUAX_UNSIGNED_RANGE(L, 4, 0, other->used_colors - 1);
     size_t count = LUAX_UNSIGNED_RANGE(L, 5, 0, GL_PALETTE_MAX_COLORS - IMAX(from, to));
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 6, true);
 
