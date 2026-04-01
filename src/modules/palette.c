@@ -181,18 +181,12 @@ static int palette_new_1o_1o(lua_State *L)
     LUAX_SIGNATURE_END
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
-    LOG_D("cloning palette %p", other);
+    LOG_D("cloning palette %p w/ %d color(s)", other, other->used_colors);
 
-    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
-            .palette = { 0 },
-            .used_colors = 0
-        }, OBJECT_TYPE_PALETTE);
+    Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t),
+        other, OBJECT_TYPE_PALETTE);
 
-    GL_palette_copy(self->palette, other->palette);
-
-    self->used_colors = other->used_colors;
-
-    LOG_D("palette %p allocated", self);
+    LOG_D("palette %p allocated w/ %d color(s)", self, self->used_colors);
 
     return 1;
 }
