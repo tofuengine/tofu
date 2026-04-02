@@ -508,11 +508,11 @@ end
 
 ### Image Assets Policies
 
-Recently we added the support for native pixel-transparency (bit #7 in the 8-bits-per-pixel packed format). Along with
-the policy of having at most 128 colors in a palette we devised the following policies:
+Recently we added the support for native pixel-transparency (bit #7 in the 8-bits-per-pixel packed format). Along with the policy of having at most 128 colors in a palette we devised the following policies:
 
-- images are stored into PNGs with transparency (which is automatically converted by our tool);
-- *mega-palettes* can be achieved by packing palettes one after the other (the `offset` argument of our tool can be used to ensure the each image cohabit each other and will use the correct color-index);
-- Aseprite color-index-remapping can be used to use the correct palette but BEWARE of color transparency (color #0 is typically "consumed");
-- fonts are NO LONGER two-color images, but on-color (typically, white) with transparency.
-- also, debug messages are RENDERED by using bank #1
+- images created as PNGs, transparency can be used without any issue, as the alpha channel is converted to the bit #7 of the packed format;
+- **Aseprite**'s color-index-remapping is encouraged to be used, to map the correct palette;
+- fonts are NO LONGER two-color images, but single-color (typically white, but this don't really matter at all) with transparency.
+- conversion to the packed format is done with `imagen`;
+- *mega-palettes* can be achieved by packing palettes smaller palettes one after the other. During the image conversion, the `offset` option in `imagen` can be used to "shift" the color indices and use a different portio of the palette for each image. For example, if we have a palette with 128 colors and we want to use the first 16 for the tileset, the next 16 for the player sprites, we can convert the tileset image with `imagen --offset 0`, the player sprites with `imagen --offset 16`, and so on.;
+- By leveraging the palette bank feature, debug messages are USUALLY drawn with bank #1 and (game graphics will use bank #0). This way we can avoid any potential clash in color indices between the two.
