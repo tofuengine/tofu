@@ -53,7 +53,7 @@ int storage_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
-            // -- operations --
+            // -- static mutators --
             { "inject", storage_inject_3ssS_0 },
 #if !defined(TOFU_STORAGE_AUTO_COLLECT)
             { "flush", storage_flush_0_0 },

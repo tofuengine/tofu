@@ -52,7 +52,7 @@ int math_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
-            // -- operations --
+            // -- static operations --
             { "lerp", math_lerp_3nnn_1n },
             { "invlerp", math_invlerp_3nnn_1n },
             { "clamp", math_clamp_v_1n },

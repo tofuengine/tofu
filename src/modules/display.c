@@ -41,9 +41,9 @@ int display_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
-            // -- getters/setters --
+            // -- static getters/setters --
             { "size", display_size_0_2nn },
-            // -- mutators --
+            // -- static mutators --
             { "palette", display_palette_2oN_0 },
             { "offset", display_offset_2NN_0 },
             { "shift", display_shift_v_0 },

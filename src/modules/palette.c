@@ -75,6 +75,7 @@ int palette_loader(lua_State *L)
             { "resize", palette_resize_2on },
             // -- operations --
             { "match", palette_match_4onnn_1n },
+            // -- static operations --
             { "mix", palette_mix_7nnnnnnN_3nnn },
             { NULL, NULL }
         },
