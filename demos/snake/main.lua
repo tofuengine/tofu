@@ -233,12 +233,15 @@ function Main:render(canvas, _)
 
     if self.state == "game-over" then
       local points <const> = (self.length - INITIAL_LENGTH) * 10
-      canvas:write(WIDTH * 0.5, HEIGHT * 0.25, FONT,
-        "GAME OVER", "center", "middle", 4, 4)
-      canvas:write(WIDTH * 0.5, HEIGHT * 0.50, FONT,
-        string.format("Your final score is %d", points), "center", "middle", 2, 2)
-      canvas:write(WIDTH * 0.5, HEIGHT * 0.75, FONT,
-        "-- press start --", "center", "middle", 2, 2)
+      canvas:push()
+        canvas:shift(0, 1)
+        canvas:write(WIDTH * 0.5, HEIGHT * 0.25, FONT,
+          "GAME OVER", "center", "middle", 4, 4)
+        canvas:write(WIDTH * 0.5, HEIGHT * 0.50, FONT,
+          string.format("Your final score is %d", points), "center", "middle", 2, 2)
+        canvas:write(WIDTH * 0.5, HEIGHT * 0.75, FONT,
+          "-- press start --", "center", "middle", 2, 2)
+      canvas:pop()
     end
 
   canvas:push()

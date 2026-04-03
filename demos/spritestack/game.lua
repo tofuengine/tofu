@@ -80,6 +80,7 @@ end
 
 function Game:init()
   Display.palette(PALETTE)
+  Display.palette(PALETTE_FONT, 1)
 end
 
 function Game:deinit()

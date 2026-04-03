@@ -68,7 +68,7 @@ function Main:__ctor()
   self.comparator = 1
   self.threshold = 255
   self.mode = 0
-  self.limit = PALETTE:size()
+  self.limit = 64
 
   --  canvas:transparent(0, false)
 end

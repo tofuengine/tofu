@@ -80,7 +80,7 @@ function Main:__ctor()
 end
 
 function Main:init()
-  -- Remap the font foreground index to the second palette color (green) so 
+  -- Remap the font foreground index to the second palette color (green) so
   -- that we can have a black background! :D
   FONT:remap({ [0] = 1 })
 
@@ -159,7 +159,7 @@ function Main:render(canvas, _)
 
   -- No need for bank switching since the font is already remapped to use the
   -- second palette color.
-  anvas:write(x, y, FONT, PROPERTIES[self.property])
+  canvas:write(x, y, FONT, PROPERTIES[self.property])
   canvas:write(WIDTH, HEIGHT, FONT, string.format("%d FPS", System.fps()), "right", "bottom")
 end
 

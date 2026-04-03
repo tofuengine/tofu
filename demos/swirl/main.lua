@@ -130,7 +130,7 @@ function Main:render(canvas, _)
       l = 1.0 - l * l -- Tweak to smooth the color change differently.
 
       local vx, vy = v:unpack()
-      square(canvas, px, py, 5, vx, vy, l)
+      square(canvas, px, py, 5, math.abs(vx), math.abs(vy), l)
     end
   end
 

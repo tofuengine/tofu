@@ -58,9 +58,11 @@ local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
-local POOL <const> = Pool.new()
+local POOL <const> = Pool.new(1) -- Only one timer at a time, please!
 
 local STEPS <const> = 64
+
+local DEFAULT_DAMPING <const> = 1.0
 
 local Main = Class.define()
 
@@ -68,7 +70,7 @@ function Main:__ctor()
   self.x_size = WIDTH / STEPS
   self.y_size = HEIGHT / STEPS
   self.windy = false
-  self.damping = 1.0
+  self.damping = DEFAULT_DAMPING
   self.timer = nil
   self.grid = Grid2D.new(STEPS, STEPS, { 0 })
 
@@ -100,19 +102,21 @@ function Main:handle_input()
   elseif CONTROLLER:is_pressed("right") then
     self.damping = self.damping + 0.1
   elseif CONTROLLER:is_pressed("down") then
-    local damping <const> = self.damping
-    self.damping = 0.0
-    self.timer = POOL:spawn(0.05, 0, function(event)
-      if event ~= "fired" then
-        return
-      end
+    local timer = POOL:spawn(0.05, 0, function(event)
+        if event ~= "fired" then
+          return
+        end
 
-      self.damping = self.damping + 0.025
-      if self.damping >= damping then
-        self.damping = damping
-        self.timer:cancel()
-      end
-    end)
+        self.damping = self.damping + 0.025
+        if self.damping >= DEFAULT_DAMPING then
+          self.damping = DEFAULT_DAMPING
+          self.timer:cancel()
+        end
+      end)
+    if timer then
+      self.damping = 0.0
+      self.timer = timer
+    end
   elseif CONTROLLER:is_pressed("start") then
     self:reset()
   end

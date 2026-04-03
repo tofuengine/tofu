@@ -77,9 +77,10 @@ function Main:__ctor()
 end
 
 function Main:init()
-  -- TODO: remap the spritesheet to use index #1
-  --FONT:remap({ [0] = 11 })
-  --CANVAS:bank(1)
+  -- Remap the sprite-sheet pixels (which is a single color image with
+  -- transparency) to use index #1, to avoid continuous shifting.
+  self.bank:image():remap({ [0] = 1 })
+
   Display.palette(PALETTE_FONT, 1) -- Bank 1 is reserved for the font
   self:_change_palette(PALETTE)
 end
@@ -160,7 +161,7 @@ function Main:render(canvas, _)
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
         local y = (HEIGHT - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
-        canvas:shift(0, color)
+        canvas:shift(1, color)
         canvas:sprite(x, y, self.bank, index)
       end
     end
@@ -173,7 +174,7 @@ function Main:render(canvas, _)
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
-        canvas:shift(0, color)
+        canvas:shift(1, color)
         canvas:tile(x, y, self.bank, index, 0, math.tointeger(time * 4))
       end
     end
@@ -186,47 +187,29 @@ function Main:render(canvas, _)
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
-        canvas:shift(0, color)
+        canvas:shift(1, color)
         canvas:tile(x, y, self.bank, index, math.tointeger(time * 4), 0)
       end
     end
     canvas:pop()
   elseif self.mode == 3 then
-    canvas:push()
-      canvas:shift(0, 1)
-      canvas:tile(0, 0, self.bank, 0, 0, math.tointeger(time * 4), 4, -4)
-    canvas:pop()
+    canvas:tile(0, 0, self.bank, 0, 0, math.tointeger(time * 4), 4, -4)
   elseif self.mode == 4 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
 
-    canvas:push()
-      canvas:shift(0, 1)
-      canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, scale, scale, rotation)
-    canvas:pop()
+    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, scale, scale, rotation)
     canvas:write(WIDTH, HEIGHT, FONT, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
   elseif self.mode == 5 then
-    canvas:push()
-      canvas:shift(0, 1)
-      canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 256 * 1)
-    canvas:pop()
+    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 256 * 1)
   elseif self.mode == 6 then
-    canvas:push()
-      canvas:shift(0, 1)
-      canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 128 * 1)
-    canvas:pop()
+    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 128 * 1)
   elseif self.mode == 7 then
     local x = (WIDTH + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
     local y = (HEIGHT + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
-    canvas:push()
-      canvas:shift(0, 1)
-      canvas:sprite(x - 4, y - 4, self.bank, 0)
-    canvas:pop()
+    canvas:sprite(x - 4, y - 4, self.bank, 0)
   elseif self.mode == 8 then
-    canvas:push()
-      canvas:shift(0, 1)
-      canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
-    canvas:pop()
+    canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   elseif self.mode == 9 then
     canvas:push()
       canvas:shift(self.shifting)
