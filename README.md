@@ -55,13 +55,10 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Support for both proportional and non-proportional bitmap-based fonts (alphabet subset can be specified, if required).
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Tiles drawing with offset/scaling/flipping.
-* [x] *Custom image format*, optimized for blazing-fast loading time. A support tool for converting from standard formats is provided, supporting also image palette optimization (via median-cut color reduction) and/or matching.
-* [x] Palette-based graphics w/ 256 colors.
-* [x] Predefined library of 8/16/32/64 colors palettes.
-* [x] Palette selection from the configuration file or run-time redefined.
-* [x] Automatic clear of the default image buffer on each loop (configurable).
+* [x] *Custom image format*, optimized for blazing-fast loading time. A support tool for converting from standard formats is provided, supporting also image palette optimization (via median-cut color reduction) and/or matching. Converted images support per-pixel transparency with indexed color format (128 distinct colors).
+* [x] Palette-based graphics w/ up to 256 colors on screen simultaneously (albeit the actual number of colors can be greater with the use of "copperlists").
 * [x] Banked palette support (two banks of 128-color palettes) w/ color bias during VRAM transfer.
-* [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
+* [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Internal 16-bit (RGB565) pixel format used for indexed-to-texture rendering, matching [X68000](https://en.wikipedia.org/wiki/X68000) aesthetics.
 * [x] Per-color transparency and re-indexing (*shifting*), in this order, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] Multiple (offscreen) canvas w/ drawing state stack support.
@@ -89,7 +86,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Logging facility (w/ selectable severity level).
 * [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom [RTTI](https://en.wikipedia.org/wiki/Run-time_type_information) implementation.
 * [x] Crash screen (debug build).
-* [x] Performance profiling (debug build).
+* [x] Game scripting performance profiling (debug build).
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times) and resource usage (memory).
 * [x] User-dependent I/O functions to load/store game data.
@@ -264,7 +261,6 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 
 ### Graphics
 
-* [ ] Transparency encoding in the image.
 * [ ] Adding image manipulation features (e.g. `image:replace()`) for faster optimizations.
 * [ ] Move to full GPU use (beware of the diamond-exit-rule and ensure pixel-perfect positioning).
 * [ ] Adopt another (more simple to merge into) pixel font.
@@ -276,7 +272,8 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 
 * [ ] On-the-fly (could pre-cache it for later usage) sound synthesizer, similar to [srfx](https://github.com/grimfang4/sfxr).
 * [ ] Audio channels support -- each source is to associated to a channel.
-* [ ] Real-time audio effects (noise, reverb, filters, [spatialization](https://www.sfml-dev.org/tutorials/2.6/audio-spatialization.php), etc...).
+* [ ] Real-time audio effects (noise, reverb, filters, etc...).
+* [ ] Positional audio support through [spatialization](https://www.sfml-dev.org/tutorials/2.6/audio-spatialization.php).
 * [ ] Custom "raw" sound formats.
 
 ### Input
