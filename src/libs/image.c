@@ -31,17 +31,28 @@
 
 #include <memory.h>
 
+// Note: initially, the image format of choice was PNG (TGA would be another
+//       candidate). The decoding time wasn't that bad, but it required the
+//       inclusion of at least two libraries(`libspng` and `miniz`) for a clean
+//       memory-efficient implementation.
+//       Also, supporting runtime palette remapping complicated quite a bit the
+//       final game code. So, we devised a custom image format, optimized for
+//       loading times and memory usage. The color remapping need to be done
+//       "offline" with `imagen`. This is realistic, as in a game typically we
+//       don't want really that much level of freedom (the palette is chosen
+//       carefully by the pixel-artist).
+
+#define IMG_MAGIC "TOFUIMG!"
+#define IMG_MAGIC_SIZE 8
+
 #pragma pack(push, 1)
 typedef struct _img_header_s {
-    uint8_t magic[8]; // "TOFUIMG!"
+    uint8_t magic[IMG_MAGIC_SIZE]; // "TOFUIMG!"
     uint16_t width; // Width of the image in pixels (0-65535)
     uint16_t height; // Height of the image in pixels (0-65535)
     uint8_t palette[IMG_PALETTE_MAX_COLORS * 3]; // Max 128 RGB entries
 } _img_header_t;
 #pragma pack(pop)
-
-#define IMG_MAGIC "TOFUIMG!"
-#define IMG_MAGIC_SIZE 8
 
 bool image_decode_from_callbacks(const image_io_callbacks_t *io_callbacks, void *io_user_data,
                                  const image_decode_callbacks_t *decode_callbacks, void *decode_user_data)
