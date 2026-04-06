@@ -79,7 +79,7 @@ static const image_io_callbacks_t _image_io_callbacks = {
 
 typedef struct _decode_callbacks_closure_s {
     GL_Surface_t *surface;
-    const GL_Surface_Callback_t callback;
+    const GL_Surface_Callbacks_t *callbacks;
     void *user_data;
 } _decode_callbacks_closure_t;
 
@@ -96,7 +96,7 @@ static bool _on_allocate(void *user_data, size_t width, size_t height, const uin
 
     closure->surface = surface;
 
-    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_START_OF_DATA, NULL);
+    closure->callbacks->on_start_of_data(closure->user_data, closure->surface);
 
     return true;
 }
@@ -105,7 +105,7 @@ static bool _on_scanline(void *user_data, size_t index, const void *pixels)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    closure->callback(closure->user_data, closure->surface, (int)index, pixels);
+    closure->callbacks->on_scanline(closure->user_data, closure->surface, (int)index, (const GL_Pixel_t *)pixels);
 
     return true; // Continue decoding.
 }
@@ -114,7 +114,7 @@ static void _on_free(void *user_data, bool success)
 {
     _decode_callbacks_closure_t *closure = (_decode_callbacks_closure_t *)user_data;
 
-    closure->callback(closure->user_data, closure->surface, GL_SURFACE_CALLBACK_END_OF_DATA, NULL);
+    closure->callbacks->on_end_of_data(closure->user_data, closure->surface, success);
 
     if (!success) {
         LOG_E("decoding failed, destroying surface");
@@ -131,11 +131,11 @@ static const image_decode_callbacks_t _image_decode_callbacks = {
 };
 
 GL_Surface_t *GL_surface_decode_from_callbacks(const GL_IO_Callbacks_t *io_callbacks, void *io_user_data,
-                                               const GL_Surface_Callback_t callback, void *user_data)
+                                               const GL_Surface_Callbacks_t *callbacks, void *user_data)
 {
     _decode_callbacks_closure_t decode_callbacks_closure = {
         .surface = NULL,
-        .callback = callback,
+        .callbacks = callbacks,
         .user_data = user_data
     };
 

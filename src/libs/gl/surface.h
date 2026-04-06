@@ -40,8 +40,6 @@
 
 #include "common.h"
 
-#include <stdbool.h>
-
 typedef struct GL_Surface_s {
     size_t width, height; // FIXME: use `GL_Size_t`.
     GL_Pixel_t *data;
@@ -57,20 +55,18 @@ typedef struct GL_Surface_s {
 //     GL_Pixel_t data[];
 // } GL_SurfaceA_t;
 
-// Note: the `row` parameter is the row number of the image, starting from `0`. It is also
-//       used to signal the start and end of the data stream, using the special values
-//       `GL_SURFACE_CALLBACK_START_OF_DATA` and `GL_SURFACE_CALLBACK_END_OF_DATA`.
-typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, int row, const void *pixels); // 8bbp indexed format.
-
-// Special values for the `row` parameter in the `GL_Surface_Callback_t` callback.
-// TODO: use a callback-table approach.
-#define GL_SURFACE_CALLBACK_START_OF_DATA -1
-#define GL_SURFACE_CALLBACK_END_OF_DATA   -2
+// Note: probably the `on_start_of_data` and `on_end_of_data` callbacks are not
+//       that useful, but we are keeping them for future usage (and consistency
+//       with similar other parts of the code)
+typedef struct GL_Surface_Callbacks_s {
+    void (*on_start_of_data)(void *user_data, GL_Surface_t *surface);
+    void (*on_scanline)(void *user_data, GL_Surface_t *surface, int row, const GL_Pixel_t *pixels);
+    void (*on_end_of_data)(void *user_data, GL_Surface_t *surface, bool success);
+} GL_Surface_Callbacks_t;
 
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.
-extern GL_Surface_t *GL_surface_decode_from_callbacks(const GL_IO_Callbacks_t *io_callbacks, void *io_user_data,
-        const GL_Surface_Callback_t callback, void *user_data);
+extern GL_Surface_t *GL_surface_decode_from_callbacks(const GL_IO_Callbacks_t *io_callbacks, void *io_user_data, const GL_Surface_Callbacks_t *callbacks, void *user_data);
 
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);

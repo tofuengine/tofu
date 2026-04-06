@@ -37,7 +37,6 @@
 
 #include "image.h"
 
-#include "internal/callbacks.h"
 #include "internal/udt.h"
 
 #include <core/config.h>
@@ -157,6 +156,29 @@ static const GL_IO_Callbacks_t _io_callbacks = {
     .eof = _handle_eof,
 };
 
+static void _surface_on_start_of_data(void *user_data, GL_Surface_t *surface)
+{
+    // Do nothing...
+}
+
+static void _surface_on_scanline(void *user_data, GL_Surface_t *surface, int row, const GL_Pixel_t *pixels)
+{
+    const uint8_t *src = (const uint8_t *)pixels;
+    GL_Pixel_t *dst = surface->data + row * surface->width;
+    memcpy(dst, src, surface->width); // Direct copy.
+}
+
+static void _surface_on_end_of_data(void *user_data, GL_Surface_t *surface, bool success)
+{
+    // Do nothing...
+}
+
+static const GL_Surface_Callbacks_t _surface_callbacks = {
+    .on_start_of_data = _surface_on_start_of_data,
+    .on_scanline = _surface_on_scanline,
+    .on_end_of_data = _surface_on_end_of_data
+};
+
 static int image_new_1s_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -178,7 +200,7 @@ static int image_new_1s_1o(lua_State *L)
     }
     LOG_D("handle %p opened for file `%s`", handle, name);
 
-    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, surface_callback_palette, NULL);
+    GL_Surface_t *surface = GL_surface_decode_from_callbacks(&_io_callbacks, handle, &_surface_callbacks, NULL);
     if (!surface) {
         Storage_close(storage, handle);
         return luaL_error(L, "can't decode file `%s`", name);
