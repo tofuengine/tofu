@@ -1646,7 +1646,7 @@ DRFLAC_API void drflac_version(drflac_uint32* pMajor, drflac_uint32* pMinor, drf
     }
 }
 
-DRFLAC_API const char* drflac_version_string()
+DRFLAC_API const char* drflac_version_string(void)
 {
     return DRFLAC_VERSION_STRING;
 }
