@@ -146,18 +146,21 @@ SL_Source_t *SL_music_create(const SL_Context_t *context, const SL_IO_Callbacks_
     SL_Source_t *music = malloc(sizeof(Music_t));
     if (!music) {
         LOG_E("can't allocate music structure");
-        return NULL;
+        goto error_exit;
     }
 
     bool cted = _music_ctor(music, context, callbacks, user_data); // FIXME: use goto idiom here
     if (!cted) {
-        LOG_E("can't initialize music structure");
-        free(music);
-        return NULL;
+        goto error_free_music;
     }
 
     LOG_D("music %p created", music);
     return music;
+
+error_free_music:
+    free(music);
+error_exit:
+    return NULL;
 }
 
 static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)

@@ -145,18 +145,21 @@ SL_Source_t *SL_module_create(const SL_Context_t *context, const SL_IO_Callbacks
     SL_Source_t *module = malloc(sizeof(Module_t));
     if (!module) {
         LOG_E("can't allocate module structure");
-        return NULL;
+        goto error_exit;
     }
 
     bool cted = _module_ctor(module, context, callbacks, user_data);
     if (!cted) {
-        LOG_E("can't initialize module structure");
-        free(module);
-        return NULL;
+        goto error_free_module;
     }
 
     LOG_D("module %p created", module);
     return module;
+
+error_free_module:
+    free(module);
+error_exit:
+    return NULL;
 }
 
 static size_t _xmp_read(void *buffer, size_t size, size_t amount, void *user_data)
