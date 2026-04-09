@@ -58,7 +58,7 @@ typedef struct Music_s { // FIXME: rename to `_Music_Source_s`.
 
     SL_IO_Callbacks_Closure_t io_callbacks_closure;
 
-    drflac *decoder;
+    drmp3 *decoder;
     size_t length_in_frames;
 
     ma_pcm_rb buffer;
@@ -75,7 +75,7 @@ static inline bool _rewind(Music_t *music)
 {
     LOG_T("rewinding music %p", music);
 
-    drflac_bool32 sought = drflac_seek_to_pcm_frame(music->decoder, 0);
+    drmp3_bool32 sought = drmp3_seek_to_pcm_frame(music->decoder, 0);
     if (!sought) {
         LOG_E("can't rewind music stream");
         return false;
@@ -121,9 +121,9 @@ static inline bool _produce(Music_t *music)
     ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
 #if SL_BYTES_PER_SAMPLE == 2
-    size_t frames_produced = drflac_read_pcm_frames_s16(music->decoder, frames_to_produce, write_buffer);
+    size_t frames_produced = drmp3_read_pcm_frames_s16(music->decoder, frames_to_produce, write_buffer);
 #elif SL_BYTES_PER_SAMPLE == 4
-    size_t frames_produced = drflac_read_pcm_frames_f32(music->decoder, frames_to_produce, write_buffer);
+    size_t frames_produced = drmp3_read_pcm_frames_f32(music->decoder, frames_to_produce, write_buffer);
 #endif
 
     ma_pcm_rb_commit_write(buffer, frames_produced);
@@ -149,7 +149,7 @@ SL_Source_t *SL_music_create(const SL_Context_t *context, const SL_IO_Callbacks_
         return NULL;
     }
 
-    bool cted = _music_ctor(music, context, callbacks, user_data);
+    bool cted = _music_ctor(music, context, callbacks, user_data); // FIXME: use goto idiom here
     if (!cted) {
         LOG_E("can't initialize music structure");
         free(music);
@@ -167,31 +167,36 @@ static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
     return closure->callbacks->read(closure->user_data, buffer, bytes_to_read);
 }
 
-static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin origin)
+static drmp3_bool32 _music_seek(void *user_data, int offset, drmp3_seek_origin origin)
 {
     const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     bool sought = false;
-    if (origin == DRFLAC_SEEK_SET) {
+    if (origin == DRMP3_SEEK_SET) {
         sought = closure->callbacks->seek(closure->user_data, offset, SEEK_SET);
     } else
-    if (origin == DRFLAC_SEEK_CUR) {
+    if (origin == DRMP3_SEEK_CUR) {
         sought = closure->callbacks->seek(closure->user_data, offset, SEEK_CUR);
     } else
-    if (origin == DRFLAC_SEEK_END) {
+    if (origin == DRMP3_SEEK_END) {
         sought = closure->callbacks->seek(closure->user_data, offset, SEEK_END);
     }
-    return sought ? DRFLAC_TRUE : DRFLAC_FALSE;
+    return sought ? DRMP3_TRUE : DRMP3_FALSE;
 }
 
-static drflac_bool32 _music_tell(void* user_data, drflac_int64 *cursor)
+static drmp3_bool32 _music_tell(void* user_data, drmp3_int64 *cursor)
 {
     const SL_IO_Callbacks_Closure_t *closure = (const SL_IO_Callbacks_Closure_t *)user_data;
 
     long offset = closure->callbacks->tell(closure->user_data);
-    *cursor = (drflac_int64)offset;
+    *cursor = (drmp3_int64)offset;
 
-    return DRFLAC_TRUE;
+    return DRMP3_TRUE;
+}
+
+static void _music_meta(void* user_data, const drmp3_metadata *metadata)
+{
+    LOG_D("metadata callback called with type %d and data size %d", metadata->type, (int)metadata->rawDataSize);
 }
 
 #if defined(DEBUG) && !defined(SANITIZE)
@@ -229,36 +234,43 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
             .frames_completed = 0
         };
 
+    music->decoder = malloc(sizeof(drmp3));
+    if (!music->decoder) {
+        LOG_E("can't allocate music decoder");
+        goto error_exit;
+    }
+
 #if defined(DEBUG) && !defined(SANITIZE)
-    music->decoder = drflac_open(_music_read, _music_seek, _music_tell, &music->io_callbacks_closure, &(drflac_allocation_callbacks){
+    drmp3_bool32 initialized = drmp3_init(music->decoder, _music_read, _music_seek, _music_tell, _music_meta, &music->io_callbacks_closure, &(drmp3_allocation_callbacks){
             .pUserData = NULL,
             .onMalloc  = _malloc,
             .onRealloc = _realloc,
             .onFree    = _free
         });
 #else
-    music->decoder = drflac_open(_music_read, _music_seek, _music_tell, &music->io_callbacks_closure, NULL);
+    drmp3_bool32 initialized = drmp3_init(music->decoder, _music_read, _music_seek, _music_tell, _music_meta, &music->io_callbacks_closure, NULL);
 #endif
-    if (!music->decoder) {
+    if (!initialized) {
         LOG_E("can't create music decoder");
-        goto error_exit;
+        goto error_free_decoder;
     }
 
     music->length_in_frames = music->decoder->totalPCMFrameCount;
     if (music->length_in_frames == 0) {
         LOG_E("can't create music w/ zero length");
-        goto error_close_decoder;
+        goto error_deinitialize_decoder;
     }
 
     size_t channels = music->decoder->channels;
     size_t sample_rate = music->decoder->sampleRate;
-    size_t bits_per_sample = music->decoder->bitsPerSample;
-    LOG_D("music decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", music->decoder, music->length_in_frames, channels, sample_rate, bits_per_sample);
+    bool is_cbr = music->decoder->isCBR;
+    bool is_vbr = music->decoder->isVBR;
+    LOG_D("music decoder %p initialized w/ %d frames, %d channels, %dHz (cbr=%d, vbr=%d)", music->decoder, music->length_in_frames, channels, sample_rate, is_cbr, is_vbr);
 
     ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, channels, _STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
         LOG_E("can't initialize music ring-buffer (%d frames)", _STREAMING_BUFFER_SIZE_IN_FRAMES);
-        goto error_close_decoder;
+        goto error_deinitialize_decoder;
     }
 
 #if defined(TOFU_SOUND_MUSIC_PRELOAD)
@@ -279,8 +291,10 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
 
 error_deinitialize_ringbuffer:
     ma_pcm_rb_uninit(&music->buffer);
-error_close_decoder:
-    drflac_close(music->decoder);
+error_deinitialize_decoder:
+    drmp3_uninit(music->decoder);
+error_free_decoder:
+    free(music->decoder);
 error_exit:
     return false;
 }
@@ -295,8 +309,11 @@ static void _music_dtor(SL_Source_t *source)
     ma_pcm_rb_uninit(&music->buffer);
     LOG_D("music ring-buffer uninitialized");
 
-    drflac_close(music->decoder);
-    LOG_D("music decoder closed");
+    drmp3_uninit(music->decoder);
+    LOG_D("music decoder uninitialized");
+
+    free(music->decoder);
+    LOG_D("music decoder freed");
 }
 
 static bool _music_reset(SL_Source_t *source)

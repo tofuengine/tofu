@@ -37,3 +37,6 @@
 
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
+
+#define DR_MP3_IMPLEMENTATION
+#include <dr_libs/dr_mp3.h>
