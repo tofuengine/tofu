@@ -96,6 +96,9 @@ typedef struct GL_IO_Callbacks_Closure_s {
     void *user_data;
 } GL_IO_Callbacks_Closure_t;
 
+// A pixel is a single byte (eight bits) encoding the transparency (bit #7)
+// and the color index (bits #0-6) of a pixel. The actual color is determined
+// by looking up the color index in a 128-entries palette.
 typedef uint8_t GL_Pixel_t;
 
 typedef int8_t GL_Bool_t;

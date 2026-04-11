@@ -237,6 +237,10 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
             .frames_completed = 0
         };
 
+    // Note: the `drmp3` library is inconsistent with `drflac` in that it doesn't provide an `open()` function,
+    //       (which is also a bit odd and unbalanced in design) so we have to allocate the decoder structure ourselves
+    //       and then initialize it w/ `drmp3_init()`. We choose not to implement by ourselves the `open()` function
+    //   since it would be a bit redundant and not worth the effort.
     music->decoder = malloc(sizeof(drmp3));
     if (!music->decoder) {
         LOG_E("can't allocate music decoder");

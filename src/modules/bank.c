@@ -37,7 +37,6 @@
 
 #include "bank.h"
 
-#include "internal/callbacks.h"
 #include "internal/udt.h"
 
 #include <core/config.h>

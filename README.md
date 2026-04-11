@@ -70,8 +70,8 @@ For the courious ones, these are the current statistics of the game-engine codeb
 * [x] Post-effect display-wise fragment shaders.
 * [x] Library of "retro-feel" post-effects (LCD, CRT, color-blindness, etc...).
 * [x] Audio support w/real-time sound streaming on a separate thread.
-* [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
-* [x] Static and streamed audio data playback (FLAC format).
+* [x] On-the-fly audio mixing w/ per-voice looping/panning/balance/gain/speed control.
+* [x] Static and streamed audio data playback (FLAC and MP3 format, respectively).
 * [x] Module playback support (MOD, S3M, XM, and IT).
 * [x] Out-of-the-box timers support.
 * [x] Ready-to-use 2D vector class and higher-order iterators.
