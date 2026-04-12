@@ -38,7 +38,6 @@
 #include "environment.h"
 
 #include <core/config.h>
-#include <core/platform.h>
 #include <libs/fmath.h>
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 #include <libs/heap.h>

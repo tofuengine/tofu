@@ -36,8 +36,6 @@
 #include <libs/stb.h>
 #include <libs/xor.h>
 
-#include <ctype.h>
-
 #pragma pack(push, 1)
 typedef struct Pak_Header_s {
     char signature[PAK_SIGNATURE_LENGTH];

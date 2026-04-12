@@ -41,14 +41,11 @@
 #include <core/platform.h>
 #include <core/soy/soy.h>
 #include <core/version.h>
-#include <libs/hex.h>
 #define _LOG_TAG "engine"
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <libs/stopwatch.h>
 #include <libs/sysinfo.h>
-
-#include <ctype.h>
 
 // Value for setting the "zero time" of the engine. This will trick the system
 // and get the consistent precision of an integer, with the convenient units

@@ -41,7 +41,6 @@
 
 #include <core/config.h>
 #include <core/version.h>
-#include <libs/imath.h>
 #define _LOG_TAG "configuration"
 #include <libs/log.h>
 

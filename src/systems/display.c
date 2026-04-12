@@ -31,8 +31,6 @@
 #include <libs/imath.h>
 #include <libs/stb.h>
 
-#include <time.h>
-
 #if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #define _PIXEL_FORMAT GL_BGRA

@@ -40,7 +40,6 @@
 #include "color.h"
 
 #include <core/config.h>
-#include <libs/imath.h>
 #include <libs/fmath.h>
 #define _LOG_TAG "gl-palette"
 #include <libs/log.h>

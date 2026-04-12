@@ -46,9 +46,6 @@
 #include <libs/path.h>
 #include <libs/stb.h>
 
-#include <dirent.h>
-#include <sys/stat.h>
-
 typedef struct Std_Mount_s {
     // The struct need to match `FS_Mount_t`, initially.
     Mount_VTable_t vtable;

@@ -32,7 +32,6 @@
 #include <core/config.h>
 #define _LOG_TAG "fs"
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/stb.h>
 
 // Basically a key/value pair to store along with the `mount` pointer an

@@ -37,7 +37,6 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
-#include <libs/stopwatch.h>
 #include <modules/modules.h>
 
 #include <stdint.h>

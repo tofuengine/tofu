@@ -38,7 +38,6 @@
 #include "storage.h"
 
 #include <core/config.h>
-#include <libs/image.h>
 #define _LOG_TAG "storage"
 #include <libs/log.h>
 #include <libs/path.h>

@@ -28,7 +28,6 @@
 
 #include <core/config.h>
 #include <core/version.h>
-#include <libs/stb.h>
 #include <libs/sysinfo.h>
 #include <systems/environment.h>
 

@@ -42,7 +42,6 @@
 #include <core/config.h>
 #define _LOG_TAG "fs-callbacks"
 #include <libs/log.h>
-#include <libs/path.h>
 #include <libs/stb.h>
 
 typedef struct Cache_Mount_s {

@@ -43,9 +43,10 @@
 #define _LOG_TAG "image"
 #include <libs/log.h>
 #include <libs/stopwatch.h>
-#include <libs/stb.h>
 #include <systems/display.h>
 #include <systems/storage.h>
+
+#include <string.h>
 
 static int image_new_v_1o(lua_State *L);
 static int image_gc_1o_0(lua_State *L);
