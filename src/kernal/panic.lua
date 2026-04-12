@@ -56,6 +56,11 @@ local MARGIN <const> = 4
 local STROKE <const> = 2
 local SPAN <const> = WIDTH - 2 * MARGIN
 
+local FONT_INDEX <const> = 0
+
+local BACKGROUND_INDEX <const> = 0
+local FOREGROUND_INDEX <const> = 1
+
 local Panic <const> = Class.define()
 
 function Panic:__ctor(message)
@@ -103,19 +108,26 @@ function Panic:update(_)
 end
 
 function Panic:render(canvas, _)
+  canvas:clear(BACKGROUND_INDEX)
+
   local on <const> = (math.floor(System.time()) % 2) == 0
 
-  local rectangle = self.rectangle
-  for i = 0, STROKE - 1 do
-    canvas:rectangle("line",
-      rectangle.x + i, rectangle.y + i,
-      rectangle.width - (i * 2), rectangle.height - (i * 2),
-      on and 1 or 0)
+  if on then
+    local rectangle = self.rectangle
+    for i = 0, STROKE - 1 do
+      canvas:rectangle("line",
+        rectangle.x + i, rectangle.y + i,
+        rectangle.width - (i * 2), rectangle.height - (i * 2),
+        FOREGROUND_INDEX)
+    end
   end
 
-  for _, line in ipairs(self.lines) do
-    canvas:write(line.x, line.y, FONT, line.text)
-  end
+  canvas:push()
+    canvas:shift(FONT_INDEX, FOREGROUND_INDEX)
+    for _, line in ipairs(self.lines) do
+      canvas:write(line.x, line.y, FONT, line.text)
+    end
+  canvas:pop()
 end
 
 return Panic
