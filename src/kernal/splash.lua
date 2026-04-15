@@ -54,6 +54,8 @@ local FONT_INDEX <const> = 0
 local BACKGROUND_INDEX <const> = 0
 local FOREGROUND_INDEX <const> = 1
 
+local DURATION <const> = 2.0
+
 -- TODO: implement "splash" state that emulates Amiga's boot-splash.
 
 local Splash <const> = Class.define()
@@ -74,6 +76,16 @@ end
 function Splash:render(canvas, _)
   canvas:clear(BACKGROUND_INDEX)
 
+  local progress <const> = System.time() / DURATION
+
+  local width = WIDTH // 8
+  local x <const> = (WIDTH + width) * progress - width
+  if x + width > WIDTH then
+    width = WIDTH - x
+  end
+  canvas:hline(x, HEIGHT / 3, width, FOREGROUND_INDEX)
+--  canvas:hline(0, HEIGHT / 3, WIDTH * progress, FOREGROUND_INDEX)
+
   canvas:push()
     canvas:shift(FONT_INDEX, FOREGROUND_INDEX)
     canvas:write(WIDTH / 2, HEIGHT / 2, FONT, LOGO, "center", "middle")
@@ -81,7 +93,7 @@ function Splash:render(canvas, _)
 end
 
 function Splash.is_done()
-  return System.time() > 3.0
+  return System.time() >= DURATION
 end
 
 return Splash
