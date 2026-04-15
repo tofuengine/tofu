@@ -37,8 +37,6 @@
 
 #include "queue.h"
 
-#include "blit.h"
-
 #include <core/config.h>
 #define _LOG_TAG "gl-queue"
 #include <libs/log.h>

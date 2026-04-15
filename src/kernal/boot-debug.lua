@@ -50,19 +50,27 @@ local Boot <const> = Class.define() -- To be precise, the class name is irreleva
 
 function Boot:__ctor()
   self.states = {
-    ["splash"] = { -- TODO: implement "splash" state that emulates Amiga's boot.
-      enter = function(_)
+    ["splash"] = {
+      enter = function(me)
+          local Splash <const> = require("splash")
+          me.splash = Splash.new()
         end,
       leave = function(_)
         end,
-      init = function(_)
-        self:switch("running")
+      init = function(me)
+          me.splash:init()
         end,
-      deinit = function(_)
+      deinit = function(me)
+          me.splash:deinit()
         end,
-      update = function(_, _)
+      update = function(me, delta_time)
+          me.splash:update(delta_time)
+          if me.splash.is_done() then -- Arbitrary time to switch to the "running" state.
+            self:switch("running")
+          end
         end,
-      render = function(_, _, _)
+      render = function(me, canvas, _)
+          me.splash:render(canvas)
         end
     },
     ["running"] = {

@@ -66,8 +66,8 @@ int palette_loader(lua_State *L)
             { "__gc", palette_gc_1o_0 },
             // -- accessors --
             { "colors", palette_colors_1o_1t },
-            { "size", palette_size_1o_1n },
-            { "peek", palette_peek_2on_3nnn }, // TODO: rename to `peek` and `poke`? Or override?
+            { "size", palette_size_1o_1n }, // TODO: rename to `length` or `capacity`?
+            { "peek", palette_peek_2on_3nnn }, // TODO: rename to a single overloaded method?
             // -- mutators --
             { "poke", palette_poke_5onnnn_0 },
             { "lerp", palette_lerp_5onnnN_0 },
