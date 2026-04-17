@@ -40,23 +40,18 @@ local System <const> = require("tofu.core.system")
 local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
 local Palette <const> = require("tofu.graphics.palette")
-local Font <const> = require("tofu.graphics.font")
 
-local PALETTE <const> = Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
-local FONT <const> = Font.default()
+local PALETTE <const> = Palette.default('pico-8')
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
-local LOGO <const> = "Tofu Engine"
-
-local FONT_INDEX <const> = 0
+local COLORS <const> = PALETTE:size()
+local AMOUNT <const> = COLORS * 2
+local HALF_AMOUNT <const> = COLORS
 
 local BACKGROUND_INDEX <const> = 0
-local FOREGROUND_INDEX <const> = 1
 
-local DURATION <const> = 2.0
-
--- TODO: implement "splash" state that emulates Amiga's boot-splash.
+local DURATION <const> = 1.0
 
 local Splash <const> = Class.define()
 
@@ -76,20 +71,28 @@ end
 function Splash:render(canvas, _)
   canvas:clear(BACKGROUND_INDEX)
 
-  local progress <const> = System.time() / DURATION
-
-  local width = WIDTH // 8
-  local x <const> = (WIDTH + width) * progress - width
-  if x + width > WIDTH then
-    width = WIDTH - x
+  local step <const> = (System.time() / DURATION) * AMOUNT
+  local progress
+  if step < HALF_AMOUNT then
+    progress = math.floor(step)
+  else
+    progress = AMOUNT - math.ceil(step)
   end
-  canvas:hline(x, HEIGHT / 3, width, FOREGROUND_INDEX)
---  canvas:hline(0, HEIGHT / 3, WIDTH * progress, FOREGROUND_INDEX)
 
-  canvas:push()
-    canvas:shift(FONT_INDEX, FOREGROUND_INDEX)
-    canvas:write(WIDTH / 2, HEIGHT / 2, FONT, LOGO, "center", "middle")
-  canvas:pop()
+  local width = WIDTH / COLORS
+  local height = HEIGHT / COLORS
+
+  local y = 0
+  for i = 0, COLORS - 1 do
+    local x = 0
+    for j = 0, AMOUNT - 1 do
+      local index = (i + j + progress) % COLORS
+      canvas:rectangle('fill', x, y, width, height, index)
+
+      x = x + width
+    end
+    y = y + height
+  end
 end
 
 function Splash.is_done()
