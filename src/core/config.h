@@ -74,6 +74,12 @@
 // ### Audio ###
 // #############
 
+// When defined, the audio mixing is performed using floating point format. This
+// allows for a simpler and more consistent mixing, but it can be more CPU
+// intensive on some platforms. When not defined, the mixing is performed using
+// signed 16-bit integer format.
+#undef  TOFU_AUDIO_FLOATING_POINT_MIXING
+
 // The audio sub-system runs on a separate thread that processes any currently
 // active source, mixing them up, and generates the sound data for the audio
 // device. However, having the audio device always active can be undesirable,

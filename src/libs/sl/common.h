@@ -25,14 +25,32 @@
 #ifndef TOFU_LIBS_SL_COMMON_H
 #define TOFU_LIBS_SL_COMMON_H
 
+#include <core/config.h>
+#include <core/platform.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
+#define SL_FORMAT_SIGNED_16_BIT 0
+#define SL_FORMAT_FLOAT_32_BIT  1
+
+#if defined(TOFU_AUDIO_FLOATING_POINT_MIXING)
+    #define SL_FORMAT SL_FORMAT_FLOAT_32
+#else
+    #define SL_FORMAT SL_FORMAT_FLOAT_32_BIT
+#endif
+
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
 // panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many sound-cards
 // and converting from lower sample rates is simpler.
-#define SL_BYTES_PER_SAMPLE     2
+#if SL_FORMAT == SL_FORMAT_SIGNED_16_BIT
+    #define SL_BYTES_PER_SAMPLE     2
+#elif SL_FORMAT == SL_FORMAT_FLOAT_32_BIT
+    #define SL_BYTES_PER_SAMPLE     4
+#else
+    #error "unsupported SL_FORMAT"
+#endif
 #define SL_SAMPLES_PER_CHANNEL  1
 #define SL_CHANNELS_PER_FRAME   2
 #define SL_FRAMES_PER_SECOND    22050
