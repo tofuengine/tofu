@@ -26,10 +26,11 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
+#include <libs/imath.h>
 
 #include <stdint.h>
 
-// Add to the `accumulator` the `sample` scaled by `gain`.
+// Add to the `accumulator` the `sample` scaled by `gain` (sort of fused multiply-accumulate).
 //
 // Note that, due to scaling, the intermediate `sample * gain` value can exceed the sample maximum/minimum value.
 // We are clamping after the accumulation to save one operation.
@@ -37,28 +38,18 @@
 // Also note that we are safe using a `float`, over a (for example) fixed-point 24:8 value. We are not going to
 // loose resolution during the computation.
 #if SL_BYTES_PER_SAMPLE == 2
-static inline int16_t _accumulate_s16(int16_t accumulator, int16_t left_sample, float left_gain, int16_t right_sample, float right_gain)
+static inline void _accumulate_s16(int16_t *accumulator, int16_t left_sample, float left_gain, int16_t right_sample, float right_gain)
 {
-    const int32_t result = (int32_t)((float)accumulator + (float)left_sample * left_gain + (float)right_sample * right_gain);
-    if (result >= INT16_MAX) {
-        return INT16_MAX;
-    }
-    if (result <= INT16_MIN) {
-        return INT16_MIN;
-    }
-    return (int16_t)result;
+    const int32_t result = (int32_t)((float)*accumulator + (float)left_sample * left_gain + (float)right_sample * right_gain);
+    *accumulator = (int16_t)ICLAMP(result, INT16_MIN, INT16_MAX);
+    // FIXME: move the clipping to the end of the whole mix, not per sample, to save some CPU cycles.
+    // FIXME: does clipping makes sense at all? Maybe we can just let it overflow and wrap around, which is what happens in the real hardware.
 }
 #elif SL_BYTES_PER_SAMPLE == 4
-static inline float _accumulate_f32(float accumulator, float left_sample, float left_gain, float right_sample, float right_gain)
+static inline void _accumulate_f32(float *accumulator, float left_sample, float left_gain, float right_sample, float right_gain)
 {
-    const float result = accumulator + left_sample * left_gain + right_sample * right_gain;
-    if (result >= 1.0f) {
-        return 1.0f;
-    }
-    if (result <= -1.0f) {
-        return -1.0f;
-    }
-    return result;
+    const float result = *accumulator + left_sample * left_gain + right_sample * right_gain;
+    *accumulator = FCLAMP(result, -1.0f, 1.0f);
 }
 #endif
 
@@ -80,8 +71,8 @@ void mix_2on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
     for (size_t i = frames; i--; dptr += 2, sptr += 2) {
         const int16_t left = sptr[0];
         const int16_t right = sptr[1];
-        dptr[0] = _accumulate_s16(dptr[0], left, left_to_left, right, right_to_left);
-        dptr[1] = _accumulate_s16(dptr[1], left, left_to_right, right, right_to_right);
+        _accumulate_s16(dptr + 0, left, left_to_left, right, right_to_left);
+        _accumulate_s16(dptr + 1, left, left_to_right, right, right_to_right);
     }
 #elif SL_BYTES_PER_SAMPLE == 4
     const float *sptr = input;
@@ -89,8 +80,8 @@ void mix_2on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
     for (size_t i = frames; i--; dptr += 2, sptr += 2) {
         const float left = sptr[0];
         const float right = sptr[1];
-        dptr[0] = _accumulate_f32(dptr[0], left, left_to_left, right, right_to_left);
-        dptr[1] = _accumulate_f32(dptr[1], left, left_to_right, right, right_to_right);
+        _accumulate_f32(dptr + 0, left, left_to_left, right, right_to_left);
+        _accumulate_f32(dptr + 1, left, left_to_right, right, right_to_right);
     }
 #else
     #error "Wrong internal format"
@@ -110,8 +101,8 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
     for (size_t i = frames; i--; dptr += 2, sptr += 1) {
         const int16_t left = sptr[0];
         const int16_t right = sptr[0];
-        dptr[0] = _accumulate_s16(dptr[0], left, left_to_left, right, right_to_left);
-        dptr[1] = _accumulate_s16(dptr[1], left, left_to_right, right, right_to_right);
+        _accumulate_s16(dptr + 0, left, left_to_left, right, right_to_left);
+        _accumulate_s16(dptr + 1, left, left_to_right, right, right_to_right);
     }
 #elif SL_BYTES_PER_SAMPLE == 4
     const float *sptr = input;
@@ -119,8 +110,8 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, SL_Mix_t 
     for (size_t i = frames; i--; dptr += 2, sptr += 1) {
         const float left = sptr[0];
         const float right = sptr[0];
-        dptr[0] = _accumulate_f32(dptr[0], left, left_to_left, right, right_to_left);
-        dptr[1] = _accumulate_f32(dptr[1], left, left_to_right, right, right_to_right);
+        _accumulate_f32(dptr + 0, left, left_to_left, right, right_to_left);
+        _accumulate_f32(dptr + 1, left, left_to_right, right, right_to_right);
     }
 #else
     #error "Wrong internal format"
