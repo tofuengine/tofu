@@ -27,6 +27,7 @@
 #include "internal.h"
 #include "mix.h"
 
+#include <libs/fmath.h>
 #define _LOG_TAG "sl"
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -88,7 +89,8 @@ void SL_context_set_pan(SL_Context_t *context, size_t group_id, float pan)
 {
     SL_Group_t *group = &context->groups[group_id];
 
-    group->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+    float clamped_pan = FCLAMP(pan, -1.0f, 1.0f);
+    group->mix = mix_pan(clamped_pan);
     _fire_on_group_changed(context, group_id);
 }
 
@@ -96,7 +98,8 @@ void SL_context_set_balance(SL_Context_t *context, size_t group_id, float balanc
 {
     SL_Group_t *group = &context->groups[group_id];
 
-    group->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
+    float clamped_balance = FCLAMP(balance, -1.0f, 1.0f);
+    group->mix = mix_balance(clamped_balance);
     _fire_on_group_changed(context, group_id);
 }
 
@@ -104,7 +107,7 @@ void SL_context_set_gain(SL_Context_t *context, size_t group_id, float gain)
 {
     SL_Group_t *group = &context->groups[group_id];
 
-    group->gain = fmaxf(0.0f, gain);
+    group->gain = FMAX(0.0f, gain);
     _fire_on_group_changed(context, group_id);
 }
 

@@ -27,6 +27,7 @@
 #include "mix.h"
 
 #include <core/config.h>
+#include <libs/fmath.h>
 #define _LOG_TAG "sl-props"
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -173,33 +174,37 @@ void SL_props_set_mix(SL_Props_t *props, SL_Mix_t mix)
 
 void SL_props_set_pan(SL_Props_t *props, float pan)
 {
+    float clamped_pan = FCLAMP(pan, -1.0f, 1.0f);
     props->mix = props->channels == 1
-        ? mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)))
-        : mix_twin_pan(fmaxf(-1.0f, fminf(pan, 1.0f)), fmaxf(-1.0f, fminf(pan, 1.0f)));
+        ? mix_pan(clamped_pan)
+        : mix_twin_pan(clamped_pan, clamped_pan);
     _precompute(props);
 }
 
 void SL_props_set_twin_pan(SL_Props_t *props, float left_pan, float right_pan)
 {
-    props->mix = mix_twin_pan(fmaxf(-1.0f, fminf(left_pan, 1.0f)), fmaxf(-1.0f, fminf(right_pan, 1.0f)));
+    float clamped_left_pan = FCLAMP(left_pan, -1.0f, 1.0f);
+    float clamped_right_pan = FCLAMP(right_pan, -1.0f, 1.0f);
+    props->mix = mix_twin_pan(clamped_left_pan, clamped_right_pan);
     _precompute(props);
 }
 
 void SL_props_set_balance(SL_Props_t *props, float balance)
 {
-    props->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
+    float clamped_balance = FCLAMP(balance, -1.0f, 1.0f);
+    props->mix = mix_balance(clamped_balance);
     _precompute(props);
 }
 
 void SL_props_set_gain(SL_Props_t *props, float gain)
 {
-    props->gain = fmaxf(0.0f, gain);
+    props->gain = FMAX(0.0f, gain);
     _precompute(props);
 }
 
 void SL_props_set_speed(SL_Props_t *props, float speed)
 {
-    props->speed = fmaxf(_MIN_SPEED_VALUE, speed);
+    props->speed = FMAX(_MIN_SPEED_VALUE, speed);
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 
