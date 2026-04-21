@@ -78,7 +78,28 @@
 // allows for a simpler and more consistent mixing, but it can be more CPU
 // intensive on some platforms. When not defined, the mixing is performed using
 // signed 16-bit integer format.
+//
+// The suggested setting, for more accurate result, is to enable this macro and
+// disable `TOFU_AUDIO_CLAMP_DURING_MIXING`, to allow for some better overall
+// sample "blending" (where one sample could "correct" the other one, instead
+// of just clipping).
 #undef  TOFU_AUDIO_FLOATING_POINT_MIXING
+
+// We can choose to clamp the mixed sample during the mixing process, that is
+// for every sample that is accumulated/mixed.
+//
+// When not using floating point format, disabling this option will just let
+// the sample value to overflow and wrap around, which is what happens in the
+// real hardware.
+//
+// Otherwise, when using floating point format, disabling this option will just
+// let the audio backend to clip the samples during just before sending them to
+// the audio device, which is more efficient than clamping every sample during
+// the mixing process.
+//
+// The suggested setting is to disable this option, and if more accurate mixing
+// is desired, to enable `TOFU_AUDIO_FLOATING_POINT_MIXING` as well.
+#undef  TOFU_AUDIO_CLAMP_DURING_MIXING
 
 // The audio sub-system runs on a separate thread that processes any currently
 // active source, mixing them up, and generates the sound data for the audio

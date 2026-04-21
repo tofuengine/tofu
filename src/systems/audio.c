@@ -200,6 +200,11 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     device_config.notificationCallback      = _notification_callback;
     device_config.pUserData                 = (void *)audio;
     device_config.noPreSilencedOutputBuffer = MA_FALSE; // We require pre-silenced buffers as we mix incrementally.
+#if defined(TOFU_AUDIO_CLAMP_DURING_MIXING)
+    device_config.noClip                    = MA_TRUE; // Disable miniaudio's internal clipping, we will handle it ourselves during mixing.
+#else
+    device_config.noClip                    = MA_FALSE;
+#endif
 
     result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {

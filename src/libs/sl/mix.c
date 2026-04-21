@@ -33,23 +33,35 @@
 // Add to the `accumulator` the `sample` scaled by `gain` (sort of fused multiply-accumulate).
 //
 // Note that, due to scaling, the intermediate `sample * gain` value can exceed the sample maximum/minimum value.
-// We are clamping after the accumulation to save one operation.
+// We can clamp it after the accumulation to save one operation, but in the long run we will get distortion due to
+// the clipping.
 //
-// Also note that we are safe using a `float`, over a (for example) fixed-point 24:8 value. We are not going to
-// loose resolution during the computation.
+// Unless we are using an intermediate "larger" format (for example, using a 32-bit integer accumulator for 16-bit
+// samples), the signal will be distorted anyway, so we can just let it overflow and wrap around, which is what happens
+// in the real hardware.
+//
+// The safest option is to use `float`, over a (for example) fixed-point 24:8 value. We are not going to
+// loose resolution during the computation and we can just clamp the final result to the [-1.0f, 1.0f] range,
+// effectively clipping.
 #if SL_BYTES_PER_SAMPLE == 2
 static inline void _accumulate_s16(int16_t *accumulator, int16_t left_sample, float left_gain, int16_t right_sample, float right_gain)
 {
     const int32_t result = (int32_t)((float)*accumulator + (float)left_sample * left_gain + (float)right_sample * right_gain);
+#if defined(TOFU_AUDIO_CLAMP_DURING_MIXING)
     *accumulator = (int16_t)ICLAMP(result, INT16_MIN, INT16_MAX);
-    // FIXME: move the clipping to the end of the whole mix, not per sample, to save some CPU cycles.
-    // FIXME: does clipping makes sense at all? Maybe we can just let it overflow and wrap around, which is what happens in the real hardware.
+#else
+    *accumulator = (int16_t)result;
+#endif
 }
 #elif SL_BYTES_PER_SAMPLE == 4
 static inline void _accumulate_f32(float *accumulator, float left_sample, float left_gain, float right_sample, float right_gain)
 {
     const float result = *accumulator + left_sample * left_gain + right_sample * right_gain;
+#if defined(TOFU_AUDIO_CLAMP_DURING_MIXING)
     *accumulator = FCLAMP(result, -1.0f, 1.0f);
+#else
+    *accumulator = result;
+#endif
 }
 #endif
 
