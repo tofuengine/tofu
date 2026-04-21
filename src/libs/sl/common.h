@@ -36,9 +36,9 @@
 #define SL_FORMAT_FLOAT_32_BIT  1
 
 #if defined(TOFU_AUDIO_FLOATING_POINT_MIXING)
-    #define SL_FORMAT SL_FORMAT_FLOAT_32
-#else
     #define SL_FORMAT SL_FORMAT_FLOAT_32_BIT
+#else
+    #define SL_FORMAT SL_FORMAT_SIGNED_16_BIT
 #endif
 
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
