@@ -291,8 +291,8 @@ static inline Input_Controller_Stick_t _controller_stick(float x, float y, float
         return (Input_Controller_Stick_t){ .x = 0.0f, .y = 0.0f, .angle = 0.0f, .magnitude = 0.0f };
     } else { // Rescale to ensure [0, 1] range. Response curve is left to the final user.
         const float angle = atan2f(y, x);
-        const float normalized_magnitude = fminf(1.0f, (magnitude - deadzone) / range);
-        const float scale = normalized_magnitude / magnitude;
+        const float normalized_magnitude = (magnitude - deadzone) / range;
+        const float scale = FMIN(1.0f, normalized_magnitude) / magnitude;
         return (Input_Controller_Stick_t){ .x = x * scale, .y = y * scale, .angle = angle, .magnitude = normalized_magnitude };
     }
 }
@@ -302,7 +302,8 @@ static inline float _controller_trigger(float magnitude, float deadzone, float r
     if (magnitude < deadzone) {
         return 0.0f;
     } else {
-        return fminf(1.0f, (magnitude - deadzone) / range);
+        const float normalized_magnitude = (magnitude - deadzone) / range;
+        return FMIN(1.0f, normalized_magnitude);
     }
 }
 
