@@ -63,6 +63,13 @@ local FOREGROUND_INDEX <const> = 1
 
 local Panic <const> = Class.define()
 
+-- local function _compute_lines(message, lines)
+--   for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
+--     table.insert(lines, str)
+--   end
+--   return lines
+-- end
+
 function Panic:__ctor(message)
   local errors <const> = {}
   for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
