@@ -43,6 +43,8 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include "color.h"
+
 GL_Processor_t *GL_processor_create(void)
 {
     GL_Processor_t *processor = malloc(sizeof(GL_Processor_t));
@@ -142,10 +144,6 @@ static void _surface_to_pixels(const GL_Processor_State_t *state, const GL_Surfa
     const GL_Color_t *palette = state->palette;
     const GL_Pixel_t *shifting = state->shifting;
 
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    const int count = processor->palette->size;
-#endif
-
     const size_t data_size = surface->data_size;
 
     const GL_Pixel_t *src = surface->data;
@@ -155,9 +153,9 @@ static void _surface_to_pixels(const GL_Processor_State_t *state, const GL_Surfa
         const GL_Pixel_t index = shifting[*(src++)];
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
         GL_Color_t color;
-        if (index >= count) {
+        if (index >= GL_PALETTE_MAX_COLORS) {
             const int y = (index - 240) * 8;
-            color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+            color = gl_color_from_rgb( 0, 63 + y, 0 );
         } else {
             color = palette[index];
         }
@@ -178,9 +176,6 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
     memcpy(shifting, state->shifting, sizeof(GL_Pixel_t) * GL_PROCESSOR_MAX_COLORS);
 
     size_t wait_index = 0;
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    const int count = processor->palette->size;
-#endif
     int src_modulo = 0;
     size_t dst_offset = 0; // Always in the range `[0, width)`.
 
@@ -279,9 +274,9 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
             const GL_Pixel_t index = shifting[*(src++)];
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             GL_Color_t color;
-            if (index >= count) {
+            if (index >= GL_PALETTE_MAX_COLORS) {
                 const int v = (index - 240) * 8;
-                color = (GL_Color_t){ 0, 63 + v, 0, 255 };
+                color = gl_color_from_rgb(0, 63 + v, 0);
             } else {
                 color = palette[index];
             }
