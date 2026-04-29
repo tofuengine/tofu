@@ -104,7 +104,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [GLFW](https://www.glfw.org/) v3.4.0
 * [libxmp](https://xmp.sourceforge.net/) v4.6.3
 * [Lua](https://lua.org/) v5.5.0
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.24
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.25
 * [miniz](https://github.com/richgel999/miniz) v3.0.2
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
