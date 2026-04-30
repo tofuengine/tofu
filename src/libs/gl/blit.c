@@ -425,7 +425,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
         dptr += dskip;
     }
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    _pixel(surface, dx, dy, 7);
+    _pixel(surface, dx, dy, 11); // !!! WARNING !!! Unclipped position, might be outside the drawing region! Could SEGV!
     _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);
