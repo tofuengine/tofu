@@ -605,6 +605,11 @@ lissajous: engine
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/lissajous
 	@$(builddir)/$(TARGET) --data=./demos/lissajous
 
+bench: engine
+	@echo "Launching *rotobench* application!"
+	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/rotobench
+	@$(builddir)/$(TARGET) --data=./demos/rotobench
+
 demo: engine
 	@echo "Launching *$(DEMO)* application!"
 	@$(LUACHECK) $(LUACHECKFLAGS) ./demos/$(DEMO)
