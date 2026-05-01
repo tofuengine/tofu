@@ -52,25 +52,30 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local SPRITE_WIDTH <const> = 16
 local SPRITE_HEIGHT <const> = 16
 
+local SCALE <const> = 2.0
+
+local STEP_X <const> = SPRITE_WIDTH * SCALE
+local STEP_Y <const> = SPRITE_HEIGHT * SCALE
+
 local Main = Class.define()
 
 function Main:__ctor()
   self.bank = Bank.from_image("assets/sprites.img", SPRITE_WIDTH, SPRITE_HEIGHT)
 
+  local rotation = 0
+
   self.sprites = {}
-  for i = 0, WIDTH, SPRITE_WIDTH do
-    for j = 0, HEIGHT, SPRITE_HEIGHT do
+  for i = 0, WIDTH, STEP_X do
+    for j = 0, HEIGHT, STEP_Y do
       table.insert(self.sprites, {
           x = i, y = j,
-          anchor = 0.5,
-          anchor_speed = 0.0,
-          rotation = 128,
-          rotation_speed = 0.0,
-          scale = 2.0,
-          scale_speed = 0.0,
+          pivot = 0.5,
+          rotation = rotation,
+          scale = SCALE,
           flip_x = false,
           flip_y = false
         })
+      rotation = rotation + 64
     end
   end
 end
@@ -84,9 +89,6 @@ function Main:deinit()
 end
 
 function Main:update(_)
-  -- self.scale = math.max(0, self.scale + self.scale_speed * delta_time)
-  -- self.rotation = self.rotation + self.rotation_speed * delta_time
-  -- self.anchor = math.min(1.0, math.max(0.0, self.anchor + self.anchor_speed * delta_time))
 end
 
 function Main:render(canvas, _)
@@ -98,7 +100,7 @@ function Main:render(canvas, _)
       sprite.flip_x and -sprite.scale or sprite.scale,
       sprite.flip_y and -sprite.scale or sprite.scale,
       sprite.rotation,
-      self.anchor, self.anchor)
+      sprite.pivot, sprite.pivot)
   end
 
   canvas:push()
