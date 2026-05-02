@@ -335,12 +335,6 @@
 // If not defined, the default palette will be a greyscale gradient.
 #undef  TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED
 
-// Enables an optimization for the software rotation algorithm, and only the
-// pixels inside the "circle area" of the rotation are backward-mapped. This
-// will preventively save some pixels from rotations, typically giving faster
-// performances.
-#define TOFU_GRAPHICS_OPTIMIZED_ROTATIONS
-
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:

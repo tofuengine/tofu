@@ -264,6 +264,38 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
 #endif
 }
 
+static inline void _rotate_point_around_pivot_with_offset(GL_PointF_t *point,
+                                                          float pivot_x, float pivot_y,
+                                                          float offset_x, float offset_y,
+                                                          float M[4])
+{
+    float px = point->x - pivot_x;
+    float py = point->y - pivot_y;
+
+    point->x = px * M[0] + py * M[1] + offset_x;
+    point->y = px * M[2] + py * M[3] + offset_y;
+}
+
+static inline void _rotate_point(GL_PointF_t *point,
+                                 float M[4])
+{
+    float px = point->x;
+    float py = point->y;
+
+    point->x = px * M[0] + py * M[1];
+    point->y = px * M[2] + py * M[3];
+}
+
+static inline float _fminf4(float a, float b, float c, float d)
+{
+    return fminf(fminf(a, b), fminf(c, d));
+}
+
+static inline float _fmaxf4(float a, float b, float c, float d)
+{
+    return fmaxf(fmaxf(a, b), fmaxf(c, d));
+}
+
 void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_Surface_t *surface = context->surface;
@@ -274,21 +306,22 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
-    const float dw = sw * FABS(scale_x);
-    const float dh = sh * FABS(scale_y);
+    const float dw = (float)ITRUNC(sw * FABS(scale_x)); // Match `GL_context_blit_s()`.
+    const float dh = (float)ITRUNC(sh * FABS(scale_y));
 
-    const float sax = (sw - 1.0f) * anchor_x; // Anchor points, relative to the source and destination areas.
-    const float say = (sh - 1.0f) * anchor_y;
-    const float dax = (dw - 1.0f) * anchor_x;
-    const float day = (dh - 1.0f) * anchor_y;
+    if ((dw <= 0.0f) || (dh <= 0.0f)) {
+        return;
+    }
 
-    const float sx = (float)area.x + sax; // Total translation, anchor offset *and* source area origin.
-    const float sy = (float)area.y + say;
+    const float sx = (float)area.x;
+    const float sy = (float)area.y;
     const float dx = (float)position.x;
     const float dy = (float)position.y;
 
-    float s, c;
-    fsincos(rotation, &s, &c);
+    //const float sax = sx + sw * anchor_x; // Anchor points in destination edge-space.
+    //const float say = sy + sh * anchor_y;
+    const float dax = dx + dw * anchor_x;
+    const float day = dy + dh * anchor_y;
 
     // The counter-clockwise 2D rotation matrix is
     //
@@ -303,41 +336,49 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     //  R = |        |
     //      | -s   c |
 
-    // Precompute the "target disc": where we must draw pixels of the rotated sprite (relative to (x, y)).
-    // The radius of the disc is the distance between the anchor point and the farthest corner of the
-    // sprite rectangle, i.e. the magnitude of a vector with
-    //   - the biggest horizontal distance between anchor point and rectangle left or right (as width), and
-    //   - the biggest vertical distance between anchor point and rectangle top or bottom (as height).
-    // If the anchor point is a corner, it is the full diagonal length.
+    float s, c;
+    fsincos(rotation, &s, &c);
 
-    // Measure distance between anchor and edge pixel center, so anchor vs 0.5 (start) or sw - 0.5 (end)
-    // Note that in the operations below, we work "inside" pixels as much as possible (offset 0.5 from top-left corner)
-    const float delta_x = fmaxf(dax, dw - dax) - 0.5f;
-    const float delta_y = fmaxf(day, dh - day) - 0.5f;
-    const float radius_squared = delta_x * delta_x + delta_y * delta_y;
-    const float radius = ceilf(sqrtf(radius_squared)); // Ensure room for every pixel.
+    // Forward transformation matrix, used to rotate the destination rectangle
+    // corners and calculate the bounding box of the drawing region.
+    float M[4] = {
+            c, -s,
+            s,  c
+        };
 
-    const float aabb_x0 = -radius; // The rotation AABB is a tad exaggerated, we'll optimize the scan by using the (squared) radius.
-    const float aabb_y0 = -radius;
-    const float aabb_x1 = radius;
-    const float aabb_y1 = radius;
+    // Inverse transformation matrix, used to backward-map the destination pixel
+    // to the source one. We combine inverse rotation, scaling, and flip
+    // (TRSF -> FSRT).
+    //
+    // | fx  0 | | 1/sx    0 | |  c s |
+    // |       | |           | |      | NOTE: flip sign is included in the `scale_*` value!
+    // |  0 fy | |    0 1/sy | | -s c |
+    float IMS[4] = {
+            c / scale_x, s / scale_x,
+            -s / scale_y, c / scale_y
+        };
 
-    float skip_x = aabb_x0; // Offset into the target surface/texture, updated during clipping.
-    float skip_y = aabb_y0;
+    GL_PointF_t p0 = { .x = dx,      .y = dy };
+    GL_PointF_t p1 = { .x = dx + dw, .y = dy };
+    GL_PointF_t p2 = { .x = dx + dw, .y = dy + dh };
+    GL_PointF_t p3 = { .x = dx,      .y = dy + dh };
+
+    _rotate_point_around_pivot_with_offset(&p0, dax, day, dax, day, M);
+    _rotate_point_around_pivot_with_offset(&p1, dax, day, dax, day, M);
+    _rotate_point_around_pivot_with_offset(&p2, dax, day, dax, day, M);
+    _rotate_point_around_pivot_with_offset(&p3, dax, day, dax, day, M);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = ICEILF(aabb_x0 + dx), // To include every fractionally occupied pixel.
-            .y0 = ICEILF(aabb_y0 + dy),
-            .x1 = ICEILF(aabb_x1 + dx) + 1,
-            .y1 = ICEILF(aabb_y1 + dy) + 1
+            .x0 = IFLOORF(_fminf4(p0.x, p1.x, p2.x, p3.x)),
+            .y0 = IFLOORF(_fminf4(p0.y, p1.y, p2.y, p3.y)),
+            .x1 = ICEILF(_fmaxf4(p0.x, p1.x, p2.x, p3.x)),
+            .y1 = ICEILF(_fmaxf4(p0.y, p1.y, p2.y, p3.y))
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x += (float)(clipping_region->x0 - drawing_region.x0); // Add clipped part, we'll skip it.
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y += (float)(clipping_region->y0 - drawing_region.y0); // Ditto.
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -353,15 +394,31 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
         return;
     }
 
-    const int sminx = area.x;
-    const int sminy = area.y;
-    const int smaxx = sminx + (int)area.width;
-    const int smaxy = sminy + (int)area.height;
+    // The source pivot offset is calculated from the top/left or bottom/right corner,
+    // according to the flipping (negative scaling). The source anchor point delta is
+    // calculated from the destination values so it takes into account for the
+    // flip as well (i.e. we are scanning top/left to bottom/right, or vice versa).
+    const float sax = (scale_x < 0.0f ? sx + sw : sx) + (dax - dx) / scale_x;
+    const float say = (scale_y < 0.0f ? sy + sh : sy) + (day - dy) / scale_y;
 
-    const float M11 = c / scale_x;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling *and* flip (TRSF -> FSRT).
-    const float M12 = s / scale_x;  // | fx  0 | | 1/sx    0 | |  c s |
-    const float M21 = -s / scale_y; // |       | |           | |      | NOTE: flip sign is already fused in the scale factor!
-    const float M22 = c / scale_y;  // |  0 fy | |    0 1/sy | | -s c |
+    // When calculating the source origin, the pivot is still in destination space,
+    // as the rotation is applied to the drawing rectangle top/left corner.
+    GL_PointF_t source_origin = (GL_PointF_t){
+            .x = (float)drawing_region.x0 + 0.5f,
+            .y = (float)drawing_region.y0 + 0.5f
+        };
+    GL_PointF_t row_dx = (GL_PointF_t){
+            .x = 1.0f,
+            .y = 0.0f
+        };
+    GL_PointF_t row_dy = (GL_PointF_t){
+            .x = 0.0f,
+            .y = 1.0f
+        };
+
+    _rotate_point_around_pivot_with_offset(&source_origin, dax, day, sax, say, IMS);
+    _rotate_point(&row_dx, IMS);
+    _rotate_point(&row_dy, IMS);
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
@@ -373,65 +430,61 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
+    const int sminx = area.x; // This is the boundary of the source area, used to check if the backward-mapped pixel is out of bounds.
+    const int sminy = area.y;
+    const int smaxx = sminx + (int)area.width;
+    const int smaxy = sminy + (int)area.height;
+
+    float row_u = source_origin.x;
+    float row_v = source_origin.y;
+
     for (int i = 0; i < height; ++i) {
-        const float ov = skip_y + (float)i; // + 0.5f;
-#if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
-        const float ov_squared = ov * ov;
-#endif
+        float u = row_u;
+        float v = row_v;
 
         for (int j = 0; j < width; ++j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif
-            const float ou = skip_x + (float)j; // + 0.5f;
-#if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
-            const float ou_squared = ou * ou;
-            const float distance_squared = ov_squared + ou_squared;
-            if (distance_squared <= radius_squared) {
-#endif
+            int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+            int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
+
+            if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-                _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 11);
+                _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
-
-                const float u = (ou * M11 + ov * M12) + sx + 0.5f; // Important: offset half a pixel to center the source texture!
-                const float v = (ou * M21 + ov * M22) + sy + 0.5f; // (see variables initialization why we are using sx/sx solely)
-
-                int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-                int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
-
-                if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-                    _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
-#endif
-                    const GL_Pixel_t *sptr = sdata + y * swidth + x;
+                const GL_Pixel_t *sptr = sdata + y * swidth + x;
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
-                    const GL_Pixel_t pixel = *sptr;
-                    const uint8_t mapped = state_map[pixel];
-                    const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
-                    const GL_Pixel_t draw = 1 - skip;
-                    const GL_Pixel_t mask = (GL_Pixel_t)-draw;
-                    const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
-                    const GL_Pixel_t dindex = *dptr;
-                    *dptr = _BLIT_BLEND(dindex, sindex, mask);
+                const GL_Pixel_t pixel = *sptr;
+                const uint8_t mapped = state_map[pixel];
+                const GL_Pixel_t skip = GL_PALETTE_IS_TRANSPARENT(mapped);
+                const GL_Pixel_t draw = 1 - skip;
+                const GL_Pixel_t mask = (GL_Pixel_t)-draw;
+                const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                const GL_Pixel_t dindex = *dptr;
+                *dptr = _BLIT_BLEND(dindex, sindex, mask);
 #else
-                    uint8_t mapped = state_map[*sptr];
-                    if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                        *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
-                    }
-#endif
+                uint8_t mapped = state_map[*sptr];
+                if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                    *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                 }
-#if defined(TOFU_GRAPHICS_OPTIMIZED_ROTATIONS)
-            }
 #endif
+            }
 
             ++dptr;
+
+            u += row_dx.x; // Move to the next pixel in the row, according to the rotation and scaling.
+            v += row_dx.y;
         }
 
         dptr += dskip;
+
+        row_u += row_dy.x; // Shift the row vertically (scaling is included in the `row_d*` values).
+        row_v += row_dy.y;
     }
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    _pixel(surface, dx, dy, 11); // !!! WARNING !!! Unclipped position, might be outside the drawing region! Could SEGV!
+    _pixel(surface, position.x, position.y, 11); // !!! WARNING !!! Unclipped draw! Might be cause a SEGV!
     _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);

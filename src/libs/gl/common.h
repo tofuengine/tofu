@@ -109,20 +109,38 @@ typedef struct GL_Point_s {
     int x, y;
 } GL_Point_t;
 
+typedef struct GL_PointF_s {
+    float x, y;
+} GL_PointF_t;
+
 typedef struct GL_Size_s {
     size_t width, height;
 } GL_Size_t;
+
+typedef struct GL_SizeF_s {
+    float width, height;
+} GL_SizeF_t;
 
 typedef struct GL_Rectangle_s {
     int x, y;
     size_t width, height;
 } GL_Rectangle_t;
 
+typedef struct GL_RectangleF_s {
+    float x, y;
+    float width, height;
+} GL_RectangleF_t;
+
 typedef struct GL_Quad_s {
     int x0, y0; // FIXME: rename to left, top, right, and bottom.
     int x1, y1;
     // TODO: optimize by adding `width` and `height` fields?
 } GL_Quad_t;
+
+typedef struct GL_QuadF_s {
+    float x0, y0;
+    float x1, y1;
+} GL_QuadF_t;
 
 #if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
 #pragma pack(push, 1)
