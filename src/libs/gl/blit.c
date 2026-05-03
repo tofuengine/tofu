@@ -155,17 +155,23 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
     const uint8_t *state_map = state->palette_state.map;
     const uint8_t bank_mask = state->palette_bank;
 
-    const size_t drawing_width = (size_t)ITRUNC(area.width * fabsf(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
-    const size_t drawing_height = (size_t)ITRUNC(area.height * fabsf(scale_y));
+    const int dx = position.x; // Offset into the (destination) surface, updated during clipping.
+    const int dy = position.y;
+    const int dw = (int)ITRUNC(area.width * FABS(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
+    const int dh = (int)ITRUNC(area.height * FABS(scale_y));
+
+    if (dw <= 0 || dh <= 0) { // Nothing to draw! Bail out!
+        return;
+    }
 
     float skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
     float skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = position.x,
-            .y0 = position.y,
-            .x1 = position.x + (int)drawing_width,
-            .y1 = position.y + (int)drawing_height,
+            .x0 = dx,
+            .y0 = dy,
+            .x1 = dx + dw,
+            .y1 = dy + dh,
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
