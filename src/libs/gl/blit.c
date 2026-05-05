@@ -315,13 +315,11 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
     const float sx = (float)area.x;
     const float sy = (float)area.y;
-    const float dx = (float)position.x;
-    const float dy = (float)position.y;
+    const float dx = (float)position.x + 0.5f; // Half-pixel aligned rotation, that's the pivot point indeed!
+    const float dy = (float)position.y + 0.5f;
 
-    //const float sax = sx + sw * anchor_x; // Anchor points in destination edge-space.
-    //const float say = sy + sh * anchor_y;
-    const float dax = dx + dw * anchor_x;
-    const float day = dy + dh * anchor_y;
+    const float dax = dw * anchor_x;
+    const float day = dh * anchor_y;
 
     // The counter-clockwise 2D rotation matrix is
     //
@@ -358,15 +356,17 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             -s / scale_y, c / scale_y
         };
 
-    GL_PointF_t p0 = { .x = dx,      .y = dy };
-    GL_PointF_t p1 = { .x = dx + dw, .y = dy };
-    GL_PointF_t p2 = { .x = dx + dw, .y = dy + dh };
-    GL_PointF_t p3 = { .x = dx,      .y = dy + dh };
+    const float oax = dx - dax; // Offset of the rotation anchor point in destination space.
+    const float oay = dy - day;
+    GL_PointF_t p0 = { .x = oax,      .y = oay };
+    GL_PointF_t p1 = { .x = oax + dw, .y = oay };
+    GL_PointF_t p2 = { .x = oax + dw, .y = oay + dh };
+    GL_PointF_t p3 = { .x = oax,      .y = oay + dh };
 
-    _rotate_point_around_pivot_with_offset(&p0, dax, day, dax, day, M);
-    _rotate_point_around_pivot_with_offset(&p1, dax, day, dax, day, M);
-    _rotate_point_around_pivot_with_offset(&p2, dax, day, dax, day, M);
-    _rotate_point_around_pivot_with_offset(&p3, dax, day, dax, day, M);
+    _rotate_point_around_pivot_with_offset(&p0, dx, dy, dx, dy, M);
+    _rotate_point_around_pivot_with_offset(&p1, dx, dy, dx, dy, M);
+    _rotate_point_around_pivot_with_offset(&p2, dx, dy, dx, dy, M);
+    _rotate_point_around_pivot_with_offset(&p3, dx, dy, dx, dy, M);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = IFLOORF(_fminf4(p0.x, p1.x, p2.x, p3.x)),
@@ -398,8 +398,8 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     // according to the flipping (negative scaling). The source anchor point delta is
     // calculated from the destination values so it takes into account for the
     // flip as well (i.e. we are scanning top/left to bottom/right, or vice versa).
-    const float sax = (scale_x < 0.0f ? sx + sw : sx) + (dax - dx) / scale_x;
-    const float say = (scale_y < 0.0f ? sy + sh : sy) + (day - dy) / scale_y;
+    const float spx = (scale_x < 0.0f ? sx + sw : sx) + dax / scale_x;
+    const float spy = (scale_y < 0.0f ? sy + sh : sy) + day / scale_y;
 
     // When calculating the source origin, the pivot is still in destination space,
     // as the rotation is applied to the drawing rectangle top/left corner.
@@ -416,7 +416,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             .y = 1.0f
         };
 
-    _rotate_point_around_pivot_with_offset(&source_origin, dax, day, sax, say, IMS);
+    _rotate_point_around_pivot_with_offset(&source_origin, dx, dy, spx, spy, IMS);
     _rotate_point(&row_dx, IMS);
     _rotate_point(&row_dy, IMS);
 
