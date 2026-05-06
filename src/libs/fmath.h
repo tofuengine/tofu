@@ -66,8 +66,9 @@
 #define FMIN(a, b)          ((a) < (b) ? (a) : (b))
 #define FMAX(a, b)          ((a) > (b) ? (a) : (b))
 
-//#define FSIGNUM(x)          ((x) > 0.0f ? 1 : ((x) < 0.0f ? -1 : 0))
+// Iverson bracket notation for signum function. The result is -1, 0, or 1 depending on the sign of x.
 #define FSIGNUM(x)          (((x) > 0.0f) - ((x) < 0.0f))
+//#define FSIGNUM(x)          ((x) > 0.0f ? 1 : ((x) < 0.0f ? -1 : 0))
 
 // Arguments order matches Khronos' one.
 // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/clamp.xhtml
