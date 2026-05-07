@@ -318,6 +318,10 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const float dx = (float)position.x + 0.5f; // Half-pixel aligned rotation, that's the pivot point indeed!
     const float dy = (float)position.y + 0.5f;
 
+#if !defined(TOFU_GRAPHICS_BRANCHLESS_ROTATIONS)
+    const float sax = sw * anchor_x; // Anchor points in source/destination edge-space.
+    const float say = sh * anchor_y;
+#endif
     const float dax = dw * anchor_x;
     const float day = dh * anchor_y;
 
@@ -398,8 +402,13 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     // according to the flipping (negative scaling). The source anchor point delta is
     // calculated from the destination values so it takes into account for the
     // flip as well (i.e. we are scanning top/left to bottom/right, or vice versa).
+#if defined(TOFU_GRAPHICS_BRANCHLESS_ROTATIONS)
     const float spx = (scale_x < 0.0f ? sx + sw : sx) + dax / scale_x;
     const float spy = (scale_y < 0.0f ? sy + sh : sy) + day / scale_y;
+#else
+    const float spx = (scale_x < 0.0f ? sx + sw : sx) + sax * FSIGNUM(scale_x);
+    const float spy = (scale_y < 0.0f ? sy + sh : sy) + say * FSIGNUM(scale_y);
+#endif
 
     // When calculating the source origin, the pivot is still in destination space,
     // as the rotation is applied to the drawing rectangle top/left corner.

@@ -335,6 +335,11 @@
 // If not defined, the default palette will be a greyscale gradient.
 #undef  TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED
 
+// Enables the use of branchless rotations in the blitting process. The code
+// is more efficient but it can be less accurate in some cases, especially when
+// the scale is close to zero.
+#undef  TOFU_GRAPHICS_BRANCHLESS_ROTATIONS
+
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:
