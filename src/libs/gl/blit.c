@@ -286,6 +286,18 @@ static inline void _rotate_point(GL_PointF_t *point,
     point->y = px * M[2] + py * M[3];
 }
 
+#if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
+static inline float _fminf4(float a, float b, float c, float d)
+{
+    return fminf(fminf(a, b), fminf(c, d));
+}
+
+static inline float _fmaxf4(float a, float b, float c, float d)
+{
+    return fmaxf(fmaxf(a, b), fmaxf(c, d));
+}
+#endif
+
 void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_Surface_t *surface = context->surface;
@@ -331,6 +343,15 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     float s, c;
     fsincos(rotation, &s, &c);
 
+#if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
+    // Forward transformation matrix, used to rotate the destination rectangle
+    // corners and calculate the bounding box of the drawing region.
+    float M[4] = {
+            c, -s,
+            s,  c
+        };
+#endif
+
     // Inverse transformation matrix, used to backward-map the destination pixel
     // to the source one. We combine inverse rotation, scaling, and flip
     // (TRSF -> FSRT).
@@ -343,6 +364,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             -s / scale_y, c / scale_y
         };
 
+#if defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
     const float abs_s = FABS(s);
     const float abs_c = FABS(c);
 
@@ -362,6 +384,26 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             .x1 = ICEILF(rcx + rhx),
             .y1 = ICEILF(rcy + rhy)
         };
+#else
+    const float oax = dx - dax; // Offset of the rotation anchor point in destination space.
+    const float oay = dy - day;
+    GL_PointF_t p0 = { .x = oax,      .y = oay };
+    GL_PointF_t p1 = { .x = oax + dw, .y = oay };
+    GL_PointF_t p2 = { .x = oax + dw, .y = oay + dh };
+    GL_PointF_t p3 = { .x = oax,      .y = oay + dh };
+
+    _rotate_point_around_pivot_with_offset(&p0, dx, dy, dx, dy, M);
+    _rotate_point_around_pivot_with_offset(&p1, dx, dy, dx, dy, M);
+    _rotate_point_around_pivot_with_offset(&p2, dx, dy, dx, dy, M);
+    _rotate_point_around_pivot_with_offset(&p3, dx, dy, dx, dy, M);
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = IFLOORF(_fminf4(p0.x, p1.x, p2.x, p3.x)),
+            .y0 = IFLOORF(_fminf4(p0.y, p1.y, p2.y, p3.y)),
+            .x1 = ICEILF(_fmaxf4(p0.x, p1.x, p2.x, p3.x)),
+            .y1 = ICEILF(_fmaxf4(p0.y, p1.y, p2.y, p3.y))
+        };
+#endif
 
     if (drawing_region.x0 < clipping_region->x0) {
         drawing_region.x0 = clipping_region->x0;
