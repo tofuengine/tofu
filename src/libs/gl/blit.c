@@ -365,17 +365,41 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
         };
 
 #if defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
+    // If we consider a centered AABB with half-size vector (or half-extent)
+    // `<hx, hy>`, then every point of the rectangle can be represented with
+    // the following linear combination:
+    //
+    //   p = a * <1, 0> + b * <0, 1>
+    //
+    // where `a` and `b` are in the range `[-hx, hx]` and `[-hy, hy]`,
+    // respectively. When we apply the rotation to the point `p`, we can
+    // rewrite the formula as
+    //
+    //   p' = a * <c, s> + b * <-s, c>
+    //
+    // or, for each component
+    //
+    //   p'_x = a * c - b * s
+    //   p'_y = a * s + b * c
+    //
+    // The largest possible values for `p'_x` and `p'_y` are obtained when both
+    // terms contributes in the same direction. Since `a` and `b` are in the
+    // range `[-hx, hx]` and `[-hy, hy]`, respectively, we can rewrite the formula as
+    //
+    //   p'_x = hx * abs(c) + hy * abs(s)
+    //   p'_y = hx * abs(s) + hy * abs(c)
     const float abs_s = FABS(s);
     const float abs_c = FABS(c);
 
-    const float hx = dw * 0.5f; // Half-size of the destination rectangle, but also half-size vector
+    const float hx = dw * 0.5f; // Half-extent size of the destination rectangle
     const float hy = dh * 0.5f;
-    const float cx = hx - dax; // Coordinates of the AABB center, relative to the pivot point.
-    const float cy = hy - day;
 
-    const float rcx = dx + cx * c - cy * s;
+    const float cx = hx - dax; // Compute the coordinates of the AABB center, relative to the pivot point.
+    const float cy = hy - day;
+    const float rcx = dx + cx * c - cy * s; // Rotate the center (around the pivot point) and get the coordinates in destination space.
     const float rcy = dy + cx * s + cy * c;
-    const float rhx = hx * abs_c + hy * abs_s; // Rotate the half-size vector and take the absolute value to get the AABB half-size.
+
+    const float rhx = hx * abs_c + hy * abs_s;
     const float rhy = hx * abs_s + hy * abs_c;
 
     GL_Quad_t drawing_region = {
@@ -470,6 +494,19 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const int smaxx = sminx + (int)area.width;
     const int smaxy = sminy + (int)area.height;
 
+    // We scan the destination area and calculate the source pixel with an
+    // incremental backward-mapping. This is basically very similar to texture
+    // mapping.
+    //
+    // The source-space row vector `row_dx` and column vector `row_dy`
+    // are calculated by applying the inverse transformation to the unit vectors
+    // in destination space. The source origin is calculated by applying the
+    // inverse transformation to the top/left corner of the drawing region, with
+    // an offset to the rotation anchor point in source space (so we can rotate
+    // around it).
+    //
+    // Then we just need to incrementally add the row/column vectors
+    // to move across the area.
     float row_u = source_origin.x;
     float row_v = source_origin.y;
 
@@ -519,7 +556,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
         row_v += row_dy.y;
     }
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    _pixel(surface, position.x, position.y, 11); // !!! WARNING !!! Unclipped draw! Might be cause a SEGV!
+    _pixel(surface, position.x, position.y, 11); // !!! WARNING !!! Unclipped draw! Might cause a SEGV!
     _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);

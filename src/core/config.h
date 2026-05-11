@@ -341,11 +341,8 @@
 #undef  TOFU_GRAPHICS_BRANCHLESS_ROTATIONS
 
 // We can optimize the rotated AABB calculation by avoiding rotating all the
-// corners of the rectangle, and just rotating the center of the rectangle (with
-// respect to the pivot). The other corners can be obtained by just adding the
-// half width and height to the rotated center (i.e. the rotated center is the
-// midpoint between the corners, so the half-size vector can be added to it to
-// get the corners).
+// corners of the rectangle, and just calculating the rotated half-extent. This
+// will save half of the rotation calculations.
 #define TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS
 
 // Controls the algorithm used to match similar colors during the image indexing
