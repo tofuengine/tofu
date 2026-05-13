@@ -35,13 +35,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local Math = require("tofu.core.math")
-local Oscillator = require("tofu.generators.oscillator")
-local Tweener = require("tofu.generators.tweener")
-local Image = require("tofu.graphics.image")
+local Class <const> = require("tofu.core.class")
+local Math <const> = require("tofu.core.math")
+local Oscillator <const> = require("tofu.generators.oscillator")
+local Tweener <const> = require("tofu.generators.tweener")
+local Image <const> = require("tofu.graphics.image")
 
-local Wave = Class.define()
+local Wave <const> = Class.define()
 
 function Wave:__ctor(_, _, _, pool)
   self.stripe = Image.new("assets/images/stripes.img")

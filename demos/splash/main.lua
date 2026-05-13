@@ -35,24 +35,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local Canvas = require("tofu.graphics.canvas")
-local Display = require("tofu.graphics.display")
-local Palette = require("tofu.graphics.palette")
-local Source = require("tofu.sound.source")
-local Pool = require("tofu.timers.pool")
+local Class <const> = require("tofu.core.class")
+local Canvas <const> = require("tofu.graphics.canvas")
+local Display <const> = require("tofu.graphics.display")
+local Palette <const> = require("tofu.graphics.palette")
+local Source <const> = require("tofu.sound.source")
+local Pool <const> = require("tofu.timers.pool")
 
-local Background = require("lib/background")
-local Logo = require("lib/logo")
-local Stars = require("lib/stars")
-local Wave = require("lib/wave")
+local Background <const> = require("lib/background")
+local Logo <const> = require("lib/logo")
+local Stars <const> = require("lib/stars")
+local Wave <const> = require("lib/wave")
 
 local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
-local Main = Class.define()
+local Main <const> = Class.define()
 
 function Main:__ctor()
   self.pool = Pool.new()

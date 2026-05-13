@@ -35,11 +35,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local System = require("tofu.core.system")
-local Image = require("tofu.graphics.image")
+local Class <const> = require("tofu.core.class")
+local System <const> = require("tofu.core.system")
+local Image <const> = require("tofu.graphics.image")
 
-local Logo = Class.define()
+local Logo <const> = Class.define()
 
 function Logo:__ctor(width, height, _, _)
   self.images = {

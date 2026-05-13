@@ -35,13 +35,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core.class")
-local System = require("tofu.core.system")
-local Display = require("tofu.graphics.display")
-local Font = require("tofu.graphics.font")
-local Program = require("tofu.graphics.program")
+local Class <const> = require("tofu.core.class")
+local System <const> = require("tofu.core.system")
+local Display <const> = require("tofu.graphics.display")
+local Font <const> = require("tofu.graphics.font")
+local Program <const> = require("tofu.graphics.program")
 
-local Background = Class.define()
+local Background <const> = Class.define()
 
 -- We use the last palette color conveniently to create a rasterbar-like
 -- gradient effect.
