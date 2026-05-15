@@ -52,6 +52,21 @@ int display_loader(lua_State *L)
             { NULL, NULL }
         },
         (const luaX_Const[]){
+            // As ane example of how to export constants, we export four
+            // palette bank indices.
+#if GL_PALETTE_MAX_BANKS > 0
+            { "PALETTE_DEFAULT_BANK", LUA_CT_INTEGER, { .i = GL_PALETTE_DEFAULT_BANK } },
+            { "PALETTE_BANK_0", LUA_CT_INTEGER, { .i = 0 } },
+#endif
+#if GL_PALETTE_MAX_BANKS > 1
+            { "PALETTE_BANK_1", LUA_CT_INTEGER, { .i = 1 } },
+#endif
+#if GL_PALETTE_MAX_BANKS > 2
+            { "PALETTE_BANK_2", LUA_CT_INTEGER, { .i = 2 } },
+#endif
+#if GL_PALETTE_MAX_BANKS > 3
+            { "PALETTE_BANK_3", LUA_CT_INTEGER, { .i = 3 } },
+#endif
             { NULL, LUA_CT_NIL, { 0 } }
         });
 }

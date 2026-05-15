@@ -94,7 +94,7 @@ function Background:render(canvas)
       if char_height > max_char_height then
         max_char_height = char_height
       end
-      canvas:shift(0, colours[(i + offset) % #colours + 1])
+      canvas:shift(FONT_INDEX, colours[(i + offset) % #colours + 1])
       self.font:write(c, x + dx, y + dy)
       dx = dx + char_width
     end
@@ -105,7 +105,7 @@ function Background:render(canvas)
   local width, _ = canvas:image():size()
 
   canvas:push()
-    canvas:shift(0, 15)
+    canvas:bank(Display.PALETTE_BANK_1)
     canvas:write(width, 0, self.font, string.format("%d FPS", System.fps()), "right", "top")
   canvas:pop()
 end

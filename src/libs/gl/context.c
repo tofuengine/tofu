@@ -55,7 +55,7 @@ static void _reset(GL_Context_t *context)
                 .y1 = (int)surface->height
             },
             .palette_state = (GL_Palette_State_t){ { 0 } },
-            .palette_bank = 0
+            .palette_bank = GL_PALETTE_DEFAULT_BANK
         };
 
     gl_palette_state_init(&state.palette_state);

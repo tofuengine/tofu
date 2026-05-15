@@ -70,8 +70,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, 0)
-  Display.palette(PALETTE_FONT, 1)
+  Display.palette(PALETTE, Display.PALETTE_BANK_0)
+  Display.palette(PALETTE_FONT, Display.PALETTE_BANK_1)
 end
 
 function Main:deinit()
