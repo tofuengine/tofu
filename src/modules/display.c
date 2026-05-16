@@ -117,39 +117,32 @@ static int display_offset_2NN_0(lua_State *L)
     return 0;
 }
 
-static int display_shift_0_0(lua_State *L)
+static int display_shift_1T_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TTABLE)
     LUAX_SIGNATURE_END
-
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
-    Display_set_shifting(display, NULL, NULL, 0);
-
-    return 0;
-}
-
-static int display_shift_1t_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
-    LUAX_SIGNATURE_END
-    int shift_table = LUAX_TABLE(L, 1);
+    int shift_table = LUAX_OPTIONAL_TABLE(L, 1, -1);
 
     GL_Pixel_t *from = NULL;
     GL_Pixel_t *to = NULL;
+    size_t count = 0;
 
-    lua_pushnil(L);
-    while (lua_next(L, shift_table)) {
-        arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
-        arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
+    if (shift_table != -1) {
+        lua_pushnil(L);
+        while (lua_next(L, shift_table)) {
+            arrpush(from, (GL_Pixel_t)LUAX_UNSIGNED(L, -2));
+            arrpush(to, (GL_Pixel_t)LUAX_UNSIGNED(L, -1));
 
-        lua_pop(L, 1);
+            count += 1;
+
+            lua_pop(L, 1);
+        }
     }
 
     Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
 
-    Display_set_shifting(display, from, to, arrlenu(from));
+    Display_set_shifting(display, from, to, count);
 
     arrfree(from);
     arrfree(to);
@@ -176,8 +169,8 @@ static int display_shift_2nn_0(lua_State *L)
 static int display_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(display_shift_0_0, 0)
-        LUAX_OVERLOAD_BY_ARITY(display_shift_1t_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_1T_0, 0)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_1T_0, 1)
         LUAX_OVERLOAD_BY_ARITY(display_shift_2nn_0, 2)
     LUAX_OVERLOAD_END
 }
