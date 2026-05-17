@@ -264,6 +264,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
 #endif
 }
 
+#if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
 static inline void _rotate_point_around_pivot_with_offset(GL_PointF_t *point,
                                                           float pivot_x, float pivot_y,
                                                           float offset_x, float offset_y,
@@ -286,7 +287,6 @@ static inline void _rotate_point(GL_PointF_t *point,
     point->y = px * M[2] + py * M[3];
 }
 
-#if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
 static inline float _fminf4(float a, float b, float c, float d)
 {
     return fminf(fminf(a, b), fminf(c, d));
@@ -350,7 +350,6 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             c, -s,
             s,  c
         };
-#endif
 
     // Inverse transformation matrix, used to backward-map the destination pixel
     // to the source one. We combine inverse rotation, scaling, and flip
@@ -363,6 +362,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             c / scale_x, s / scale_x,
             -s / scale_y, c / scale_y
         };
+#endif
 
 #if defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
     // If we consider a centered AABB with half-size vector (or half-extent)
@@ -462,6 +462,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
     // When calculating the source origin, the pivot is still in destination space,
     // as the rotation is applied to the drawing rectangle top/left corner.
+#if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
     GL_PointF_t source_origin = (GL_PointF_t){
             .x = (float)drawing_region.x0 + 0.5f,
             .y = (float)drawing_region.y0 + 0.5f
@@ -478,6 +479,34 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     _rotate_point_around_pivot_with_offset(&source_origin, dx, dy, spx, spy, IMS);
     _rotate_point(&row_dx, IMS);
     _rotate_point(&row_dy, IMS);
+
+    float row_u = source_origin.x;
+    float row_v = source_origin.y;
+
+    const float du_dx = row_dx.x;
+    const float dv_dx = row_dx.y;
+    const float du_dy = row_dy.x;
+    const float dv_dy = row_dy.y;
+#else
+    const float inv_scale_x = 1.0f / scale_x; // Precalulating the reciprocal is cheaper that doing DIVs.
+    const float inv_scale_y = 1.0f / scale_y;
+
+    const float m00 =  c * inv_scale_x;
+    const float m01 =  s * inv_scale_x;
+    const float m10 = -s * inv_scale_y;
+    const float m11 =  c * inv_scale_y;
+
+    const float px = (float)drawing_region.x0 + 0.5f - dx;
+    const float py = (float)drawing_region.y0 + 0.5f - dy;
+
+    float row_u = px * m00 + py * m01 + spx;
+    float row_v = px * m10 + py * m11 + spy;
+
+    const float du_dx = m00; // Meaning: delta of `u` (source space) when moving one pixel in `x` (destination space).
+    const float dv_dx = m10;
+    const float du_dy = m01;
+    const float dv_dy = m11;
+#endif
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
@@ -507,9 +536,6 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     //
     // Then we just need to incrementally add the row/column vectors
     // to move across the area.
-    float row_u = source_origin.x;
-    float row_v = source_origin.y;
-
     for (int i = 0; i < height; ++i) {
         float u = row_u;
         float v = row_v;
@@ -521,6 +547,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
+            // TODO: A smaller inner-loop cleanup is replacing the four bounds comparisons with unsigned range checks
             if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
                 _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
@@ -546,14 +573,14 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
             ++dptr;
 
-            u += row_dx.x; // Move to the next pixel in the row, according to the rotation and scaling.
-            v += row_dx.y;
+            u += du_dx; // Move to the next pixel in the row, according to the rotation and scaling.
+            v += dv_dx;
         }
 
         dptr += dskip;
 
-        row_u += row_dy.x; // Shift the row vertically (scaling is included in the `row_d*` values).
-        row_v += row_dy.y;
+        row_u += du_dy; // Shift the row vertically (scaling is included in the `row_d*` values).
+        row_v += dv_dy;
     }
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
     _pixel(surface, position.x, position.y, 11); // !!! WARNING !!! Unclipped draw! Might cause a SEGV!
