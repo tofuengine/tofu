@@ -335,10 +335,10 @@
 // If not defined, the default palette will be a greyscale gradient.
 #undef  TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED
 
-// Enables the use of branchless rotations in the blitting process. The code
+// Enables the use of branchless calculations in the blitting process. The code
 // is more efficient but it can be less accurate in some cases, especially when
 // the scale is close to zero.
-#undef  TOFU_GRAPHICS_BRANCHLESS_ROTATIONS
+#undef  TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS
 
 // We can optimize the rotated AABB calculation by avoiding rotating all the
 // corners of the rectangle, and just calculating the rotated half-extent. This

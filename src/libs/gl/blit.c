@@ -323,7 +323,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const float dx = (float)position.x + 0.5f; // Half-pixel aligned rotation, that's the pivot point indeed!
     const float dy = (float)position.y + 0.5f;
 
-#if !defined(TOFU_GRAPHICS_BRANCHLESS_ROTATIONS)
+#if !defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS)
     const float sax = sw * anchor_x; // Anchor points in source/destination edge-space.
     const float say = sh * anchor_y;
 #endif
@@ -455,7 +455,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     // according to the flipping (negative scaling). The source anchor point delta is
     // calculated from the destination values so it takes into account for the
     // flip as well (i.e. we are scanning top/left to bottom/right, or vice versa).
-#if defined(TOFU_GRAPHICS_BRANCHLESS_ROTATIONS)
+#if defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS)
     const float spx = (scale_x < 0.0f ? sx + sw : sx) + dax / scale_x;
     const float spy = (scale_y < 0.0f ? sy + sh : sy) + day / scale_y;
 #else
@@ -550,7 +550,10 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
-            // TODO: A smaller inner-loop cleanup is replacing the four bounds comparisons with unsigned range checks
+            // Note: we could rewrite the four conditions with "unsigned checks". This would require to
+            //       calculate `(size_t)(x - sminx)`, and compare with `area.width`. We would save a 
+            //       comparison, over a difference. This micro-optimization may not be worth it, as
+            //       modern branch predictors make it negligible at the cost or less readable code.
             if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
                 _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
