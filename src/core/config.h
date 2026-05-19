@@ -345,6 +345,16 @@
 // will save half of the rotation calculations.
 #define TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS
 
+// Enabling the "fast path" for blitting operations means that when operating
+// with no rotation and/ or no scaling the most efficient `GL_context_blit*()`
+// function will be called according to the actual parameters. This optimization
+// applies only to the sheet-based blitting functions.
+//
+// Note: some small differences can be observed when the enabled: the
+//       zero-rotation case can differ slightly from the general case due
+//       to fractional-scale and pivot-to-top-left rounding.
+#define TOFU_GRAPHICS_BLIT_FAST_PATH
+
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:

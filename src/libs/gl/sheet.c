@@ -42,10 +42,16 @@
 
 #include <core/config.h>
 #include <libs/bytes.h>
+#if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
+#include <libs/fmath.h>
+#endif
 #include <libs/imath.h>
 #define _LOG_TAG "gl-sheet"
 #include <libs/log.h>
 #include <libs/stb.h>
+#if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
+#include <libs/sincos.h>
+#endif
 
 #include <math.h>
 
@@ -177,6 +183,9 @@ GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, 
         };
 }
 
+// Note:
+//   - Non-rotated blits use top-left destination coordinates.
+//   - Rotated blits use anchor/pivot destination coordinates.
 void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id)
 {
     GL_context_blit(context, position, sheet->atlas, sheet->cells[cell_id]);
@@ -184,12 +193,50 @@ void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Poin
 
 void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, float scale_x, float scale_y)
 {
-    GL_context_blit_s(context, position, sheet->atlas, sheet->cells[cell_id], scale_x, scale_y);
+    const GL_Surface_t *atlas = sheet->atlas;
+    const GL_Rectangle_t cell = sheet->cells[cell_id];
+
+#if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
+    if (scale_x == 1.0f && scale_y == 1.0f) {
+        GL_context_blit(context, position, atlas, cell);
+    } else {
+        GL_context_blit_s(context, position, atlas, cell, scale_x, scale_y);
+    }
+#else
+    GL_context_blit_s(context, position, atlas, cell, scale_x, scale_y);
+#endif
 }
 
+// TODO: Validate the pivot-to-top-left rounding with anchors like 0, 0.5, 1, odd/even sprite sizes, and negative scale.
 void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    GL_context_blit_sr(context, position, sheet->atlas, sheet->cells[cell_id], scale_x, scale_y, rotation, anchor_x, anchor_y);
+    const GL_Surface_t *atlas = sheet->atlas;
+    const GL_Rectangle_t cell = sheet->cells[cell_id];
+
+#if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
+    // Note: fractional-scale zero-rotation fast path can still differ slightly
+    //       from the general case due to the pivot-to-top-left rounding, but
+    //       it's a good trade-off for the performance boost.
+    if (rotation % SINCOS_PERIOD == 0) {
+        const int dw = ITRUNC(cell.width * FABS(scale_x));
+        const int dh = ITRUNC(cell.height * FABS(scale_y));
+
+        const float left = (float)position.x + 0.5f - (float)dw * anchor_x;
+        const float top  = (float)position.y + 0.5f - (float)dh * anchor_y;
+
+        GL_Point_t left_top = { .x = IFLOORF(left), .y = IFLOORF(top) };
+
+        if (scale_x == 1.0f && scale_y == 1.0f) {
+            GL_context_blit(context, left_top, atlas, cell);
+        } else {
+            GL_context_blit_s(context, left_top, atlas, cell, scale_x, scale_y);
+        }
+    } else {
+        GL_context_blit_sr(context, position, atlas, cell, scale_x, scale_y, rotation, anchor_x, anchor_y);
+    }
+#else
+    GL_context_blit_sr(context, position, atlas, cell, scale_x, scale_y, rotation, anchor_x, anchor_y);
+#endif
 }
 
 void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset)
