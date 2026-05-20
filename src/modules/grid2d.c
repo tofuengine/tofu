@@ -90,7 +90,7 @@ static int grid2d_new_3nnT_1o(lua_State *L)
     LUAX_SIGNATURE_END
     size_t width = LUAX_UNSIGNED(L, 1);
     size_t height = LUAX_UNSIGNED(L, 2);
-    int data_table = LUAX_OPTIONAL_TABLE(L, 3, 0);
+    int data_table = LUAX_OPTIONAL_TABLE(L, 3, LUAX_NIL_TABLE);
 
     size_t data_size = width * height;
     Grid_Object_Value_t *data = malloc(sizeof(Grid_Object_Value_t) * data_size);
