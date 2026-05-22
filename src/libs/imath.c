@@ -58,7 +58,6 @@ int imax(int a, int b)
 }
 
 #if defined(IMATH_FAST_OPERATIONS)
-#else
 int ifloor(float x)
 {
     const int i = (int)x;
