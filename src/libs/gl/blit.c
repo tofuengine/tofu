@@ -245,11 +245,10 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
 #else
             uint8_t mapped = state_map[sptr[x]];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
 #endif
 
             u += du;
