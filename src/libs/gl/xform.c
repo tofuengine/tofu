@@ -299,6 +299,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 sy += area.y;
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
+
                 uint8_t mapped = state_map[*sptr];
 #if defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY)
                 if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
@@ -309,7 +310,6 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
 #endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
             }
-
             ++dptr;
 
             xp += a;

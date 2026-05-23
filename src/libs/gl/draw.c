@@ -173,16 +173,17 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
 
     int y = drawing_region.y0;
     for (int i = height; i; --i) {
-        int x = drawing_region.x0; // TODO: optimize?
+        int x = drawing_region.x0; // TODO: optimize with modulo/stride?
         for (int j = width; j; --j) {
             uint8_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
+
             x += 1;
         }
+
         dptr += dskip;
         y += 1;
     }
@@ -241,19 +242,20 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
 
     int y = drawing_region.y0;
     for (int i = height; i; --i) {
-        int x = drawing_region.x0; // TODO: optimize?
+        int x = drawing_region.x0; // TODO: optimize with modulo/stride?
         for (int j = width; j; --j) {
             const GL_Pixel_t from = *dptr;
             const GL_Pixel_t to = *(sptr++);
 
             uint8_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
+
             x += 1;
         }
+
         sptr += sskip;
         dptr += dskip;
         y += 1;
@@ -434,16 +436,17 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
+
             const GL_Pixel_t value = *(mptr++);
 
             uint8_t mapped = state_map[*(sptr++)];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)
-                || !should_write(value, threshold)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)
+                && should_write(value, threshold)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
         }
+
         sptr += sskip;
         mptr += mskip;
         dptr += dskip;
@@ -578,13 +581,14 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
+
             uint8_t mapped = state_map[blend(*dptr, *(sptr++))];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
         }
+
         sptr += sskip;
         dptr += dskip;
     }

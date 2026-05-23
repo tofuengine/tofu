@@ -118,6 +118,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
+
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
             const GL_Pixel_t pixel = *(sptr++);
             const uint8_t mapped = state_map[pixel];
@@ -135,6 +136,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             ++dptr;
 #endif
         }
+
         sptr += sskip;
         dptr += dskip;
     }

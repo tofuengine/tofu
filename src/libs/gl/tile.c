@@ -109,14 +109,16 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
+
             uint8_t mapped = state_map[srow[u]];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
+
             u = (u + 1) % (int)area.width; // Prefer modulo over branch.
         }
+
         v = (v + 1) % (int)area.height;
         dptr += dskip;
     }
@@ -209,12 +211,13 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
+
             uint8_t mapped = state_map[srow[u]];
-            if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                ++dptr;
-            } else {
-                *(dptr++) = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+            if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
+            ++dptr;
+
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
                 u = IMOD(u + du, area.width); // Prefer modulo over branch.
