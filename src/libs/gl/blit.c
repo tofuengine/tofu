@@ -539,11 +539,11 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     //
     // Then we just need to incrementally add the row/column vectors
     // to move across the area.
-    for (int i = 0; i < height; ++i) {
+    for (int i = height; i; --i) {
         float u = row_u;
         float v = row_v;
 
-        for (int j = 0; j < width; ++j) {
+        for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif

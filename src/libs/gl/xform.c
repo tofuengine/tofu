@@ -208,24 +208,28 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     float c = registers[GL_XFORM_REGISTER_C]; float d = registers[GL_XFORM_REGISTER_D];
     float x0 = registers[GL_XFORM_REGISTER_X]; float y0 = registers[GL_XFORM_REGISTER_Y];
 
-    for (int i = 0; i < height; ++i) {
-        if (table && i == table->scan_line) {
-            for (size_t k = 0; k < table->count; ++k) {
-                const GL_XForm_Registers_t id = table->operations[k].id;
-                const float value = table->operations[k].value;
-                switch (id) {
-                    case GL_XFORM_REGISTER_H: { h = value; } break;
-                    case GL_XFORM_REGISTER_V: { v = value; } break;
-                    case GL_XFORM_REGISTER_A: { a = value; } break;
-                    case GL_XFORM_REGISTER_B: { b = value; } break;
-                    case GL_XFORM_REGISTER_C: { c = value; } break;
-                    case GL_XFORM_REGISTER_D: { d = value; } break;
-                    case GL_XFORM_REGISTER_X: { x0 = value; } break;
-                    case GL_XFORM_REGISTER_Y: { y0 = value; } break;
-                    default: { } break;
+    int scan_line = -1; // Start at -1, since we pre-increment at the beginning of the loop.
+    for (int i = height; i; --i) {
+        if (table) {
+            scan_line += 1;
+            if (scan_line == table->scan_line) {
+                for (size_t k = 0; k < table->count; ++k) {
+                    const GL_XForm_Registers_t id = table->operations[k].id;
+                    const float value = table->operations[k].value;
+                    switch (id) {
+                        case GL_XFORM_REGISTER_H: { h = value; } break;
+                        case GL_XFORM_REGISTER_V: { v = value; } break;
+                        case GL_XFORM_REGISTER_A: { a = value; } break;
+                        case GL_XFORM_REGISTER_B: { b = value; } break;
+                        case GL_XFORM_REGISTER_C: { c = value; } break;
+                        case GL_XFORM_REGISTER_D: { d = value; } break;
+                        case GL_XFORM_REGISTER_X: { x0 = value; } break;
+                        case GL_XFORM_REGISTER_Y: { y0 = value; } break;
+                        default: { } break;
+                    }
                 }
+                ++table;
             }
-            ++table;
 #if defined(__DETACH_XFORM_TABLE__)
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
@@ -244,9 +248,9 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
         float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
 #endif
 
-        for (int j = 0; j < width; ++j) {
+        for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-            _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             int sx = IROUNDF(xp); // Preserve direction, for negative values!
             int sy = IROUNDF(yp);
