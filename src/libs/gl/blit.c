@@ -545,8 +545,8 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-            _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
             int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
