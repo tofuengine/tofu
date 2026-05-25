@@ -526,7 +526,14 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const int smaxx = sminx + (int)area.width;
     const int smaxy = sminy + (int)area.height;
 
-    // We scan the destination area and calculate the source pixel with an
+#if defined(TOFU_GRAPHICS_NO_IFLOORF)
+    const float fsminx = (float)sminx;
+    const float fsminy = (float)sminy;
+    const float fsmaxx = (float)smaxx;
+    const float fsmaxy = (float)smaxy;
+#endif  /* defined(TOFU_GRAPHICS_NO_IFLOORF) */
+
+    // We can the destination area and calculate the source pixel with an
     // incremental backward-mapping. This is basically very similar to texture
     // mapping.
     //
@@ -545,8 +552,18 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-#endif
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+#endif
+
+#if defined(TOFU_GRAPHICS_NO_IFLOORF)
+            // In the source space we can't have negative zero, so we can use
+            // simple casts to `int` to get the floor value. We just need to
+            // check if the value is in bounds before, to avoid out-of-bounds
+            // access due to the truncation toward zero.
+            if (u >= fsminx && u < fsmaxx && v >= fsminy && v < fsmaxy) {
+                const int x = (int)u;
+                const int y = (int)v;
+#else   /* defined(TOFU_GRAPHICS_NO_IFLOORF) */
             int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
@@ -555,9 +572,10 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             //       comparison, over a difference. This micro-optimization may not be worth it, as
             //       modern branch predictors make it negligible at the cost or less readable code.
             if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
+#endif  /* defined(TOFU_GRAPHICS_NO_IFLOORF) */
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-#endif
                 _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 3);
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
                 const GL_Pixel_t *sptr = sdata + y * swidth + x;
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)

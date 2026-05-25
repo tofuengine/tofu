@@ -345,6 +345,17 @@
 // will save half of the rotation calculations.
 #define TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS
 
+// In the roto-scaling algorithm we apply an inverse transformation from the
+// destination space to the source space. Coordinates are calculated as floating
+// point values, but we need to round them down to get the corresponding pixel
+// in the source image. The `IFLOORF(x)` function is the most accurate way to do
+// this, but it can be more expensive than a simple cast to `int` (which
+// truncates toward zero). When the `TOFU_GRAPHICS_NO_IFLOORF` macro is defined,
+// the latter method will be used, with some additional checks to avoid
+// out-of-bounds access due to the truncation toward zero of negative values
+// (e.g. `-0.3` becomes `0` instead of `-1`).
+#define TOFU_GRAPHICS_NO_IFLOORF
+
 // Enabling the "fast path" for blitting operations means that when operating
 // with no rotation and/ or no scaling the most efficient `GL_context_blit*()`
 // function will be called according to the actual parameters. This optimization
