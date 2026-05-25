@@ -556,8 +556,8 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             //       modern branch predictors make it negligible at the cost or less readable code.
             if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-                _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
+                _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 3);
                 const GL_Pixel_t *sptr = sdata + y * swidth + x;
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
