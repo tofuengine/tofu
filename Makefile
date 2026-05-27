@@ -184,6 +184,9 @@ else ifeq ($(WINDOWING),mesa)
 else
 $(error WINDOWING value '$(WINDOWING)' is not recognized)
 endif
+ifeq ($(BUILD),release)
+	CFLAGS+=-DIMATH_FAST_OPERATIONS -DIMATH_INLINE_FAST_OPERATIONS -DFMATH_FAST_OPERATIONS -DFMATH_INLINE_FAST_OPERATIONS
+endif
 
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
