@@ -63,11 +63,11 @@
 #define IFLOORF(x)      (ifloor((x)))
 #define ICEILF(x)       (iceil((x)))
 #define IROUNDF(x)      (ifloor((x) + 0.5f))
-#else
+#else   /* defined(IMATH_FAST_OPERATIONS) */
 #define IFLOORF(x)      ((int)floorf((x)))
 #define ICEILF(x)       ((int)ceilf((x)))
 #define IROUNDF(x)      ((int)roundf((x)))
-#endif
+#endif  /* defined(IMATH_FAST_OPERATIONS) */
 
 extern int iabs(int v);
 extern int imod(int a, int b);
@@ -75,8 +75,22 @@ extern int imin(int a, int b);
 extern int imax(int a, int b);
 
 #if defined(IMATH_FAST_OPERATIONS)
+#if defined(IMATH_INLINE_FAST_OPERATIONS)
+static inline int ifloor(float x)
+{
+    const int i = (int)x;
+    return i - ((float)i > x);
+}
+
+static inline int iceil(float x)
+{
+    const int i = (int)x;
+    return i + (x > (float)i);
+}
+#else   /* defined(IMATH_INLINE_FAST_OPERATIONS) */
 extern int ifloor(float x);
 extern int iceil(float x);
-#endif
+#endif  /* defined(IMATH_INLINE_FAST_OPERATIONS) */
+#endif  /* defined(IMATH_FAST_OPERATIONS) */
 
 #endif  /* TOFU_LIBS_IMATH_H */

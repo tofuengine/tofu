@@ -77,6 +77,7 @@ float fsmootherstep(float edge0, float edge1, float x)
 }
 
 #if defined(FMATH_FAST_OPERATIONS)
+#if !defined(FMATH_INLINE_FAST_OPERATIONS)
 float ffloor(float x)
 {
     const int i = (int)x;
@@ -88,4 +89,5 @@ float fceil(float x)
     const int i = (int)x;
     return (float)(i + (x > (float)i));
 }
-#endif
+#endif  /* !defined(FMATH_INLINE_FAST_OPERATIONS) */
+#endif  /* defined(FMATH_FAST_OPERATIONS) */

@@ -86,11 +86,11 @@
 #define FFLOOR(x)           (ffloor((x)))
 #define FCEIL(x )           (fceil((x)))
 #define FROUND(x)           (ffloor((x) + 0.5f))
-#else
+#else   /* defined(FMATH_FAST_OPERATIONS) */
 #define FFLOOR(x)           (floorf((x)))
 #define FCEIL(x )           (ceilf((x)))
 #define FROUND(x)           (roundf((x)))
-#endif
+#endif  /* defined(FMATH_FAST_OPERATIONS) */
 
 extern int fsignun(float x);
 extern float flerp(float v0, float v1, float t);
@@ -101,8 +101,22 @@ extern float fsmoothstep(float edge0, float edge1, float x);
 extern float fsmootherstep(float edge0, float edge1, float x);
 
 #if defined(FMATH_FAST_OPERATIONS)
+#if !defined(FMATH_INLINE_FAST_OPERATIONS)
+static inline float ffloor(float x)
+{
+    const int i = (int)x;
+    return (float)(i - ((float)i > x));
+}
+
+static inline float fceil(float x)
+{
+    const int i = (int)x;
+    return (float)(i + (x > (float)i));
+}
+#else   /* !defined(FMATH_INLINE_FAST_OPERATIONS) */
 extern float ffloor(float x);
 extern float fceil(float x);
-#endif
+#endif  /* !defined(FMATH_INLINE_FAST_OPERATIONS) */
+#endif  /* defined(FMATH_FAST_OPERATIONS) */
 
 #endif  /* TOFU_LIBS_FMATH_H */

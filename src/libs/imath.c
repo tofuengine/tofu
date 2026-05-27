@@ -58,6 +58,7 @@ int imax(int a, int b)
 }
 
 #if defined(IMATH_FAST_OPERATIONS)
+#if !defined(IMATH_INLINE_FAST_OPERATIONS)
 int ifloor(float x)
 {
     const int i = (int)x;
@@ -69,4 +70,5 @@ int iceil(float x)
     const int i = (int)x;
     return i + (x > (float)i);
 }
-#endif
+#endif  /* !defined(IMATH_INLINE_FAST_OPERATIONS) */
+#endif  /* defined(IMATH_FAST_OPERATIONS) */
