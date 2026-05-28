@@ -46,19 +46,19 @@
 //#define _BRANCHLESS_BLIT_EXPERIMENTAL_XOR
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
-#ifdef _BRANCHLESS_BLIT_EXPERIMENTAL_XOR
+#ifdef defined(_BRANCHLESS_BLIT_EXPERIMENTAL_XOR)
     #define _BLIT_BLEND(dindex, sindex, mask) ((dindex) ^ (((dindex) ^ (sindex)) & (mask)))
-#else
+#else   /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL_XOR) */
     #define _BLIT_BLEND(dindex, sindex, mask) (((dindex) & ~(mask)) | ((sindex) & (mask)))
-#endif
-#endif
+#endif  /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL_XOR) */
+#endif  /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
 
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
@@ -117,7 +117,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
             const GL_Pixel_t pixel = *(sptr++);
@@ -128,13 +128,13 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
             const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             const GL_Pixel_t dindex = *dptr;
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
-#else
+#else   /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
             uint8_t mapped = state_map[*(sptr++)];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
             ++dptr;
-#endif
+#endif  /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
         }
 
         sptr += sskip;
@@ -147,7 +147,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
 //
 // http://www.datagenetics.com/blog/december32013/index.html
-// file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
+// https://www.researchgate.net/publication/333721765_Extensible_Implementation_of_Reliable_Pixel_Art_Interpolation
 void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y)
 {
     const GL_Surface_t *surface = context->surface;
@@ -227,13 +227,13 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
     float v = ov;
     for (int i = height; i; --i) {
         const int y = ITRUNC(v); // Truncate, as we used `ITRUNC()` to calculate the scaled size.
-        const GL_Pixel_t *sptr = sdata + y * swidth;
+        const GL_Pixel_t *sptr = sdata + y * swidth; // MULT instead of LUT access, more general-purpose (and not necessarily slower on modern CPUs with good branch prediction and pipelining).
 
         float u = ou;
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
             const int x = ITRUNC(u); // Ditto.
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
@@ -245,13 +245,13 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             const GL_Pixel_t dindex = *dptr;
             *(dptr++) = _BLIT_BLEND(dindex, sindex, mask);
-#else
+#else   /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
             uint8_t mapped = state_map[sptr[x]];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                 *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
             }
             ++dptr;
-#endif
+#endif  /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
 
             u += du;
         }
@@ -264,7 +264,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
     _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
     _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
     _pixel(surface, drawing_region.x0, drawing_region.y1, 7);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 }
 
 #if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
@@ -326,7 +326,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 #if !defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS)
     const float sax = sw * anchor_x; // Anchor points in source/destination edge-space.
     const float say = sh * anchor_y;
-#endif
+#endif  /* !defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS) */
     const float dax = dw * anchor_x;
     const float day = dh * anchor_y;
 
@@ -365,7 +365,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             c / scale_x, s / scale_x,
             -s / scale_y, c / scale_y
         };
-#endif
+#endif  /* !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
 
 #if defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
     // If we consider a centered AABB with half-size vector (or half-extent)
@@ -402,16 +402,16 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const float rcx = dx + cx * c - cy * s; // Rotate the center (around the pivot point) and get the coordinates in destination space.
     const float rcy = dy + cx * s + cy * c;
 
-    const float rhx = hx * abs_c + hy * abs_s;
+    const float rhx = hx * abs_c + hy * abs_s; // Not really a rotation, more like geometric derivation through trigonometry. :)
     const float rhy = hx * abs_s + hy * abs_c;
 
     GL_Quad_t drawing_region = {
-            .x0 = IFLOORF(rcx - rhx),
+            .x0 = IFLOORF(rcx - rhx), // Note: we need to floor/ceil to properly round, we can optimize the actual function 'tough.
             .y0 = IFLOORF(rcy - rhy),
             .x1 = ICEILF(rcx + rhx),
             .y1 = ICEILF(rcy + rhy)
         };
-#else
+#else   /* defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
     const float oax = dx - dax; // Offset of the rotation anchor point in destination space.
     const float oay = dy - day;
     GL_PointF_t p0 = { .x = oax,      .y = oay };
@@ -430,7 +430,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             .x1 = ICEILF(_fmaxf4(p0.x, p1.x, p2.x, p3.x)),
             .y1 = ICEILF(_fmaxf4(p0.y, p1.y, p2.y, p3.y))
         };
-#endif
+#endif  /* defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
 
     if (drawing_region.x0 < clipping_region->x0) {
         drawing_region.x0 = clipping_region->x0;
@@ -458,10 +458,10 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 #if defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS)
     const float spx = (scale_x < 0.0f ? sx + sw : sx) + dax / scale_x;
     const float spy = (scale_y < 0.0f ? sy + sh : sy) + day / scale_y;
-#else
+#else   /* defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS) */
     const float spx = (scale_x < 0.0f ? sx + sw : sx) + sax * FSIGNUM(scale_x);
     const float spy = (scale_y < 0.0f ? sy + sh : sy) + say * FSIGNUM(scale_y);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS) */
 
     // When calculating the source origin, the pivot is still in destination space,
     // as the rotation is applied to the drawing rectangle top/left corner.
@@ -490,11 +490,11 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const float dv_dx = row_dx.y;
     const float du_dy = row_dy.x;
     const float dv_dy = row_dy.y;
-#else
-    const float inv_scale_x = 1.0f / scale_x; // Precalulating the reciprocal is cheaper that doing DIVs.
+#else   /* !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
+    const float inv_scale_x = 1.0f / scale_x; // Precalculating the reciprocal is cheaper that doing DIVs.
     const float inv_scale_y = 1.0f / scale_y;
 
-    const float m00 =  c * inv_scale_x;
+    const float m00 =  c * inv_scale_x; // Inverse rotation and scaling combined. The flip sign is included in the `inv_scale_*` value.
     const float m01 =  s * inv_scale_x;
     const float m10 = -s * inv_scale_y;
     const float m11 =  c * inv_scale_y;
@@ -505,11 +505,11 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     float row_u = px * m00 + py * m01 + spx;
     float row_v = px * m10 + py * m11 + spy;
 
-    const float du_dx = m00; // Meaning: delta of `u` (source space) when moving one pixel in `x` (destination space).
+    const float du_dx = m00; // Meaning: delta of (source space) `u` when moving one pixel in (destination space) `x`.
     const float dv_dx = m10;
     const float du_dy = m01;
     const float dv_dy = m11;
-#endif
+#endif  /* !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
@@ -553,7 +553,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 #if defined(TOFU_GRAPHICS_NO_IFLOORF)
             // In the source space we can't have negative zero, so we can use
@@ -587,12 +587,12 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
                 const GL_Pixel_t sindex = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                 const GL_Pixel_t dindex = *dptr;
                 *dptr = _BLIT_BLEND(dindex, sindex, mask);
-#else
+#else   /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
                 uint8_t mapped = state_map[*sptr];
                 if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                     *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                 }
-#endif
+#endif  /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
             }
 
             ++dptr;
@@ -612,5 +612,5 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
     _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);
     _pixel(surface, drawing_region.x0    , drawing_region.y1 - 1, 7);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 }
