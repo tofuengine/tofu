@@ -44,6 +44,8 @@ The preferred form for preprocessor conditional is the "expanded one", that is
 ```c
 #if defined(DEBUG)
    // ...
+#else   /* defined(DEBUG) */
+   // ...
 #endif  /* defined(DEBUG) */
 ```
 
@@ -52,14 +54,16 @@ over
 ```c
 #ifdef DEBUG
    // ...
+#else   /* DEBUG */
+   // ...
 #endif  /* DEBUG */
 ```
 
 This is due to better consistency when more than one condition is to be checked.
 
-The only exception to this is for the include-guards (see below), which uses the compact version.
+The only exception to this is for the include-guards (see below), which uses the compact version, or when the condition is in form of `==` with combined `#elif` clauses.
 
-> Coincidentally this is the same approach used in Lua's codebase.
+> Coincidentally this is the same approach used in Lua's codebase, with the difference that we also annotate the closing statements. :)
 
 ## Debugging
 
