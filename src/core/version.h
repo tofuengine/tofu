@@ -35,7 +35,7 @@
     #define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev-debug"
 #else
     #define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev-debug"
-#endif
+#endif  /* defined(DEBUG) */
 #define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
 #define TOFU_VERSION_STRING         _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 

@@ -213,9 +213,9 @@ Engine_t *Engine_create(const Engine_Options_t *options)
             .keyboard = {
 #if defined(DEBUG)
                 .exit_key = true
-#else
+#else   /* defined(DEBUG) */
                 .exit_key = engine->configuration->keyboard.exit_key
-#endif
+#endif  /* defined(DEBUG) */
             },
             .cursor = {
                 .enabled = engine->configuration->cursor.enabled,
@@ -254,7 +254,7 @@ Engine_t *Engine_create(const Engine_Options_t *options)
             .debug = engine->configuration->system.debug,
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
             .profile = engine->configuration->system.profile
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
         }, engine->display, engine->interpreter);
     if (!engine->environment) {
         LOG_F("can't initialize environment");
@@ -358,10 +358,10 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
     return Audio_update(engine->audio, delta_time)
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             && Storage_update(engine->storage, delta_time)
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 #if TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS
             && Interpreter_collect(engine->interpreter)
-#endif
+#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS */
             ;
 }
 
@@ -387,7 +387,7 @@ void Engine_run(Engine_t *engine)
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float deltas[Environment_Index_t_CountOf] = { 0 };
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
     StopWatch_t marker = stopwatch_init();
     float lag = 0.0f;
     float low_priority_lag = 0.0f;
@@ -396,6 +396,7 @@ void Engine_run(Engine_t *engine)
         // If the frame delta time exceeds the maximum allowed skippable one (because the system can't
         // keep the pace we want) we forcibly cap the elapsed time.
         float frame_time = stopwatch_partial(&marker);
+        //frame_time *= 4.0f;
 #if defined(DEBUG)
         // If we are running in debug mode we could be occasionally be interrupted due to breakpoint stepping.
         // We detect this by using a "max elapsed threshold" value. If we exceed it, we forcibly cap the elapsed
@@ -403,23 +404,23 @@ void Engine_run(Engine_t *engine)
         if (frame_time >= TOFU_ENGINE_BREAKPOINT_DETECTION_THRESHOLD) {
             frame_time = delta_time;
         }
-#endif  /* DEBUG */
+#endif  /* defined(DEBUG) */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         StopWatch_t stats_marker = stopwatch_clone(&marker);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         Environment_accumulate(engine->environment, frame_time, deltas);
-#else   /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#else   /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
         Environment_accumulate(engine->environment, frame_time);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
         _process();
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_PROCESS] = stopwatch_partial(&stats_marker);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
         // We already capped the `lag` accumulator value (relative to a maximum amount of skippable
         // frames). Now we process all the accumulated frames, if any, or the `lag` variable
@@ -446,13 +447,13 @@ void Engine_run(Engine_t *engine)
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_UPDATE] = stopwatch_partial(&stats_marker);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
         running = running && _render(engine, lag / delta_time); // ratio in the range `[0, 1]`
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_RENDER] = stopwatch_partial(&stats_marker);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
         const float busy_time = stopwatch_elapsed(&marker);
         const float wait_time = reference_time - busy_time; // When non-positive it means we are not capping. :P
@@ -463,22 +464,22 @@ void Engine_run(Engine_t *engine)
             // as this will ensure rock-steady (average) FPS, especially if the system takes over during the
             // yield time and makes the application wait more than expected.
             StopWatch_t wait_marker = stopwatch_init();
-#endif  /* TOFU_ENGINE_WAIT_SKID_COMPENSATION */
+#endif  /* defined(TOFU_ENGINE_WAIT_SKID_COMPENSATION) */
             soy_wait_for(wait_time);
 #if defined(TOFU_ENGINE_WAIT_SKID_COMPENSATION)
             const float actual_wait_time = stopwatch_elapsed(&wait_marker);
             const float skid = actual_wait_time - wait_time; // Positive values means the wait has been longer than expected...
             stopwatch_delta(&marker, skid); // ... so we move the start-of-frame marker to account for the difference.
-#endif  /* TOFU_ENGINE_WAIT_SKID_COMPENSATION */
+#endif  /* defined(TOFU_ENGINE_WAIT_SKID_COMPENSATION) */
         }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         deltas[ENVIRONMENT_INDEX_WAIT] = stopwatch_partial(&stats_marker);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
         // The frame-time statistic doesn't take into account of time
         deltas[ENVIRONMENT_INDEX_FRAME] = stopwatch_elapsed(&marker);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
     }
 }

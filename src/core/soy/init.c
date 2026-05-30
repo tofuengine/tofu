@@ -30,7 +30,7 @@
 #include <libs/stb.h>
 
 #if TOFU_CORE_BACKEND == BACKEND_GLFW
-  #include <GLFW/glfw3.h>
+    #include <GLFW/glfw3.h>
 #endif
 
 #if TOFU_CORE_BACKEND == BACKEND_GLFW

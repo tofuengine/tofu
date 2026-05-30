@@ -81,7 +81,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "system-profile") == 0) {
         configuration->system.profile = strcmp(value, "true") == 0;
     } else
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
     if (strcmp(fqn, "system-mappings") == 0) {
         strncpy(configuration->system.mappings, value, CONFIGURATION_MAX_VALUE_LENGTH - 1);
     } else
@@ -264,16 +264,16 @@ Configuration_t *Configuration_create(void)
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
 #if defined(DEBUG)
                 .debug = true,
-#else
+#else   /* defined(DEBUG) */
                 .debug = false,
-#endif  /* DEBUG */
+#endif  /* defined(DEBUG) */
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
 #if defined(PROFILE)
                 .profile = true,
-#else
+#else   /* defined(PROFILE) */
                 .profile = false,
-#endif  /* PROFILE */
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(PROFILE) */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
                 .mappings = "assets/txt/gamecontrollerdb.txt",
                 .quit_on_close = true
             },

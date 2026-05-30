@@ -30,7 +30,7 @@
 #include <libs/log.h>
 
 #if TOFU_CORE_BACKEND == BACKEND_GLFW
-  #include <GLFW/glfw3.h>
+    #include <GLFW/glfw3.h>
 #endif
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -101,9 +101,9 @@ void soy_wait_for(float seconds)
                 };
 #if defined(TOFU_CORE_USE_CLOCK_NANOSLEEP)
             clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
-#else
+#else   /* defined(TOFU_CORE_USE_CLOCK_NANOSLEEP) */
             nanosleep(&ts, NULL);
-#endif
+#endif  /* defined(TOFU_CORE_USE_CLOCK_NANOSLEEP) */
 #endif
         } else {
             // ... otherwise adopt as semi-busy wait, yielding the processor

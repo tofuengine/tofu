@@ -59,7 +59,7 @@ typedef struct Configuration_s {
         bool debug;
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
         bool profile;
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
         char mappings[CONFIGURATION_MAX_VALUE_LENGTH];
         bool quit_on_close;
     } system;
