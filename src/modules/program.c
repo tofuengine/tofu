@@ -106,7 +106,7 @@ static int program_new_0_1o(lua_State *L)
     LOG_D("program %p allocated", self);
 #else
     (void)self;
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
 }
@@ -122,7 +122,7 @@ static int program_gc_1o_0(lua_State *L)
 
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program %p finalized", self);
-#endif  /* VERBOSETOFU_CORE_VERBOSE_DEBUG_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 0;
 }
@@ -339,7 +339,7 @@ static int program_gradient_4ontN_0(lua_State *L)
         if (count != 4) {
             luaL_error(L, "marker #%d has %d components (out of 4 required)", i, count);
         }
-#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
         lua_rawgeti(L, item_stack_index, 1); // O N T N T -> O N T N T I
         lua_rawgeti(L, item_stack_index, 2); // O N T N T I -> O N T N T I I
         lua_rawgeti(L, item_stack_index, 3); // O N T N T I I -> O N T N T I I I
@@ -404,7 +404,7 @@ static int program_palette_5onntN_0(lua_State *L)
         if (count != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, count);
         }
-#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
         lua_rawgeti(L, item_stack_index, 1); // O T N N N T -> O T N N N T I
         lua_rawgeti(L, item_stack_index, 2); // O T N N N T I -> O T N N N T I I
         lua_rawgeti(L, item_stack_index, 3); // O T N N N T I I -> O T N N N T I I I

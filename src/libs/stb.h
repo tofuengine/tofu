@@ -41,7 +41,7 @@
 #if defined(DEBUG) && !defined(SANITIZE)
     #include <stb/stb_leakcheck.h>
     #define STB_LEAKCHECK_INCLUDED
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
 #include <stb/stb_ds.h>
 
 extern void *stb_memdup(const void *ptr, size_t size);

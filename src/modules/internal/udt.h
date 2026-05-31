@@ -291,9 +291,9 @@ typedef struct Source_Object_s {
 
 #if defined(TOFU_SCRIPT_GRID_INTEGER_VALUES)
 typedef int Grid_Object_Value_t;
-#else
+#else   /* defined(TOFU_SCRIPT_GRID_INTEGER_VALUES) */
 typedef float Grid_Object_Value_t;
-#endif
+#endif  /* defined(TOFU_SCRIPT_GRID_INTEGER_VALUES) */
 
 typedef struct Grid_Object_s {
     size_t width, height;

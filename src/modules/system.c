@@ -38,7 +38,7 @@
 static int system_debug_0_1b(lua_State *L);
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
 static int system_profile_0_1b(lua_State *L);
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
 static int system_version_0_3nnn(lua_State *L);
 static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
@@ -48,10 +48,10 @@ static int system_uptime_0_1n(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 static int system_stats_0_4nnnn(lua_State *L);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static int system_heap_1S_2nn(lua_State *L);
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
 static int system_active_0_1b(lua_State *L);
 static int system_quit_0_0(lua_State *L);
 
@@ -63,7 +63,7 @@ int system_loader(lua_State *L)
             { "debug", system_debug_0_1b },
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
             { "profile", system_profile_0_1b },
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
             // -- accessors --
             { "version", system_version_0_3nnn },
             { "information", system_information_0_1t },
@@ -74,10 +74,10 @@ int system_loader(lua_State *L)
             { "fps", system_fps_0_1n },
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
             { "stats", system_stats_0_4nnnn },
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
             { "heap", system_heap_1S_2nn },
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
             { "active", system_active_0_1b },
             // -- operations --
             { "quit", system_quit_0_0 },
@@ -112,7 +112,7 @@ static int system_profile_0_1b(lua_State *L)
 
     return 1;
 }
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
 
 static int system_version_0_3nnn(lua_State *L)
 {
@@ -246,7 +246,7 @@ static int system_stats_0_4nnnn(lua_State *L)
 
     return 5;
 }
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static int system_heap_1S_2nn(lua_State *L)
@@ -277,7 +277,7 @@ static int system_heap_1S_2nn(lua_State *L)
 
     return 2;
 }
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
 
 static int system_active_0_1b(lua_State *L)
 {

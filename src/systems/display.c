@@ -170,7 +170,7 @@ static bool _has_errors(void)
     }
     return result;
 }
-#endif
+#endif  /* defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS) */
 
 /**
  * void glOrtho(double l, double r, double b, double t, double n, double f);
@@ -198,9 +198,9 @@ static void _size_callback(GLFWwindow *window, int width, int height)
     //       that we can send data to.
 #if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     Display_t *display = (Display_t *)glfwGetWindowUserPointer(window);
-#else
+#else   /* defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX) */
     const Display_t *display = (const Display_t *)glfwGetWindowUserPointer(window);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX) */
 
     glViewport(0, 0, width, height); // Viewport matches window
     LOG_D("viewport size set to %dx%d", width, height);
@@ -216,7 +216,7 @@ static void _size_callback(GLFWwindow *window, int width, int height)
 #if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     memcpy(display->mvp, mvp, sizeof(mat4)); // There's no need to store it, we are sending right away to the shader.
     LOG_D("model/view/projection matrix stored");
-#endif
+#endif  /* defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX) */
     shader_use(display->shader);
     shader_send(display->shader, UNIFORM_MVP, SHADER_UNIFORM_MAT4, 1, mvp);
     shader_use(NULL);
@@ -238,7 +238,7 @@ static void _size_callback(GLFWwindow *window, int width, int height)
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     LOG_D("enabling OpenGL debug");
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_TRIANGLES_WINDING) */
 }
 
 static void _close_callback(GLFWwindow *window)
@@ -314,12 +314,12 @@ static GLFWwindow *_window_create(const Display_t *display, GL_Rectangle_t *pres
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-#else
+#else   /* defined(TOFU_CORE_OPENGL_ES) */
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.3 is the first "version unified" OpenGL.
-#endif
+#endif  /* defined(TOFU_CORE_OPENGL_ES) */
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -371,7 +371,7 @@ static bool _shader_initialize(Display_t *display, const char *effect)
         LOG_E("shader effect is null");
         goto error_exit;
     }
-#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     const size_t length = strlen(_FRAGMENT_SHADER) + strlen(effect);
     char *shader_code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
@@ -537,7 +537,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         goto error_destroy_window;
     }
     LOG_D("GLAD initialized (using generator %s)", GLAD_GENERATOR_VERSION);
-#endif  /* GLAD_OPTION_GL_ON_DEMAND || GLAD_OPTION_GL_LOADER */
+#endif  /* defined(GLAD_OPTION_GL_ON_DEMAND) || defined(GLAD_OPTION_GL_LOADER) */
 
     display->vram.position = (GL_Point_t){ .x = vram_rectangle.x, .y = vram_rectangle.y };
     display->vram.size = (GL_Size_t){ .width = vram_rectangle.width, .height = vram_rectangle.height };
@@ -587,7 +587,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         LOG_D("ring buffer w/ id #%d created (%d bytes)", display->vram.pbo.buffers[i], display->vram.pixels.count);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Tight packing (no padding), we are only transferring data (one time set)
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -623,7 +623,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     LOG_I("GLFW platform: %d", glfwGetPlatform());
 #if !defined(GLAD_OPTION_GL_ON_DEMAND)
     LOG_I("GLAD: %d.%d", GLAD_VERSION_MAJOR(glad_version), GLAD_VERSION_MINOR(glad_version));
-#endif  /* GLAD_OPTION_GL_ON_DEMAND */
+#endif  /* !defined(GLAD_OPTION_GL_ON_DEMAND) */
     LOG_I("vendor: %s", glGetString(GL_VENDOR));
     LOG_I("renderer: %s", glGetString(GL_RENDERER));
     LOG_I("version: %s", glGetString(GL_VERSION));
@@ -644,7 +644,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
 #if defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS)
     _has_errors(); // Display pending OpenGL errors.
-#endif
+#endif  /* defined(TOFU_GRAPHICS_REPORT_OPENGL_ERRORS) */
 
     LOG_D("display %p created", display);
 
@@ -660,7 +660,7 @@ error_destroy_shader:
 error_delete_ring_buffers:
 #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
     glDeleteBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
 error_delete_texture_buffers:
     glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures.ids);
 error_free_vram:
@@ -668,7 +668,7 @@ error_free_vram:
 error_unload_glad:
 #if defined(GLAD_OPTION_GL_LOADER)
     gladLoaderUnloadGL();
-#endif  /* GLAD_OPTION_GL_LOADER */
+#endif  /* defined(GLAD_OPTION_GL_LOADER) */
 error_destroy_window:
     _window_destroy(display->window);
 error_free_display:
@@ -696,7 +696,7 @@ void Display_destroy(Display_t *display)
 
 #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
     glDeleteBuffers(DISPLAY_PBO_RING_SIZE, display->vram.pbo.buffers);
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
     glDeleteBuffers(DISPLAY_BUFFERS_COUNT, display->vram.textures.ids);
     LOG_D("texture buffers deleted");
 
@@ -706,7 +706,7 @@ void Display_destroy(Display_t *display)
 #if defined(GLAD_OPTION_GL_LOADER)
     gladLoaderUnloadGL();
     LOG_D("GLAD unloaded");
-#endif  /* GLAD_OPTION_GL_LOADER */
+#endif  /* defined(GLAD_OPTION_GL_LOADER) */
 
     _window_destroy(display->window);
     LOG_D("window %p destroyed", display->window);
@@ -810,7 +810,7 @@ void Display_present(Display_t *display)
         staging_buffer = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, display->vram.pixels.count,
                 GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
     }
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD_ORPHAN_RECOVERING */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD_ORPHAN_RECOVERING) */
     if (staging_buffer) {
         memcpy(staging_buffer, pixels, display->vram.pixels.count); // Stage from the CPU buffer, as quick as possible!
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
@@ -826,14 +826,14 @@ void Display_present(Display_t *display)
     }
 
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-#else   /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+#else   /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
     glTexSubImage2D(GL_TEXTURE_2D,
             0, // Level of detail
             0, 0, // Note: the size of the texture is the same as the canvas, so we can update the whole texture with a single call.
             (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height,
             _PIXEL_FORMAT, _PIXEL_TYPE,
             pixels);
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
 
     // --------------------------------
     // -----------:: DRAW ::-----------

@@ -37,9 +37,9 @@
 
 #if defined(TOFU_AUDIO_FLOATING_POINT_MIXING)
     #define SL_FORMAT SL_FORMAT_FLOAT_32_BIT
-#else
+#else   /* defined(TOFU_AUDIO_FLOATING_POINT_MIXING) */
     #define SL_FORMAT SL_FORMAT_SIGNED_16_BIT
-#endif
+#endif  /* defined(TOFU_AUDIO_FLOATING_POINT_MIXING) */
 
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
 // panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many sound-cards

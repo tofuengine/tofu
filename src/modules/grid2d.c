@@ -171,7 +171,7 @@ static int grid2d_fill_2ot_0(lua_State *L)
     if (length > self->data_size) {
         return luaL_error(L, "table is too long for grid data (table has %d items, but grid data-size is %d)", length, self->data_size);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     Grid_Object_Value_t *ptr = self->data;
 
@@ -200,7 +200,7 @@ static int grid2d_copy_2oo_0(lua_State *L)
     if (self->data_size != other->data_size) {
         return luaL_error(L, "grid data-size don't match");
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     Grid_Object_Value_t *dptr = self->data;
     const Grid_Object_Value_t *sptr = other->data;
@@ -225,7 +225,7 @@ static int grid2d_peek_2on_1n(lua_State *L)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     Grid_Object_Value_t value = self->data[offset];
 
@@ -252,7 +252,7 @@ static int grid2d_peek_3onn_1n(lua_State *L)
     if (row >= self->height) {
         return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     Grid_Object_Value_t value = self->data[row * self->width + column];
 
@@ -284,7 +284,7 @@ static int grid2d_poke_3onn_0(lua_State *L)
     if (offset >= self->data_size) {
         return luaL_error(L, "offset %d is out of range [0, %d)", offset, self->data_size);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     self->data[offset] = value;
 
@@ -311,7 +311,7 @@ static int grid2d_poke_4onnn_0(lua_State *L)
     if (row >= self->height) {
         return luaL_error(L, "row %d is out of range [0, %d)", row, self->height);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     self->data[row * self->width + column] = value;
 

@@ -61,7 +61,7 @@ static void  _free(void *ptr, void *pUserData)
 {
     free(ptr);
 }
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
 
 SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
@@ -90,9 +90,9 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
             .onRealloc = _realloc,
             .onFree = _free
         }, &props->converter);
-#else
+#else   /* defined(DEBUG) && !defined(SANITIZE) */
     ma_result result = ma_data_converter_init(&config, NULL, &props->converter);
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
     if (result != MA_SUCCESS) {
         LOG_E("failed to create data converter");
         goto error_free_props;
@@ -115,9 +115,9 @@ void SL_props_destroy(SL_Props_t *props)
             .onRealloc = _realloc,
             .onFree = _free
         });
-#else
+#else   /* defined(DEBUG) && !defined(SANITIZE) */
     ma_data_converter_uninit(&props->converter, NULL);
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
     LOG_D("data converter uninitialized");
 
     free(props);

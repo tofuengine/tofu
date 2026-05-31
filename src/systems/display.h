@@ -55,19 +55,19 @@
 // rendering and transferring phases.
 #if defined(TOFU_GRAPHICS_RENDER_BUFFERS_COUNT)
     #define DISPLAY_BUFFERS_COUNT TOFU_GRAPHICS_RENDER_BUFFERS_COUNT
-#else
+#else   /* defined(TOFU_GRAPHICS_RENDER_BUFFERS_COUNT) */
     #define DISPLAY_BUFFERS_COUNT 2
-#endif
+#endif  /* defined(TOFU_GRAPHICS_RENDER_BUFFERS_COUNT) */
 
 // And this the the number of (circular) upload buffers we plan to use to
 // have an async operation.
 #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD)
     #if defined(TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT)
         #define DISPLAY_PBO_RING_SIZE TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT
-    #else
+    #else   /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT) */
         #define DISPLAY_PBO_RING_SIZE 3
-    #endif
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+    #endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD_BUFFERS_COUNT) */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
 
 typedef struct Display_Configuration_s {
     struct {
@@ -90,7 +90,7 @@ typedef struct Display_s {
     GLuint vao;
 #if defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX)
     mat4 mvp;
-#endif
+#endif  /* defined(TOFU_GRAPHICS_SAVE_MVP_MATRIX) */
 
     struct {
         GL_Size_t size;
@@ -112,7 +112,7 @@ typedef struct Display_s {
             GLuint buffers[DISPLAY_PBO_RING_SIZE];
             int index;
         }  pbo;
-#endif  /* TOFU_GRAPHICS_ASYNC_UPLOAD */
+#endif  /* defined(TOFU_GRAPHICS_ASYNC_UPLOAD) */
         GL_Point_t position; // Destination position, normalized to the final screen size.
         GL_Size_t size; // Duplicates rectangle, for faster return of size.
         GL_Point_t offset;

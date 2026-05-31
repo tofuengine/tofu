@@ -502,14 +502,14 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
 #if defined(TOFU_GRAPHICS_FIX_RASTERIZER_WINDING)
 #if defined(TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING)
     if ((v1.x - v0.x) * (v2.y - v0.y) < (v2.x - v0.x) * (v1.y - v0.y)) { // Ensure CW winding.
-#else
+#else   /* defined(TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING) */
     if ((v1.x - v0.x) * (v2.y - v0.y) > (v2.x - v0.x) * (v1.y - v0.y)) { // Ensure CCW winding.
-#endif
+#endif  /* defined(TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING) */
         const GL_Point_t t = v1;
         v1 = v2;
         v2 = t;
     }
-#endif  /* TOFU_GRAPHICS_FIX_RASTERIZER_WINDING */
+#endif  /* defined(TOFU_GRAPHICS_FIX_RASTERIZER_WINDING) */
 
     // Fast edge-function calculation, using a DDA method.
     // Note: swap `v1` and `v2` in the formulas to change winding.
@@ -517,11 +517,11 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
     const int DW0X = v1.y - v2.y, DW0Y = v2.x - v1.x;
     const int DW1X = v2.y - v0.y, DW1Y = v0.x - v2.x;
     const int DW2X = v0.y - v1.y, DW2Y = v1.x - v0.x;
-#else
+#else   /* defined(TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING) */
     const int DW0X = v2.y - v1.y, DW0Y = v1.x - v2.x;
     const int DW1X = v0.y - v2.y, DW1Y = v2.x - v0.x;
     const int DW2X = v1.y - v0.y, DW2Y = v0.x - v1.x;
-#endif
+#endif  /* defined(TOFU_GRAPHICS_CLOCKWISE_RASTERIZER_WINDING) */
 
     const GL_Point_t p = (GL_Point_t){ .x = drawing_region.x0, .y = drawing_region.y0 };
 

@@ -48,7 +48,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 // https://lodev.org/cgtutor/floodfill.html
 void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index, bool transparency)
@@ -382,7 +382,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
         LOG_W("source and mask surfaces need to match in size");
         return;
     }
-#endif
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = area.y;
@@ -435,7 +435,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
             const GL_Pixel_t value = *(mptr++);
 
@@ -580,7 +580,7 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
             uint8_t mapped = state_map[blend(*dptr, *(sptr++))];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {

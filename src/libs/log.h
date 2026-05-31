@@ -55,7 +55,7 @@ typedef enum Log_Levels_e {
 
 #if !defined(_LOG_TAG)
     #define _LOG_TAG __FILE__
-#endif
+#endif  /* !defined(_LOG_TAG) */
 
 #define LOG_T(...) Log_write(LOG_LEVELS_TRACE, (_LOG_TAG), __VA_ARGS__)
 #define LOG_D(...) Log_write(LOG_LEVELS_DEBUG, (_LOG_TAG), __VA_ARGS__)

@@ -138,7 +138,7 @@ static int palette_new_1t_1o(lua_State *L)
     if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "palette has too many colors (%d) - max is %d", size, GL_PALETTE_MAX_COLORS);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = { 0 }
@@ -152,7 +152,7 @@ static int palette_new_1t_1o(lua_State *L)
         if (components != 3) {
             luaL_error(L, "palette entry #%d has %d components (out of 3 required)", i, components);
         }
-#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
         lua_rawgeti(L, item_stack_index, 1); // T O N T -> T O N T I
         lua_rawgeti(L, item_stack_index, 2); // T O N T I -> T O N T I I
         lua_rawgeti(L, item_stack_index, 3); // T O N T I I -> T O N T I I I
@@ -213,7 +213,7 @@ static int palette_new_3n_1o(lua_State *L)
     if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "too many bits to fit palette (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
     }
-#endif  /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     Palette_Object_t *self = (Palette_Object_t *)udt_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = { 0 },
@@ -387,7 +387,7 @@ static int palette_merge_6ononnB_0(lua_State *L)
     if (from + count > other->used_colors) {
         return luaL_error(L, "out of bounds source palette range (from %d + count %d > used colors %d)", from, count, other->used_colors);
     }
-#endif /* TOFU_CORE_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     GL_Color_t *palette = self->palette;
     GL_palette_merge(palette, to, other->palette, from, count, remove_duplicates);

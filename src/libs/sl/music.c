@@ -114,7 +114,7 @@ static inline bool _produce(Music_t *music)
     } else
     if (frames_to_produce > _STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = _STREAMING_BUFFER_CHUNK_IN_FRAMES;
-#endif
+#endif  /* defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES) */
     }
 
     void *write_buffer;
@@ -217,7 +217,7 @@ static void  _free(void *ptr, void *user_data)
 {
     free(ptr);
 }
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
 
 static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
@@ -254,9 +254,9 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
             .onRealloc = _realloc,
             .onFree    = _free
         });
-#else
+#else   /* defined(DEBUG) && !defined(SANITIZE) */
     drmp3_bool32 initialized = drmp3_init(music->decoder, _music_read, _music_seek, _music_tell, _music_meta, &music->io_callbacks_closure, NULL);
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
     if (!initialized) {
         LOG_E("can't create music decoder");
         goto error_free_decoder;
@@ -286,7 +286,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
         LOG_E("can't pre-load music data");
         goto error_deinitialize_ringbuffer;
     }
-#endif
+#endif  /* defined(TOFU_SOUND_MUSIC_PRELOAD) */
 
     music->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, _MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!music->props) {
@@ -339,7 +339,7 @@ static bool _music_reset(SL_Source_t *source)
         LOG_E("can't pre-load music data");
         return false;
     }
-#endif
+#endif  /* defined(TOFU_SOUND_MUSIC_PRELOAD) */
     return true;
 }
 

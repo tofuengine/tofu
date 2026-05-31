@@ -45,7 +45,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset)
 {
@@ -108,7 +108,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
             uint8_t mapped = state_map[srow[u]];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
@@ -210,7 +210,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
             uint8_t mapped = state_map[srow[u]];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {

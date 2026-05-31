@@ -179,7 +179,7 @@ void Storage_destroy(Storage_t *storage)
     }
     arrfree(storage->handles);
     LOG_D("file-system handles %p freed", storage->handles);
-#endif
+#endif  /* defined(TOFU_STORAGE_LEAK_CHECK) */
 
     free(storage);
     LOG_D("storage freed");
@@ -272,7 +272,7 @@ static bool _load_as_string(Storage_Resource_t *resource, FS_Handle_t *handle)
             },
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             .age = 0.0
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
         };
 
     return true;
@@ -297,7 +297,7 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
             },
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             .age = 0.0
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
         };
 
     return true;
@@ -356,9 +356,9 @@ static inline size_t _used_cache_slots(Storage_Resource_t **resources)
         }
         count += 1;
     }
-#else   /* TOFU_STORAGE_AUTO_COLLECT */
+#else   /* defined(TOFU_STORAGE_AUTO_COLLECT) */
     size_t count = length;
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
     LOG_D("cache is currently holding %d resources", count);
     return count;
 }
@@ -386,13 +386,13 @@ static inline void _free_cache_slot(Storage_Resource_t **resources)
 
     oldest->age = TOFU_STORAGE_RESOURCE_MAX_AGE; // Mark the oldest for release in the next cycle.
     LOG_D("resource %p marked for release", oldest);
-#else   /* TOFU_STORAGE_AUTO_COLLECT */
+#else   /* defined(TOFU_STORAGE_AUTO_COLLECT) */
     Storage_Resource_t *oldest = resources[0];
     arrdel(resources, 0); // FIFO removal.
     LOG_D("resource %p released", oldest);
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 }
-#endif
+#endif  /* defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT) */
 
 bool Storage_exists(Storage_t *storage, const char *name)
 {
@@ -421,7 +421,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         LOG_D("cache-hit for resource `%s`, resetting age and returning", name);
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
         entry->age = 0.0f; // Reset age on cache-hit.
-#endif  /* TOFU_STORAGE_AUTO_COLLECT) */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
         return entry;
     }
 
@@ -449,7 +449,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         LOG_D("cache is full, picking a resource to release");
         _free_cache_slot(storage->resources);
     }
-#endif
+#endif  /* defined(TOFU_STORAGE_CACHE_ENTRIES_LIMIT) */
 
     LOG_D("resource `%s` stored as %p", name, resource);
 
@@ -523,7 +523,7 @@ FS_Handle_t *Storage_open(Storage_t *storage, const char *name)
     }
 #if defined(TOFU_STORAGE_LEAK_CHECK)
     arrpush(storage->handles, handle);
-#endif
+#endif  /* defined(TOFU_STORAGE_LEAK_CHECK) */
     return handle;
 }
 
@@ -538,7 +538,7 @@ void Storage_close(Storage_t *storage, FS_Handle_t *handle)
         }
         arrdelswap(storage->handles, index);
     }
-#endif
+#endif  /* defined(TOFU_STORAGE_LEAK_CHECK) */
     FS_close(handle);
 }
 
@@ -561,7 +561,7 @@ bool Storage_update(Storage_t *storage, float delta_time)
 
     return true;
 }
-#else   /* TOFU_STORAGE_AUTO_COLLECT */
+#else   /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 size_t Storage_flush(Storage_t *storage)
 {
     size_t count = arrlenu(storage->resources);
@@ -576,4 +576,4 @@ size_t Storage_flush(Storage_t *storage)
 
     return count;
 }
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */

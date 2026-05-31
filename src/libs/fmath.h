@@ -44,7 +44,7 @@
 
 #if defined(TOFU_CORE_FAST_MATH) && !defined(FMATH_FAST_OPERATIONS)
     #define FMATH_FAST_OPERATIONS
-#endif
+#endif  /* defined(TOFU_CORE_FAST_MATH) && !defined(FMATH_FAST_OPERATIONS) */
 
 #define F_E         2.7182818284590452354f
 #define F_LOG2E     1.4426950408889634074f

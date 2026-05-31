@@ -49,7 +49,7 @@
 #if PLATFORM_ID == PLATFORM_WINDOWS
     #if defined(PATH_USE_OS_NATIVE_API)
         #include <shlobj.h>
-    #endif
+    #endif  /* defined(PATH_USE_OS_NATIVE_API) */
 #endif
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -85,9 +85,9 @@ void path_expand(const char *path, char *expanded)
     #if defined(PATH_USE_OS_NATIVE_API)
         char appdata[PLATFORM_PATH_MAX] = { 0 };
         SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
-    #else
+    #else   /* defined(PATH_USE_OS_NATIVE_API) */
         const char *appdata = getenv("APPDATA"); // https://pureinfotech.com/list-environment-variables-windows-10/
-    #endif
+    #endif  /* defined(PATH_USE_OS_NATIVE_API) */
         strcpy(resolved, appdata);
         strcat(resolved, path + 9);
 #endif

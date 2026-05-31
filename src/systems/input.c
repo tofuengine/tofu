@@ -393,7 +393,7 @@ static inline void _buttons_sync(Input_Button_t *buttons, size_t first, size_t c
 typedef struct Int_To_Int_s {
     int from, to;
 } Int_To_Int_t;
-#endif
+#endif  /* defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
 
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
 #define _KEYBOARD_A_CONTROLLER_ID   0
@@ -426,7 +426,7 @@ static Int_To_Int_t _keyboard_to_controller_1[] = {
     { INPUT_KEYBOARD_BUTTON_N, INPUT_CONTROLLER_BUTTON_START },
     { -1, -1 }
 };
-#endif
+#endif  /* defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) */
 
 #if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
 #define _CURSOR_CONTROLLER_ID   0
@@ -437,7 +437,7 @@ static Int_To_Int_t _controller_to_cursor[] = {
     { INPUT_CONTROLLER_BUTTON_B, INPUT_CURSOR_BUTTON_MIDDLE },
     { -1, -1 }
 };
-#endif
+#endif  /* defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
 
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED)
 static inline void _buttons_accumulate(Input_Button_t *target, const Input_Button_t *source, const Int_To_Int_t *mapping)
@@ -449,7 +449,7 @@ static inline void _buttons_accumulate(Input_Button_t *target, const Input_Butto
         target[mapping[i].to] = source[mapping[i].from];
     }
 }
-#endif
+#endif  /* defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) || defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
 
 static inline void _buttons_process(Input_t *input)
 {
@@ -467,14 +467,14 @@ static inline void _buttons_process(Input_t *input)
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
     _buttons_accumulate(controllers[_KEYBOARD_A_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_0);
     _buttons_accumulate(controllers[_KEYBOARD_B_CONTROLLER_ID].buttons, keyboard->buttons, _keyboard_to_controller_1);
-#endif
+#endif  /* defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) */
 
 #if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     const Input_Controller_t *controller = &controllers[_CURSOR_CONTROLLER_ID];
     if (!cursor->enabled) {
         _buttons_accumulate(cursor->buttons, controller->buttons, _controller_to_cursor);
     }
-#endif
+#endif  /* defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
 }
 
 static inline void _keyboard_update(Input_t *input, float delta_time)
@@ -515,7 +515,7 @@ static inline void _cursor_update(Input_t *input, float delta_time)
                 break;
             }
         }
-#endif  /* TOFU_INPUT_CURSOR_IS_EMULATED */
+#endif  /* defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
     }
 }
 
@@ -600,9 +600,9 @@ bool Input_cursor_is_available(const Input_Cursor_t *cursor)
 {
 #if defined(TOFU_INPUT_CURSOR_IS_EMULATED)
     return true;
-#else
+#else   /* defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
     return cursor->enabled;
-#endif
+#endif  /* defined(TOFU_INPUT_CURSOR_IS_EMULATED) */
 }
 
 Input_Button_t Input_cursor_get_button(const Input_Cursor_t *cursor, Input_Cursor_Buttons_t button)
@@ -628,9 +628,9 @@ bool Input_controller_is_available(const Input_Controller_t *controller)
 {
 #if defined(TOFU_INPUT_CONTROLLER_IS_EMULATED)
     return controller->jid != -1 || controller->id < 2; // Controllers #0 and #1 are keyboard emulated, anyway.
-#else
+#else   /* defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) */
     return controller->jid != -1;
-#endif
+#endif  /* defined(TOFU_INPUT_CONTROLLER_IS_EMULATED) */
 }
 
 Input_Button_t Input_controller_get_button(const Input_Controller_t *controller, Input_Controller_Buttons_t button)

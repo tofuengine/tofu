@@ -65,7 +65,7 @@ typedef struct Audio_s {
 
 #if defined(TOFU_AUDIO_AUTOSTART)
     double grace;
-#endif  /* TOFU_AUDIO_AUTOSTART */
+#endif  /* defined(TOFU_AUDIO_AUTOSTART) */
 } Audio_t;
 
 // TODO: rename as lowercase!!!

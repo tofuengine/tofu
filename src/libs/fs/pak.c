@@ -162,12 +162,12 @@ static inline void _name_to_id(const char *name, uint8_t id[PAK_ID_LENGTH], char
     md5_hash_sz(id, name, false);
     _to_hex(sz, id);
 }
-#else   /* TOFU_FILE_DEBUG_ENABLED */
+#else   /* defined(TOFU_FILE_DEBUG_ENABLED) */
 static inline void _name_to_id(const char *name, uint8_t id[PAK_ID_LENGTH])
 {
     md5_hash_sz(id, name, false);
 }
-#endif  /* TOFU_FILE_DEBUG_ENABLED */
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
 // FIXME: cache some entries into memory in order to avoid repeated seeks?
 static bool _peek_entry(FILE *stream, size_t index, Pak_Entry_Header_t *header)
@@ -251,9 +251,9 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     char id_hex[PAK_ID_LENGTH_SZ];
     _name_to_id(name, entry->id, id_hex);
     LOG_T("entry `%s` has id `%s`", name, id_hex);
-#else   /* TOFU_FILE_DEBUG_ENABLED */
+#else   /* defined(TOFU_FILE_DEBUG_ENABLED) */
     _name_to_id(name, entry->id);
-#endif  /* TOFU_FILE_DEBUG_ENABLED */
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
     Pak_Entry_Header_t header = { 0 };
     bool found = pak_mount->search(stream, pak_mount->entries, entry->id, &header);
@@ -269,7 +269,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
 
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T("entry `%s` w/ size %u located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
-#endif  /* TOFU_FILE_DEBUG_ENABLED */
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
     return stream;
 
@@ -436,7 +436,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long begin_of_st
         xor_schedule(&pak_handle->cipher_context, key, PAK_ID_LENGTH);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
         LOG_T("cipher context initialized");
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     }
 
     LOG_T("handle %p initialized at %ld (%d bytes)", handle, begin_of_stream, size);
@@ -457,7 +457,7 @@ static size_t _pak_handle_size(const FS_Handle_t *handle)
 
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("handle %p is", std_handle);
-#endif  /* TOFU_FILE_DEBUG_ENABLED */
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
     return pak_handle->stream_size;
 }
@@ -482,18 +482,18 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T("%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
     if (pak_handle->encrypted) {
         xor_process(&pak_handle->cipher_context, buffer, buffer, bytes_read);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
         LOG_T("%d bytes decrypted", bytes_read);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     }
 
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("%d bytes read for handle %p", bytes_read, handle);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     return bytes_read;
 }
 
@@ -524,14 +524,14 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
     bool sought = fseek(pak_handle->stream, position, SEEK_SET) == 0;
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_T("%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
     if (pak_handle->encrypted) { // If encrypted, re-sync the cipher to the sought position.
         size_t index = position - pak_handle->begin_of_stream;
         xor_seek(&pak_handle->cipher_context, index);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
         LOG_T("cipher context adjusted to %d", index);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     }
 
     return sought;
@@ -557,6 +557,6 @@ static bool _pak_handle_eof(const FS_Handle_t *handle)
     bool end_of_file = position > pak_handle->end_of_stream;
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_IF_D(end_of_file, "end-of-file reached for handle %p", handle);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     return end_of_file;
 }

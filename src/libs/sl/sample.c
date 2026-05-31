@@ -182,7 +182,7 @@ static void  _free(void *ptr, void *user_data)
 {
     free(ptr);
 }
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
 
 static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const SL_IO_Callbacks_t *callbacks, void *user_data)
 {
@@ -209,9 +209,9 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const
         .onRealloc = _realloc,
         .onFree    = _free
     });
-#else
+#else   /* defined(DEBUG) && !defined(SANITIZE) */
     sample->decoder = drflac_open(_sample_read, _sample_seek, _sample_tell, &sample->io_callbacks_closure, NULL);
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
     if (!sample->decoder) {
         LOG_E("can't create sample decoder");
         goto error_exit;
@@ -239,7 +239,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const
         LOG_E("sample is too long (%.2f seconds)", duration);
         goto error_close_decoder;
     }
-#endif
+#endif  /* defined(_SAMPLE_MAX_LENGTH_IN_SECONDS) */
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(INTERNAL_FORMAT, channels, sample->length_in_frames, NULL, NULL);
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.

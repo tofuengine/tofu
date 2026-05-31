@@ -56,7 +56,7 @@ GL_Processor_t *GL_processor_create(void)
     *processor = (GL_Processor_t){ 0 };
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("processor created at %p", processor);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
 #if defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED)
     LOG_W("setting default to %d color(s) quantized palette", GL_PROCESSOR_MAX_COLORS);
@@ -75,10 +75,10 @@ GL_Processor_t *GL_processor_create(void)
     #else
         #error "Too few palette entries"
     #endif
-#else
+#else   /* defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED) */
     LOG_W("setting default to %d color(s) greyscale palette", GL_PROCESSOR_MAX_COLORS);
     GL_palette_set_greyscale(processor->state.palette, GL_PROCESSOR_MAX_COLORS);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEFAULT_PALETTE_IS_QUANTIZED) */
 
     GL_processor_reset(processor);
 
@@ -89,19 +89,19 @@ void GL_processor_destroy(GL_Processor_t *processor)
 {
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("destroying processor %p", processor);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     if (processor->state.program) {
         GL_program_destroy(processor->state.program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program %p destroyed", processor->state.program);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
     }
 
     free(processor);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("processor freed");
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 }
 
 void GL_processor_reset(GL_Processor_t *processor)
@@ -122,7 +122,7 @@ void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palet
     GL_palette_copy(dst, palette);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("palette copied to bank %u", bank);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 }
 
 // TODO: change API, accepting a single array with successive from/to pairs.
@@ -160,9 +160,9 @@ static void _surface_to_pixels(const GL_Processor_State_t *state, const GL_Surfa
             color = palette[index];
         }
         *(dst++) = color;
-#else
+#else   /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
         *(dst++) = palette[index];
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
     }
 }
 
@@ -205,9 +205,9 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
         for (size_t w = dwidth; w; --w) {
 #if defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL)
             if (raster_index >= wait) {
-#else   /* TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL */
+#else   /* defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL) */
             while (raster_index >= wait_index) {
-#endif  /* TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL */
+#endif  /* defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL) */
                 switch (entry->command) {
                     case GL_PROGRAM_COMMAND_NOP: {
                         break;
@@ -222,7 +222,7 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
                         if (index < wait_index) {
                             LOG_W("WAIT command can't jump backwards (at <%d, %d>)", x, y);
                         }
-#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS) */
                         wait_index = index;
                         break;
                     }
@@ -235,7 +235,7 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
                         if (index < wait_index) {
                             LOG_W("WAIT command can't jump backwards <%d, %d>)", dx, dy);
                         }
-#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS) */
                         wait_index = index;
                         break;
                     }
@@ -281,9 +281,9 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
                 color = palette[index];
             }
             *(dst++) = color;
-#else
+#else   /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
             *(dst++) = palette[index];
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
             if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
                 dst = dst_sod;
             }
@@ -305,13 +305,13 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
             LOG_E("attempt to set invalid processor program %p", program);
             return;
         }
-#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS) */
 
     if (processor->state.program) { // Deallocate current program, if present.
         GL_program_destroy(processor->state.program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program %p destroyed", processor->program);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
         processor->state.program = NULL;
     }
 
@@ -319,7 +319,7 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
         processor->state.program = GL_program_clone(program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("processor program at %p copied at %p", program, processor->program);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
     }
     processor->surface_to_pixels = program ? _surface_to_pixels_program : _surface_to_pixels;
 }

@@ -41,7 +41,7 @@
 #include <libs/fmath.h>
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 #include <libs/heap.h>
-#endif
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
 #include <libs/imath.h>
 #define _LOG_TAG "environment"
 #include <libs/log.h>
@@ -101,12 +101,12 @@ static inline size_t _calculate_fps(float frame_time)
     index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
 
     return IROUND((float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES / sum);
-#else
+#else   /* defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE) */
     static float average = 0.0f;
 
     average = FLERP(average, frame_time, 0.1); // Smaller values makes the average more "stable".
     return _frame_time_to_fps(average);
-#endif
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE) */
 }
 
 // TODO: ditch moving average, and write a devlog about it! :)
@@ -126,7 +126,7 @@ static inline void _calculate_times(float times[Environment_Index_t_CountOf], co
         times[i] = sums[i] / (float)TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
     }
     index = (index + 1) % TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE_SAMPLES;
-#else
+#else   /* defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE) */
     static float averages[Environment_Index_t_CountOf] = { 0 };
 
     for (size_t i = 0; i < Environment_Index_t_CountOf; ++i) {
@@ -134,15 +134,15 @@ static inline void _calculate_times(float times[Environment_Index_t_CountOf], co
         averages[i] = FLERP(averages[i], t, _EMA_ALPHA); // Ditto.
         times[i] = averages[i];
     }
-#endif
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_MOVING_AVERAGE) */
 }
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf])
-#else
+#else   /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 void Environment_accumulate(Environment_t *environment, float frame_time)
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 {
     Environment_State_t *state = &environment->state;
 
@@ -151,12 +151,12 @@ void Environment_accumulate(Environment_t *environment, float frame_time)
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     _calculate_times(stats->times, deltas);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
     stats->memory_usage = FLERP(stats->memory_usage, heap_usage(), _EMA_ALPHA);
     stats->vm_memory_usage = FLERP(stats->memory_usage, Interpreter_stats(environment->interpreter), _EMA_ALPHA);
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
 }
 
 static inline bool _is_active(const Display_t *display)
@@ -189,14 +189,14 @@ bool Environment_update(Environment_t *environment, float delta_time)
             stats->times[ENVIRONMENT_INDEX_RENDER ], stats->times[ENVIRONMENT_INDEX_RENDER ] / stats->times[ENVIRONMENT_INDEX_FRAME],
             stats->times[ENVIRONMENT_INDEX_WAIT   ], stats->times[ENVIRONMENT_INDEX_WAIT   ] / stats->times[ENVIRONMENT_INDEX_FRAME],
             stats->times[ENVIRONMENT_INDEX_FRAME  ]);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
         LOG_I("heap-usage %.0fKiB, vm heap-usage %.0fKiB",
             stats->memory_usage / 1024.0f,
             stats->vm_memory_usage / 1024.0f);
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
     }
-#endif  /* TOFU_ENGINE_STATISTICS_DEBUG */
+#endif  /* defined(TOFU_ENGINE_STATISTICS_DEBUG) */
 
     return true;
 }

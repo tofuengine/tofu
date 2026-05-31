@@ -48,7 +48,7 @@
     #include <windows.h>
     #if !defined(VER_PLATFORM_WIN32_CE)
         #define VER_PLATFORM_WIN32_CE 3
-    #endif
+    #endif  /* !defined(VER_PLATFORM_WIN32_CE) */
 #elif PLATFORM_ID == PLATFORM_LINUX
     #include <sys/utsname.h>
 #endif

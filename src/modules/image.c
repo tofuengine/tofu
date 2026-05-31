@@ -194,7 +194,7 @@ static int image_new_1s_1o(lua_State *L)
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     StopWatch_t stopwatch = stopwatch_init();
     LOG_I("profiling loading and decoding for image `%s`", name);
-#endif
+#endif  /* defined(TOFU_CORE_PROFILING_ENABLED) */
     FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", name);
@@ -210,7 +210,7 @@ static int image_new_1s_1o(lua_State *L)
     Storage_close(storage, handle);
 #if defined(TOFU_CORE_PROFILING_ENABLED)
     LOG_I("loading and decoding image `%s` took %.3fs", name, stopwatch_elapsed(&stopwatch));
-#endif
+#endif  /* defined(TOFU_CORE_PROFILING_ENABLED) */
     LOG_D("surface %p loaded and decoded from file `%s`", surface, name);
 
     Image_Object_t *self = (Image_Object_t *)udt_newobject(L, sizeof(Image_Object_t), &(Image_Object_t){

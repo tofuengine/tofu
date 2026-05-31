@@ -197,7 +197,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
         const float distance = delta_L * delta_L
             + delta_a * delta_a
             + delta_b * delta_b;
-#endif  /* TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM */
+#endif
 
         // Note: computing the square root is unnecessary as the function is
         //       crescent invariant.

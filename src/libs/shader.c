@@ -128,7 +128,7 @@ Shader_t *shader_create(const char *vertex, const char *fragment, const char *id
     }
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("shader created at %p", shader);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     *shader = (Shader_t){ 0 }; // Initialize the object structure to clear all the fields.
 
@@ -230,7 +230,7 @@ void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, s
     if (location == -1) {
 #if defined(TOFU_GRAPHICS_REPORT_SHADERS_ERRORS)
         LOG_W("can't find uniform #%d for program #%d", index, shader->id);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_REPORT_SHADERS_ERRORS) */
         return;
     }
     switch (type) {

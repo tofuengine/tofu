@@ -46,7 +46,7 @@
 static int storage_inject_3ssS_0(lua_State *L);
 #if !defined(TOFU_STORAGE_AUTO_COLLECT)
 static int storage_flush_0_0(lua_State *L);
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 //static int storage_exists_1s_1b(lua_State *L);
 
 int storage_loader(lua_State *L)
@@ -57,7 +57,7 @@ int storage_loader(lua_State *L)
             { "inject", storage_inject_3ssS_0 },
 #if !defined(TOFU_STORAGE_AUTO_COLLECT)
             { "flush", storage_flush_0_0 },
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -117,4 +117,4 @@ static int storage_flush_0_0(lua_State *L)
 
     return 0;
 }
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */

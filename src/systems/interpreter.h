@@ -71,4 +71,4 @@ extern bool Interpreter_collect(const Interpreter_t *interpreter);
 
 extern size_t Interpreter_stats(const Interpreter_t *interpreter);
 
-#endif  /* __ TOFU_SYSTEMS_INTERPRETER_H__ */
+#endif  /* TOFU_SYSTEMS_INTERPRETER_H */

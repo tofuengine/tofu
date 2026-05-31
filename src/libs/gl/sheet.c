@@ -44,14 +44,14 @@
 #include <libs/bytes.h>
 #if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
 #include <libs/fmath.h>
-#endif
+#endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 #include <libs/imath.h>
 #define _LOG_TAG "gl-sheet"
 #include <libs/log.h>
 #include <libs/stb.h>
 #if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
 #include <libs/sincos.h>
-#endif
+#endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 
 #include <math.h>
 
@@ -202,9 +202,9 @@ void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Po
     } else {
         GL_context_blit_s(context, position, atlas, cell, scale_x, scale_y);
     }
-#else
+#else   /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
     GL_context_blit_s(context, position, atlas, cell, scale_x, scale_y);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 }
 
 // TODO: Validate the pivot-to-top-left rounding with anchors like 0, 0.5, 1, odd/even sprite sizes, and negative scale.
@@ -234,9 +234,9 @@ void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_P
     } else {
         GL_context_blit_sr(context, position, atlas, cell, scale_x, scale_y, rotation, anchor_x, anchor_y);
     }
-#else
+#else   /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
     GL_context_blit_sr(context, position, atlas, cell, scale_x, scale_y, rotation, anchor_x, anchor_y);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 }
 
 void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, GL_Point_t offset)

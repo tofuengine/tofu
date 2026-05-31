@@ -299,7 +299,7 @@ static inline float _fmaxf4(float a, float b, float c, float d)
 {
     return fmaxf(fmaxf(a, b), fmaxf(c, d));
 }
-#endif
+#endif  /* !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
 
 void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {

@@ -85,7 +85,7 @@ typedef struct Storage_Resource_s {
     } var;
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
     double age;
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 } Storage_Resource_t;
 
 typedef struct Storage_Configuration_s {
@@ -107,7 +107,7 @@ typedef struct Storage_s {
     FS_Context_t *context;
 #if defined(TOFU_STORAGE_LEAK_CHECK)
     FS_Handle_t **handles; // Used for leak-access checking.
-#endif
+#endif  /* defined(TOFU_STORAGE_LEAK_CHECK) */
 
     Storage_Cache_t *cache;
 
@@ -142,8 +142,8 @@ extern void Storage_close(Storage_t *storage, FS_Handle_t *handle);
 
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
 extern bool Storage_update(Storage_t *storage, float delta_time);
-#else   /* TOFU_STORAGE_AUTO_COLLECT */
+#else   /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 extern size_t Storage_flush(Storage_t *storage);
-#endif  /* TOFU_STORAGE_AUTO_COLLECT */
+#endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
 
-#endif  /* TOFU_SYSTEMS_STORAGE_H */
+#endif  /* defined(TOFU_SYSTEMS_STORAGE_H) */

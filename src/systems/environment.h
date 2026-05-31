@@ -50,7 +50,7 @@ typedef struct Environment_Configuration_s {
     bool debug;
 #if defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING)
     bool profile;
-#endif  /* TOFU_ENGINE_SCRIPT_LEVEL_PROFILING */
+#endif  /* defined(TOFU_ENGINE_SCRIPT_LEVEL_PROFILING) */
 } Environment_Configuration_t;
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
@@ -62,17 +62,17 @@ typedef enum Environment_Index_e {
     ENVIRONMENT_INDEX_FRAME,
     Environment_Index_t_CountOf
 } Environment_Index_t;
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 typedef struct Environment_Stats_s {
     size_t fps;
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
     float times[Environment_Index_t_CountOf];
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
     float memory_usage;
     float vm_memory_usage;
-#endif  /* TOFU_ENGINE_HEAP_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_HEAP_STATISTICS) */
 } Environment_Stats_t;
 
 typedef struct Environment_State_s {
@@ -97,9 +97,9 @@ extern const Environment_State_t *Environment_get_state(const Environment_t *env
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
 extern void Environment_accumulate(Environment_t *environment, float frame_time, const float deltas[Environment_Index_t_CountOf]);
-#else
+#else   /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 extern void Environment_accumulate(Environment_t *environment, float frame_time);
-#endif  /* TOFU_ENGINE_PERFORMANCE_STATISTICS */
+#endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 
 extern bool Environment_update(Environment_t *environment, float delta_time);
 

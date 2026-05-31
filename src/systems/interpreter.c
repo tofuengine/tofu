@@ -45,16 +45,16 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
     #define _TRACEBACK_STACK_INDEX 1
     #define _OBJECT_STACK_INDEX    (_TRACEBACK_STACK_INDEX + 1)
     #define _METHOD_STACK_INDEX(m) (_OBJECT_STACK_INDEX + 1 + (m))
-#else   /* TOFU_INTERPRETER_PROTECTED_CALLS */
+#else   /* defined(TOFU_INTERPRETER_PROTECTED_CALLS) */
     #define _OBJECT_STACK_INDEX    1
     #define _METHOD_STACK_INDEX(m) _OBJECT_STACK_INDEX + 1 + (m)
-#endif  /* TOFU_INTERPRETER_PROTECTED_CALLS */
+#endif  /* defined(TOFU_INTERPRETER_PROTECTED_CALLS) */
 
 #if defined(TOFU_INTERPRETER_READER_BUFFER_SIZE)
     #define _READER_CONTEXT_BUFFER_SIZE TOFU_INTERPRETER_READER_BUFFER_SIZE
-#else   /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
+#else   /* defined(TOFU_INTERPRETER_READER_BUFFER_SIZE) */
     #define _READER_CONTEXT_BUFFER_SIZE 1024
-#endif  /* TOFU_INTERPRETER_READER_BUFFER_SIZE */
+#endif  /* defined(TOFU_INTERPRETER_READER_BUFFER_SIZE) */
 
 #define _BOOT_SCRIPT "boot"
 
@@ -139,7 +139,7 @@ static int _error_handler(lua_State *L)
     luaL_traceback(L, L, msg, 1); /* append a standard traceback */
     return 1; /* return the traceback */
 }
-#endif
+#endif  /* defined(TOFU_INTERPRETER_PROTECTED_CALLS) && defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK) */
 
 // [...] Every time lua_load needs another piece of the chunk, it calls the reader, passing along its data parameter.
 // The reader must return a pointer to a block of memory with a new piece of the chunk and set size to the block size.
@@ -219,11 +219,11 @@ static bool _detect(lua_State *L, const char *methods[])
         } else {
 #if defined(TOFU_INTERPRETER_PARTIAL_OBJECT)
             LOG_W("method `%s` is missing", methods[i]);
-#else
+#else   /* defined(TOFU_INTERPRETER_PARTIAL_OBJECT) */
             LOG_F("mandatory method `%s` is missing", methods[i]);
             lua_pop(L, 1 + (i + 1)); // Pop the instance and the methods we pushed so far.
             return false;
-#endif
+#endif  /* defined(TOFU_INTERPRETER_PARTIAL_OBJECT) */
         }
     }
 
@@ -239,10 +239,10 @@ static inline int _raw_call(lua_State *L, int nargs, int nresults)
         return luaL_error(L, "error #%d in call: %s", result, lua_tostring(L, -1));
     }
     return LUA_OK;
-#else
+#else   /* defined(TOFU_INTERPRETER_PROTECTED_CALLS) */
     lua_call(L, nargs, nresults);
     return LUA_OK;
-#endif
+#endif  /* defined(TOFU_INTERPRETER_PROTECTED_CALLS) */
 }
 
 static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
@@ -256,7 +256,7 @@ static inline int _method_call(lua_State *L, Entry_Point_Methods_t method, int n
         }
         return LUA_OK;
     }
-#endif
+#endif  /* defined(TOFU_INTERPRETER_PARTIAL_OBJECT) */
     lua_pushvalue(L, index);                // T O F1 ... Fn A1 ... An     -> T O F1 ... Fn A1 ... An F
     lua_pushvalue(L, _OBJECT_STACK_INDEX);  // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
@@ -306,12 +306,12 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
 #if defined(TOFU_INTERPRETER_PROTECTED_CALLS)
 #if defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK)
     lua_pushcfunction(interpreter->state, _error_handler);
-#else   /* TOFU_INTERPRETER_CUSTOM_TRACEBACK */
+#else   /* defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK) */
     lua_getglobal(interpreter->state, "debug");
     lua_getfield(interpreter->state, -1, "traceback");
     lua_remove(interpreter->state, -2);
-#endif  /* TOFU_INTERPRETER_CUSTOM_TRACEBACK */
-#endif  /* TOFU_INTERPRETER_PROTECTED_CALLS */
+#endif  /* defined(TOFU_INTERPRETER_CUSTOM_TRACEBACK) */
+#endif  /* defined(TOFU_INTERPRETER_PROTECTED_CALLS) */
 
     return interpreter;
 

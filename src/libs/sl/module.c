@@ -109,13 +109,13 @@ static inline bool _produce(Module_t *module)
     if (frames_to_produce == 0) {
 #if defined(TOFU_MODULE_DEBUG_ENABLED)
         LOG_T("buffer overrrun for source %p - stalling (waiting for consumer)", module);
-#endif
+#endif  /* defined(TOFU_MODULE_DEBUG_ENABLED) */
         return true;
 #if defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES)
     } else
     if (frames_to_produce > _STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = _STREAMING_BUFFER_CHUNK_IN_FRAMES;
-#endif
+#endif  /* defined(_STREAMING_BUFFER_CHUNK_IN_FRAMES) */
     }
 
     void *write_buffer;

@@ -44,7 +44,7 @@
 
 #if !defined(LUAX_RUNTIME_CHECKS) && defined(DEBUG)
     #define LUAX_RUNTIME_CHECKS
-#endif
+#endif  /* !defined(LUAX_RUNTIME_CHECKS) && defined(DEBUG) */
 
 typedef enum luaX_Const_Type_e {
     LUA_CT_NIL,
@@ -110,12 +110,12 @@ typedef struct luaX_String_s {
                 luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d, matched %d out of %d)", __FILE__, __LINE__, _index - 1, _matched, _argc); \
             } \
         } while (0);
-#else
+#else   /* defined(LUAX_RUNTIME_CHECKS) */
     #define LUAX_SIGNATURE_BEGIN(l)
     #define LUAX_SIGNATURE_REQUIRED(...)
     #define LUAX_SIGNATURE_OPTIONAL(...)
     #define LUAX_SIGNATURE_END
-#endif
+#endif  /* defined(LUAX_RUNTIME_CHECKS) */
 
 // We can either check overloads by arity only, or by types. The latter is
 // the default.
@@ -142,7 +142,7 @@ typedef struct luaX_String_s {
                 default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
             } \
         } while (0);
-#else
+#else   /* defined(LUAX_ARITY_OVERLOAD_ONLY) */
     #define LUAX_OVERLOAD_BEGIN(L) \
         do { \
             lua_State *_L = (L); \
@@ -154,7 +154,7 @@ typedef struct luaX_String_s {
     #define LUAX_OVERLOAD_END \
             { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } while (0);
-#endif
+#endif  /* defined(LUAX_ARITY_OVERLOAD_ONLY) */
 
 // Defining `LUAX_STRICT_INTEGERS` makes `LUAX_INTEGER` and `LUAX_UNSIGNED` check
 // for integer-ness of the argument, instead of just number-ness. This is useful
@@ -166,10 +166,10 @@ typedef struct luaX_String_s {
 #if defined(LUAX_STRICT_INTEGERS)
 #define LUAX_IS_INTEGER(L, idx)     (lua_isinteger((L), (idx)))
 #define LUAX_IS_UNSIGNED(L, idx)    (lua_isinteger((L), (idx)))
-#else
+#else   /* defined(LUAX_STRICT_INTEGERS) */
 #define LUAX_IS_INTEGER(L, idx)     (lua_isnumber((L), (idx)))
 #define LUAX_IS_UNSIGNED(L, idx)    (lua_isnumber((L), (idx)))
-#endif
+#endif  /* defined(LUAX_STRICT_INTEGERS) */
 #define LUAX_IS_NUMBER(L, idx)      (lua_isnumber((L), (idx)))
 #define LUAX_IS_STRING(L, idx)      (lua_isstring((L), (idx)))
 #define LUAX_IS_LSTRING(L, idx)     (lua_isstring((L), (idx)))
@@ -194,7 +194,7 @@ typedef struct luaX_String_s {
     #define LUAX_USERDATA(L, idx)                 (!LUAX_IS_USERDATA((L), (idx)) ? luaL_error((L), "argument #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)                (!LUAX_IS_OBJECT((l), (idx), (t)) ? luaL_error((l), "argument #%d has wrong type (expected #%d)", (idx), (t)), NULL : luaX_toobject((l), (idx), (t)))
     #define LUAX_FUNCTION(l, idx)                 (!LUAX_IS_FUNCTION((l), (idx)) ? luaL_error((l), "argument #%d has wrong type", (idx)), LUAX_NIL_FUNCTION : luaX_tofunction((l), (idx)))
-#else
+#else   /* defined(LUAX_RUNTIME_CHECKS) */
     #define LUAX_BOOLEAN(L, idx)                  (lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                  (lua_tointeger((L), (idx)))
     #define LUAX_INTEGER_RANGE(L, idx, min, max)  (LUAX_INTEGER((L), (idx)))
@@ -209,7 +209,7 @@ typedef struct luaX_String_s {
     #define LUAX_USERDATA(L, idx)                 (lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)                (luaX_toobject((L), (idx), (t)))
     #define LUAX_FUNCTION(l, idx)                 (luaX_tofunction((L), (idx)))
-#endif
+#endif  /* defined(LUAX_RUNTIME_CHECKS) */
 
 #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)                  (lua_isnoneornil((L), (idx)) ? (def) : LUAX_BOOLEAN((L), (idx)))
 #define LUAX_OPTIONAL_INTEGER(L, idx, def)                  (lua_isnoneornil((L), (idx)) ? (def) : LUAX_INTEGER((L), (idx)))
@@ -238,10 +238,10 @@ typedef struct luaX_String_s {
                 return luaL_error(L, "[%s:%d] stack is unbalanced (%d)", __FILE__, __LINE__, _delta); \
             } \
         } while (0);
-#else
+#else   /* defined(LUAX_RUNTIME_CHECKS) */
     #define LUAX_STACK_BEGIN(L)
     #define LUAX_STACK_END(L, delta)
-#endif
+#endif  /* defined(LUAX_RUNTIME_CHECKS) */
 
 #define LUAX_UNUSED(x)   (void)(x)
 

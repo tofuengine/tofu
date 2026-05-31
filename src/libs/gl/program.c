@@ -75,7 +75,7 @@ GL_Program_t *GL_program_create(void)
     }
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program created at %p", program);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     *program = (GL_Program_t){ 0 };
 
@@ -95,7 +95,7 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
     }
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program cloned at %p", clone);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     *clone = (GL_Program_t){ 0 };
 
@@ -112,17 +112,17 @@ void GL_program_destroy(GL_Program_t *program)
 {
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("destroying program %p", program);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     arrfree(program->entries);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     free(program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program freed");
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 }
 
 #if defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS)
@@ -137,7 +137,7 @@ bool GL_program_validate(const GL_Program_t *program)
             && entry.args[0].size == SIZE_MAX
             && entry.args[1].size == SIZE_MAX;
 }
-#endif  /* TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS */
+#endif  /* defined(TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS) */
 
 void GL_program_copy(GL_Program_t *program, const GL_Program_t *other)
 {
@@ -151,7 +151,7 @@ void GL_program_clear(GL_Program_t *program)
     arrfree(program->entries);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     arrpush(program->entries, END_OF_DATA);
@@ -162,7 +162,7 @@ void GL_program_erase(GL_Program_t *program, size_t position, size_t length)
     arrdeln(program->entries, position, length);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("program entries at %p freed", program->entries);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 }
 
 void GL_program_nop(GL_Program_t *program, int position)

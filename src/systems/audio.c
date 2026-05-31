@@ -109,7 +109,7 @@ static void  _free(void *ptr, void *pUserData)
 {
     free(ptr);
 }
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
 
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 {
@@ -144,9 +144,9 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
             .onRealloc = _realloc,
             .onFree = _free
         }, &audio->driver.log);
-#else
+#else   /* defined(DEBUG) && !defined(SANITIZE) */
     ma_log_init(NULL, &audio->driver.log);
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
     ma_log_callback log_callback = ma_log_callback_init(_log_callback, (void *)audio);
     result = ma_log_register_callback(&audio->driver.log, log_callback);
     if (result != MA_SUCCESS) {
@@ -163,7 +163,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
             .onRealloc = _realloc,
             .onFree = _free
         };
-#endif
+#endif  /* defined(DEBUG) && !defined(SANITIZE) */
 
     result = ma_context_init(NULL, 0, &context_config, &audio->driver.context);
     if (result != MA_SUCCESS) {
@@ -202,9 +202,9 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     device_config.noPreSilencedOutputBuffer = MA_FALSE; // We require pre-silenced buffers as we mix incrementally.
 #if defined(TOFU_AUDIO_CLAMP_DURING_MIXING)
     device_config.noClip                    = MA_TRUE; // Disable miniaudio's internal clipping, we will handle it ourselves during mixing.
-#else
+#else   /* defined(TOFU_AUDIO_CLAMP_DURING_MIXING) */
     device_config.noClip                    = MA_FALSE;
-#endif
+#endif  /* defined(TOFU_AUDIO_CLAMP_DURING_MIXING) */
 
     result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {
@@ -222,7 +222,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         LOG_E("can't start the audio device");
         goto error_deinitialize_context;
     }
-#endif
+#endif  /* !defined(TOFU_AUDIO_AUTOSTART) */
 
     LOG_I("miniaudio: v%s", ma_version_string());
     LOG_I("device-name: %s", audio->driver.device.playback.name);
@@ -376,7 +376,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
     bool updated = SL_context_update(audio->context, delta_time);
 #if defined(TOFU_AUDIO_AUTOSTART)
     size_t count = SL_context_count_tracked(audio->context);
-#endif
+#endif  /* defined(TOFU_AUDIO_AUTOSTART) */
     ma_mutex_unlock(&audio->driver.lock);
 
     if (!updated) {
@@ -408,7 +408,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
             }
         }
     }
-#endif
+#endif  /* defined(TOFU_AUDIO_AUTOSTART) */
 
     return true;
 }

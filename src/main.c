@@ -157,7 +157,7 @@ int main(int argc, const char *argv[])
 
 #if defined(STB_LEAKCHECK_INCLUDED)
     stb_leakcheck_dumpmem();
-#endif
+#endif  /* defined(STB_LEAKCHECK_INCLUDED) */
 
     return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -43,7 +43,7 @@
 // DEBUG build. Please note that it can be force-enabled anyway.
 #if !defined(LUAX_NO_RTTI) && defined(DEBUG)
     #define _LUAX_RTTI
-#endif  /* LUAX_NO_RTTI */
+#endif  /* !defined(LUAX_NO_RTTI) && defined(DEBUG) */
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
@@ -121,17 +121,17 @@ int luaX_tofunction(lua_State *L, int idx)
 typedef struct luaX_Object_s {
     int type;
 } luaX_Object;
-#else
+#else   /* defined(_LUAX_RTTI) */
 typedef void *luaX_Object;
-#endif  /* _LUAX_RTTI */
+#endif  /* defined(_LUAX_RTTI) */
 
 #if defined(_LUAX_RTTI)
     #define LUAX_OBJECT_SIZE(s)     (sizeof(luaX_Object) + (s))
     #define LUAX_OBJECT_SELF(o)     ((void *)((luaX_Object *)(o) + 1))
-#else
+#else   /* defined(_LUAX_RTTI) */
     #define LUAX_OBJECT_SIZE(s)     (s)
     #define LUAX_OBJECT_SELF(o)     ((void *)(o))
-#endif  /* _LUAX_RTTI */
+#endif  /* defined(_LUAX_RTTI) */
 
 void *luaX_newobject(lua_State *L, size_t size, const void *state, int type, const char *metatable)
 {
@@ -140,7 +140,7 @@ void *luaX_newobject(lua_State *L, size_t size, const void *state, int type, con
     *object = (luaX_Object){
             .type = type
         };
-#endif  /* _LUAX_RTTI */
+#endif  /* defined(_LUAX_RTTI) */
     luaL_setmetatable(L, metatable);
     void *self = LUAX_OBJECT_SELF(object);
     memcpy(self, state, size);
@@ -153,15 +153,15 @@ int luaX_isobject(lua_State *L, int idx, int type)
     if (!object) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d is null", idx), 0;
-#else   /* DEBUG */
+#else   /* defined(DEBUG) */
         return 0;
-#endif  /* DEBUG */
+#endif  /* defined(DEBUG) */
     }
 #if defined(_LUAX_RTTI)
     return object->type == type;
-#else   /* _LUAX_RTTI */
+#else   /* defined(_LUAX_RTTI) */
     return 1;
-#endif  /* _LUAX_RTTI */
+#endif  /* defined(_LUAX_RTTI) */
 }
 
 void *luaX_toobject(lua_State *L, int idx, int type)
@@ -170,20 +170,20 @@ void *luaX_toobject(lua_State *L, int idx, int type)
     if (!object) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d is null", idx), NULL;
-#else   /* DEBUG */
+#else   /* defined(DEBUG) */
         return NULL;
-#endif  /* DEBUG */
+#endif  /* defined(DEBUG) */
     }
 
 #if defined(_LUAX_RTTI)
     if (object->type != type) {
 #if defined(DEBUG)
         return luaL_error(L, "object at argument #%d has wrong type (expected %d, actual %d)", idx, type, object->type), NULL;
-#else   /* DEBUG */
+#else   /* defined(DEBUG) */
         return NULL;
-#endif  /* DEBUG */
+#endif  /* defined(DEBUG) */
     }
-#endif  /* _LUAX_RTTI */
+#endif  /* defined(_LUAX_RTTI) */
 
     return LUAX_OBJECT_SELF(object);
 }

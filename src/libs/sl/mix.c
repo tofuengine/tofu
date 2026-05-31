@@ -49,9 +49,9 @@ static inline void _accumulate_s16(int16_t *accumulator, int16_t left_sample, fl
     const int32_t result = (int32_t)((float)*accumulator + (float)left_sample * left_gain + (float)right_sample * right_gain);
 #if defined(TOFU_AUDIO_CLAMP_DURING_MIXING)
     *accumulator = (int16_t)ICLAMP(result, INT16_MIN, INT16_MAX);
-#else
+#else   /* defined(TOFU_AUDIO_CLAMP_DURING_MIXING) */
     *accumulator = (int16_t)result;
-#endif
+#endif  /* defined(TOFU_AUDIO_CLAMP_DURING_MIXING) */
 }
 #elif SL_BYTES_PER_SAMPLE == 4
 static inline void _accumulate_f32(float *accumulator, float left_sample, float left_gain, float right_sample, float right_gain)
@@ -59,9 +59,9 @@ static inline void _accumulate_f32(float *accumulator, float left_sample, float 
     const float result = *accumulator + left_sample * left_gain + right_sample * right_gain;
 #if defined(TOFU_AUDIO_CLAMP_DURING_MIXING)
     *accumulator = FCLAMP(result, -1.0f, 1.0f);
-#else
+#else   /* defined(TOFU_AUDIO_CLAMP_DURING_MIXING) */
     *accumulator = result;
-#endif
+#endif  /* defined(TOFU_AUDIO_CLAMP_DURING_MIXING) */
 }
 #endif
 

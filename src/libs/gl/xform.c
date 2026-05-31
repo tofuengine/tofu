@@ -48,7 +48,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
@@ -59,7 +59,7 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
     }
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("xform created at %p", xform);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     *xform = (GL_XForm_t){
             .registers = {
@@ -80,13 +80,13 @@ void GL_xform_destroy(GL_XForm_t *xform)
         arrfree(xform->table);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("xform table at %p freed", xform->table);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
     }
 
     free(xform);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("xform %p freed", xform);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 }
 
 void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap)
@@ -109,7 +109,7 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
         arrfree(xform->table);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
         LOG_D("xform table at %p freed", xform->table);
-#endif  /* TOFU_CORE_VERBOSE_DEBUG */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
     }
 
     const GL_XForm_Table_Entry_t *entry = entries;
@@ -251,7 +251,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
             int sx = IROUNDF(xp); // Preserve direction, for negative values!
             int sy = IROUNDF(yp);
 
@@ -309,10 +309,10 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
                     *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
                 }
-#else
+#else   /* defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY) */
                 // NOTE: no transparency in Mode-7!
                 *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
-#endif  /* TOFU_GRAPHICS_XFORM_TRANSPARENCY */
+#endif  /* defined(TOFU_GRAPHICS_XFORM_TRANSPARENCY) */
             }
             ++dptr;
 

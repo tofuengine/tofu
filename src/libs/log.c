@@ -67,13 +67,13 @@
     #define COLOR_WHITE_HC   "\x1b[97m"
 
     #define COLOR_OFF        "\x1b[0m"
-#endif
+#endif  /* defined(_USE_COLORS) */
 
 #if defined(_USE_COLORS)
 static const char *_colors[Log_Levels_t_CountOf] = {
     COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
 };
-#endif
+#endif  /* defined(_USE_COLORS) */
 
 static const char _prefixes[Log_Levels_t_CountOf] = {
     'A', 'T', 'D', 'I', 'W', 'E', 'F', 'N'
@@ -94,13 +94,13 @@ static void _write(Log_Levels_t level, const char *tag, const char *text, va_lis
 
 #if defined(_USE_COLORS)
     fprintf(_stream, "%s[%c/%s]%s %s", COLOR_WHITE, _prefixes[level], tag, COLOR_OFF, _colors[level]);
-#else
+#else   /* defined(_USE_COLORS) */
     fprintf(_stream, "[%c/%s] ", _prefixes[level], tag);
-#endif
+#endif  /* defined(_USE_COLORS) */
     vfprintf(_stream, text, args);
 #if defined(_USE_COLORS)
     fputs(COLOR_OFF, _stream);
-#endif
+#endif  /* defined(_USE_COLORS) */
     if (text[strlen(text) - 1] != '\n') {
         fputs("\n", _stream);
     }
@@ -110,9 +110,9 @@ extern void Log_initialize(void)
 {
 #if defined(DEBUG)
     _level = LOG_LEVELS_ALL;
-#else
+#else   /* defined(DEBUG) */
     _level = LOG_LEVELS_ERROR;
-#endif
+#endif  /* defined(DEBUG) */
     _stream = stderr;
 }
 

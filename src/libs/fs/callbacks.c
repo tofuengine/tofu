@@ -181,7 +181,7 @@ static size_t _callbacks_handle_read(FS_Handle_t *handle, void *buffer, size_t b
     size_t bytes_read = cache_handle->callbacks->read(cache_handle->stream, buffer, bytes_requested);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("%d bytes read for handle %p", bytes_read, handle);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     return bytes_read;
 }
 
@@ -192,7 +192,7 @@ static bool _callbacks_handle_seek(FS_Handle_t *handle, long offset, int whence)
     bool sought = cache_handle->callbacks->seek(cache_handle->stream, offset, whence);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_D("%d bytes sought w/ mode %d for handle %p w/ result %d", offset, whence, handle, sought);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     return sought;
 }
 
@@ -210,6 +210,6 @@ static bool _callbacks_handle_eof(const FS_Handle_t *handle)
     bool end_of_file =  cache_handle->callbacks->eof(cache_handle->stream);
 #if defined(TOFU_FILE_DEBUG_ENABLED)
     LOG_IF_D(end_of_file, "end-of-file reached for handle %p", handle);
-#endif
+#endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
     return end_of_file;
 }

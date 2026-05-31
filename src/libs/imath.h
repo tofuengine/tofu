@@ -44,7 +44,7 @@
 
 #if defined(TOFU_CORE_FAST_MATH) && !defined(IMATH_FAST_OPERATIONS)
     #define IMATH_FAST_OPERATIONS
-#endif
+#endif  /* defined(TOFU_CORE_FAST_MATH) && !defined(IMATH_FAST_OPERATIONS) */
 
 #define IABS(v)         ((v) > 0 ? (v) : -(v))
 #define IMOD(a, b)      ((((a) % (b)) + (b)) % (b))
