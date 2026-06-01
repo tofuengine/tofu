@@ -101,7 +101,7 @@ extern float fsmoothstep(float edge0, float edge1, float x);
 extern float fsmootherstep(float edge0, float edge1, float x);
 
 #if defined(FMATH_FAST_OPERATIONS)
-#if !defined(FMATH_INLINE_FAST_OPERATIONS)
+#if defined(FMATH_INLINE_FAST_OPERATIONS)
 static inline float ffloor(float x)
 {
     const int i = (int)x;
@@ -113,10 +113,10 @@ static inline float fceil(float x)
     const int i = (int)x;
     return (float)(i + (x > (float)i));
 }
-#else   /* !defined(FMATH_INLINE_FAST_OPERATIONS) */
+#else   /* defined(FMATH_INLINE_FAST_OPERATIONS) */
 extern float ffloor(float x);
 extern float fceil(float x);
-#endif  /* !defined(FMATH_INLINE_FAST_OPERATIONS) */
+#endif  /* defined(FMATH_INLINE_FAST_OPERATIONS) */
 #endif  /* defined(FMATH_FAST_OPERATIONS) */
 
 #endif  /* TOFU_LIBS_FMATH_H */
