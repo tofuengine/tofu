@@ -638,7 +638,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     is_debug = is_debug;
 
     glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // opzionale: può costare; valutalo
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // optional: evaluate, costly
     glDebugMessageCallback(_opengl_debug_proc, NULL);
 #endif
 

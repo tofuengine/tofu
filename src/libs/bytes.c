@@ -69,7 +69,7 @@ uint64_t bytes_swap64(uint64_t value)
 int16_t bytes_i16le(int16_t i16)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return i16;
+    return i16;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return bytes_swap16(i16);
 #else
@@ -80,7 +80,7 @@ int16_t bytes_i16le(int16_t i16)
 uint16_t bytes_ui16le(uint16_t ui16)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return ui16;
+    return ui16;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return bytes_swap16(ui16);
 #else
@@ -93,7 +93,7 @@ int16_t bytes_i16be(int16_t i16)
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return bytes_swap16(i16);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return i16;
+    return i16;
 #else
 #    error unsupported endianness
 #endif
@@ -104,7 +104,7 @@ uint16_t bytes_ui16be(uint16_t ui16)
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return bytes_swap16(ui16);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return ui16;
+    return ui16;
 #else
 #    error unsupported endianness
 #endif
@@ -113,7 +113,7 @@ uint16_t bytes_ui16be(uint16_t ui16)
 int32_t bytes_i32le(int32_t i32)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return i32;
+    return i32;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return bytes_swap32(i32);
 #else
@@ -124,7 +124,7 @@ int32_t bytes_i32le(int32_t i32)
 uint32_t bytes_ui32le(uint32_t ui32)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return ui32;
+    return ui32;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return bytes_swap32(ui32);
 #else
@@ -137,7 +137,7 @@ int32_t bytes_i32be(int32_t i32)
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return bytes_swap32(i32);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return i32;
+    return i32;
 #else
 #    error unsupported endianness
 #endif
@@ -148,7 +148,7 @@ uint32_t bytes_ui32be(uint32_t ui32)
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return bytes_swap32(ui32);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return ui32;
+    return ui32;
 #else
 #    error unsupported endianness
 #endif

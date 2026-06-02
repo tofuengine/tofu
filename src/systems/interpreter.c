@@ -22,14 +22,6 @@
  * SOFTWARE.
  */
 
-#if 0
-https://www.lua.org/manual/5.2/manual.html
-https://www.lua.org/pil/27.3.2.html
-https://www.lua.org/pil/25.2.html
-
-https://nachtimwald.com/2014/07/26/calling-lua-from-c/
-#endif
-
 #include "interpreter.h"
 
 #include <core/config.h>
