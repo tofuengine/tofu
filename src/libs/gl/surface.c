@@ -203,14 +203,14 @@ void GL_surface_destroy(GL_Surface_t *surface)
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)
 {
-#if defined(__NO_MEMSET_MEMCPY__)
+#if defined(_NO_MEMSET_MEMCPY)
     GL_Pixel_t *dst = surface->data;
     for (size_t i = surface->data_size; i; --i) {
         *(dst++) = index;
     }
-#else
+#else   /* defined(_NO_MEMSET_MEMCPY) */
     memset(surface->data, index, surface->data_size);
-#endif
+#endif  /* defined(_NO_MEMSET_MEMCPY) */
 }
 
 GL_Pixel_t GL_surface_peek(const GL_Surface_t *surface, GL_Point_t position)

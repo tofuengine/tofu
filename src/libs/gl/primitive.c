@@ -143,7 +143,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         }
     }
 
-#if !defined(__NON_DDA_LINES__)
+#if !defined(_BRESENHAM_LINES)
     GL_Pixel_t *ddata = surface->data;
 
     const int dwidth = (int)surface->width;
@@ -165,7 +165,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         x += xin;
         y += yin;
     }
-#else
+#else   /* !defined(_BRESENHAM_LINES) */
     const int dwidth = (int)surface->width;
 
     const int dx = iabs(x1 - x0);
@@ -196,7 +196,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
             dptr += sy;
         }
     }
-#endif
+#endif  /* !defined(_BRESENHAM_LINES) */
 }
 
 #if 0

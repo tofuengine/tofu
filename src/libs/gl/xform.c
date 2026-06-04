@@ -230,23 +230,23 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 }
                 ++table;
             }
-#if defined(__DETACH_XFORM_TABLE__)
+#if defined(_DETACH_XFORM_TABLE)
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
             }
-#endif
+#endif  /* defined(_DETACH_XFORM_TABLE) */
         }
 
         const float xi = 0.0f - x0;
         const float yi = (float)i - y0;
 
-#if !defined(__CLIP_OFFSET__)
+#if !defined(_CLIP_OFFSET)
         float xp = (a * xi + b * yi) + x0 + h;
         float yp = (c * xi + d * yi) + y0 + v;
-#else
+#else   /* !defined(_CLIP_OFFSET) */
         float xp = (a * xi + b * yi) + x0 + fmodf(h, sw); // Clip to avoid cancellation when H/V are large.
         float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
-#endif
+#endif  /* !defined(_CLIP_OFFSET) */
 
         for (int j = width; j; --j) {
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
