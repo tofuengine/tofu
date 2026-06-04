@@ -14,7 +14,8 @@ Behavioural macros are also present in the file `config.h`.
 The rules are simple:
 
 * each macro should begin with the prefix that defines the "namespace" (e.g. `LUAX_XXX`);
-* macros that are public have no other prefix, being them "constants", functions-like, or behavioural (e.g. to configure);
+* engine-wise public macros must have the `TOFU_` prefix, being them "constants", functions-like, or behavioural (e.g. to configure);
+* for library/reusable code macros the prefix is the library name (e.g. `LUAX_XXX` for `luax.h`);
 * macros that are not public have an additional single underscore as prefix (e.g. `_LUAX_XXX`).
 
 > Please, don't ever a double underscore as this is meant for internally defined ones!
@@ -35,7 +36,7 @@ Note that this specific is interesting: we are checking a *public* macro (`LUAX_
 
 ## Identifiers
 
-For the identifiers is adopted the [snake-case]() style.
+For the identifiers is adopted the [snake-case](https://en.wikipedia.org/wiki/Snake_case) style.
 
 ## Preprocessor Conditionals
 

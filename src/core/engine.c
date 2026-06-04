@@ -359,9 +359,9 @@ static inline bool _low_priority_update(Engine_t *engine, float delta_time)
 #if defined(TOFU_STORAGE_AUTO_COLLECT)
             && Storage_update(engine->storage, delta_time)
 #endif  /* defined(TOFU_STORAGE_AUTO_COLLECT) */
-#if TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS
+#if TOFU_INTERPRETER_GC_MODE == TOFU_GC_MODE_CONTINUOUS
             && Interpreter_collect(engine->interpreter)
-#endif  /* TOFU_INTERPRETER_GC_MODE == GC_MODE_CONTINUOUS */
+#endif  /* TOFU_INTERPRETER_GC_MODE == TOFU_GC_MODE_CONTINUOUS */
             ;
 }
 

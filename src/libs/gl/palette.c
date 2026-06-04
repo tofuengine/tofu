@@ -127,7 +127,7 @@ void GL_palette_set_quantized(GL_Color_t *palette, size_t red_bits, size_t green
     }
 }
 
-#if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_PERCEPTUAL
+#if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_PERCEPTUAL
 typedef struct CIELAB_s {
     float L, a, b;
 } CIELAB_t;
@@ -158,7 +158,7 @@ static inline CIELAB_t _rgb_to_cielab(uint8_t r, uint8_t g, uint8_t b)
 
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from, size_t count, GL_Color_t color)
 {
-#if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_PERCEPTUAL
+#if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_PERCEPTUAL
     CIELAB_t color_lab = _rgb_to_cielab(color.r, color.g, color.b);
 #endif
     size_t to = from + count - 1;
@@ -168,7 +168,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
     for (size_t i = from; i <= to; ++i) {
         const GL_Color_t current = palette[i];
 
-#if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_EUCLIDIAN
+#if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_EUCLIDIAN
         const float delta_r = (float)(color.r - current->r);
         const float delta_g = (float)(color.g - current->g);
         const float delta_b = (float)(color.b - current->b);
@@ -176,7 +176,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
         const float distance = delta_r * delta_r
             + delta_g * delta_g
             + delta_b * delta_b;
-#elif TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_WEIGHTED
+#elif TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_WEIGHTED
         // https://www.compuphase.com/cmetric.htm
         const float delta_r = (float)(gl_color_get_r(color) - gl_color_get_r(current));
         const float delta_g = (float)(gl_color_get_g(color) - gl_color_get_g(current));
@@ -187,7 +187,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
         const float distance = (delta_r * delta_r) * (2.0f + (r_mean / 255.0f))
             + (delta_g * delta_g) * 4.0f
             + (delta_b * delta_b) * (2.0f + ((255.0f - r_mean) / 255.0f));
-#elif TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == COLOR_MATCH_PERCEPTUAL
+#elif TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_PERCEPTUAL
         CIELAB_t current_lab = _rgb_to_cielab(current->r, current->g, current->b);
 
         float delta_L = color_lab.L - current_lab.L;

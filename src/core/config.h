@@ -41,34 +41,36 @@
 #define CONFIG_H_INCLUDED
 
 // Constant MACROs have no prefix.
-#define BACKEND_GLFW 0
-#define BACKEND_RGFW 1
-#define BACKEND_SDL3 2
+// TODO: maybe we should prefix them with `TOFU_` for better readability and to 
+//       avoid potential name clashes?
+#define TOFU_BACKEND_GLFW 0
+#define TOFU_BACKEND_SDL3 1
+#define TOFU_BACKEND_RGFW 2
 
-#define COLOR_MATCH_EUCLIDIAN  0
-#define COLOR_MATCH_WEIGHTED   1
-#define COLOR_MATCH_PERCEPTUAL 2
-#define COLOR_MATCH_OCTREE     3
+#define TOFU_COLOR_MATCH_EUCLIDIAN  0
+#define TOFU_COLOR_MATCH_WEIGHTED   1
+#define TOFU_COLOR_MATCH_PERCEPTUAL 2
+#define TOFU_COLOR_MATCH_OCTREE     3
 
-#define GC_REPORTING_PERIOD 5.0f
+#define TOFU_GC_REPORTING_PERIOD 5.0f
 
-#define GC_TYPE_INCREMENTAL  0
-#define GC_TYPE_GENERATIONAL 1
+#define TOFU_GC_TYPE_INCREMENTAL  0
+#define TOFU_GC_TYPE_GENERATIONAL 1
 
-#define GC_MODE_AUTOMATIC  0
-#define GC_MODE_CONTINUOUS 1
-#define GC_MODE_MANUAL     2
+#define TOFU_GC_MODE_AUTOMATIC  0
+#define TOFU_GC_MODE_CONTINUOUS 1
+#define TOFU_GC_MODE_MANUAL     2
 
-#define BALANCE_LAW_LINEAR    0
-#define BALANCE_LAW_SINCOS    1
-#define BALANCE_LAW_SQRT      2
+#define TOFU_BALANCE_LAW_LINEAR 0
+#define TOFU_BALANCE_LAW_SINCOS 1
+#define TOFU_BALANCE_LAW_SQRT   2
 
-#define PANNING_LAW_CONSTANT_GAIN           0
-#define PANNING_LAW_CONSTANT_POWER_SINCOS   1
-#define PANNING_LAW_CONSTANT_POWER_SQRT     2
+#define TOFU_PANNING_LAW_CONSTANT_GAIN         0
+#define TOFU_PANNING_LAW_CONSTANT_POWER_SINCOS 1
+#define TOFU_PANNING_LAW_CONSTANT_POWER_SQRT   2
 
-#define PIXEL_FORMAT_RGBA8888 0
-#define PIXEL_FORMAT_RGB565   1
+#define TOFU_PIXEL_FORMAT_RGBA8888 0
+#define TOFU_PIXEL_FORMAT_RGB565   1
 
 // #############
 // ### Audio ###
@@ -124,12 +126,12 @@
 // ### Core ###
 // ############
 
-// Configures the multi-plaform backend to be used. Valid choices are:
+// Configures the multi-platform backend to be used. Valid choices are:
 //
-//   - BACKEND_GLFW
-//   - BACKEND_RGFW (to be done)
-//   - BACKEND_SDL3 (to be done)
-#define TOFU_CORE_BACKEND BACKEND_GLFW
+//   - TOFU_BACKEND_GLFW
+//   - TOFU_BACKEND_SDL3 (to be done)
+//   - TOFU_BACKEND_RGFW (to be done)
+#define TOFU_CORE_BACKEND TOFU_BACKEND_GLFW
 
 // Controls the use of OpenGL/ES for rendering.
 //
@@ -249,19 +251,19 @@
 // This macro defines the pixel format used for the internal VRAM texture.
 // Valid choices are:
 //
-// - `PIXEL_FORMAT_RGBA8888`
-// - `PIXEL_FORMAT_RGB565`
+// - `TOFU_PIXEL_FORMAT_RGBA8888`
+// - `TOFU_PIXEL_FORMAT_RGB565`
 //
-// The default is `PIXEL_FORMAT_RGB565`, as it offers a good compromise
+// The default is `TOFU_PIXEL_FORMAT_RGB565`, as it offers a good compromise
 // between quality and performance. Since this is and pixel-arts oriented engine
 // the loss of color depth is generally not an issue.
 //
-// `PIXEL_FORMAT_RGBA8888` is the original format used by the engine, but it
+// `TOFU_PIXEL_FORMAT_RGBA8888` is the original format used by the engine, but it
 // is generally overkill for the kind of graphics the engine is supposed to
 // handle. However, it requires not conversion at all from the GPU when
 // transferring the VRAM texture to the screen, so it could be useful in some
 // specific cases.
-#define TOFU_GRAPHICS_PIXEL_FORMAT PIXEL_FORMAT_RGB565
+#define TOFU_GRAPHICS_PIXEL_FORMAT TOFU_PIXEL_FORMAT_RGB565
 
 // The rendering system features texture buffering, to decouple the UPLOAD
 // (RAM to texture) and DRAW (texture to framebuffer) phases. This is convenient
@@ -370,26 +372,26 @@
 // process (i.e. finding the best matching palette color). The following modes
 // are available:
 //
-// - COLOR_MATCH_EUCLIDIAN (simpler)
+// - TOFU_COLOR_MATCH_EUCLIDIAN (simpler)
 //   Each color is treated as a three-components vector and the (squared)
 //   Euclidian distance is used to find the nearest color.
 //
-// - COLOR_MATCH_WEIGHTED (best compromise)
+// - TOFU_COLOR_MATCH_WEIGHTED (best compromise)
 //   Similar to the Euclidian distance but it takes into account also the
 //   "red-mean" and it's more consistent across the color spectrum, relatively
 //   to the human eye sensitivity to the RGB components.
 //
-// - COLOR_MATCH_PERCEPTUAL (slower)
+// - TOFU_COLOR_MATCH_PERCEPTUAL (slower)
 //   Uses the CIELab color-space representation for the color, which adopts a
 //   relatively perceptually uniform space, to find the best match (CIE76).
 //   This algorithm is noticeably slower than the others and occasionally can
 //   result in odds matching.
 //
-// - COLOR_MATCH_OCTREE (to be implemented)
+// - TOFU_COLOR_MATCH_OCTREE (to be implemented)
 //   Adopts an octree representations for the colors to detect the most similar
 //   colors.
 //
-#define TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM COLOR_MATCH_WEIGHTED
+#define TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM TOFU_COLOR_MATCH_WEIGHTED
 
 // Determines whether the Mode7-like transformations will consider the surface
 // as opaque or any (currently) transparent color will be discared.
@@ -418,8 +420,8 @@
 // used. This will report a simpler output.
 #define TOFU_INTERPRETER_CUSTOM_TRACEBACK
 
-// Selects the garbage-collector type. Could be either `GC_TYPE_INCREMENTAL` or
-// `GC_TYPE_GENERATIONAL`.
+// Selects the garbage-collector type. Could be either `TOFU_GC_TYPE_INCREMENTAL` or
+// `TOFU_GC_TYPE_GENERATIONAL`.
 //
 // An *incremental* garbage-collector reduces the length of the pause from
 // the script execution but doesn't reduce the overhead of the GC phase.
@@ -429,31 +431,31 @@
 // the point that we use pools of actors/entities that are reused.
 //
 // For this reason the *incremental* type is suggested.
-#define TOFU_INTERPRETER_GC_TYPE GC_TYPE_INCREMENTAL
+#define TOFU_INTERPRETER_GC_TYPE TOFU_GC_TYPE_INCREMENTAL
 
 // Selects the mode under which the garbage-collection is performed during the
 // game-engine lifetime. It can be one of the following values:
 //
-// - GC_MODE_AUTOMATIC
+// - TOFU_GC_MODE_AUTOMATIC
 //   Garbage-collection is carried out by the Lua virtual-machine according to
 //   it's internal logic (e.g. executed incrementally and a clean-cycle is
 //   forced when the amount of memory to be freed is significant).
 //
-// - GC_MODE_CONTINUOUS
+// - TOFU_GC_MODE_CONTINUOUS
 //   A single GC step is performed periodically at a fixed time-step (i.e.
 //   at every VM update step) so that the overhead is distributed over time.
 //
-// - GC_MODE_MANUAL
+// - TOFU_GC_MODE_MANUAL
 //   no autonomous garbage-collection is performed by the game-engine. It is
 //   duty of the programmer to call the `collectgarbage()` function when desired
 //   (e.g. during the level loading process).
 //
-// For small-sized projects, probably `GC_MODE_AUTOMATIC` is advisable. For
-// mid-sized project either `GC_MODE_CONTINUOUS` are suggested. On large
-// projects, or where performance really matters, `GC_MODE_MANUAL` is to be used
-#define TOFU_INTERPRETER_GC_MODE GC_MODE_CONTINUOUS
+// For small-sized projects, probably `TOFU_GC_MODE_AUTOMATIC` is advisable. For
+// mid-sized project either `TOFU_GC_MODE_CONTINUOUS` are suggested. On large
+// projects, or where performance really matters, `TOFU_GC_MODE_MANUAL` is to be used
+#define TOFU_INTERPRETER_GC_MODE TOFU_GC_MODE_CONTINUOUS
 
-// When the `GC_MODE_CONTINUOUS` mode is enabled, Interpreter_collect()` is
+// When the `TOFU_GC_MODE_CONTINUOUS` mode is enabled, Interpreter_collect()` is
 // called periodically to perform a garbage-collection step. With this macro we
 // can control if a single (indivisible) or a full (i.e. while it is actually
 // completed) step is performed. Usually a *single* step is preferable as it is
@@ -518,10 +520,10 @@
 //
 // Can be one of the following values:
 //
-//   - BALANCE_LAW_LINEAR
-//   - BALANCE_LAW_SINCOS
-//   - BALANCE_LAW_SQRT
-#define TOFU_SOUND_BALANCE_LAW BALANCE_LAW_SINCOS
+//   - TOFU_BALANCE_LAW_LINEAR
+//   - TOFU_BALANCE_LAW_SINCOS
+//   - TOFU_BALANCE_LAW_SQRT
+#define TOFU_SOUND_BALANCE_LAW TOFU_BALANCE_LAW_SINCOS
 
 // Configures the stereo *panning law* used by the sound sub-system, that is
 // the curve that controls the *position* of a sound in the stereo panorama
@@ -531,12 +533,12 @@
 //
 // Can be one of the following values:
 //
-//   - PANNING_LAW_CONSTANT_GAIN
-//   - PANNING_LAW_CONSTANT_POWER_SINCOS
-//   - PANNING_LAW_CONSTANT_POWER_SQRT
+//   - TOFU_PANNING_LAW_CONSTANT_GAIN
+//   - TOFU_PANNING_LAW_CONSTANT_POWER_SINCOS
+//   - TOFU_PANNING_LAW_CONSTANT_POWER_SQRT
 //
 // Usually a *constant power* law seems to be perceived as more "natural".
-#define TOFU_SOUND_PANNING_LAW PANNING_LAW_CONSTANT_POWER_SINCOS
+#define TOFU_SOUND_PANNING_LAW TOFU_PANNING_LAW_CONSTANT_POWER_SINCOS
 
 // The sound sub-system can support music preloading, that is the playing buffer
 // is filled during the opening phase so that it will be available from the

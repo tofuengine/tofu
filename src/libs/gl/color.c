@@ -41,9 +41,9 @@
 
 GL_Color_t gl_color_from_rgb(uint8_t r, uint8_t g, uint8_t b)
 {
-#if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
+#if TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGBA8888
     return (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-#elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
+#elif TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGB565
     //      1
     // 5432109876543210
     // RRRRRGGGGGGBBBBB
@@ -57,9 +57,9 @@ GL_Color_t gl_color_from_rgb(uint8_t r, uint8_t g, uint8_t b)
 
 uint8_t gl_color_get_r(GL_Color_t color)
 {
-#if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
+#if TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGBA8888
     return color.r;
-#elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
+#elif TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGB565
     return (color & 0xF800) >> 8
             | (color & 0xE000) >> 13;
 #else
@@ -69,9 +69,9 @@ uint8_t gl_color_get_r(GL_Color_t color)
 
 uint8_t gl_color_get_g(GL_Color_t color)
 {
-#if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
+#if TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGBA8888
     return color.g;
-#elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
+#elif TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGB565
     return (color & 0x07E0) >> 3
             | (color & 0x0600) >> 9;
 #else
@@ -81,9 +81,9 @@ uint8_t gl_color_get_g(GL_Color_t color)
 
 uint8_t gl_color_get_b(GL_Color_t color)
 {
-#if TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGBA8888
+#if TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGBA8888
     return color.b;
-#elif TOFU_GRAPHICS_PIXEL_FORMAT == PIXEL_FORMAT_RGB565
+#elif TOFU_GRAPHICS_PIXEL_FORMAT == TOFU_PIXEL_FORMAT_RGB565
     return (color & 0x001F) << 3
             | (color & 0x001C) >> 2;
 #else

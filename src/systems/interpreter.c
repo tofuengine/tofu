@@ -278,13 +278,13 @@ Interpreter_t *Interpreter_create(const Storage_t *storage)
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
     lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
 
-#if TOFU_INTERPRETER_GC_TYPE == GC_TYPE_INCREMENTAL
+#if TOFU_INTERPRETER_GC_TYPE == TOFU_GC_TYPE_INCREMENTAL
     lua_gc(interpreter->state, LUA_GCINC, 0, 0, 0);
-#elif TOFU_INTERPRETER_GC_TYPE == GC_TYPE_GENERATIONAL
+#elif TOFU_INTERPRETER_GC_TYPE == TOFU_GC_TYPE_GENERATIONAL
     lua_gc(interpreter->state, LUA_GCGEN, 0, 0);
 #endif
 
-#if TOFU_INTERPRETER_GC_MODE != GC_MODE_AUTOMATIC
+#if TOFU_INTERPRETER_GC_MODE != TOFU_GC_MODE_AUTOMATIC
     lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default. We disable as we will control it.
 #endif
 
@@ -433,7 +433,7 @@ bool Interpreter_collect(const Interpreter_t *interpreter)
     }
 
 #if defined(TOFU_INTERPRETER_GC_FULL_CYCLE)
-    #if TOFU_INTERPRETER_GC_TYPE == GC_TYPE_GENERATIONAL
+    #if TOFU_INTERPRETER_GC_TYPE == TOFU_GC_TYPE_GENERATIONAL
     luaX_gccollect(interpreter->state);
     #else
     luaX_gccycle(interpreter->state, -1);
