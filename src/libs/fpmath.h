@@ -51,12 +51,20 @@
 
 #if !defined(FIXED32_FRACTIONAL_BITS)
     #define FIXED32_FRACTIONAL_BITS 16
-    #define FIXED32_FRACTIONAL_MASK 0x0000FFFF
-    #define FIXED32_INTEGER_MASK 0xFFFF0000
 #endif  /* !defined(FIXED32_FRACTIONAL_BITS) */
 
-#define FIXED32_ONE (1 << FIXED32_FRACTIONAL_BITS)
-#define FIXED32_ONE_HALF (FIXED32_ONE >> 1)
+#if FIXED32_FRACTIONAL_BITS != 4 && \
+    FIXED32_FRACTIONAL_BITS != 8 && \
+    FIXED32_FRACTIONAL_BITS != 12 && \
+    FIXED32_FRACTIONAL_BITS != 16
+    #error "FIXED32_FRACTIONAL_BITS must be 4, 8, 12 or 16"
+#endif
+
+// Retain signedness with these macros, for the masks.
+#define FIXED32_ONE             (INT32_C(1) << FIXED32_FRACTIONAL_BITS)
+#define FIXED32_ONE_HALF        (FIXED32_ONE >> 1)
+#define FIXED32_FRACTIONAL_MASK (FIXED32_ONE - INT32_C(1))
+#define FIXED32_INTEGER_MASK    (~FIXED32_FRACTIONAL_MASK)
 
 //typedef int32_t fp32_16_t;
 typedef int32_t fixed32_t;
@@ -66,7 +74,11 @@ typedef int32_t fixed32_t;
 // multiple definitions when included in different translation units.
 static inline fixed32_t fixed32_from_int(int v)
 {
-    return (fixed32_t)(v << FIXED32_FRACTIONAL_BITS);
+#if defined(FIXED32_USE_64_BIT)
+    return (fixed32_t)(v * (int64_t)FIXED32_ONE);
+#else   /* defined(FIXED32_USE_64_BIT) */
+    return (fixed32_t)(v * (int32_t)FIXED32_ONE);
+#endif  /* defined(FIXED32_USE_64_BIT) */
 }
 
 static inline fixed32_t fixed32_from_float(float v)
@@ -89,43 +101,43 @@ static inline fixed32_t fixed32_from_double_round(double v)
     return (fixed32_t)(v * (double)FIXED32_ONE + (v >= 0 ? 0.5 : -0.5));
 }
 
-static inline int fixed32_to_int(fixed32_t v)
+static inline int fixed32_to_int_floor(fixed32_t v)
 {
-    return v >> FIXED32_FRACTIONAL_BITS;
+    // Floors toward negative infinity, which is what we want for negative numbers.
+    //
+    // It's an implementation-defined behavior if `v` is negative and has a
+    // fractional part, but it works as expected on two's complement
+    // architectures, which are the vast majority of modern ones.
+    //
+    // Note: we are using bitwise shifting only to calculate the floor value,
+    //       as they would not work correctly for negative numbers.
+    return v >> FIXED32_FRACTIONAL_BITS; 
+}
+
+static inline int fixed32_to_int_trunc(fixed32_t v)
+{
+    return v / FIXED32_ONE; // This will truncate toward zero, which is what we want for negative numbers.
 }
 
 static inline int fixed32_to_int_round(fixed32_t v)
 {
-    if (v >= 0) {
-        return (v + FIXED32_ONE_HALF) >> FIXED32_FRACTIONAL_BITS;
-    }
-    return (v - FIXED32_ONE_HALF) >> FIXED32_FRACTIONAL_BITS;
+#if defined(FIXED32_USE_64_BIT)
+    int64_t aux = (int64_t)v; // Use `int64_t` to avoid overflow when adding `FIXED32_ONE_HALF`.
+#else   /* defined(FIXED32_USE_64_BIT) */
+    int32_t aux = v;
+#endif
+    aux += v >= 0 ? FIXED32_ONE_HALF : -FIXED32_ONE_HALF;
+    return (int)(aux / FIXED32_ONE); // Dividing (not shifting) will round to the nearest integer, with ties rounding away from zero, which is what we want for negative numbers.
 }
 
 static inline float fixed32_to_float(fixed32_t v)
 {
-    return (float)v / (float)FIXED32_ONE;
-}
-
-static inline float fixed32_to_float_round(fixed32_t v)
-{
-    if (v >= 0) {
-        return (float)(v + FIXED32_ONE_HALF) / (float)FIXED32_ONE;
-    }
-    return (float)(v - FIXED32_ONE_HALF) / (float)FIXED32_ONE;
+    return (float)v / (float)FIXED32_ONE; // No need to add `FIXED32_ONE_HALF` for rounding, as the division will already round to the nearest float.
 }
 
 static inline double fixed32_to_double(fixed32_t v)
 {
-    return (double)v / (double)FIXED32_ONE;
-}
-
-static inline double fixed32_to_double_round(fixed32_t v)
-{
-    if (v >= 0) {
-        return (double)(v + FIXED32_ONE_HALF) / (double)FIXED32_ONE;
-    }
-    return (double)(v - FIXED32_ONE_HALF) / (double)FIXED32_ONE;
+    return (double)v / (double)FIXED32_ONE; // Ditto.
 }
 
 static inline fixed32_t fixed32_floor(fixed32_t v)
@@ -135,18 +147,16 @@ static inline fixed32_t fixed32_floor(fixed32_t v)
 
 static inline fixed32_t fixed32_ceil(fixed32_t v)
 {
-    if (v >= 0) {
-        return (v & FIXED32_INTEGER_MASK) + ((v & FIXED32_FRACTIONAL_MASK) ? FIXED32_ONE : 0);
-    }
-    return (v & FIXED32_INTEGER_MASK) - ((v & FIXED32_FRACTIONAL_MASK) ? FIXED32_ONE : 0);
+    // The masking already produces a "floor" value, so we don't need to check
+    // for the sign of `v` to decide if we need to add `FIXED32_ONE` or not, as
+    // the result will be the same.
+    return (v & FIXED32_INTEGER_MASK) + ((v & FIXED32_FRACTIONAL_MASK) ? FIXED32_ONE : 0);
 }
 
 static inline fixed32_t fixed32_round(fixed32_t v)
 {
-    if (v >= 0) {
-        return (v + FIXED32_ONE_HALF) & FIXED32_INTEGER_MASK;
-    }
-    return (v - FIXED32_ONE_HALF) & FIXED32_INTEGER_MASK;
+    int aux = fixed32_to_int_round(v); // Convert and rescale, to avoid flooring issues with negative numbers.
+    return fixed32_from_int(aux);
 }
 
 // Helper macros. The user can still call the functions directly if they want
@@ -158,17 +168,17 @@ static inline fixed32_t fixed32_round(fixed32_t v)
     #define FIXED32_FROM_FLOAT(v) fixed32_from_float_round(v)
     #define FIXED32_FROM_DOUBLE(v) fixed32_from_double_round(v)
     #define FIXED32_TO_INT(v) fixed32_to_int_round(v)
-    #define FIXED32_TO_FLOAT(v) fixed32_to_float_round(v)
-    #define FIXED32_TO_DOUBLE(v) fixed32_to_double_round(v)
 #else   /* !defined(FIXED32_NO_ROUNDING) */
     #define FIXED32_FROM_FLOAT(v) fixed32_from_float(v)
     #define FIXED32_FROM_DOUBLE(v) fixed32_from_double(v)
-    #define FIXED32_TO_INT(v) fixed32_to_int(v)
-    #define FIXED32_TO_FLOAT(v) fixed32_to_float(v)
-    #define FIXED32_TO_DOUBLE(v) fixed32_to_double(v)
+    #define FIXED32_TO_INT(v) fixed32_to_int_trunc(v)
 #endif  /* !defined(FIXED32_NO_ROUNDING) */
 
-#define FIXED32_ITRUNC(v) fixed32_to_int(v)
+#define FIXED32_TO_FLOAT(v) fixed32_to_float(v)
+#define FIXED32_TO_DOUBLE(v) fixed32_to_double(v)
+
+#define FIXED32_ITRUNC(v) fixed32_to_int_trunc(v)
+#define FIXED32_IFLOOR(v) fixed32_to_int_floor(v)
 #define FIXED32_IROUND(v) fixed32_to_int_round(v)
 
 #endif  /* TOFU_LIBS_FPMATH_H */
