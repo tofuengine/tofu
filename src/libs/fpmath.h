@@ -53,12 +53,9 @@
     #define FIXED32_FRACTIONAL_BITS 16
 #endif  /* !defined(FIXED32_FRACTIONAL_BITS) */
 
-#if FIXED32_FRACTIONAL_BITS != 4 && \
-    FIXED32_FRACTIONAL_BITS != 8 && \
-    FIXED32_FRACTIONAL_BITS != 12 && \
-    FIXED32_FRACTIONAL_BITS != 16
-    #error "FIXED32_FRACTIONAL_BITS must be 4, 8, 12 or 16"
-#endif
+#if FIXED32_FRACTIONAL_BITS < 1 || FIXED32_FRACTIONAL_BITS > 30
+    #error "FIXED32_FRACTIONAL_BITS must be between 1 and 30 (inclusive)."
+#endif  /* FIXED32_FRACTIONAL_BITS < 1 || FIXED32_FRACTIONAL_BITS > 30 */
 
 // Retain signedness with these macros, for the masks.
 #define FIXED32_ONE             (INT32_C(1) << FIXED32_FRACTIONAL_BITS)
@@ -66,12 +63,25 @@
 #define FIXED32_FRACTIONAL_MASK (FIXED32_ONE - INT32_C(1))
 #define FIXED32_INTEGER_MASK    (~FIXED32_FRACTIONAL_MASK)
 
+// The user can define `FIXED32_USE_64_BIT` to use 64-bit integers for the
+// intermediate calculations. However, we leave this as optional in case we
+// know that the represented values will not exceed internally `INT32_MAX`,
+// as we can have faster operations with 32-bit integers.
+//
+// Define the macro below to represent the whole `fixed32_t` range.
+
+//#define FIXED32_USE_64_BIT
+
 //typedef int32_t fp32_16_t;
 typedef int32_t fixed32_t;
 
 // All the functions are defined as `static inline` to allow the compiler to
 // optimize them as much as possible, and to avoid potential issues with
 // multiple definitions when included in different translation units.
+
+// No check are performed on the input values, as the user is expected to know
+// what they are doing when using fixed-point arithmetic and not cause undefined
+// behavior by overflowing the intermediate calculations.
 static inline fixed32_t fixed32_from_int(int v)
 {
 #if defined(FIXED32_USE_64_BIT)
@@ -109,8 +119,7 @@ static inline int fixed32_to_int_floor(fixed32_t v)
     // fractional part, but it works as expected on two's complement
     // architectures, which are the vast majority of modern ones.
     //
-    // Note: we are using bitwise shifting only to calculate the floor value,
-    //       as they would not work correctly for negative numbers.
+    // Note: we are using bitwise shifting only to calculate the floor value.
     return v >> FIXED32_FRACTIONAL_BITS; 
 }
 
