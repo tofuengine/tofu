@@ -196,13 +196,13 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
         int positive = top - i;
         int negative = -(i + 1);
         int type = lua_type(L, positive);
-#if 0
+#if defined(_LUAX_CHECK_STACK_DUMP)
         int typeN = lua_type(L, negative);
         if (type != typeN) {
             printf("  %d/%d: type mismatch %d != %d\n", positive, negative, type, typeN);
             continue;
         }
-#endif
+#endif  /* defined(_LUAX_CHECK_STACK_DUMP) */
         const char* type_name = lua_typename(L, type);
         printf("  %d/%d: type=%s", positive, negative, type_name);
         switch (type) {
