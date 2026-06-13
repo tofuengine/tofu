@@ -347,7 +347,7 @@
 // will save half of the rotation calculations.
 #define TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS
 
-// In the roto-scaling algorithm we apply an inverse transformation from the
+// In the (roto)scaling algorithm we apply an inverse transformation from the
 // destination space to the source space. Coordinates are calculated as floating
 // point values, but we need to round them down to get the corresponding pixel
 // in the source image. The `IFLOORF(x)` function is the most accurate way to do
@@ -357,6 +357,16 @@
 // out-of-bounds access due to the truncation toward zero of negative values
 // (e.g. `-0.3` becomes `0` instead of `-1`).
 #define TOFU_GRAPHICS_NO_IFLOORF
+
+// Generally speaking, fixed-point math is no longer the ace-in-the-hole for
+// performance that it used to be in 25 years ago. Current current CPUs are
+// optimized for floating-point calculations in their micro-code. However,
+// in our (roto)scaling algorithm we need to round down the source coordinates
+// to `int` to get the corresponding pixel, and even a simple cast to `int`
+// (`ITRUNC(x)`, which truncates toward zero) is costly (not to mention the
+// `IFLOORF(x)` macro). Fixed-point math can be a good compromise to get a more
+// efficient rounding down while preserving the accuracy of the calculations.
+#define TOFU_GRAPHICS_USE_FIXED_MATH
 
 // Enabling the "fast path" for blitting operations means that when operating
 // with no rotation and/ or no scaling the most efficient `GL_context_blit*()`
