@@ -569,10 +569,10 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
 #if defined(TOFU_GRAPHICS_NO_IFLOORF)
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-    const fix32_t fsminx = FIX32_FROM_FLOAT((float)sminx);
-    const fix32_t fsminy = FIX32_FROM_FLOAT((float)sminy);
-    const fix32_t fsmaxx = FIX32_FROM_FLOAT((float)smaxx);
-    const fix32_t fsmaxy = FIX32_FROM_FLOAT((float)smaxy);
+    const fix32_t fsminx = FIX32_FROM_INT(sminx);
+    const fix32_t fsminy = FIX32_FROM_INT(sminy);
+    const fix32_t fsmaxx = FIX32_FROM_INT(smaxx);
+    const fix32_t fsmaxy = FIX32_FROM_INT(smaxy);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
     const float fsminx = (float)sminx;
     const float fsminy = (float)sminy;
