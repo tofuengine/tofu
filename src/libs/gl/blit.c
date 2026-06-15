@@ -225,28 +225,28 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
     const float ov = (float)area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
 
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-    const fix32_t du = FIX32_FROM_FLOAT(inv_scale_x);
-    const fix32_t dv = FIX32_FROM_FLOAT(inv_scale_y);
+    const fix32_t du = FPMATH_FROM_FLOAT(inv_scale_x);
+    const fix32_t dv = FPMATH_FROM_FLOAT(inv_scale_y);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
     const float du = inv_scale_x; // Retain sign of the scaling to move according to a "vector" along the scaling.
     const float dv = inv_scale_y;
 #endif  /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
 
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-    fix32_t v = FIX32_FROM_FLOAT(ov);
+    fix32_t v = FPMATH_FROM_FLOAT(ov);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
     float v = ov;
 #endif  /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
     for (int i = height; i; --i) {
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-        const int y = FIX32_ITRUNC(v); // We can truncate, because the fixed-point conversion already rounded to the nearest integer.
+        const int y = FPMATH_ITRUNC(v); // We can truncate, because the fixed-point conversion already rounded to the nearest integer.
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
         const int y = ITRUNC(v); // Truncate, as we used `ITRUNC()` to calculate the scaled size.
 #endif
         const GL_Pixel_t *sptr = sdata + y * swidth; // MULT instead of LUT access, more general-purpose (and not necessarily slower on modern CPUs with good branch prediction and pipelining).
 
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-        fix32_t u = FIX32_FROM_FLOAT(ou);
+        fix32_t u = FPMATH_FROM_FLOAT(ou);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
         float u = ou;
 #endif  /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
@@ -255,7 +255,7 @@ void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const G
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-            const int x = FIX32_ITRUNC(u); // Ditto.
+            const int x = FPMATH_ITRUNC(u); // Ditto.
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
             const int x = ITRUNC(u); // Ditto.
 #endif  /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
@@ -533,13 +533,13 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const float row_u_setup = px * m00 + py * m01 + spx;
     const float row_v_setup = px * m10 + py * m11 + spy;
 
-    fix32_t row_u = FIX32_FROM_FLOAT(row_u_setup);
-    fix32_t row_v = FIX32_FROM_FLOAT(row_v_setup);
+    fix32_t row_u = FPMATH_FROM_FLOAT(row_u_setup);
+    fix32_t row_v = FPMATH_FROM_FLOAT(row_v_setup);
 
-    const fix32_t du_dx = FIX32_FROM_FLOAT(m00); // Meaning: delta of (source space) `u` when moving one pixel in (destination space) `x`.
-    const fix32_t dv_dx = FIX32_FROM_FLOAT(m10);
-    const fix32_t du_dy = FIX32_FROM_FLOAT(m01);
-    const fix32_t dv_dy = FIX32_FROM_FLOAT(m11);
+    const fix32_t du_dx = FPMATH_FROM_FLOAT(m00); // Meaning: delta of (source space) `u` when moving one pixel in (destination space) `x`.
+    const fix32_t dv_dx = FPMATH_FROM_FLOAT(m10);
+    const fix32_t du_dy = FPMATH_FROM_FLOAT(m01);
+    const fix32_t dv_dy = FPMATH_FROM_FLOAT(m11);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
     float row_u = px * m00 + py * m01 + spx;
     float row_v = px * m10 + py * m11 + spy;
@@ -569,10 +569,10 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
 #if defined(TOFU_GRAPHICS_NO_IFLOORF)
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-    const fix32_t fsminx = FIX32_FROM_INT(sminx);
-    const fix32_t fsminy = FIX32_FROM_INT(sminy);
-    const fix32_t fsmaxx = FIX32_FROM_INT(smaxx);
-    const fix32_t fsmaxy = FIX32_FROM_INT(smaxy);
+    const fix32_t fsminx = FPMATH_FROM_INT(sminx);
+    const fix32_t fsminy = FPMATH_FROM_INT(sminy);
+    const fix32_t fsmaxx = FPMATH_FROM_INT(smaxx);
+    const fix32_t fsmaxy = FPMATH_FROM_INT(smaxy);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
     const float fsminx = (float)sminx;
     const float fsminy = (float)sminy;
@@ -615,16 +615,16 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
             // access due to the truncation toward zero.
             if (u >= fsminx && u < fsmaxx && v >= fsminy && v < fsmaxy) {
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-                const int x = FIX32_ITRUNC(u); // We can call `FIX32_IFLOOR()` which is faster, since we are in the non-negative range.
-                const int y = FIX32_ITRUNC(v);
+                const int x = FPMATH_ITRUNC(u); // We can call `FPMATH_IFLOOR()` which is faster, since we are in the non-negative range.
+                const int y = FPMATH_ITRUNC(v);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
                 const int x = (int)u;
                 const int y = (int)v;
 #endif  /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
 #else   /* defined(TOFU_GRAPHICS_NO_IFLOORF) */
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
-            const int x = FIX32_IFLOOR(u);
-            const int y = FIX32_IFLOOR(v);
+            const int x = FPMATH_IFLOOR(u);
+            const int y = FPMATH_IFLOOR(v);
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
             const int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             const int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
