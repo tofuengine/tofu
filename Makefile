@@ -167,7 +167,6 @@ CFLAGS=-D_DEFAULT_SOURCE \
 	-DDR_FLAC_NO_STDIO \
 	-DMA_NO_CUSTOM -DMA_USE_STDINT -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -DMA_NO_NODE_GRAPH -DMA_NO_RESOURCE_MANAGER \
 	-DLIBXMP_BUILDING_STATIC \
-	-DMINIZ_NO_STDIO -DMINIZ_NO_TIME -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_ARCHIVE_WRITING_APIS -DMINIZ_NO_ZLIB_COMPATIBLE_NAME -DMINIZ_NO_MALLOC \
 	-I$(srcdir) \
 	-I$(externaldir)
 ifeq ($(PLATFORM),linux)
@@ -261,7 +260,6 @@ SOURCES+=$(wildcard $(externaldir)/cglm/*.c) \
 	$(wildcard $(externaldir)/glad/*.c) \
 	$(wildcard $(externaldir)/lua/*.c) \
 	$(wildcard $(externaldir)/miniaudio/*.c) \
-	$(wildcard $(externaldir)/miniz/*.c) \
 	$(wildcard $(externaldir)/noise/*.c) \
 	$(wildcard $(externaldir)/spleen/*.c) \
 	$(wildcard $(externaldir)/xmp-lite/*.c)
@@ -284,7 +282,6 @@ INCLUDES+=$(wildcard $(externaldir)/cglm/*.h) \
 	$(wildcard $(externaldir)/glad/*.h) \
 	$(wildcard $(externaldir)/lua/*.h) \
 	$(wildcard $(externaldir)/miniaudio/*.h) \
-	$(wildcard $(externaldir)/miniz/*.h) \
 	$(wildcard $(externaldir)/noise/*.h) \
 	$(wildcard $(externaldir)/spleen/*.h) \
 	$(wildcard $(externaldir)/stb/*.h) \
