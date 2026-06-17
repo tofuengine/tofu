@@ -148,6 +148,6 @@ void GL_queue_blit_sr(const GL_Queue_t *queue, const GL_Context_t *context)
     const GL_Queue_Sprite_t *current = queue->sprites;
     for (size_t count = arrlenu(queue->sprites); count; --count) {
         const GL_Queue_Sprite_t *sprite = current++;
-        GL_sheet_blit_sr(sheet, context, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->anchor_x, sprite->anchor_y);
+        GL_sheet_blit_sr(sheet, context, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->pivot_x, sprite->pivot_y);
     }
 }

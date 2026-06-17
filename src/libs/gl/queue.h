@@ -49,7 +49,7 @@ typedef struct GL_Queue_Sprite_s {
     GL_Point_t position;
     float scale_x, scale_y;
     int rotation;
-    float anchor_x, anchor_y;
+    float pivot_x, pivot_y;
 } GL_Queue_Sprite_t;
 
 typedef struct GL_Queue_s {

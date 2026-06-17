@@ -1301,13 +1301,13 @@ static int canvas_sprite_10onnonnnnNN_0(lua_State *L)
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_NUMBER(L, 7);
     int rotation = LUAX_INTEGER(L, 8);
-    float anchor_x = LUAX_OPTIONAL_NUMBER(L, 9, 0.5f);
-    float anchor_y = LUAX_OPTIONAL_NUMBER(L, 10, anchor_x);
+    float pivot_x = LUAX_OPTIONAL_NUMBER(L, 9, 0.5f);
+    float pivot_y = LUAX_OPTIONAL_NUMBER(L, 10, pivot_x);
 
     const GL_Context_t *context = self->context;
     const GL_Sheet_t *sheet = bank->sheet;
     GL_sheet_blit_sr(sheet, context, (GL_Point_t){ .x = x, .y = y },
-        cell_id, scale_x, scale_y, rotation, anchor_x, anchor_y);
+        cell_id, scale_x, scale_y, rotation, pivot_x, pivot_y);
 
     return 0;
 }

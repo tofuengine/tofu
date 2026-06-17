@@ -325,7 +325,7 @@ static inline float _fmaxf4(float a, float b, float c, float d)
 }
 #endif  /* !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
 
-void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float pivot_x, float pivot_y)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -348,11 +348,11 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
     const float dy = (float)position.y + 0.5f;
 
 #if !defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS)
-    const float sax = sw * anchor_x; // Anchor points in source/destination edge-space.
-    const float say = sh * anchor_y;
+    const float sax = sw * pivot_x; // Pivot (which are also anchors) points in source/destination edge-space.
+    const float say = sh * pivot_y;
 #endif  /* !defined(TOFU_GRAPHICS_BRANCHLESS_CALCULATIONS) */
-    const float dax = dw * anchor_x;
-    const float day = dh * anchor_y;
+    const float dax = dw * pivot_x;
+    const float day = dh * pivot_y;
 
     // The counter-clockwise 2D rotation matrix is
     //

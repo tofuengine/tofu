@@ -179,7 +179,7 @@ static int batch_add_4onNN_0(lua_State *L) // FIXME: rename to `push()`?
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = 1.0f, .scale_y = 1.0f,
             .rotation = 0,
-            .anchor_x = 0.5f, .anchor_y = 0.5f
+            .pivot_x = 0.5f, .pivot_y = 0.5f
         });
 
     return 0;
@@ -205,7 +205,7 @@ static int batch_add_5onnnn_0(lua_State *L)
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = 1.0f, .scale_y = 1.0f,
             .rotation = rotation,
-            .anchor_x = 0.5f, .anchor_y = 0.5f
+            .pivot_x = 0.5f, .pivot_y = 0.5f
         });
 
     return 0;
@@ -233,7 +233,7 @@ static int batch_add_6onnnnn_0(lua_State *L)
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = scale_x, .scale_y = scale_y,
             .rotation = 0,
-            .anchor_x = 0.5f, .anchor_y = 0.5f
+            .pivot_x = 0.5f, .pivot_y = 0.5f
         });
 
     return 0;
@@ -259,15 +259,15 @@ static int batch_add_9onnnnnNNN_0(lua_State *L)
     float scale_x = LUAX_NUMBER(L, 5);
     float scale_y = LUAX_NUMBER(L, 6);
     int rotation = LUAX_OPTIONAL_INTEGER(L, 7, 0);
-    float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
-    float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
+    float pivot_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
+    float pivot_y = LUAX_OPTIONAL_NUMBER(L, 9, pivot_x);
 
     GL_queue_add(self->queue, (GL_Queue_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
             .scale_x = scale_x, .scale_y = scale_y,
             .rotation = rotation,
-            .anchor_x = anchor_x, .anchor_y = anchor_y
+            .pivot_x = pivot_x, .pivot_y = pivot_y
         });
 
     return 0;
