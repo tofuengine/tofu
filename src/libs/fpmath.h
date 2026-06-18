@@ -45,6 +45,7 @@
 // to switch between rounding and non-rounding versions of the functions by
 // defining the `FPMATH_NO_ROUNDING` macro.
 #define FPMATH_FROM_INT(v) fix32_from_int(v)
+#define FPMATH_FROM_RATIONAL(n, d) fix32_from_rational((n), (d))
 #if !defined(FPMATH_NO_ROUNDING)
     #define FPMATH_FROM_FLOAT(v) fix32_round_from_float(v)
     #define FPMATH_FROM_DOUBLE(v) fix32_round_from_double(v)
@@ -54,7 +55,6 @@
     #define FPMATH_FROM_DOUBLE(v) fix32_from_double(v)
     #define FPMATH_TO_INT(v) fix32_trunc_to_int(v)
 #endif  /* !defined(FPMATH_NO_ROUNDING) */
-
 #define FPMATH_TO_FLOAT(v) fix32_to_float(v)
 #define FPMATH_TO_DOUBLE(v) fix32_to_double(v)
 

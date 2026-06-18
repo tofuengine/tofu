@@ -94,6 +94,11 @@
 //   fixed-point conversion.
 // - `fix32_round_from_float()` / `fix32_round_from_double()`: half-away-from-
 //   zero float/double to fixed-point conversion.
+// - `fix32_from_rational()`: converts an integer numerator and denominator
+//   directly to fixed point with truncation toward zero. This is mainly a
+//   semantic helper for deterministic integer-ratio conversion, as it avoids an
+//   intermediate floating-point value. The denominator must be nonzero and the
+//   scaled intermediate must fit the selected arithmetic path.
 // - `fix32_add()` / `fix32_sub()`: fixed-point addition and subtraction.
 // - `fix32_mul_by_int()`: fixed-point multiplied by an integer.
 // - `fix32_mul()`: fixed-point multiplication with selectable scaling path.
@@ -224,6 +229,16 @@ static inline fix32_t fix32_round_from_double(double value)
 {
     const double scaled = value * (double)FIX32_ONE;
     return (fix32_t)(scaled + ((scaled >= 0.0) ? 0.5 : -0.5));
+}
+
+static inline fix32_t fix32_from_rational(int32_t numerator, int32_t denominator)
+{
+#if FIX32_USE_64_BIT
+    return (fix32_t)(((int64_t)numerator * (int64_t)FIX32_ONE) /
+                     (int64_t)denominator);
+#else   /* FIX32_USE_64_BIT */
+    return (fix32_t)((numerator * FIX32_ONE) / denominator);
+#endif  /* FIX32_USE_64_BIT */
 }
 
 static inline fix32_t fix32_add(fix32_t left, fix32_t right)
