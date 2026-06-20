@@ -47,6 +47,40 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 }
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
+// In the previous implementation, we were using the modulo macro as follows:
+//
+//     u = IMOD(u + du, (int)area.width)    du = +1 or -1
+//
+// and
+//
+//     u = (u + 1) % (int)area.width
+//
+// which is correct, but hides TWO distinct `%` operations and an additional
+// sum.
+//
+// Since we know that `dv` is equal to `1` in absolute value, we can write a
+// specialized code to handle the behaviour.
+//
+// We are basically replacing the "branchless" approach with a "branchful"
+// one. Is this worth? Yes, as the CPU's branch-predictor does a pretty good
+// job and in this specific case the branch is entered only a small fraction
+// of times.
+//
+// We were, wrongly, assuming that a branchless algorithm is always better.
+//
+// ( we observed a similar phenomenon in the sprite blitter )
+static inline int _step_and_wrap(int v, int dv, int min, int max)
+{
+    v += dv;
+    if (v < min) {
+        v = max;
+    } else
+    if (v > max) {
+        v = min;
+    }
+    return v;
+}
+
 extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset)
 {
     const GL_Surface_t *surface = context->surface;
@@ -55,14 +89,17 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const uint8_t *state_map = state->palette_state.map;
     const uint8_t bank_mask = state->palette_bank;
 
-    int skip_x = offset.x; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = offset.y;
+    const int w = (int)area.width; // We can safely cast to `int`, we won't ever have 32-bit sized tiles! :)
+    const int h = (int)area.height;
+
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)area.width,
-            .y1 = position.y + (int)area.height
+            .x1 = position.x + w,
+            .y1 = position.y + h
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -97,8 +134,11 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const GL_Pixel_t *sptr = sdata + area.y * swidth + area.x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int ou = IMOD(skip_x, area.width);
-    const int ov = IMOD(skip_y, area.height);
+    const int ou = IMOD(skip_x + offset.x, w);
+    const int ov = IMOD(skip_y + offset.y, h);
+
+    const int max_u = w - 1;
+    const int max_v = h - 1;
 
     int v = ov;
     for (int i = height; i; --i) {
@@ -116,10 +156,10 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
             }
             ++dptr;
 
-            u = (u + 1) % (int)area.width; // Prefer modulo over branch.
+            u = _step_and_wrap(u, 1, 0, max_u);
         }
 
-        v = (v + 1) % (int)area.height;
+        v = _step_and_wrap(v, 1, 0, max_v);
         dptr += dskip;
     }
 }
@@ -132,8 +172,11 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     const uint8_t *state_map = state->palette_state.map;
     const uint8_t bank_mask = state->palette_bank;
 
-    const size_t sw = area.width * IABS(scale_x);
-    const size_t sh = area.height * IABS(scale_y);
+    const int w = (int)area.width;
+    const int h = (int)area.height;
+
+    const int sw = w * IABS(scale_x);
+    const int sh = h * IABS(scale_y);
 
     int skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = 0;
@@ -141,8 +184,8 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (int)sw,
-            .y1 = position.y + (int)sh
+            .x1 = position.x + sw,
+            .y1 = position.y + sh
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -192,13 +235,16 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 
     const int ou0 = skip_x / su;
     const int ov0 = skip_y / sv;
-    const int ou1 = (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
-    const int ov1 = (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
-    const int ou = IMOD(ou1 + offset.x, area.width); // Pre-add the offset (wrapping around). Negative offset is supported.
-    const int ov = IMOD(ov1 + offset.y, area.height);
+    const int ou1 = (scale_x < 0 ? w - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
+    const int ov1 = (scale_y < 0 ? h - 1 - ov0 : ov0);
+    const int ou = IMOD(ou1 + offset.x, w); // Pre-add the offset (wrapping around). Negative offset is supported.
+    const int ov = IMOD(ov1 + offset.y, h); // NOTE: `IMOD` is acceptable, here, offsets are arbitrary (not single step)
 
     const int du = scale_x > 0 ? 1 : -1;
     const int dv = scale_y > 0 ? 1 : -1;
+
+    const int max_u = w - 1;
+    const int max_v = h - 1;
 
     int v = ov;
     int rv = rv0;
@@ -220,14 +266,14 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
-                u = IMOD(u + du, area.width); // Prefer modulo over branch.
+                u = _step_and_wrap(u, du, 0, max_u);
                 ru = 0;
             }
         }
 
         rv += 1;
         if (rv == sv) { // Ditto.
-            v = IMOD(v + dv, area.height); // Ditto.
+            v = _step_and_wrap(v, dv, 0, max_v);
             rv = 0;
         }
         dptr += dskip;
