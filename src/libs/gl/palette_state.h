@@ -60,6 +60,7 @@ typedef struct GL_Palette_State_s {
     // set). This allows us to determine if a pixel is transparent just with
     // a single LUT access (and not by testing the alpha-bit).
     uint8_t map[GL_PALETTE_AVAILABLE_COLORS];
+    // TODO: change to `uint16_t` and add palette bank (will require rebaking)
 } GL_Palette_State_t;
 
 #define GL_PALETTE_FLAGS_MASK    0x80

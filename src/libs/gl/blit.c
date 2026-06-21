@@ -134,7 +134,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 #else   /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
             uint8_t mapped = state_map[*(sptr++)];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped); // FIXME: useles macro call, the byte is already w/o the MSB bit high!
             }
             ++dptr;
 #endif  /* defined(_BRANCHLESS_BLIT_EXPERIMENTAL) */
