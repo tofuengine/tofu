@@ -69,17 +69,12 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 // We were, wrongly, assuming that a branchless algorithm is always better.
 //
 // ( we observed a similar phenomenon in the sprite blitter )
-static inline int _step_and_wrap(int v, int dv, int min, int max)
-{
-    v += dv;
-    if (v < min) {
-        v = max;
-    } else
-    if (v > max) {
-        v = min;
-    }
-    return v;
-}
+//
+// As a general optimization then we can leverage the fact we are stepping a
+// single pixel at a time. Also we know the direction of the step (in case of
+// the non-scaled tiles is always positive). This mean that we can rewrite the
+// branchless formula to a "branchful" BUT SIMPLER one that the CPU branch
+// predictor can optimize.
 
 extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset)
 {
@@ -140,6 +135,10 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const int max_u = w - 1;
     const int max_v = h - 1;
 
+    // TODO: we can apply row/column segmentation and split the loop in two, as
+    //       the exact moment at which the wrap occurs can be calculated (after
+    //       `width - ou` pixels).
+
     int v = ov;
     for (int i = height; i; --i) {
         const GL_Pixel_t *srow = sptr + v * swidth;
@@ -156,10 +155,14 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
             }
             ++dptr;
 
-            u = _step_and_wrap(u, 1, 0, max_u);
+            if (++u > max_u) {
+                u = 0;
+            }
         }
 
-        v = _step_and_wrap(v, 1, 0, max_v);
+        if (++v > max_v) {
+            v = 0;
+        }
         dptr += dskip;
     }
 }
@@ -266,14 +269,30 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
 
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
-                u = _step_and_wrap(u, du, 0, max_u);
+                if (du > 0) { // This is a loop-invariant condition that the CPU branch-predictor can hoist.
+                    if (++u > max_u) {
+                        u = 0;
+                    }
+                } else { // `du` is either positive or negative, can't be `0`.
+                    if (--u < 0) {
+                        u = max_u;
+                    }
+                }
                 ru = 0;
             }
         }
 
         rv += 1;
         if (rv == sv) { // Ditto.
-            v = _step_and_wrap(v, dv, 0, max_v);
+            if (dv > 0) { // Ditto.
+                if (++v > max_v) {
+                    v = 0;
+                }
+            } else {
+                if (--v < 0) {
+                    v = max_v;
+                }
+            }
             rv = 0;
         }
         dptr += dskip;
