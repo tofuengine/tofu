@@ -56,7 +56,7 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
     // Always limit the access to the map for the actually used colors. The
     // upper half of the map is reserved for transparent pixels (as they have
     // the MSB set).
-    state->map[from] = (state->map[from] & GL_PALETTE_FLAGS_MASK) | to;
+    state->map[from] = (state->map[from] & ~GL_PALETTE_SHIFTING_MASK) | to;
 }
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
