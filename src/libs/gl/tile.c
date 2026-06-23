@@ -81,8 +81,7 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
     const int w = (int)area.width; // We can safely cast to `int`, we won't ever have 32-bit sized tiles! :)
     const int h = (int)area.height;
@@ -149,9 +148,9 @@ extern void GL_context_tile(const GL_Context_t *context, GL_Point_t position, co
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
-            uint8_t mapped = state_map[srow[u]];
+            uint16_t mapped = state_map[srow[u]];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = GL_PALETTE_GET_PIXEL(mapped);
             }
             ++dptr;
 
@@ -172,8 +171,7 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
     const int w = (int)area.width;
     const int h = (int)area.height;
@@ -261,9 +259,9 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
-            uint8_t mapped = state_map[srow[u]];
+            uint16_t mapped = state_map[srow[u]];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = GL_PALETTE_GET_PIXEL(mapped);
             }
             ++dptr;
 

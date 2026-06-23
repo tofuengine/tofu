@@ -56,8 +56,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
     if (seed.x < clipping_region->x0 || seed.x >= clipping_region->x1
         || seed.y < clipping_region->y0 || seed.y >= clipping_region->y1) {
@@ -70,13 +69,13 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     const size_t dskip = dwidth;
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (transparency && GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
-    const GL_Pixel_t replacement = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    const GL_Pixel_t replacement = GL_PALETTE_GET_PIXEL(mapped);
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
@@ -134,8 +133,7 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = area.x,
@@ -175,9 +173,9 @@ void GL_context_scan(const GL_Context_t *context, GL_Rectangle_t area, const GL_
     for (int i = height; i; --i) {
         int x = drawing_region.x0; // TODO: optimize with modulo/stride?
         for (int j = width; j; --j) {
-            uint8_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
+            uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, *dptr)];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = GL_PALETTE_GET_PIXEL(mapped);
             }
             ++dptr;
 
@@ -194,8 +192,7 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
     int skip_x = area.x; // Offset into the (source) surface/texture, updated during clipping.
     int skip_y = area.y;
@@ -247,9 +244,9 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
             const GL_Pixel_t from = *dptr;
             const GL_Pixel_t to = *(sptr++);
 
-            uint8_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
+            uint16_t mapped = state_map[callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to)];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = GL_PALETTE_GET_PIXEL(mapped);
             }
             ++dptr;
 
@@ -373,8 +370,7 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state); // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
@@ -439,10 +435,10 @@ void GL_context_stencil(const GL_Context_t *context, GL_Point_t position, const 
 
             const GL_Pixel_t value = *(mptr++);
 
-            uint8_t mapped = state_map[*(sptr++)];
+            uint16_t mapped = state_map[*(sptr++)];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)
                 && should_write(value, threshold)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = GL_PALETTE_GET_PIXEL(mapped);
             }
             ++dptr;
         }
@@ -529,9 +525,8 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
     const GL_Pixel_Function_t blend = _pixel_functions[function];
-    const uint8_t bank_mask = state->palette_bank;
 
     int skip_x = area.x; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = area.y;
@@ -582,9 +577,9 @@ void GL_context_blend(const GL_Context_t *context, GL_Point_t position, const GL
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
-            uint8_t mapped = state_map[blend(*dptr, *(sptr++))];
+            uint16_t mapped = state_map[blend(*dptr, *(sptr++))];
             if (!GL_PALETTE_IS_TRANSPARENT(mapped)) {
-                *dptr = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+                *dptr = GL_PALETTE_GET_PIXEL(mapped);
             }
             ++dptr;
         }

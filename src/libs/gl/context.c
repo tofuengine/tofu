@@ -53,9 +53,7 @@ static void _reset(GL_Context_t *context)
                 .y0 = 0,
                 .x1 = (int)surface->width,
                 .y1 = (int)surface->height
-            },
-            .palette_state = (GL_Palette_State_t){ { 0 } },
-            .palette_bank = GL_PALETTE_DEFAULT_BANK
+            }
         };
 
     gl_palette_state_init(&state.palette_state);
@@ -173,8 +171,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
     const int width = clipping_region->x1 - clipping_region->x0;
     const int height = clipping_region->y1 - clipping_region->y0;
@@ -183,11 +180,11 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
     }
     // FIXME: remove this early bailing out everywhere? Null for-loop suffices and is better due to lack of branch?
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (transparency && GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     GL_Pixel_t *ddata = surface->data;
 
@@ -214,5 +211,5 @@ void GL_context_set_bank(GL_Context_t *context, size_t bank)
 
     // Precompute the bank mask, so that we have it ready during the drawing
     // operation.
-    context->state.current.palette_bank = (uint8_t)bank << GL_PALETTE_BANK_SHIFT;
+    gl_palette_state_bank(&context->state.current.palette_state, bank);
 }

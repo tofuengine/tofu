@@ -326,14 +326,13 @@ void GL_context_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     _point(surface, clipping_region, position.x, position.y, index);
 }
@@ -343,14 +342,13 @@ void GL_context_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     _hline(surface, clipping_region, origin.x, origin.y, w, index);
 }
@@ -360,14 +358,13 @@ void GL_context_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, 
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     _vline(surface, clipping_region, origin.x, origin.y, h, index);
 }
@@ -377,14 +374,13 @@ void GL_context_polyline(const GL_Context_t *context, const GL_Point_t *vertices
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     if (count < 2) {
         return;
@@ -403,14 +399,13 @@ void GL_context_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rec
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
@@ -464,14 +459,13 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = imin(imin(v0.x, v1.x), v2.x),
@@ -566,14 +560,13 @@ void GL_context_filled_circle(const GL_Context_t *context, GL_Point_t center, si
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     const int cx = center.x;
     const int cy = center.y;
@@ -606,14 +599,13 @@ void GL_context_circle(const GL_Context_t *context, GL_Point_t center, size_t ra
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const uint8_t *state_map = state->palette_state.map;
-    const uint8_t bank_mask = state->palette_bank;
+    const uint16_t *state_map = GL_PALETTE_GET_MAP(state->palette_state);
 
-    uint8_t mapped = state_map[index];
+    uint16_t mapped = state_map[index];
     if (GL_PALETTE_IS_TRANSPARENT(mapped)) {
         return;
     }
-    index = bank_mask | GL_PALETTE_GET_SHIFTING(mapped);
+    index = GL_PALETTE_GET_PIXEL(mapped);
 
     const int cx = center.x;
     const int cy = center.y;

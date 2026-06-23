@@ -48,7 +48,6 @@
 typedef struct GL_State_s {
     GL_Quad_t clipping_region;
     GL_Palette_State_t palette_state;
-    uint8_t palette_bank;
 } GL_State_t;
 
 typedef struct GL_Context_s {

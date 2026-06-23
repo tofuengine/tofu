@@ -45,6 +45,7 @@ void gl_palette_state_init(GL_Palette_State_t *state)
     *state = (GL_Palette_State_t){ 0 };
 
     gl_palette_state_reset(state);
+    gl_palette_state_bank(state, GL_PALETTE_DEFAULT_BANK);
 }
 
 void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to)
@@ -56,7 +57,16 @@ void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pi
     // Always limit the access to the map for the actually used colors. The
     // upper half of the map is reserved for transparent pixels (as they have
     // the MSB set).
-    state->map[from] = (state->map[from] & ~GL_PALETTE_SHIFTING_MASK) | to;
+#if defined(TOFU_GRAPHICS_PALETTE_BANK_SYNC)
+    for (size_t i = 0; i < GL_PALETTE_MAX_BANKS; ++i) {
+        uint16_t *map = state->map[i];
+#else
+        uint16_t *map = state->map[state->bank];
+#endif
+        map[from] = (map[from] & ~GL_PALETTE_SHIFTING_MASK) | to;
+#if defined(TOFU_GRAPHICS_PALETTE_BANK_SYNC)
+    }
+#endif
 }
 
 void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent)
@@ -65,26 +75,47 @@ void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, b
         LOG_W("palette index %u out of range, skipping transparency setting", index);
         return;
     }
-    if (is_transparent) { // We operate on the single flag, leaving the shifting part of the map entry unchanged.
-        state->map[index] |= GL_PALETTE_FLAG_TRANSPARENCY;
-    } else {
-        state->map[index] &= ~GL_PALETTE_FLAG_TRANSPARENCY;
+#if defined(TOFU_GRAPHICS_PALETTE_BANK_SYNC)
+    for (size_t i = 0; i < GL_PALETTE_MAX_BANKS; ++i) {
+        uint16_t *map = state->map[i];
+#else
+        uint16_t *map = state->map[state->bank];
+#endif
+        if (is_transparent) { // We operate on the single flag, leaving the shifting part of the map entry unchanged.
+            map[index] |= GL_PALETTE_FLAG_TRANSPARENCY;
+        } else {
+            map[index] &= ~GL_PALETTE_FLAG_TRANSPARENCY;
+        }
+#if defined(TOFU_GRAPHICS_PALETTE_BANK_SYNC)
     }
+#endif
+}
+
+void gl_palette_state_bank(GL_Palette_State_t *state, int bank)
+{
+    state->bank = bank; // Well, this way bank selection is actually `O(1)` :)
 }
 
 void gl_palette_state_reset(GL_Palette_State_t *state)
 {
     // Colors in the upper half of the map are reserved for transparent pixels
     // (as they have the MSB set).
-    for (size_t i = 0; i < GL_PALETTE_AVAILABLE_COLORS; ++i) {
-        uint8_t index = i & GL_PIXEL_INDEX_MASK;
+    for (size_t i = 0; i < GL_PALETTE_MAX_BANKS; ++i) {
+        uint8_t bank = i;
+        uint16_t *map = state->map[i];
 
-        // To be precise, the shifting part of the map entry is not relevant
-        // for transparent pixels as the transparency flag is set. However,
-        // we set it to the original color index just for consistency and
-        // debugging purposes (e.g. when dumping the palette state).
-        state->map[i] = (i > GL_PALETTE_LAST_INDEX)
-            ? GL_PALETTE_FLAG_TRANSPARENCY | index
-            : index;
+        for (size_t j = 0; j < GL_PALETTE_AVAILABLE_COLORS; ++j) {
+            uint8_t index = j & GL_PIXEL_INDEX_MASK;
+
+            uint8_t packed = (bank << GL_PALETTE_BANK_SHIFT) | index;
+
+            // To be precise, the shifting part of the map entry is not relevant
+            // for transparent pixels as the transparency flag is set. However,
+            // we set it to the original color index just for consistency and
+            // debugging purposes (e.g. when dumping the palette state).
+            map[j] = (j > GL_PALETTE_LAST_INDEX)
+                ? GL_PALETTE_FLAG_TRANSPARENCY | packed
+                : packed;
+        }
     }
 }

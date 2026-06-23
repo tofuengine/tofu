@@ -52,31 +52,46 @@ typedef struct GL_Palette_State_s {
     // multiple memory accesses per pixel during drawing with a single access.
     //
     // The layout is as follows:
-    //   - 0x80 (MSB): transparency flag
-    //   - 0x7F (LSB): shifted color index (0-127)
+    //   - 0x0100 (MSB): transparency flag
+    //   - 0x0080 (MSB): bank selection
+    //   - 0x007F (LSB): shifted color index (0-127)
     //
     // The optimization goes even further as the upper half of the map
     // (128-255) is reserved for transparent pixels (as they have the MSB
     // set). This allows us to determine if a pixel is transparent just with
     // a single LUT access (and not by testing the alpha-bit).
-    uint8_t map[GL_PALETTE_AVAILABLE_COLORS];
-    // TODO: change to `uint16_t` and add palette bank (will require rebaking)
+    //
+    // An additional optimization is achieved by keep distinct (but synched)
+    // LUTs, one for each bank. This saves the cost of rebaking all the LUT.
+    // However, when a single pixel transparency/shifting is changed we need
+    // to apply the change to every bank LUT.
+    uint16_t map[GL_PALETTE_MAX_BANKS][GL_PALETTE_AVAILABLE_COLORS];
+
+    uint8_t bank;
 } GL_Palette_State_t;
 
-#define GL_PALETTE_FLAGS_MASK    0x80
-#define GL_PALETTE_SHIFTING_MASK 0x7F
+#define GL_PALETTE_FLAGS_MASK    0xFF00
+#define GL_PALETTE_BANK_MASK     0x0080
+#define GL_PALETTE_SHIFTING_MASK 0x007F
 
-#define GL_PALETTE_FLAG_TRANSPARENCY 0x80
+#define GL_PALETTE_FLAG_TRANSPARENCY 0x0100
 
 #define GL_PALETTE_IS_TRANSPARENT(entry) \
     (((entry) & GL_PALETTE_FLAG_TRANSPARENCY) != 0)
 
 #define GL_PALETTE_GET_SHIFTING(entry) \
-    ((GL_Pixel_t)(entry & GL_PALETTE_SHIFTING_MASK))
+    ((entry & GL_PALETTE_SHIFTING_MASK))
+
+#define GL_PALETTE_GET_PIXEL(entry) \
+    ((GL_Pixel_t)(entry))
+
+#define GL_PALETTE_GET_MAP(state) \
+    ((state).map[(state).bank])
 
 extern void gl_palette_state_init(GL_Palette_State_t *state);
 extern void gl_palette_state_shifting(GL_Palette_State_t *state, GL_Pixel_t from, GL_Pixel_t to);
 extern void gl_palette_state_transparent(GL_Palette_State_t *state, GL_Pixel_t index, bool is_transparent);
+extern void gl_palette_state_bank(GL_Palette_State_t *state, int bank);
 extern void gl_palette_state_reset(GL_Palette_State_t *state);
 
 #endif  /* TOFU_LIBS_GL_PALETTE_STATE_H */
