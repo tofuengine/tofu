@@ -378,6 +378,16 @@
 //       to fractional-scale and pivot-to-top-left rounding.
 #define TOFU_GRAPHICS_BLIT_FAST_PATH
 
+// Each palette bank as a distinct LUT where the transparency/shifting pixel
+// information is stored. Usually we want the every change to these parameters
+// is propagated to every bank equally.
+// By undefining this macro, every bank LUT will be independent each other, so
+// (for example) a change in the shifting for pixel #42 in bank #0 won't be
+// also propagate to bank #1.
+// This can be used to obtain some peculiar effect, such as pre-configuring a
+// palette setup and just switch bank (with `O(1)` cost).
+#define TOFU_GRAPHICS_PALETTE_BANK_LUT_SYNC
+
 // Controls the algorithm used to match similar colors during the image indexing
 // process (i.e. finding the best matching palette color). The following modes
 // are available:
