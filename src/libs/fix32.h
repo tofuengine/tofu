@@ -265,7 +265,7 @@ static inline fix32_t fix32_mul(fix32_t left, fix32_t right)
 #if FIX32_USE_64_BIT
     int64_t product = (int64_t)left * (int64_t)right;
 #else   /* FIX32_USE_64_BIT */
-    int32_t product = (int64_t)left * (int64_t)right;
+    int32_t product = left * right;
 #endif  /* FIX32_USE_64_BIT */
 #if FIX32_USE_SIGNED_SHIFT_MUL
     return (fix32_t)(product >> FIX32_FRACTIONAL_BITS);
@@ -291,7 +291,7 @@ static inline fix32_t fix32_div(fix32_t numerator, fix32_t denominator)
     //
     //   N / D = (n * S) / (d * S) = n / d (precision loss due to cancellation of S)
     //
-    //   (N * S) / D = (n * S * S) / (d * S) = n * S / d (correct scaling, no precision loss)
+    //   (N * S) / D = (n * S * S) / (d * S) = n * S / d = (n / d) * S (correct scaling, no precision loss)
     //
 #if FIX32_USE_SIGNED_SHIFT_DIV
     const int64_t scaled_numerator = (int64_t)numerator << FIX32_FRACTIONAL_BITS;
@@ -428,8 +428,13 @@ static inline fix32_t fix32_ceil(fix32_t value)
 
 static inline fix32_t fix32_round(fix32_t value)
 {
-    const int aux = fix32_round_to_int(value); // Convert and rescale, to avoid flooring issues with negative numbers.
-    return fix32_from_int(aux);
+#if FIX32_USE_64_BIT
+    int64_t biased = (int64_t)value;
+#else   /* FIX32_USE_64_BIT */
+    int32_t biased = value;
+#endif  /* FIX32_USE_64_BIT */
+    biased += (value >= 0) ? FIX32_HALF : (FIX32_HALF - INT32_C(1));
+    return (fix32_t)(biased & FIX32_INTEGER_MASK);
 }
 
 #endif  /* FIX32_H */
