@@ -71,6 +71,7 @@ typedef struct GL_Palette_State_s {
 } GL_Palette_State_t;
 
 #define GL_PALETTE_FLAGS_MASK    0xFF00
+#define GL_PALETTE_PIXEL_MASK    0x00FF
 #define GL_PALETTE_BANK_MASK     0x0080
 #define GL_PALETTE_SHIFTING_MASK 0x007F
 
