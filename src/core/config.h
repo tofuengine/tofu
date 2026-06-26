@@ -41,8 +41,6 @@
 #define CONFIG_H_INCLUDED
 
 // Constant MACROs have no prefix.
-// TODO: maybe we should prefix them with `TOFU_` for better readability and to 
-//       avoid potential name clashes?
 #define TOFU_BACKEND_GLFW 0
 #define TOFU_BACKEND_SDL3 1
 #define TOFU_BACKEND_RGFW 2
