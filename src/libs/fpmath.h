@@ -38,6 +38,7 @@
 #ifndef TOFU_LIBS_FPMATH_H
 #define TOFU_LIBS_FPMATH_H
 
+#define FIX32_STATIC_INLINE
 #include "fix32.h"
 
 // Helper macros. The user can still call the functions directly if they want

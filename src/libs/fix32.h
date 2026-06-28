@@ -31,7 +31,7 @@
 #define FIX32_XSTRINGIFY(x)    FIX32_STRINGIFY(x)
 
 #define FIX32_VERSION_MAJOR    0
-#define FIX32_VERSION_MINOR    1
+#define FIX32_VERSION_MINOR    3
 #define FIX32_VERSION_REVISION 0
 #define FIX32_VERSION_STRING   FIX32_XSTRINGIFY(FIX32_VERSION_MAJOR) "." FIX32_XSTRINGIFY(FIX32_VERSION_MINOR) "." FIX32_XSTRINGIFY(FIX32_VERSION_REVISION)
 
@@ -60,6 +60,13 @@
 //   `FIX32_VERSION_STRING`: library version identifiers.
 //
 // Configuration macros defined before including this header:
+// - `FIX32_IMPLEMENTATION`: emits the external function definitions from this
+//   header. Define it in exactly one translation unit, after choosing the same
+//   configuration macros used by the rest of the program.
+// - `FIX32_STATIC_INLINE`: emits `static inline` definitions in the current
+//   translation unit instead of external declarations. This enables an
+//   all-inline behavior for performance-sensitive code.
+// - `FIX32_INLINE`: overrides the inline spelling used by `FIX32_STATIC_INLINE`.
 // - `FIX32_FRACTIONAL_BITS`: number of fractional bits in the fixed-point
 //   representation, from `1` to `30` (default to `16`).
 // - `FIX32_USE_ARITHMETIC_SHIFT_FLOOR`: selects the arithmetic-shift floor
@@ -179,20 +186,81 @@
 // due to the lower memory bandwidth and better cache usage.
 typedef int32_t fix32_t;
 
-// ============
-// === NOTE ===
-// ============
-//
-// All the functions are defined as `static inline` to allow the compiler to
-// optimize them as much as possible, and to avoid potential issues with
-// multiple definitions when included in different translation units.
+#if defined(FIX32_IMPLEMENTATION) && defined(FIX32_STATIC_INLINE)
+#error "Define only one of FIX32_IMPLEMENTATION and FIX32_STATIC_INLINE"
+#endif  /* defined(FIX32_IMPLEMENTATION) && defined(FIX32_STATIC_INLINE) */
 
-static inline fix32_t fix32_from_raw(int32_t raw_value)
+#if !defined(FIX32_IMPLEMENTATION) && !defined(FIX32_STATIC_INLINE)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern fix32_t fix32_from_raw(int32_t raw_value);
+extern int32_t fix32_to_raw(fix32_t value);
+extern fix32_t fix32_from_int(int32_t value);
+extern fix32_t fix32_from_float(float value);
+extern fix32_t fix32_round_from_float(float value);
+extern fix32_t fix32_from_double(double value);
+extern fix32_t fix32_round_from_double(double value);
+extern fix32_t fix32_from_rational(int32_t numerator, int32_t denominator);
+extern fix32_t fix32_add(fix32_t left, fix32_t right);
+extern fix32_t fix32_sub(fix32_t left, fix32_t right);
+extern fix32_t fix32_mul_by_int(fix32_t left, int right);
+extern fix32_t fix32_mul(fix32_t left, fix32_t right);
+extern fix32_t fix32_div_by_int(fix32_t numerator, int32_t denominator);
+extern fix32_t fix32_div(fix32_t numerator, fix32_t denominator);
+extern fix32_t fix32_reciprocal_by_int(int32_t value);
+extern fix32_t fix32_reciprocal(fix32_t value);
+extern int32_t fix32_floor_to_int(fix32_t value);
+extern int32_t fix32_ceil_to_int(fix32_t value);
+extern int fix32_trunc_to_int(fix32_t value);
+extern int32_t fix32_round_to_int(fix32_t value);
+extern float fix32_to_float(fix32_t value);
+extern float fix32_floor_to_float(fix32_t value);
+extern float fix32_ceil_to_float(fix32_t value);
+extern float fix32_round_to_float(fix32_t value);
+extern double fix32_to_double(fix32_t value);
+extern double fix32_floor_to_double(fix32_t value);
+extern double fix32_ceil_to_double(fix32_t value);
+extern double fix32_round_to_double(fix32_t value);
+extern fix32_t fix32_floor(fix32_t value);
+extern fix32_t fix32_ceil(fix32_t value);
+extern fix32_t fix32_round(fix32_t value);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* !defined(FIX32_STATIC_INLINE) && !defined(FIX32_IMPLEMENTATION) */
+
+#if defined(FIX32_STATIC_INLINE) || defined(FIX32_IMPLEMENTATION)
+
+// If no explicit definition is provided, fallback to `static inline`.
+#if !defined(FIX32_INLINE)
+    #define FIX32_INLINE static inline
+#endif  /* !defined(FIX32_INLINE) */
+
+#if defined(FIX32_STATIC_INLINE)
+    #if !defined(FIX32_INLINE)
+        #define FIX32_DEF static inline
+    #else   /* !defined(FIX32_INLINE) */
+        #define FIX32_DEF FIX32_INLINE
+    #endif  /* !defined(FIX32_INLINE) */
+#else   /* defined(FIX32_STATIC_INLINE) */
+    #define FIX32_DEF
+#endif  /* defined(FIX32_STATIC_INLINE) */
+
+#if defined(__cplusplus) && defined(FIX32_IMPLEMENTATION)
+extern "C" {
+#endif
+
+FIX32_DEF fix32_t fix32_from_raw(int32_t raw_value)
 {
     return raw_value;
 }
 
-static inline int32_t fix32_to_raw(fix32_t value)
+FIX32_DEF int32_t fix32_to_raw(fix32_t value)
 {
     return value;
 }
@@ -200,7 +268,7 @@ static inline int32_t fix32_to_raw(fix32_t value)
 // No check are performed on the input values, as the user is expected to know
 // what they are doing when using fixed-point arithmetic and not cause undefined
 // behavior by overflowing the intermediate calculations.
-static inline fix32_t fix32_from_int(int32_t value)
+FIX32_DEF fix32_t fix32_from_int(int32_t value)
 {
 #if FIX32_USE_64_BIT
     return value * (int64_t)FIX32_ONE;
@@ -209,29 +277,29 @@ static inline fix32_t fix32_from_int(int32_t value)
 #endif  /* FIX32_USE_64_BIT */
 }
 
-static inline fix32_t fix32_from_float(float value)
+FIX32_DEF fix32_t fix32_from_float(float value)
 {
     return value * (float)FIX32_ONE;
 }
 
-static inline fix32_t fix32_round_from_float(float value)
+FIX32_DEF fix32_t fix32_round_from_float(float value)
 {
     const float scaled = value * (float)FIX32_ONE;
     return (fix32_t)(scaled + ((scaled >= 0.0f) ? 0.5f : -0.5f));
 }
 
-static inline fix32_t fix32_from_double(double value)
+FIX32_DEF fix32_t fix32_from_double(double value)
 {
     return value * (double)FIX32_ONE;
 }
 
-static inline fix32_t fix32_round_from_double(double value)
+FIX32_DEF fix32_t fix32_round_from_double(double value)
 {
     const double scaled = value * (double)FIX32_ONE;
     return (fix32_t)(scaled + ((scaled >= 0.0) ? 0.5 : -0.5));
 }
 
-static inline fix32_t fix32_from_rational(int32_t numerator, int32_t denominator)
+FIX32_DEF fix32_t fix32_from_rational(int32_t numerator, int32_t denominator)
 {
 #if FIX32_USE_64_BIT
     return (fix32_t)(((int64_t)numerator * (int64_t)FIX32_ONE) /
@@ -241,17 +309,17 @@ static inline fix32_t fix32_from_rational(int32_t numerator, int32_t denominator
 #endif  /* FIX32_USE_64_BIT */
 }
 
-static inline fix32_t fix32_add(fix32_t left, fix32_t right)
+FIX32_DEF fix32_t fix32_add(fix32_t left, fix32_t right)
 {
     return left + right;
 }
 
-static inline fix32_t fix32_sub(fix32_t left, fix32_t right)
+FIX32_DEF fix32_t fix32_sub(fix32_t left, fix32_t right)
 {
     return left - right;
 }
 
-static inline fix32_t fix32_mul_by_int(fix32_t left, int right)
+FIX32_DEF fix32_t fix32_mul_by_int(fix32_t left, int right)
 {
 #if FIX32_USE_64_BIT
     return (fix32_t)((int64_t)left * (int64_t)right);
@@ -260,7 +328,7 @@ static inline fix32_t fix32_mul_by_int(fix32_t left, int right)
 #endif  /* FIX32_USE_64_BIT */
 }
 
-static inline fix32_t fix32_mul(fix32_t left, fix32_t right)
+FIX32_DEF fix32_t fix32_mul(fix32_t left, fix32_t right)
 {
 #if FIX32_USE_64_BIT
     int64_t product = (int64_t)left * (int64_t)right;
@@ -274,12 +342,12 @@ static inline fix32_t fix32_mul(fix32_t left, fix32_t right)
 #endif  /* FIX32_USE_SIGNED_SHIFT_MUL */
 }
 
-static inline fix32_t fix32_div_by_int(fix32_t numerator, int32_t denominator)
+FIX32_DEF fix32_t fix32_div_by_int(fix32_t numerator, int32_t denominator)
 {
     return numerator / denominator;
 }
 
-static inline fix32_t fix32_div(fix32_t numerator, fix32_t denominator)
+FIX32_DEF fix32_t fix32_div(fix32_t numerator, fix32_t denominator)
 {
     // Direct division of fixed-point numbers cancels out the fractional bits,
     // so we need to rescale the numerator first in order not to loose
@@ -304,12 +372,12 @@ static inline fix32_t fix32_div(fix32_t numerator, fix32_t denominator)
     return (fix32_t)quotient;
 }
 
-static inline fix32_t fix32_reciprocal_by_int(int32_t value)
+FIX32_DEF fix32_t fix32_reciprocal_by_int(int32_t value)
 {
     return FIX32_ONE / value;
 }
 
-static inline fix32_t fix32_reciprocal(fix32_t value)
+FIX32_DEF fix32_t fix32_reciprocal(fix32_t value)
 {
     return fix32_div(FIX32_ONE, value);
 }
@@ -321,7 +389,7 @@ static inline fix32_t fix32_reciprocal(fix32_t value)
 // architectures, which are the vast majority of modern ones.
 //
 // Note: we are using bitwise shifting only to calculate the floor value.
-static inline int32_t fix32_floor_to_int(fix32_t value)
+FIX32_DEF int32_t fix32_floor_to_int(fix32_t value)
 {
 #if FIX32_USE_ARITHMETIC_SHIFT_FLOOR
     // Fast path: relies on the target doing arithmetic right shifts for signed values.
@@ -338,7 +406,7 @@ static inline int32_t fix32_floor_to_int(fix32_t value)
 #endif
 }
 
-static inline int32_t fix32_ceil_to_int(fix32_t value)
+FIX32_DEF int32_t fix32_ceil_to_int(fix32_t value)
 {
 #if FIX32_USE_ARITHMETIC_SHIFT_FLOOR
     const int32_t whole = value >> FIX32_FRACTIONAL_BITS;
@@ -357,12 +425,12 @@ static inline int32_t fix32_ceil_to_int(fix32_t value)
 #endif
 }
 
-static inline int fix32_trunc_to_int(fix32_t value)
+FIX32_DEF int fix32_trunc_to_int(fix32_t value)
 {
     return value / FIX32_ONE; // This will truncate toward zero, which is what we want for negative numbers.
 }
 
-static inline int32_t fix32_round_to_int(fix32_t value)
+FIX32_DEF int32_t fix32_round_to_int(fix32_t value)
 {
 #if FIX32_USE_64_BIT
     int64_t aux = (int64_t)value; // Use `int64_t` to avoid overflow when adding `FIX32_ONE_HALF`.
@@ -373,52 +441,52 @@ static inline int32_t fix32_round_to_int(fix32_t value)
     return (int32_t)(aux / FIX32_ONE); // Dividing (not shifting) will round to the nearest integer, with ties rounding away from zero, which is what we want for negative numbers.
 }
 
-static inline float fix32_to_float(fix32_t value)
+FIX32_DEF float fix32_to_float(fix32_t value)
 {
     return (float)value / (float)FIX32_ONE; // No need to add `FIX32_ONE_HALF` for rounding, as the division will already round to the nearest float.
 }
 
-static inline float fix32_floor_to_float(fix32_t value)
+FIX32_DEF float fix32_floor_to_float(fix32_t value)
 {
     return (float)fix32_floor_to_int(value);
 }
 
-static inline float fix32_ceil_to_float(fix32_t value)
+FIX32_DEF float fix32_ceil_to_float(fix32_t value)
 {
     return (float)fix32_ceil_to_int(value);
 }
 
-static inline float fix32_round_to_float(fix32_t value)
+FIX32_DEF float fix32_round_to_float(fix32_t value)
 {
     return (float)fix32_round_to_int(value);
 }
 
-static inline double fix32_to_double(fix32_t value)
+FIX32_DEF double fix32_to_double(fix32_t value)
 {
     return (double)value / (double)FIX32_ONE; // Ditto.
 }
 
-static inline double fix32_floor_to_double(fix32_t value)
+FIX32_DEF double fix32_floor_to_double(fix32_t value)
 {
     return (double)fix32_floor_to_int(value);
 }
 
-static inline double fix32_ceil_to_double(fix32_t value)
+FIX32_DEF double fix32_ceil_to_double(fix32_t value)
 {
     return (double)fix32_ceil_to_int(value);
 }
 
-static inline double fix32_round_to_double(fix32_t value)
+FIX32_DEF double fix32_round_to_double(fix32_t value)
 {
     return (double)fix32_round_to_int(value);
 }
 
-static inline fix32_t fix32_floor(fix32_t value)
+FIX32_DEF fix32_t fix32_floor(fix32_t value)
 {
     return value & FIX32_INTEGER_MASK;
 }
 
-static inline fix32_t fix32_ceil(fix32_t value)
+FIX32_DEF fix32_t fix32_ceil(fix32_t value)
 {
     // The masking already produces a "floor" value, so we don't need to check
     // for the sign of `value` to decide if we need to add `FIX32_ONE` or not, as
@@ -426,7 +494,7 @@ static inline fix32_t fix32_ceil(fix32_t value)
     return (value & FIX32_INTEGER_MASK) + ((value & FIX32_FRACTIONAL_MASK) ? FIX32_ONE : 0);
 }
 
-static inline fix32_t fix32_round(fix32_t value)
+FIX32_DEF fix32_t fix32_round(fix32_t value)
 {
 #if FIX32_USE_64_BIT
     int64_t biased = (int64_t)value;
@@ -436,5 +504,12 @@ static inline fix32_t fix32_round(fix32_t value)
     biased += (value >= 0) ? FIX32_HALF : (FIX32_HALF - INT32_C(1));
     return (fix32_t)(biased & FIX32_INTEGER_MASK);
 }
+
+#if defined(__cplusplus) && defined(FIX32_IMPLEMENTATION)
+}
+#endif
+
+#undef FIX32_DEF
+#endif  /* !defined(FIX32_IMPLEMENTATION) && !defined(FIX32_STATIC_INLINE) */
 
 #endif  /* FIX32_H */
