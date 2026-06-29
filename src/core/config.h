@@ -367,7 +367,7 @@
 #define TOFU_GRAPHICS_USE_FIXED_MATH
 
 // Enabling the "fast path" for blitting operations means that when operating
-// with no rotation and/ or no scaling the most efficient `GL_context_blit*()`
+// with no rotation and/ or no scaling the most efficient `GL_context_sprite*()`
 // function will be called according to the actual parameters. This optimization
 // applies only to the sheet-based blitting functions.
 //
