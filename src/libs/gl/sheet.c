@@ -37,7 +37,7 @@
 
 #include "sheet.h"
 
-#include "blit.h"
+#include "sprite.h"
 #include "tile.h"
 
 #include <core/config.h>
@@ -188,7 +188,7 @@ GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, 
 //   - Rotated blits use anchor/pivot destination coordinates.
 void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id)
 {
-    GL_context_blit(context, position, sheet->atlas, sheet->cells[cell_id]);
+    GL_context_sprite(context, position, sheet->atlas, sheet->cells[cell_id]);
 }
 
 void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Point_t position, size_t cell_id, float scale_x, float scale_y)
@@ -198,12 +198,12 @@ void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_Po
 
 #if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)
     if (scale_x == 1.0f && scale_y == 1.0f) {
-        GL_context_blit(context, position, atlas, cell);
+        GL_context_sprite(context, position, atlas, cell);
     } else {
-        GL_context_blit_s(context, position, atlas, cell, scale_x, scale_y);
+        GL_context_sprite_s(context, position, atlas, cell, scale_x, scale_y);
     }
 #else   /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
-    GL_context_blit_s(context, position, atlas, cell, scale_x, scale_y);
+    GL_context_sprite_s(context, position, atlas, cell, scale_x, scale_y);
 #endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 }
 
@@ -227,15 +227,15 @@ void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Context_t *context, GL_P
         GL_Point_t left_top = { .x = IFLOORF(left), .y = IFLOORF(top) };
 
         if (scale_x == 1.0f && scale_y == 1.0f) {
-            GL_context_blit(context, left_top, atlas, cell);
+            GL_context_sprite(context, left_top, atlas, cell);
         } else {
-            GL_context_blit_s(context, left_top, atlas, cell, scale_x, scale_y);
+            GL_context_sprite_s(context, left_top, atlas, cell, scale_x, scale_y);
         }
     } else {
-        GL_context_blit_sr(context, position, atlas, cell, scale_x, scale_y, rotation, pivot_x, pivot_y);
+        GL_context_sprite_sr(context, position, atlas, cell, scale_x, scale_y, rotation, pivot_x, pivot_y);
     }
 #else   /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
-    GL_context_blit_sr(context, position, atlas, cell, scale_x, scale_y, rotation, pivot_x, pivot_y);
+    GL_context_sprite_sr(context, position, atlas, cell, scale_x, scale_y, rotation, pivot_x, pivot_y);
 #endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 }
 

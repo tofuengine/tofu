@@ -259,7 +259,7 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, const 
     }
 }
 
-// Note: `GL_context_copy()` is optimized, when compared to `GL_context_blit()`, since *no* shifting *nor*
+// Note: `GL_context_copy()` is optimized, when compared to `GL_context_sprite()`, since *no* shifting *nor*
 // transparency are applied.
 void GL_context_copy(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {

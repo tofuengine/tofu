@@ -38,7 +38,6 @@
 #ifndef TOFU_LIBS_GL_H
 #define TOFU_LIBS_GL_H
 
-#include "blit.h"
 #include "color.h"
 #include "common.h"
 #include "context.h"
@@ -48,6 +47,7 @@
 #include "processor.h"
 #include "queue.h"
 #include "sheet.h"
+#include "sprite.h"
 #include "surface.h"
 #include "tile.h"
 #include "xform.h"

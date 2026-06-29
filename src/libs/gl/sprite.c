@@ -35,7 +35,7 @@
  * SOFTWARE.
  */
 
-#include "blit.h"
+#include "sprite.h"
 
 #include <core/config.h>
 #include <libs/fmath.h>
@@ -65,7 +65,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
+void GL_context_sprite(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -150,7 +150,7 @@ void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // https://www.researchgate.net/publication/333721765_Extensible_Implementation_of_Reliable_Pixel_Art_Interpolation
-void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y)
+void GL_context_sprite_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -323,7 +323,7 @@ static inline float _fmaxf4(float a, float b, float c, float d)
 }
 #endif  /* !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS) */
 
-void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float pivot_x, float pivot_y)
+void GL_context_sprite_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float pivot_x, float pivot_y)
 {
     const GL_Surface_t *surface = context->surface;
     const GL_State_t *state = &context->state.current;
@@ -332,7 +332,7 @@ void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const 
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
-    const float dw = (float)ITRUNC(sw * FABS(scale_x)); // Match `GL_context_blit_s()`.
+    const float dw = (float)ITRUNC(sw * FABS(scale_x)); // Match `GL_context_sprite_s()`.
     const float dh = (float)ITRUNC(sh * FABS(scale_y));
 
     if ((dw <= 0.0f) || (dh <= 0.0f)) {

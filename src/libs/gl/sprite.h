@@ -43,8 +43,31 @@
 
 // TODO: rename `blit` to `sprite`. `blit` is the logic operator, but we are
 //       actually working on sprites. This also pairs with the `tile` functions.
-extern void GL_context_blit(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
-extern void GL_context_blit_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
-extern void GL_context_blit_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
+
+#if 1
+extern void GL_context_sprite(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
+extern void GL_context_sprite_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
+extern void GL_context_sprite_sr(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float pivot_x, float pivot_y);
+#else
+extern void GL_context_sprite(const GL_Context_t *context,
+        GL_Point_t position,
+        GL_PointF_t anchor,
+        const GL_Surface_t *source,
+        GL_Rectangle_t area);
+extern void GL_context_sprite_s(const GL_Context_t *context,
+        GL_Point_t position,
+        GL_PointF_t anchor,
+        float scale_x, float scale_y,
+        const GL_Surface_t *source,
+        GL_Rectangle_t area);
+extern void GL_context_sprite_sr(const GL_Context_t *context,
+        GL_Point_t position,
+        GL_PointF_t anchor,
+        float scale_x, float scale_y,
+        GL_PointF_t pivot,
+        int rotation,
+        const GL_Surface_t *source,
+        GL_Rectangle_t area);
+#endif
 
 #endif  /* TOFU_LIBS_GL_CONTEXT_BLIT_H */
