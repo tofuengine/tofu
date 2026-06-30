@@ -882,7 +882,7 @@ static int canvas_blit_2oo_0(lua_State *L)
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Image_Object_t *image = (const Image_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_IMAGE);
 
-    GL_context_blit(self->context, (GL_Point_t){ .x = 0, .y = 0 },
+    GL_context_sprite(self->context, (GL_Point_t){ .x = 0, .y = 0 },
         image->surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = image->surface->width, .height = image->surface->height });
 
     return 0;
@@ -909,7 +909,7 @@ static int canvas_blit_8onnoNNNN_0(lua_State *L)
     size_t width = LUAX_OPTIONAL_UNSIGNED(L, 7, image->surface->width);
     size_t height = LUAX_OPTIONAL_UNSIGNED(L, 8, image->surface->height);
 
-    GL_context_blit(self->context, (GL_Point_t){ .x = x, .y = y },
+    GL_context_sprite(self->context, (GL_Point_t){ .x = x, .y = y },
         image->surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
