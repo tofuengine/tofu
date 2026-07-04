@@ -37,15 +37,12 @@ SOFTWARE.
 
 local Class <const> = require("tofu.core.class")
 local System <const> = require("tofu.core.system")
-local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
 local Palette <const> = require("tofu.graphics.palette")
 local Font <const> = require("tofu.graphics.font")
 
 local PALETTE <const> = Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
 local FONT <const> = Font.default()
-local CANVAS <const> = Canvas.default()
-local WIDTH <const>, _ <const> = CANVAS:image():size()
 
 local TITLE <const> = {
     "Software Failure.",
@@ -54,7 +51,6 @@ local TITLE <const> = {
 
 local MARGIN <const> = 4
 local STROKE <const> = 2
-local SPAN <const> = WIDTH - 2 * MARGIN
 
 local FONT_INDEX <const> = 0
 
@@ -70,38 +66,9 @@ local Panic <const> = Class.define()
 --   return lines
 -- end
 
-function Panic:__ctor(message)
-  local errors <const> = {}
-  for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
-    table.insert(errors, str)
-  end
-
-  self.lines = {} -- Pre-calculate lines position and rectangle area.
-
-  local y = MARGIN + STROKE + MARGIN
-  for _, text in ipairs(TITLE) do -- Title lines are centered.
-    local lw <const>, lh <const> = FONT:size(text)
-    table.insert(self.lines, { text = text, x = (WIDTH - lw) * 0.5, y = y })
-    y = y + lh
-  end
-  y = y + MARGIN
-
-  self.rectangle = { -- The rectangle ends here, message follows.
-      x = MARGIN,
-      y = MARGIN,
-      width = WIDTH - MARGIN - MARGIN,
-      height = y - MARGIN + (STROKE - 1)
-    }
-
-  y = y + STROKE + MARGIN
-  for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
-    local texts <const> = FONT:wrap(line, SPAN)
-    for _, text in ipairs(texts) do
-      local _ <const>, th <const> = FONT:size(text)
-      table.insert(self.lines, { text = text, x = MARGIN, y = y })
-      y = y + th
-    end
-  end
+function Panic:__ctor(canvas, state)
+  self.canvas = canvas
+  self.state = state
 end
 
 function Panic:init()
@@ -114,7 +81,10 @@ end
 function Panic:update(_)
 end
 
-function Panic:render(canvas, _)
+function Panic:render(_)
+  local canvas = self.canvas
+  local state = self.state
+
   canvas:clear(BACKGROUND_INDEX)
 
   local on <const> = (math.floor(System.time()) % 2) == 0
@@ -129,12 +99,49 @@ function Panic:render(canvas, _)
     end
   end
 
-  canvas:push()
-    canvas:shift(FONT_INDEX, FOREGROUND_INDEX)
+  state:push()
+    state:shift(FONT_INDEX, FOREGROUND_INDEX)
     for _, line in ipairs(self.lines) do
       canvas:write(line.x, line.y, FONT, line.text)
     end
-  canvas:pop()
+  state:pop()
+end
+
+function Panic:set_message(message)
+  local width <const>, _ <const> = self.canvas:image():size()
+  local span <const> = width - 2 * MARGIN
+
+  local errors <const> = {}
+  for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
+    table.insert(errors, str)
+  end
+
+  self.lines = {} -- Pre-calculate lines position and rectangle area.
+
+  local y = MARGIN + STROKE + MARGIN
+  for _, text in ipairs(TITLE) do -- Title lines are centered.
+    local lw <const>, lh <const> = FONT:size(text)
+    table.insert(self.lines, { text = text, x = (width - lw) * 0.5, y = y })
+    y = y + lh
+  end
+  y = y + MARGIN
+
+  self.rectangle = { -- The rectangle ends here, message follows.
+      x = MARGIN,
+      y = MARGIN,
+      width = width - MARGIN - MARGIN,
+      height = y - MARGIN + (STROKE - 1)
+    }
+
+  y = y + STROKE + MARGIN
+  for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
+    local texts <const> = FONT:wrap(line, span)
+    for _, text in ipairs(texts) do
+      local _ <const>, th <const> = FONT:size(text)
+      table.insert(self.lines, { text = text, x = MARGIN, y = y })
+      y = y + th
+    end
+  end
 end
 
 return Panic

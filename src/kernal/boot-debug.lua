@@ -39,12 +39,16 @@ local Class <const> = require("tofu.core.class")
 local Log <const> = require("tofu.core.log")
 local System <const> = require("tofu.core.system")
 local Canvas <const> = require("tofu.graphics.canvas")
+local State <const> = require("tofu.graphics.state")
 local Display <const> = require("tofu.graphics.display")
 local Speakers <const> = require("tofu.sound.speakers")
 
 local INITIAL_STATE <const> = "splash"
 
 local CANVAS <const> = Canvas.default()
+local STATE <const> = State.new(CANVAS)
+-- TODO: the `CANVAS` and `STATE` should be passed to the `init()` method, or
+--       even the constructor. Then, the client will store and use it later.
 
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
@@ -53,7 +57,7 @@ function Boot:__ctor()
     ["splash"] = {
       enter = function(me)
           local Splash <const> = require("splash")
-          me.splash = Splash.new()
+          me.splash = Splash.new(CANVAS, STATE)
         end,
       leave = function(_)
         end,
@@ -69,8 +73,8 @@ function Boot:__ctor()
             self:switch("running")
           end
         end,
-      render = function(me, canvas, _)
-          me.splash:render(canvas)
+      render = function(me, ratio)
+          me.splash:render(ratio)
         end
     },
     ["running"] = {
@@ -81,7 +85,7 @@ function Boot:__ctor()
           end
 
           local Main <const> = require("main") -- Lazy require, to trap and display errors in the constructor!
-          me.main = Main.new()
+          me.main = Main.new(CANVAS, STATE)
         end,
       leave = function(me)
           if me.profile then
@@ -106,14 +110,15 @@ function Boot:__ctor()
       update = function(me, delta_time)
           me.main:update(delta_time)
         end,
-      render = function(me, canvas, ratio)
-          me.main:render(canvas, ratio)
+      render = function(me, ratio)
+          me.main:render(ratio)
         end
     },
     ["failure"] = {
       enter = function(me, message)
           local Panic <const> = require("panic")
-          me.panic = Panic.new(message)
+          me.panic = Panic.new(CANVAS, STATE)
+          me.panic:set_message(message)
         end,
       leave = function(_)
         end,
@@ -126,8 +131,8 @@ function Boot:__ctor()
       update = function(me, delta_time)
           me.panic:update(delta_time)
         end,
-      render = function(me, canvas, ratio)
-          me.panic:render(canvas, ratio)
+      render = function(me, ratio)
+          me.panic:render(ratio)
         end
     }
   }
@@ -153,7 +158,7 @@ end
 
 function Boot:render(ratio)
   local me <const> = self.state
-  self:call(me.render, me, CANVAS, ratio)
+  self:call(me.render, me, ratio)
 end
 
 function Boot:reinit_system()
@@ -161,8 +166,8 @@ function Boot:reinit_system()
 
   Display.reset()
 
-  CANVAS:pop() -- Discard all saved states, if any.
-  CANVAS:reset() -- Reset default canvas from the game state.
+  STATE:pop() -- Discard all saved states, if any.
+  STATE:reset() -- Reset default canvas from the game state.
 end
 
 -- Achtung! Don´t *ever* call `switch()` from within `enter()` or `leave()`
