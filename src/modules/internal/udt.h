@@ -86,6 +86,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_IMAGE,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
+    OBJECT_TYPE_STATE,
     OBJECT_TYPE_XFORM,
     // Input
     OBJECT_TYPE_CONTROLLER,
@@ -155,6 +156,10 @@ typedef struct Canvas_Object_s {
         luaX_Reference reference;
     } image;
 } Canvas_Object_t;
+
+typedef struct State_Object_s {
+    GL_Context_t *context;
+} State_Object_t;
 
 typedef struct Controller_Object_s {
     Input_Controller_t *controller;

@@ -84,6 +84,7 @@
 #include "program.h"
 #include "source.h"
 #include "speakers.h"
+#include "state.h"
 #include "storage.h"
 #include "system.h"
 #include "tweener.h"
@@ -113,6 +114,7 @@ void modules_initialize(lua_State *L, const void *userdatas[])
             { "tofu.graphics.image", image_loader },
             { "tofu.graphics.palette", palette_loader },
             { "tofu.graphics.program", program_loader },
+            { "tofu.graphics.state", state_loader },
             { "tofu.graphics.xform", xform_loader },
             { "tofu.input.controller", controller_loader },
             { "tofu.input.cursor", cursor_loader },
