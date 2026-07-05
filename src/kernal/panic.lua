@@ -66,9 +66,9 @@ local Panic <const> = Class.define()
 --   return lines
 -- end
 
-function Panic:__ctor(canvas, state)
+function Panic:__ctor(canvas)
   self.canvas = canvas
-  self.state = state
+  self.state = canvas:state()
 end
 
 function Panic:init()

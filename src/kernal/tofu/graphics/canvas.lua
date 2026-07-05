@@ -36,6 +36,7 @@ SOFTWARE.
 ]]--
 
 local Image <const> = require("tofu.graphics.image")
+local State <const> = require("tofu.graphics.state")
 
 local Canvas <const> = {}
 
@@ -58,6 +59,14 @@ function Canvas.default()
     _default = Canvas.new(image)
   end
   return _default
+end
+
+function Canvas:state()
+  -- if not self.state then
+  --   self.state = State.from_canvas(self)
+  -- end
+  -- return self.state
+  return State.from_canvas(self)
 end
 
 function Canvas:square(mode, x, y, size, index)

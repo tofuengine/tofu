@@ -52,9 +52,9 @@ local DURATION <const> = 1.0
 
 local Splash <const> = Class.define()
 
-function Splash:__ctor(canvas, state)
+function Splash:__ctor(canvas)
   self.canvas = canvas
-  self.state = state
+  self.state = canvas:state()
   self.width, self.height = canvas:image():size()
 end
 

@@ -39,16 +39,13 @@ local Class <const> = require("tofu.core.class")
 local Log <const> = require("tofu.core.log")
 local System <const> = require("tofu.core.system")
 local Canvas <const> = require("tofu.graphics.canvas")
-local State <const> = require("tofu.graphics.state")
 local Display <const> = require("tofu.graphics.display")
 local Speakers <const> = require("tofu.sound.speakers")
 
 local INITIAL_STATE <const> = "splash"
 
 local CANVAS <const> = Canvas.default()
-local STATE <const> = State.new(CANVAS)
--- TODO: the `CANVAS` and `STATE` should be passed to the `init()` method, or
---       even the constructor. Then, the client will store and use it later.
+local STATE <const> = CANVAS:state()
 
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
@@ -57,7 +54,7 @@ function Boot:__ctor()
     ["splash"] = {
       enter = function(me)
           local Splash <const> = require("splash")
-          me.splash = Splash.new(CANVAS, STATE)
+          me.splash = Splash.new(CANVAS)
         end,
       leave = function(_)
         end,
@@ -85,7 +82,7 @@ function Boot:__ctor()
           end
 
           local Main <const> = require("main") -- Lazy require, to trap and display errors in the constructor!
-          me.main = Main.new(CANVAS, STATE)
+          me.main = Main.new(CANVAS)
         end,
       leave = function(me)
           if me.profile then
@@ -117,7 +114,7 @@ function Boot:__ctor()
     ["failure"] = {
       enter = function(me, message)
           local Panic <const> = require("panic")
-          me.panic = Panic.new(CANVAS, STATE)
+          me.panic = Panic.new(CANVAS)
           me.panic:set_message(message)
         end,
       leave = function(_)
