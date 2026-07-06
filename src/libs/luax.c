@@ -135,7 +135,7 @@ typedef void *luaX_Object;
 
 void *luaX_newobject(lua_State *L, size_t size, const void *state, int type, const char *metatable)
 {
-    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 1);
+    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, LUAX_OBJECT_SIZE(size), 0); // No uservalues requested.
 #if defined(_LUAX_RTTI)
     *object = (luaX_Object){
             .type = type
