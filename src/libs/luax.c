@@ -103,11 +103,10 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
 
 int luaX_totable(lua_State *L, int idx)
 {
-    // In case the index is relative to the top of the stack, we need to convert
-    // it to an absolute index, because the stack might be modified during the
-    // table access. An absolute index never changes and it's safer to use in
-    // this case.
-    return idx > 0 ? idx : lua_gettop(L) + idx + 1;
+    // A table is referenced by its ABSOLUTE stack index. This is because the
+    // stack might be modified during the table access. An absolute index never
+    // changes and it's safer to use as it's independent of the context.
+    return lua_absindex(L, idx);
 }
 
 int luaX_tofunction(lua_State *L, int idx)
