@@ -42,6 +42,8 @@ local Canvas <const> = {}
 
 local _default = nil
 
+local _states <const> = setmetatable({}, { __mode = "k" }) -- Weak table, don't keep objects alive
+
 function Canvas.from_image(...)
   local args <const> = { ... }
   if #args == 1 then -- name
@@ -62,11 +64,12 @@ function Canvas.default()
 end
 
 function Canvas:state()
-  -- if not self.state then
-  --   self.state = State.from_canvas(self)
-  -- end
-  -- return self.state
-  return State.from_canvas(self)
+  local state = _states[self]
+  if not state then
+    state = State.from_canvas(self)
+    _states[self] = state
+  end
+  return state
 end
 
 function Canvas:square(mode, x, y, size, index)
