@@ -159,6 +159,10 @@ typedef struct Canvas_Object_s {
 
 typedef struct State_Object_s {
     GL_Context_t *context;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
 } State_Object_t;
 
 typedef struct Controller_Object_s {

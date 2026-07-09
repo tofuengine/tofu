@@ -92,7 +92,11 @@ static int state_new_1o_1o(lua_State *L)
     GL_Context_t *context = canvas->context;
 
     State_Object_t *self = (State_Object_t *)udt_newobject(L, sizeof(State_Object_t), &(State_Object_t){
-            .context = context
+            .context = context,
+            .canvas = {
+                .instance = canvas,
+                .reference = luaX_ref(L, 1)
+            }
         }, OBJECT_TYPE_STATE);
 
     LOG_D("state %p allocated w/ context %p for canvas %p", self, context, canvas);
@@ -106,6 +110,9 @@ static int state_gc_1o_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     State_Object_t *self = (State_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_STATE);
+
+    luaX_unref(L, self->canvas.reference);
+    LOG_D("canvas reference #%d released", self->canvas.reference);
 
     LOG_D("state %p finalized", self);
 
