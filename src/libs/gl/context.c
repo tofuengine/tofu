@@ -84,6 +84,9 @@ void GL_context_destroy(GL_Context_t *context)
 {
     LOG_D("destroying context %p", context);
 
+    shfree(context->state.diary);
+    LOG_D("context diary at %p freed", context->state.diary);
+
     arrfree(context->state.stack);
     LOG_D("context stack at %p freed", context->state.stack);
 
@@ -114,6 +117,41 @@ void GL_context_pop(GL_Context_t *context, size_t levels)
     for (size_t i = levels; i; --i) {
         context->state.current = arrpop(context->state.stack);
     }
+}
+
+void GL_context_forget(GL_Context_t *context, const char *id)
+{
+    if (!id) {
+        LOG_I("emptying palette state diary, removing all entries");
+        shfree(context->state.diary);
+        return;
+    }
+
+    bool deleted = shdel(context->state.diary, id);
+    if (!deleted) {
+        LOG_W("palette state diary entry w/ id `%s` not found", id);
+    }
+//    LOG_D("palette state diary entry for id `%s` deleted", id);
+}
+
+void GL_context_remember(GL_Context_t *context, const char *id)
+{
+    shput(context->state.diary, id, context->state.current);
+//    LOG_D("palette state diary remembered as `%s`", id);
+}
+
+bool GL_context_recall(GL_Context_t *context, const char *id)
+{
+    ptrdiff_t index = shgeti(context->state.diary, id);
+    if (index == -1) {
+        LOG_W("palette state diary entry w/ id `%s` not found", id);
+        return false;
+    }
+
+    context->state.current = context->state.diary[index].value;
+//    LOG_D("palette state diary entry w/ id `%s` recalled", id);
+
+    return true;
 }
 
 void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region)

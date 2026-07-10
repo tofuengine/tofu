@@ -50,11 +50,17 @@ typedef struct GL_State_s {
     GL_Palette_State_t palette_state;
 } GL_State_t;
 
+typedef struct GL_Context_Diary_Entry_s {
+    const char *key;
+    GL_State_t value;
+} GL_Context_Diary_Entry_t;
+
 typedef struct GL_Context_s {
     const GL_Surface_t *surface;
     struct {
         GL_State_t current;
         GL_State_t *stack;
+        GL_Context_Diary_Entry_t *diary;
     } state;
 } GL_Context_t;
 
@@ -64,6 +70,10 @@ extern void GL_context_destroy(GL_Context_t *context);
 extern void GL_context_reset(GL_Context_t *context);
 extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context, size_t levels);
+
+extern void GL_context_forget(GL_Context_t *context, const char *id);
+extern void GL_context_remember(GL_Context_t *context, const char *id);
+extern bool GL_context_recall(GL_Context_t *context, const char *id);
 
 extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
 extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
