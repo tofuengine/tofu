@@ -44,3 +44,24 @@ function Palette.default(id)
 end
 
 return Palette
+
+-- local Image <const> = require("tofu.graphics.image")
+
+-- local Palette <const> = {}
+
+-- function Palette.from_id(id)
+--   local file <const> = string.format("assets/lua/palettes/%s", id)
+--   local palette <const> = require(file)
+--   return Palette.new(palette)
+-- end
+
+-- function Palette.from_image(image)
+--   local image <const> = Image.new(args[1])
+--   return Palette.new(image)
+-- end
+
+-- function Palette.default()
+--   return Palette.from_id('famicube')
+-- end
+
+-- return Palette

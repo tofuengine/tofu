@@ -36,14 +36,14 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
-local Class = require("tofu.core.class")
-local System = require("tofu.core.system")
-local Controller = require("tofu.input.controller")
-local Canvas = require("tofu.graphics.canvas")
-local Display = require("tofu.graphics.display")
-local Font = require("tofu.graphics.font")
-local Palette = require("tofu.graphics.palette")
-local XForm = require("tofu.graphics.xform")
+local Class <const> = require("tofu.core.class")
+local System <const> = require("tofu.core.system")
+local Controller <const> = require("tofu.input.controller")
+local Canvas <const> = require("tofu.graphics.canvas")
+local Display <const> = require("tofu.graphics.display")
+local Font <const> = require("tofu.graphics.font")
+local Palette <const> = require("tofu.graphics.palette")
+local XForm <const> = require("tofu.graphics.xform")
 
 -- Define some constants.
 local PALETTE <const> = Palette.default("pico-8")

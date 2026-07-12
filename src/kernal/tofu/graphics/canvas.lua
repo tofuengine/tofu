@@ -66,7 +66,7 @@ end
 function Canvas:state()
   local state = _states[self]
   if not state then
-    state = State.from_canvas(self)
+    state = State.new(self)
     _states[self] = state
   end
   return state

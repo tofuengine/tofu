@@ -61,9 +61,9 @@ function Main:__ctor()
 
   self.anchor = 0.5
   self.anchor_speed = 0.0
-  self.rotation = 128
+  self.rotation = 64
   self.rotation_speed = 0.0
-  self.scale = 2.0
+  self.scale = 4.0
   self.scale_speed = 0.0
   self.flip_x = false
   self.flip_y = false

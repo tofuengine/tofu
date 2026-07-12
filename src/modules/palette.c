@@ -175,6 +175,7 @@ static int palette_new_1t_1o(lua_State *L)
     return 1;
 }
 
+// TODO: use this constructor to create a palette from an image.
 static int palette_new_1o_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)

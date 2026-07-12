@@ -93,7 +93,7 @@ static int bank_new_2os_1o(lua_State *L)
     Bank_Object_t *self = (Bank_Object_t *)udt_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
             .atlas = {
                 .instance = atlas,
-                .reference = luaX_ref(L, 1),
+                .reference = luaX_ref(L, 1), // TODO: replace all the `luaX_ref` with `lua_setiuserdata()
             },
             .sheet = sheet
         }, OBJECT_TYPE_BANK);

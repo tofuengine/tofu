@@ -48,6 +48,9 @@
 
 static int state_new_1o_1o(lua_State *L);
 static int state_gc_1o_0(lua_State *L);
+static int state_remember_2os_0(lua_State *L);
+static int state_recall_2os_0(lua_State *L);
+static int state_forget_2oS_0(lua_State *L);
 static int state_push_1o_0(lua_State *L);
 static int state_pop_2oN_0(lua_State *L);
 static int state_reset_1o_0(lua_State *L);
@@ -67,6 +70,9 @@ int state_loader(lua_State *L)
             // -- getters/setters --
             // -- accessors --
             // -- mutators --
+            { "remember", state_remember_2os_0 },
+            { "recall", state_recall_2os_0 },
+            { "forget", state_forget_2oS_0 },
             { "push", state_push_1o_0 },
             { "pop", state_pop_2oN_0 },
             { "reset", state_reset_1o_0 },
@@ -115,6 +121,50 @@ static int state_gc_1o_0(lua_State *L)
     LOG_D("canvas reference #%d released", self->canvas.reference);
 
     LOG_D("state %p finalized", self);
+
+    return 0;
+}
+
+static int state_remember_2os_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    State_Object_t *self = (State_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_STATE);
+    const char *id = LUAX_STRING(L, 2);
+
+    GL_context_remember(self->context, id);
+
+    return 0;
+}
+
+static int state_recall_2os_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    State_Object_t *self = (State_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_STATE);
+    const char *id = LUAX_STRING(L, 2);
+
+    if (!GL_context_recall(self->context, id)) {
+        lua_pushnil(L);
+    }
+
+    return 1;
+}
+
+static int state_forget_2oS_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    State_Object_t *self = (State_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_STATE);
+    const char *id = LUAX_OPTIONAL_STRING(L, 2, NULL);
+
+    GL_context_forget(self->context, id);
 
     return 0;
 }

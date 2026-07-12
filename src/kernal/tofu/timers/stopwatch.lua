@@ -14,7 +14,7 @@
 
 MIT License
 
-Copyright (c) 2019-2026 Marco Lizza
+Copyright (c) 2019-2024 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,10 +35,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local State <const> = {}
+local Class <const> = require("tofu.core.class")
 
-function State.from_canvas(canvas)
-  return State.new(canvas)
+local StopWatch <const> = Class.define()
+
+function StopWatch:__ctor()
+  self.age = 0
+  self:reset()
 end
 
-return State
+function StopWatch:rate(rate)
+  self.rate = rate or 1.0
+end
+
+function StopWatch:reset()
+  self.age = 0.0
+end
+
+function StopWatch:cancel()
+  self.cancelled = true
+  self.callback("cancelled")
+end
+
+return StopWatch

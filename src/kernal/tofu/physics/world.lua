@@ -43,6 +43,8 @@ function World:spawn(...)
   local body = Body.new(...)
   self:add(body)
   return body
+--  return Body.new(self)
+-- body:kill()
 end
 
 return World

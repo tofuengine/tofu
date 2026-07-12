@@ -41,7 +41,6 @@ local Controller = require("tofu.input.controller")
 local Noise = require("tofu.generators.noise")
 local Wave = require("tofu.generators.wave")
 local Bank = require("tofu.graphics.bank")
-local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
@@ -52,28 +51,34 @@ require("preload")
 local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
-local CANVAS <const> = Canvas.default()
-local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
+--local DISPLAY <const> = Display.default()
+--local AUDIO <const> = Audio.default()
 
 local AMOUNT <const> = 16
 local PALETTES <const> = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 
 local Main = Class.define()
 
-function Main:__ctor()
+function Main:__ctor(canvas)
+  self.canvas = canvas
+  self.width, self.height = canvas:image():size()
+
   self.bank = Bank.from_image("assets/sheet.img", 8, 8)
   self.wave = Wave.new("triangle", 10.0, 128.0)
-  self.x_size = WIDTH / AMOUNT
-  self.y_size = HEIGHT / AMOUNT
+  self.x_size = self.width / AMOUNT
+  self.y_size = self.height / AMOUNT
   self.palette = 1
   self.scale_x = 1.0
   self.scale_y = -1.0
-  self.x, self.y = WIDTH / 2, HEIGHT / 2
+  self.x, self.y = self.width / 2, self.height / 2
   self.mode = 0
   self.clipping = false
-
   self.noise = Noise.new("simplex", 1234, 0.02)
+
+  local state = self.canvas:state()
+  state:clipping(0, 0, 32, 32)
+  state:remember("clipping")
 end
 
 function Main:init()
@@ -128,10 +133,11 @@ function Main:handle_input()
     self.mode = (self.mode + 1) % 10
   elseif CONTROLLER:is_pressed("x") then
     self.clipping = not self.clipping
+    local state = self.canvas:state()
     if self.clipping then
-      CANVAS:clipping(32, 32, 64, 64)
+      state:clipping(32, 32, 64, 64)
     else
-      CANVAS:clipping()
+      state:clipping()
     end
   end
 end
@@ -148,84 +154,89 @@ function Main:update(_)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas = self.canvas
+  local state = canvas:state()
+
   canvas:clear(0)
 
   local time = System.time()
 
   if self.mode == 0 then
-    canvas:push()
+    state:push()
+    state:recall("clipping")
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
       for j = 0, AMOUNT - 1 do
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
-        local y = (HEIGHT - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
-        canvas:shift(1, color)
+        local y = (self.height - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
+        state:shift(1, color)
         canvas:sprite(x, y, self.bank, index)
       end
     end
-    canvas:pop()
+    state:pop()
   elseif self.mode == 1 then
-    canvas:push()
+    state:push()
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
       for j = 0, AMOUNT - 1 do
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
-        canvas:shift(1, color)
+        state:shift(1, color)
         canvas:tile(x, y, self.bank, index, 0, math.tointeger(time * 4))
       end
     end
-    canvas:pop()
+    state:pop()
   elseif self.mode == 2 then
-    canvas:push()
+    state:push()
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
       for j = 0, AMOUNT - 1 do
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
-        canvas:shift(1, color)
+        state:shift(1, color)
         canvas:tile(x, y, self.bank, index, math.tointeger(time * 4), 0)
       end
     end
-    canvas:pop()
+    state:pop()
   elseif self.mode == 3 then
     canvas:tile(0, 0, self.bank, 0, 0, math.tointeger(time * 4), 4, -4)
   elseif self.mode == 4 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
 
-    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, scale, scale, rotation)
-    canvas:write(WIDTH, HEIGHT, FONT, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
+    canvas:sprite(self.width / 2, self.height / 2, self.bank, 0, scale, scale, rotation)
+    canvas:write(self.width, self.height,
+      FONT, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
   elseif self.mode == 5 then
-    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 256 * 1)
+    canvas:sprite(self.width / 2, self.height / 2, self.bank, 0, 10, 10, 256 * 1)
   elseif self.mode == 6 then
-    canvas:sprite(WIDTH / 2, HEIGHT / 2, self.bank, 0, 10, 10, 128 * 1)
+    canvas:sprite(self.width / 2, self.height / 2, self.bank, 0, 10, 10, 128 * 1)
   elseif self.mode == 7 then
-    local x = (WIDTH + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
-    local y = (HEIGHT + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
+    local x = (self.width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
+    local y = (self.height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
     canvas:sprite(x - 4, y - 4, self.bank, 0)
   elseif self.mode == 8 then
     canvas:sprite(self.x - 32, self.y - 32, self.bank, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   elseif self.mode == 9 then
-    canvas:push()
-      canvas:shift(self.shifting)
+    state:push()
+      state:shift(self.shifting)
       local noise = self.noise
       canvas:scan(function(x, y, _)
           local v = noise:generate(x, y, time * 5.0)
           return math.tointeger(v * 15)
         end)
-    canvas:pop()
+    state:pop()
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()), 1.5)
-    canvas:write(WIDTH, 0, FONT, string.format("mode: %d", self.mode), "right")
-  canvas:pop()
+    canvas:write(self.width, 0, FONT, string.format("mode: %d", self.mode), "right")
+  state:pop()
 end
 
 return Main
