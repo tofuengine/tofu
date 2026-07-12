@@ -79,3 +79,45 @@ The preferred design is to make `canvas:state()` the single entry point for draw
 `push()` and `pop()` should remain stack operations on the state controller. `capture()`, `recall()`, and `forget()` should be persistent preset operations on the same controller. This gives both concepts clear names and keeps their lifetimes distinct.
 
 The default build should keep palette bank LUTs synchronized. Bank-local LUT behavior can remain available behind `TOFU_GRAPHICS_PALETTE_BANK_LUT_SYNC` for experiments and effects, but it should be documented as a semantic change rather than presented as a transparent optimization.
+
+
+### State Object Creation
+
+The state controller does not need to be created eagerly in the `Canvas` C constructor. A lazy approach is preferable because many canvases may never need direct state control. Creating a `State` object only when `canvas:state()` is first called avoids unnecessary userdata allocation and avoids cross-module construction from `canvas.c`.
+
+The clean ownership model is to keep a weak Lua cache keyed by canvas:
+
+```lua
+local states <const> = setmetatable({}, { __mode = "k" })
+
+function Canvas:state()
+  local state = states[self]
+  if not state then
+    state = State.new(self)
+    states[self] = state
+  end
+  return state
+end
+```
+
+This cache makes repeated `canvas:state()` calls return the same controller while the canvas is alive, but it does not keep the canvas or state alive by itself. If both objects become unreachable, the weak entry can disappear.
+
+The `State` userdata still needs to keep its canvas alive because it stores a borrowed `GL_Context_t *`. Otherwise user code could keep a `State` after the `Canvas` has been collected, leaving the state object with a dangling context pointer. The state object should therefore hold a strong reference to the canvas, following the same ownership style already used by objects such as banks, batches, and fonts:
+
+```c
+typedef struct State_Object_s {
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    GL_Context_t *context;
+} State_Object_t;
+```
+
+`State.new(canvas)` should store `canvas->context` and retain argument `1` with `luaX_ref()`. The state finalizer should release that reference with `luaX_unref()`. With this shape, the ownership graph is straightforward: the weak cache points from `Canvas` to `State` without owning either object, while `State` strongly owns the `Canvas` that owns the context.
+
+Creating the state object eagerly from C is possible, but it is less attractive. `udt_newobject()` uses the current module metatable, so `canvas.c` cannot call it directly to create a `State` userdata. A cross-module helper would have to call `luaX_newobject()` with the explicit `tofu.graphics.state` metatable, push the state userdata on the stack, and then store it as a uservalue or registry reference on the canvas. Uservalues would be preferable to registry references because they are visible to the Lua garbage collector and would not create an uncollectable registry-reference cycle.
+
+That eager route also requires the state metatable to exist before `Canvas.new()` creates a canvas. The lazy Lua cache avoids that ordering concern and keeps object creation in the state module, where the correct metatable is already available.
+
+The helper name `from_canvas()` is not ideal because it sounds like a conversion. `for_canvas()` is semantically closer because the object is a live controller for a canvas, not a value derived from it. The best public API, however, is to avoid exposing either helper as the intended construction path. `canvas:state()` should be the documented way to get a state controller. The Lua wrapper can call `State.new(self)` internally, and the direct constructor can remain a low-level implementation detail rather than a named public convenience.
