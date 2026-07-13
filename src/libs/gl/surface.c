@@ -160,7 +160,13 @@ static inline bool _is_power_of_two(int n)
 
 GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
-    GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
+    if (width != 0 && height > (size_t)-1 / sizeof(GL_Pixel_t) / width) {
+        LOG_E("integer overflow in surface dimensions `%dx%d`", width, height);
+        goto error_exit;
+    }
+    size_t data_bytes = width * height;
+    data_bytes *= sizeof(GL_Pixel_t);
+    GL_Pixel_t *data = malloc(data_bytes);
     if (!data) {
         LOG_E("can't allocate `%dx%d` pixel-data", width, height);
         goto error_exit;
