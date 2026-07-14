@@ -43,7 +43,7 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-static void _reset(GL_Context_t *context)
+static inline void _reset(GL_Context_t *context)
 {
     const GL_Surface_t *surface = context->surface;
 
