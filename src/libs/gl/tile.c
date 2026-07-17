@@ -229,6 +229,20 @@ void GL_context_tile_s(const GL_Context_t *context, GL_Point_t position, const G
     //   - the source origin `u` and `v`, scaled, given that we might have skipped some pixels due to clipping, and
     //     moved to the correct margin due to x/y flipping;
     //   - the movement vector, according to x/y flipping.
+    //
+    // Fixed-point accumulation is intentionally not used here. The source indexes are already integers and this
+    // remainder DDA represents every integer scale exactly. A binary fixed-point reciprocal would be less exact
+    // for non-power-of-two scales.
+    //
+    // With 16.16 and scale 3:
+    //
+    //     round(65536 / 3) = 21845
+    //     3 * 21845        = 65535
+    //
+    // After three increments the accumulator has not reached source coordinate 1, so the first source pixel would
+    // be sampled a fourth time. Correcting that residual requires the same quotient/remainder error term already
+    // used by the current DDA, while also adding per-pixel index extraction.
+
     const int su = IABS(scale_x);
     const int sv = IABS(scale_y);
     const int ru0 = skip_x % su;
