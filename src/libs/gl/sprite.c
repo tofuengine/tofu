@@ -61,6 +61,9 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
+#define _DEBUG_PIXEL(_surface, _x, _y, _index) _pixel((_surface), (_x), (_y), (_index))
+#else
+#define _DEBUG_PIXEL(_surface, _x, _y, _index) ((void)0)
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 // TODO: specifies `const` always? Is pedantic or useful?
@@ -117,9 +120,7 @@ void GL_context_sprite(const GL_Context_t *context, GL_Point_t position, const G
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+            _DEBUG_PIXEL(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
             const GL_Pixel_t pixel = *(sptr++);
@@ -249,9 +250,7 @@ void GL_context_sprite_s(const GL_Context_t *context, GL_Point_t position, const
         float u = ou;
 #endif  /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
         for (int j = width; j; --j) {
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+            _DEBUG_PIXEL(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #if defined(TOFU_GRAPHICS_USE_FIXED_MATH)
             const int x = FPMATH_ITRUNC(u); // Ditto.
 #else   /* defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
@@ -281,12 +280,10 @@ void GL_context_sprite_s(const GL_Context_t *context, GL_Point_t position, const
         v += dv;
         dptr += dskip;
     }
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    _pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    _pixel(surface, drawing_region.x0, drawing_region.y1, 7);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+    _DEBUG_PIXEL(surface, drawing_region.x0, drawing_region.y0, 7);
+    _DEBUG_PIXEL(surface, drawing_region.x1, drawing_region.y0, 7);
+    _DEBUG_PIXEL(surface, drawing_region.x1, drawing_region.y1, 7);
+    _DEBUG_PIXEL(surface, drawing_region.x0, drawing_region.y1, 7);
 }
 
 #if !defined(TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS)
@@ -601,9 +598,7 @@ void GL_context_sprite_sr(const GL_Context_t *context, GL_Point_t position, cons
 #endif  /* defined(TOFU_GRAPHICS_NO_IFLOORF) && defined(TOFU_GRAPHICS_USE_FIXED_MATH) */
 
         for (int j = width; j; --j) {
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+            _DEBUG_PIXEL(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 
 #if defined(TOFU_GRAPHICS_NO_IFLOORF)
             // In the source space we can't have negative zero, so we can use
@@ -633,9 +628,7 @@ void GL_context_sprite_sr(const GL_Context_t *context, GL_Point_t position, cons
             //       modern branch predictors make it negligible at the cost or less readable code.
             if (x >= sminx && x < smaxx && y >= sminy && y < smaxy) {
 #endif  /* defined(TOFU_GRAPHICS_NO_IFLOORF) */
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-                _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 3);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+                _DEBUG_PIXEL(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 3);
                 const GL_Pixel_t *sptr = sdata + y * swidth + x;
 
 #if defined(_BRANCHLESS_BLIT_EXPERIMENTAL)
@@ -666,11 +659,9 @@ void GL_context_sprite_sr(const GL_Context_t *context, GL_Point_t position, cons
         row_u += du_dy; // Shift the row vertically (scaling is included in the `row_d*` values).
         row_v += dv_dy;
     }
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-    _pixel(surface, position.x, position.y, 11); // !!! WARNING !!! Unclipped draw! Might cause a SEGV!
-    _pixel(surface, drawing_region.x0    , drawing_region.y0    , 7);
-    _pixel(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
-    _pixel(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);
-    _pixel(surface, drawing_region.x0    , drawing_region.y1 - 1, 7);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+    _DEBUG_PIXEL(surface, position.x, position.y, 11); // !!! WARNING !!! Unclipped draw! Might cause a SEGV!
+    _DEBUG_PIXEL(surface, drawing_region.x0    , drawing_region.y0    , 7);
+    _DEBUG_PIXEL(surface, drawing_region.x1 - 1, drawing_region.y0    , 7);
+    _DEBUG_PIXEL(surface, drawing_region.x1 - 1, drawing_region.y1 - 1, 7);
+    _DEBUG_PIXEL(surface, drawing_region.x0    , drawing_region.y1 - 1, 7);
 }

@@ -46,6 +46,16 @@
 #define _REGION_RIGHT  4
 #define _REGION_BELOW  8
 
+#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
+static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
+{
+    surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
+}
+#define _DEBUG_PIXEL(_surface, _x, _y, _index) _pixel((_surface), (_x), (_y), (_index))
+#else
+#define _DEBUG_PIXEL(_surface, _x, _y, _index) ((void)0)
+#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+
 static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
 {
     if (x < clipping_region->x0) {
@@ -537,6 +547,7 @@ void GL_context_filled_triangle(const GL_Context_t *context, GL_Point_t v0, GL_P
         int w2 = w2_row;
 
         for (int x = 0; x < width; ++x) {
+            _DEBUG_PIXEL(surface, drawing_region.x0 + x, drawing_region.y0 + y, x + y);
             if ((w0 | w1 | w2) >= 0) { // Check the sign bit only.
                 *dptr = index;
             }

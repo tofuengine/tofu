@@ -48,6 +48,9 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
+#define _DEBUG_PIXEL(_surface, _x, _y, _index) _pixel((_surface), (_x), (_y), (_index))
+#else
+#define _DEBUG_PIXEL(_surface, _x, _y, _index) ((void)0)
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
 GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
@@ -248,9 +251,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
 #endif  /* !defined(_CLIP_OFFSET) */
 
         for (int j = width; j; --j) {
-#if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
-            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
-#endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
+            _DEBUG_PIXEL(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
             int sx = IROUNDF(xp); // Preserve direction, for negative values!
             int sy = IROUNDF(yp);
 
