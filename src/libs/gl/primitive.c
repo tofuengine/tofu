@@ -40,12 +40,6 @@
 #include <core/config.h>
 #include <libs/imath.h>
 
-#define _REGION_INSIDE 0
-#define _REGION_LEFT   1
-#define _REGION_ABOVE  2
-#define _REGION_RIGHT  4
-#define _REGION_BELOW  8
-
 #if defined(TOFU_GRAPHICS_DEBUG_ENABLED)
 static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
@@ -74,21 +68,33 @@ static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
     surface->data[y * surface->width + x] = index;
 }
 
-// https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
+// We are using the Cohen–Sutherland algorithm for line clipping, which  uses a divide-and-conquer approach to
+// determine whether a line segment is completely inside, completely outside, or partially inside the clipping region.
+// The algorithm assigns a 4-bit code to each endpoint of the line segment, indicating its position relative to the
+// clipping region. Based on these codes, the algorithm can quickly determine whether to accept, reject, or clip the
+// line segment.
+//
+// See: https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
+#define _CODE_REGION_INSIDE 0
+#define _CODE_REGION_LEFT   1
+#define _CODE_REGION_ABOVE  2
+#define _CODE_REGION_RIGHT  4
+#define _CODE_REGION_BELOW  8
+
 static inline int _compute_code(const GL_Quad_t *clipping_region, int x, int y)
 {
-    int code = _REGION_INSIDE;
+    int code = _CODE_REGION_INSIDE;
     if (x < clipping_region->x0) {
-        code |= _REGION_LEFT;
+        code |= _CODE_REGION_LEFT;
     } else
     if (x >= clipping_region->x1) {
-        code |= _REGION_RIGHT;
+        code |= _CODE_REGION_RIGHT;
     }
     if (y < clipping_region->y0) {
-        code |= _REGION_ABOVE;
+        code |= _CODE_REGION_ABOVE;
     } else
     if (y >= clipping_region->y1) {
-        code |= _REGION_BELOW;
+        code |= _CODE_REGION_BELOW;
     }
     return code;
 }
@@ -123,19 +129,19 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
             //
             // Note that we are safe in using integer math (only, the division need to be performed at last).
             int x = 0, y = 0;
-            if (code & _REGION_ABOVE) {
+            if (code & _CODE_REGION_ABOVE) {
                 y = clipping_region->y0;
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
-            if (code & _REGION_BELOW) {
+            if (code & _CODE_REGION_BELOW) {
                 y = clipping_region->y1 - 1;
                 x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
-            if (code & _REGION_LEFT) {
+            if (code & _CODE_REGION_LEFT) {
                 x = clipping_region->x0;
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             } else
-            if (code & _REGION_RIGHT) {
+            if (code & _CODE_REGION_RIGHT) {
                 x = clipping_region->x1 - 1;
                 y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             }
