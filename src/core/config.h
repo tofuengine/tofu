@@ -345,25 +345,32 @@
 // will save half of the rotation calculations.
 #define TOFU_GRAPHICS_OPTIMIZE_AABB_ROTATIONS
 
-// In the (roto)scaling algorithm we apply an inverse transformation from the
-// destination space to the source space. Coordinates are calculated as floating
-// point values, but we need to round them down to get the corresponding pixel
-// in the source image. The `IFLOORF(x)` function is the most accurate way to do
-// this, but it can be more expensive than a simple cast to `int` (which
-// truncates toward zero). When the `TOFU_GRAPHICS_NO_IFLOORF` macro is defined,
-// the latter method will be used, with some additional checks to avoid
-// out-of-bounds access due to the truncation toward zero of negative values
-// (e.g. `-0.3` becomes `0` instead of `-1`).
+// When fixed-point sampling is disabled, the roto-scaler normally floors
+// floating-point source coordinates before checking their bounds. Enabling this
+// option checks the float coordinates against the non-negative source rectangle
+// first, then casts accepted values to `int`. Truncation toward zero equals
+// floor in that accepted range, while negative values such as `-0.3f` are
+// rejected before they could become `0`.
+//
+// This option only selects the floating-point fallback. The fixed-point path
+// always applies the equivalent bounds-before-truncation optimization.
 #define TOFU_GRAPHICS_NO_IFLOORF
 
-// Generally speaking, fixed-point math is no longer the ace-in-the-hole for
-// performance that it used to be in 25 years ago. Current current CPUs are
-// optimized for floating-point calculations in their micro-code. However,
-// in our (roto)scaling algorithm we need to round down the source coordinates
-// to `int` to get the corresponding pixel, and even a simple cast to `int`
-// (`ITRUNC(x)`, which truncates toward zero) is costly (not to mention the
-// `IFLOORF(x)` macro). Fixed-point math can be a good compromise to get a more
-// efficient rounding down while preserving the accuracy of the calculations.
+// Use fixed-point accumulators for the sprite scaler and roto-scaler pixel
+// loops. The transformation setup remains floating point and only the source
+// origins and increments are quantized before iteration. This replaces repeated
+// float-to-integer conversions with fixed-point integer additions and
+// `FPMATH_ITRUNC()`.
+//
+// Valid source rectangles have non-negative coordinates. The roto-scaler checks
+// fixed-point coordinates against those bounds before truncating them, making
+// truncation toward zero exactly equivalent to floor for every accepted pixel.
+// The default 16.16 representation limits source coordinates and accumulated
+// values to its representable range and can differ from the float path near a
+// sampling boundary by its quantization error.
+//
+// The integer-scaled tile blitter deliberately retains its exact
+// quotient/remainder DDA and is not controlled by this option.
 #define TOFU_GRAPHICS_USE_FIXED_MATH
 
 // Enabling the "fast path" for blitting operations means that when operating
