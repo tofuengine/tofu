@@ -159,7 +159,7 @@ static inline CIELAB_t _rgb_to_cielab(uint8_t r, uint8_t g, uint8_t b)
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from, size_t count, GL_Color_t color)
 {
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_PERCEPTUAL
-    CIELAB_t color_lab = _rgb_to_cielab(color.r, color.g, color.b);
+    CIELAB_t color_lab = _rgb_to_cielab(gl_color_get_r(color), gl_color_get_g(color), gl_color_get_b(color));
 #endif
     size_t to = from + count - 1;
 
@@ -169,9 +169,9 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
         const GL_Color_t current = palette[i];
 
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_EUCLIDIAN
-        const float delta_r = (float)(color.r - current->r);
-        const float delta_g = (float)(color.g - current->g);
-        const float delta_b = (float)(color.b - current->b);
+        const float delta_r = (float)(gl_color_get_r(color) - gl_color_get_r(current));
+        const float delta_g = (float)(gl_color_get_g(color) - gl_color_get_g(current));
+        const float delta_b = (float)(gl_color_get_b(color) - gl_color_get_b(current));
 
         const float distance = delta_r * delta_r
             + delta_g * delta_g
@@ -188,7 +188,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
             + (delta_g * delta_g) * 4.0f
             + (delta_b * delta_b) * (2.0f + ((255.0f - r_mean) / 255.0f));
 #elif TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_PERCEPTUAL
-        CIELAB_t current_lab = _rgb_to_cielab(current->r, current->g, current->b);
+        CIELAB_t current_lab = _rgb_to_cielab(gl_color_get_r(current), gl_color_get_g(current), gl_color_get_b(current));
 
         float delta_L = color_lab.L - current_lab.L;
         float delta_a = color_lab.a - current_lab.a;
