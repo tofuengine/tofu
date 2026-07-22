@@ -135,6 +135,9 @@ static int palette_new_1t_1o(lua_State *L)
     LOG_D("setting custom palette of %d color(s)", size);
 
 #if defined(TOFU_CORE_DEFENSIVE_CHECKS)
+    if (size == 0) {
+        return luaL_error(L, "palette has no colors");
+    } else
     if (size > GL_PALETTE_MAX_COLORS) {
         return luaL_error(L, "palette has too many colors (%d) - max is %d", size, GL_PALETTE_MAX_COLORS);
     }

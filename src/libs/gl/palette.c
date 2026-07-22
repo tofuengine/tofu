@@ -161,6 +161,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Color_t *palette, size_t from,
 #if TOFU_GRAPHICS_COLOR_MATCHING_ALGORITHM == TOFU_COLOR_MATCH_PERCEPTUAL
     CIELAB_t color_lab = _rgb_to_cielab(gl_color_get_r(color), gl_color_get_g(color), gl_color_get_b(color));
 #endif
+    // Achtung! `count` needs to be greater than `0`, or an underflow will occur!
     size_t to = from + count - 1;
 
     GL_Pixel_t index = 0;
