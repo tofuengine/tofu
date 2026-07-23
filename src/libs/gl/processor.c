@@ -204,7 +204,7 @@ void _surface_to_pixels_program(const GL_Processor_State_t *state, const GL_Surf
 
         for (size_t w = dwidth; w; --w) {
 #if defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL)
-            if (raster_index >= wait) {
+            if (raster_index >= wait_index) {
 #else   /* defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL) */
             while (raster_index >= wait_index) {
 #endif  /* defined(TOFU_GRAPHICS_PROCESSOR_ONE_COMMAND_PER_PIXEL) */
