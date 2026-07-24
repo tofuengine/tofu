@@ -316,12 +316,19 @@ void GL_processor_set_program(GL_Processor_t *processor, const GL_Program_t *pro
     }
 
     if (program) {
+        // TODO: should we clone the program or just reference it? Cloning is safer, but more expensive (and could fail)
         processor->state.program = GL_program_clone(program);
+        LOG_IF_E(!processor->state.program, "can't copy processor program %p, disabling program usage", program);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-        LOG_D("processor program at %p copied at %p", program, processor->program);
+        LOG_IF_D(processor->state.program, "processor program at %p copied at %p", program, processor->state.program);
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
     }
-    processor->surface_to_pixels = program ? _surface_to_pixels_program : _surface_to_pixels;
+
+    // We use the `processor->state.program` pointer to select the proper
+    // function to handle also the FAILURE in cloning the program
+    processor->surface_to_pixels = processor->state.program
+        ? _surface_to_pixels_program
+        : _surface_to_pixels;
 }
 
 void GL_processor_surface_to_pixels(const GL_Processor_t *processor, const GL_Surface_t *surface, GL_Color_t *pixels)
