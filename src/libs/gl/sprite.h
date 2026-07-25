@@ -41,9 +41,6 @@
 #include "common.h"
 #include "context.h"
 
-// TODO: rename `blit` to `sprite`. `blit` is the logic operator, but we are
-//       actually working on sprites. This also pairs with the `tile` functions.
-
 #if 1
 extern void GL_context_sprite(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
 extern void GL_context_sprite_s(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
