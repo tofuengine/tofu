@@ -60,7 +60,6 @@ function Boot:update(delta_time)
   self.main:update(delta_time)
 end
 
--- TODO: pass the default canvas straight from C?
 function Boot:render(ratio)
   self.main:render(ratio)
 end
