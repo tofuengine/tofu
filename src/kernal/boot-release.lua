@@ -45,7 +45,7 @@ local CANVAS <const> = Canvas.default()
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Boot:__ctor()
-  self.main = Main.new()
+  self.main = Main.new(CANVAS)
 end
 
 function Boot:init()
@@ -62,7 +62,7 @@ end
 
 -- TODO: pass the default canvas straight from C?
 function Boot:render(ratio)
-  self.main:render(CANVAS, ratio)
+  self.main:render(ratio)
 end
 
 return Boot.new()
