@@ -43,8 +43,6 @@
 #define _LOG_TAG "vector2d"
 #include <libs/log.h>
 
-//#define _VERBOSE_DEBUG
-
 static int vector2d_new_v_1o(lua_State *L);
 static int vector2d_gc_1o_0(lua_State *L);
 static int vector2d_eq_1o_1b(lua_State *L);
@@ -155,9 +153,9 @@ static int vector2d_new_0_1o(lua_State *L)
         }, OBJECT_TYPE_VECTOR2D);
     LUAX_UNUSED(self);
 
-#if defined(_VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, x, y);
-#endif  /* defined(_VERBOSE_DEBUG) */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
 }
@@ -175,9 +173,9 @@ static int vector2d_new_1o_1o(lua_State *L)
         }, OBJECT_TYPE_VECTOR2D);
     LUAX_UNUSED(self);
 
-#if defined(_VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, x, y);
-#endif  /* defined(_VERBOSE_DEBUG) */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
 }
@@ -197,9 +195,9 @@ static int vector2d_new_2nn_1o(lua_State *L)
         }, OBJECT_TYPE_VECTOR2D);
     LUAX_UNUSED(self);
 
-#if defined(_VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, x, y);
-#endif  /* defined(_VERBOSE_DEBUG) */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
 }
@@ -221,9 +219,9 @@ static int vector2d_gc_1o_0(lua_State *L)
     Vector2D_Object_t *self = (Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
     LUAX_UNUSED(self);
 
-#if defined(_VERBOSE_DEBUG)
+#if defined(TOFU_CORE_VERBOSE_DEBUG)
     LOG_D("vector %p finalized", self);
-#endif  /* defined(_VERBOSE_DEBUG) */
+#endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 0;
 }
