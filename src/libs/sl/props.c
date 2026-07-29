@@ -28,7 +28,7 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
-#define _LOG_TAG "sl-props"
+#define _LOG_TAG "sl:props"
 #include <libs/log.h>
 #include <libs/stb.h>
 

@@ -28,7 +28,7 @@
 #include "mix.h"
 
 #include <core/config.h>
-#define _LOG_TAG "sl-module"
+#define _LOG_TAG "sl:module"
 #include <libs/log.h>
 #include <libs/stb.h>
 

@@ -37,7 +37,7 @@
 #include "program.h"
 
 #include <core/config.h>
-#define _LOG_TAG "gl-program"
+#define _LOG_TAG "gl:program"
 #include <libs/log.h>
 #include <libs/stb.h>
 

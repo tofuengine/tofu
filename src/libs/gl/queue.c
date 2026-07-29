@@ -38,7 +38,7 @@
 #include "queue.h"
 
 #include <core/config.h>
-#define _LOG_TAG "gl-queue"
+#define _LOG_TAG "gl:queue"
 #include <libs/log.h>
 #include <libs/stb.h>
 

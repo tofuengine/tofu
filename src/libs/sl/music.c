@@ -29,7 +29,7 @@
 
 #include <core/config.h>
 #include <libs/dr_libs.h>
-#define _LOG_TAG "sl-music"
+#define _LOG_TAG "sl:music"
 #include <libs/log.h>
 #include <libs/stb.h>
 

@@ -39,7 +39,7 @@
 
 #include <core/config.h>
 #include <libs/image.h>
-#define _LOG_TAG "gl-surface"
+#define _LOG_TAG "gl:surface"
 #include <libs/log.h>
 #include <libs/stb.h>
 

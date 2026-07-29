@@ -46,7 +46,7 @@
 #include <libs/fmath.h>
 #endif  /* defined(TOFU_GRAPHICS_BLIT_FAST_PATH) */
 #include <libs/imath.h>
-#define _LOG_TAG "gl-sheet"
+#define _LOG_TAG "gl:sheet"
 #include <libs/log.h>
 #include <libs/stb.h>
 #if defined(TOFU_GRAPHICS_BLIT_FAST_PATH)

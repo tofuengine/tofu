@@ -39,7 +39,7 @@
 
 #include <core/config.h>
 #include <libs/imath.h>
-#define _LOG_TAG "gl-processor"
+#define _LOG_TAG "gl:processor"
 #include <libs/log.h>
 #include <libs/stb.h>
 

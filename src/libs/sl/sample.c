@@ -29,7 +29,7 @@
 
 #include <core/config.h>
 #include <libs/dr_libs.h>
-#define _LOG_TAG "sl-sample"
+#define _LOG_TAG "sl:sample"
 #include <libs/log.h>
 #include <libs/stb.h>
 

@@ -41,8 +41,8 @@
 
 #include <core/config.h>
 #include <libs/hex.h>
-#define _LOG_TAG "palette"
 #include <libs/imath.h>
+#define _LOG_TAG "palette"
 #include <libs/log.h>
 
 static int palette_new_v_1o(lua_State *L);

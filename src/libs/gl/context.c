@@ -39,7 +39,7 @@
 
 #include <core/config.h>
 #include <libs/imath.h>
-#define _LOG_TAG "gl-context"
+#define _LOG_TAG "gl:context"
 #include <libs/log.h>
 #include <libs/stb.h>
 

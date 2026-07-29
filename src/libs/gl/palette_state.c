@@ -37,7 +37,7 @@
 
 #include "palette_state.h"
 
-#define _LOG_TAG "gl-palette_state"
+#define _LOG_TAG "gl:palette_state"
 #include <libs/log.h>
 
 void gl_palette_state_init(GL_Palette_State_t *state)

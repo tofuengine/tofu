@@ -41,7 +41,7 @@
 
 #include <core/config.h>
 #include <core/platform.h>
-#define _LOG_TAG "fs-std"
+#define _LOG_TAG "fs:std"
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>

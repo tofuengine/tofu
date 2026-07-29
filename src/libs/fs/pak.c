@@ -29,7 +29,7 @@
 #include <core/config.h>
 #include <core/platform.h>
 #include <libs/bytes.h>
-#define _LOG_TAG "fs-pak"
+#define _LOG_TAG "fs:pak"
 #include <libs/log.h>
 #include <libs/md5.h>
 #include <libs/path.h>

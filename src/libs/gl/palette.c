@@ -41,7 +41,7 @@
 
 #include <core/config.h>
 #include <libs/fmath.h>
-#define _LOG_TAG "gl-palette"
+#define _LOG_TAG "gl:palette"
 #include <libs/log.h>
 
 #include <string.h>
