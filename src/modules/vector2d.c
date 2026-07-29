@@ -154,7 +154,7 @@ static int vector2d_new_0_1o(lua_State *L)
     LUAX_UNUSED(self);
 
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, x, y);
+    LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, self->x, self->y);
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
@@ -174,7 +174,7 @@ static int vector2d_new_1o_1o(lua_State *L)
     LUAX_UNUSED(self);
 
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, x, y);
+    LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, self->x, self->y);
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
@@ -196,7 +196,7 @@ static int vector2d_new_2nn_1o(lua_State *L)
     LUAX_UNUSED(self);
 
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, x, y);
+    LOG_D("vector %p allocated w/ data `<%.3f, %.3f>`", self, self->x, self->y);
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     return 1;
