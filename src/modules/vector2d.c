@@ -45,7 +45,7 @@
 
 static int vector2d_new_v_1o(lua_State *L);
 static int vector2d_gc_1o_0(lua_State *L);
-static int vector2d_eq_1o_1b(lua_State *L);
+static int vector2d_eq_2oo_1b(lua_State *L);
 static int vector2d_tostring_1o_1s(lua_State *L);
 static int vector2d_x_v_v(lua_State *L);
 static int vector2d_y_v_v(lua_State *L);
@@ -90,7 +90,7 @@ int vector2d_loader(lua_State *L)
             { "new", vector2d_new_v_1o },
             { "__gc", vector2d_gc_1o_0 },
             // -- metamethods --
-            { "__eq", vector2d_eq_1o_1b },
+            { "__eq", vector2d_eq_2oo_1b },
             { "__tostring", vector2d_tostring_1o_1s },
             // -- getters/setters --
             { "x", vector2d_x_v_v },
@@ -226,7 +226,7 @@ static int vector2d_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static int vector2d_eq_1o_1b(lua_State *L)
+static int vector2d_eq_2oo_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
