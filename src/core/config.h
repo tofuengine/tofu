@@ -165,6 +165,13 @@
 // operations. See the `imath.h` and `fmath.h` sources.
 #undef  TOFU_CORE_FAST_MATH
 
+// Enables the usage of the `hypotf()` function for calculating the magnitude of
+// a vector. This is more accurate than the naive `sqrtf(x * x + y * y)`
+// implementation, and ensure that no overflow/underflow occurs, but it can be
+// slower on some platforms. The default is to  use the naive implementation,
+// unless this macro is defined.
+#define TOFU_CORE_USE_HYPOTF
+
 // ##############
 // ### Engine ###
 // ##############

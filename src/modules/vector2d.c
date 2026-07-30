@@ -43,6 +43,14 @@
 #define _LOG_TAG "vector2d"
 #include <libs/log.h>
 
+#include <float.h>
+#include <math.h>
+#include <stdbool.h>
+
+#define _ABSOLUTE_TOLERANCE 1e-6f
+#define _RELATIVE_TOLERANCE 1e-5f
+#define _PARALLEL_TOLERANCE 1e-4f
+
 static int vector2d_new_v_1o(lua_State *L);
 static int vector2d_gc_1o_0(lua_State *L);
 static int vector2d_eq_2oo_1b(lua_State *L);
@@ -138,6 +146,9 @@ int vector2d_loader(lua_State *L)
             { NULL, NULL }
         },
         (const luaX_Const[]){
+            { "ABSOLUTE_TOLERANCE", LUA_CT_NUMBER, { .n = _ABSOLUTE_TOLERANCE } },
+            { "RELATIVE_TOLERANCE", LUA_CT_NUMBER, { .n = _RELATIVE_TOLERANCE } },
+            { "PARALLEL_TOLERANCE", LUA_CT_NUMBER, { .n = _PARALLEL_TOLERANCE } },
             { NULL, LUA_CT_NIL, { 0 } }
         });
 }
@@ -344,7 +355,15 @@ static int vector2d_is_almost_zero_1o_1b(lua_State *L)
     LUAX_SIGNATURE_END
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
 
-    const bool is_almost_zero = fabsf(self->x) <= FLT_EPSILON && fabsf(self->y) <= FLT_EPSILON;
+    const float x = self->x;
+    const float y = self->y;
+
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float magnitude = hypotf(x, y);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = sqrtf(x * x + y * y);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const bool is_almost_zero = fabsf(magnitude) <= _ABSOLUTE_TOLERANCE;
 
     lua_pushboolean(L, is_almost_zero);
 
@@ -376,9 +395,79 @@ static int vector2d_is_almost_equal_2oo_1b(lua_State *L)
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
-    const bool is_almost_equal = fabsf(self->x - other->x) <= FLT_EPSILON && fabsf(self->y - other->y) <= FLT_EPSILON;
+    const float sx = self->x;
+    const float sy = self->y;
+    const float ox = other->x;
+    const float oy = other->y;
+
+    bool is_almost_equal;
+    if (sx == ox && sy == oy) {
+        is_almost_equal = true;
+    } else
+    if (!isfinite(sx) || !isfinite(sy) || !isfinite(ox) || !isfinite(oy)) {
+        is_almost_equal = false;
+    } else {
+#if defined(TOFU_CORE_USE_HYPOTF)
+        const float difference = hypotf(sx - ox, sy - oy);
+        const float magnitude = fmaxf(hypotf(sx, sy), hypotf(ox, oy));
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+        const float difference = sqrtf((sx - ox) * (sx - ox) + (sy - oy) * (sy - oy));
+        const float magnitude = fmaxf(sqrtf(sx * sx + sy * sy), sqrtf(ox * ox + oy * oy));
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+        const float tolerance = fmaxf(_ABSOLUTE_TOLERANCE, _RELATIVE_TOLERANCE * magnitude);
+
+        is_almost_equal = difference <= tolerance;
+    }
 
     lua_pushboolean(L, is_almost_equal);
+
+    return 1;
+}
+
+static int vector2d_is_aligned_3ooB_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
+    LUAX_SIGNATURE_END
+    const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
+    const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
+    const bool allow_opposite = LUAX_OPTIONAL_BOOLEAN(L, 3, false);
+
+    const float sx = self->x;
+    const float sy = self->y;
+    const float ox = other->x;
+    const float oy = other->y;
+
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float magnitude_self = hypotf(sx, sy);
+    const float magnitude_other = hypotf(ox, oy);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude_self = sqrtf(sx * sx + sy * sy);
+    const float magnitude_other = sqrtf(ox * ox + oy * oy);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+
+    bool is_aligned;
+    if (!isfinite(magnitude_self) || !isfinite(magnitude_other)) {
+        is_aligned = false;
+    } else
+    if (magnitude_self <= _ABSOLUTE_TOLERANCE || magnitude_other <= _ABSOLUTE_TOLERANCE) {
+        is_aligned = false;
+    } else {
+        const float ssx = sx / magnitude_self; // Scale the vectors to unit length to avoid overflow/underflow issues.
+        const float ssy = sy / magnitude_self;
+        const float sox = ox / magnitude_other;
+        const float soy = oy / magnitude_other;
+
+        const float dot = ssx * sox + ssy * soy;
+        const float cross = ssx * soy - ssy * sox;
+
+        is_aligned = (allow_opposite || dot > 0.0f)
+            && fabsf(cross) <= _PARALLEL_TOLERANCE;
+    }
+
+    lua_pushboolean(L, is_aligned);
 
     return 1;
 }
@@ -421,7 +510,13 @@ static int vector2d_magnitude_1o_1n(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-    lua_pushnumber(L, sqrtf(x * x + y * y));
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float magnitude = hypotf(x, y);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = sqrtf(x * x + y * y);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+
+    lua_pushnumber(L, magnitude);
 
     return 1;
 }
@@ -452,7 +547,11 @@ static int vector2d_polar_1o_2nn(lua_State *L)
     const float y = self->y;
 
     const float angle = atan2f(y, x);
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float magnitude = hypotf(x, y);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
     const float magnitude = sqrtf(x * x + y * y);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
 
     lua_pushnumber(L, angle);
     lua_pushnumber(L, magnitude);
@@ -910,7 +1009,13 @@ static int vector2d_distance_from_2oo_1n(lua_State *L)
     const float dx = self->x - other->x;
     const float dy = self->y - other->y;
 
-    lua_pushnumber(L, sqrtf(dx * dx + dy * dy));
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float distance = hypotf(dx, dy);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float distance = sqrtf(dx * dx + dy * dy);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+
+    lua_pushnumber(L, distance);
 
     return 1;
 }
@@ -927,11 +1032,12 @@ static int vector2d_normalize_2oN_1n(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-    float magnitude = 0.0f;
-
-    const float magnitude_squared = x * x + y * y;
-    if (magnitude_squared > 0.0f) {
-        magnitude = sqrtf(magnitude_squared);
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float magnitude = hypotf(x, y);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = sqrtf(x * x + y * y);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    if (magnitude > 0.0f) {
         const float factor = l / magnitude;
 
         self->x *= factor;
@@ -955,12 +1061,13 @@ static int vector2d_trim_2on_0(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-    const float magnitude_squared = x * x + y * y;
-
-    const float factor_squared = l * l / magnitude_squared;
-
-    if (factor_squared < 1.0f) {
-        const float factor = sqrtf(factor_squared);
+#if defined(TOFU_CORE_USE_HYPOTF)
+    const float magnitude = hypotf(x, y);
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = sqrtf(x * x + y * y);
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    if (magnitude > l) { // If the vector is longer than `l`, trim it down to `l`
+        const float factor = l / magnitude;
 
         self->x *= factor;
         self->y *= factor;
@@ -994,10 +1101,28 @@ static int vector2d_angle_between_2oo_1n(lua_State *L)
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
     const Vector2D_Object_t *other = (const Vector2D_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_VECTOR2D);
 
-    const float angle_self = atan2f(self->y, self->x);
-    const float angle_other = atan2f(other->y, other->x);
+    // The previous implementation was the following
+    //
+    //   const float angle_self = atan2f(self->y, self->x);
+    //   const float angle_other = atan2f(other->y, other->x);
+    //   const float angle = angle_other - angle_self;
+    //
+    // which was resulting a `±2π` angle difference.
+    //
+    // We can obtain a shorter angle difference by using the `atan2f` function
+    // with the cross and dot products of the two vectors.
 
-    lua_pushnumber(L, angle_other - angle_self);
+    const float sx = self->x;
+    const float sy = self->y;
+    const float ox = other->x;
+    const float oy = other->y;
+
+    const float dot = sx * ox + sy * oy;
+    const float cross = sx * oy - sy * ox;
+
+    const float angle = atan2f(cross, dot);
+
+    lua_pushnumber(L, angle);
 
     return 1;
 }
