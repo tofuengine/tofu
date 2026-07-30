@@ -250,7 +250,7 @@ static int vector2d_tostring_1o_1s(lua_State *L)
     LUAX_SIGNATURE_END
     const Vector2D_Object_t *self = (const Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
 
-    lua_pushfstring(L, "<%.5f, %.5f>", self->x, self->y);
+    lua_pushfstring(L, "<%f, %f>", self->x, self->y);
 
     return 1;
 }
