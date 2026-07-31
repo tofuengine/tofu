@@ -56,13 +56,17 @@ function Vector2D:clone()
   return Vector2D.new(self)
 end
 
+function Vector2D:is_parallel(other)
+  return self:is_aligned(other, true)
+end
+
 -- The pairs `{ p0, v0 }` and `{ p1, v1 }` represent the two rays we are going to
 -- check for intersection.
 --
 -- Returns the point of intersection as ratios for the rays (or
 -- `nil` if no intersection is detected). If the ratio is negative, then the
 -- intersection happened in the "past". If between `0` and `1` it occurs within
--- the velocity vector span. It greater than `1` it will happen in the "future".
+-- the velocity vector span. If greater than `1` it will happen in the "future".
 --
 -- https://www.gamedev.net/forums/topic/647810-intersection-point-of-two-vectors/
 -- http://www.tonypa.pri.ee/vectors/tut05.html

@@ -61,6 +61,7 @@ static int vector2d_is_zero_1o_1b(lua_State *L);
 static int vector2d_is_almost_zero_1o_1b(lua_State *L);
 static int vector2d_is_equal_2oo_1b(lua_State *L);
 static int vector2d_is_almost_equal_2oo_1b(lua_State *L);
+static int vector2d_is_aligned_3ooB_1b(lua_State *L);
 static int vector2d_unpack_1o_2nn(lua_State *L);
 static int vector2d_magnitude_squared_1o_1n(lua_State *L);
 static int vector2d_magnitude_1o_1n(lua_State *L);
@@ -108,6 +109,7 @@ int vector2d_loader(lua_State *L)
             { "is_almost_zero", vector2d_is_almost_zero_1o_1b },
             { "is_equal", vector2d_is_equal_2oo_1b },
             { "is_almost_equal", vector2d_is_almost_equal_2oo_1b },
+            { "is_aligned", vector2d_is_aligned_3ooB_1b },
             { "unpack", vector2d_unpack_1o_2nn },
             { "magnitude_squared", vector2d_magnitude_squared_1o_1n },
             { "magnitude", vector2d_magnitude_1o_1n },
