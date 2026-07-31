@@ -113,7 +113,7 @@ function Main:update(delta_time)
   for _, object in ipairs(self.objects) do
     local flockmates = object:find_flockmates(self.objects)
 
-    local velocity = Vector2D.new()
+    local velocity = Vector2D.zero()
     for _, rule in ipairs(RULES) do
       velocity:add(rule.rule(object, flockmates, { weight = rule.weight }))
     end

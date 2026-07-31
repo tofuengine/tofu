@@ -3,7 +3,7 @@ local Vector2D = require("tofu.util.vector2d")
 local Rules = {}
 
 function Rules.separation(self, flockmates, params)
-  local velocity = Vector2D.new()
+  local velocity = Vector2D.zero()
   for _, object in ipairs(flockmates) do
     if self ~= object and self:is_nearby(object) then
 -- TODO: should the "pulse" vector be proportional to the proximity? Nearer is stronger?
@@ -18,7 +18,7 @@ function Rules.separation(self, flockmates, params)
 end
 
 function Rules.alignment(self, flockmates, params)
-  local velocity = Vector2D.new()
+  local velocity = Vector2D.zero()
   for _, object in ipairs(flockmates) do
     if not object.is_obstacle and self ~= object and self:is_nearby(object) then
       velocity:add(object.velocity)
@@ -29,7 +29,7 @@ function Rules.alignment(self, flockmates, params)
 end
 
 function Rules.cohesion(self, flockmates, params)
-  local velocity = Vector2D.new()
+  local velocity = Vector2D.zero()
   -- Compute the centroid of the flockmates (sum of the position divided by
   -- the number of vectors)
   local count = 0
@@ -49,7 +49,7 @@ function Rules.cohesion(self, flockmates, params)
 end
 
 function Rules.follow(self, _, params)
-  local velocity = Vector2D.new()
+  local velocity = Vector2D.zero()
   if self.aim and self.aim.position then
     local v = Vector2D.new(self.aim.position)
     v:sub(self.position)

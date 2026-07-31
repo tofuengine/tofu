@@ -37,6 +37,10 @@ SOFTWARE.
 
 local Vector2D <const> = {}
 
+function Vector2D.zero()
+  return Vector2D.new()
+end
+
 function Vector2D.from_points(a, b)
   local v <const> = Vector2D.new()
   local ax <const> , ay <const> = a:unpack()
@@ -107,11 +111,6 @@ function Vector2D:mirror(v)
   local s <const> = 2 * self:dot(v) / v:dot(v)
   local vx <const>, vy <const> = v:unpack()
   self:sub(s * vx, s * vy)
-end
-
-function Vector2D.__init()
-  -- Defining some pseudo-constants.
-  Vector2D.ZERO = Vector2D.new(0, 0)
 end
 
 return Vector2D
