@@ -71,7 +71,7 @@ int math_loader(lua_State *L)
         },
         (const luaX_Const[]){
             { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
-            { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
+            { "EPSILON", LUA_CT_NUMBER, { .n = FLT_EPSILON } },
             { NULL, LUA_CT_NIL, { 0 } }
         });
 }

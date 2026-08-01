@@ -66,15 +66,15 @@ void generate_lut(float lut[], size_t lut_length, size_t lut_size)
     for (size_t i = 0; i < lut_length; ++i) {
         float angle = (float)(2.0f * M_PI) * (float)i / (float)lut_size;
         float s = sinf(angle);
-        if (fabs(s - 0.0f) <= __FLT_EPSILON__)
+        if (fabs(s - 0.0f) <= FLT_EPSILON)
         {
             lut[i] = 0.0f;
         }
-        else if (fabs(s - 1.0f) <= __FLT_EPSILON__)
+        else if (fabs(s - 1.0f) <= FLT_EPSILON)
         {
             lut[i] = 1.0f;
         }
-        else if (fabs(s + 1.0f) <= __FLT_EPSILON__)
+        else if (fabs(s + 1.0f) <= FLT_EPSILON)
         {
             lut[i] = -1.0f;
         }

@@ -457,7 +457,7 @@ void Engine_run(Engine_t *engine)
 
         const float busy_time = stopwatch_elapsed(&marker);
         const float wait_time = reference_time - busy_time; // When non-positive it means we are not capping. :P
-        if (wait_time > __FLT_EPSILON__) {
+        if (wait_time > FLT_EPSILON) {
 #if defined(TOFU_ENGINE_WAIT_SKID_COMPENSATION)
             // We wait for the require amount of time but, at the same time, we also calculate the "skid"
             // (i.e. the difference) from the actual waited time. We then take into account for the difference,

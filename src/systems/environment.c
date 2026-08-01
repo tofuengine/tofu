@@ -85,7 +85,7 @@ const Environment_State_t *Environment_get_state(const Environment_t *environmen
 
 static inline size_t _frame_time_to_fps(float frame_time)
 {
-    return frame_time > __FLT_EPSILON__ ? IROUNDF(1.0f / frame_time) : 0;
+    return frame_time > FLT_EPSILON ? IROUNDF(1.0f / frame_time) : 0;
 }
 
 static inline size_t _calculate_fps(float frame_time)
