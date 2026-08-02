@@ -40,7 +40,7 @@
 #include "internal.h"
 
 #include <core/config.h>
-#define _LOG_TAG "fs-callbacks"
+#define _LOG_TAG "fs:callbacks"
 #include <libs/log.h>
 #include <libs/stb.h>
 
