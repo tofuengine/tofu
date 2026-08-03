@@ -874,10 +874,13 @@ static int vector2d_rotate_ccw_2on_0(lua_State *L)
     const float c = cosf(angle);
     const float s = sinf(angle);
 
+    const float x = self->x;
+    const float y = self->y;
+
     // x' = x *  c + y * -s
     // y' = x *  s + y *  c
-    self->x = self->x * c - self->y * s;
-    self->y = self->x * s + self->y * c;
+    self->x = x * c - y * s;
+    self->y = x * s + y * c;
 
     return 0;
 }
@@ -899,10 +902,13 @@ static int vector2d_rotate_cw_2on_0(lua_State *L)
     const float c = cosf(angle);
     const float s = sinf(angle);
 
+    const float x = self->x;
+    const float y = self->y;
+
     // x' = x *  c + y *  s
     // y' = x * -s + y *  c
-    self->x = self->x * c + self->y * s;
-    self->y = self->y * c - self->x * s;
+    self->x = x * c + y * s;
+    self->y = y * c - x * s;
 
     return 0;
 }
@@ -914,8 +920,11 @@ static int vector2d_rotate90_ccw_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Vector2D_Object_t *self = (Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
 
-    self->x = -self->y;
-    self->y = self->x;
+    const float x = self->x;
+    const float y = self->y;
+
+    self->x = -y;
+    self->y = x;
 
     return 0;
 }
@@ -927,8 +936,11 @@ static int vector2d_rotate90_cw_1o_0(lua_State *L)
     LUAX_SIGNATURE_END
     Vector2D_Object_t *self = (Vector2D_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_VECTOR2D);
 
-    self->x = self->y;
-    self->y = -self->x;
+    const float x = self->x;
+    const float y = self->y;
+
+    self->x = y;
+    self->y = -x;
 
     return 0;
 }
