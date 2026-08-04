@@ -51,6 +51,14 @@
 #define _RELATIVE_TOLERANCE 1e-5f
 #define _PARALLEL_TOLERANCE 1e-4f
 
+#if defined(TOFU_CORE_USE_HYPOTF)
+#define _magnitude(x, y) hypotf((x), (y))
+#else   /* defined(TOFU_CORE_USE_HYPOTF) */
+static inline float _magnitude(float x, float y)
+{
+    return sqrtf(x * x + y * y);
+}
+#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
 static int vector2d_new_v_1o(lua_State *L);
 static int vector2d_gc_1o_0(lua_State *L);
 static int vector2d_eq_2oo_1b(lua_State *L);
@@ -360,11 +368,7 @@ static int vector2d_is_almost_zero_1o_1b(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float magnitude = hypotf(x, y);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float magnitude = sqrtf(x * x + y * y);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = _magnitude(x, y);
     const bool is_almost_zero = fabsf(magnitude) <= _ABSOLUTE_TOLERANCE;
 
     lua_pushboolean(L, is_almost_zero);
@@ -409,13 +413,8 @@ static int vector2d_is_almost_equal_2oo_1b(lua_State *L)
     if (!isfinite(sx) || !isfinite(sy) || !isfinite(ox) || !isfinite(oy)) {
         is_almost_equal = false;
     } else {
-#if defined(TOFU_CORE_USE_HYPOTF)
-        const float difference = hypotf(sx - ox, sy - oy);
-        const float magnitude = fmaxf(hypotf(sx, sy), hypotf(ox, oy));
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-        const float difference = sqrtf((sx - ox) * (sx - ox) + (sy - oy) * (sy - oy));
-        const float magnitude = fmaxf(sqrtf(sx * sx + sy * sy), sqrtf(ox * ox + oy * oy));
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+        const float difference = _magnitude(sx - ox, sy - oy);
+        const float magnitude = fmaxf(_magnitude(sx, sy), _magnitude(ox, oy));
         const float tolerance = fmaxf(_ABSOLUTE_TOLERANCE, _RELATIVE_TOLERANCE * magnitude);
 
         is_almost_equal = difference <= tolerance;
@@ -442,13 +441,8 @@ static int vector2d_is_aligned_3ooB_1b(lua_State *L)
     const float ox = other->x;
     const float oy = other->y;
 
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float magnitude_self = hypotf(sx, sy);
-    const float magnitude_other = hypotf(ox, oy);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float magnitude_self = sqrtf(sx * sx + sy * sy);
-    const float magnitude_other = sqrtf(ox * ox + oy * oy);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude_self = _magnitude(sx, sy);
+    const float magnitude_other = _magnitude(ox, oy);
 
     bool is_aligned;
     if (!isfinite(magnitude_self) || !isfinite(magnitude_other)) {
@@ -512,11 +506,7 @@ static int vector2d_magnitude_1o_1n(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float magnitude = hypotf(x, y);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float magnitude = sqrtf(x * x + y * y);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = _magnitude(x, y);
 
     lua_pushnumber(L, magnitude);
 
@@ -549,11 +539,7 @@ static int vector2d_polar_1o_2nn(lua_State *L)
     const float y = self->y;
 
     const float angle = atan2f(y, x);
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float magnitude = hypotf(x, y);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float magnitude = sqrtf(x * x + y * y);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = _magnitude(x, y);
 
     lua_pushnumber(L, angle);
     lua_pushnumber(L, magnitude);
@@ -1023,11 +1009,7 @@ static int vector2d_distance_from_2oo_1n(lua_State *L)
     const float dx = self->x - other->x;
     const float dy = self->y - other->y;
 
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float distance = hypotf(dx, dy);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float distance = sqrtf(dx * dx + dy * dy);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float distance = _magnitude(dx, dy);
 
     lua_pushnumber(L, distance);
 
@@ -1046,11 +1028,7 @@ static int vector2d_normalize_2oN_1n(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float magnitude = hypotf(x, y);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float magnitude = sqrtf(x * x + y * y);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = _magnitude(x, y);
     if (magnitude > 0.0f) {
         const float factor = l / magnitude;
 
@@ -1075,11 +1053,7 @@ static int vector2d_trim_2on_0(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-#if defined(TOFU_CORE_USE_HYPOTF)
-    const float magnitude = hypotf(x, y);
-#else   /* defined(TOFU_CORE_USE_HYPOTF) */
-    const float magnitude = sqrtf(x * x + y * y);
-#endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+    const float magnitude = _magnitude(x, y);
     if (magnitude > l) { // If the vector is longer than `l`, trim it down to `l`
         const float factor = l / magnitude;
 
