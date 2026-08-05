@@ -59,6 +59,11 @@ static inline float _magnitude(float x, float y)
     return sqrtf(x * x + y * y);
 }
 #endif  /* defined(TOFU_CORE_USE_HYPOTF) */
+static inline float _magnitude_squared(float x, float y)
+{
+    return x * x + y * y;
+}
+
 static int vector2d_new_v_1o(lua_State *L);
 static int vector2d_gc_1o_0(lua_State *L);
 static int vector2d_eq_2oo_1b(lua_State *L);
@@ -491,7 +496,9 @@ static int vector2d_magnitude_squared_1o_1n(lua_State *L)
     const float x = self->x;
     const float y = self->y;
 
-    lua_pushnumber(L, x * x + y * y);
+    const float magnitude_squared = _magnitude_squared(x, y);
+
+    lua_pushnumber(L, magnitude_squared);
 
     return 1;
 }
@@ -992,7 +999,9 @@ static int vector2d_distance_from_squared_2oo_1n(lua_State *L)
     const float dx = self->x - other->x;
     const float dy = self->y - other->y;
 
-    lua_pushnumber(L, dx * dx + dy * dy);
+    const float distance_squared = _magnitude_squared(dx, dy);
+
+    lua_pushnumber(L, distance_squared);
 
     return 1;
 }
