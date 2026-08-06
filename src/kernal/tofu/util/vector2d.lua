@@ -76,7 +76,7 @@ end
 -- http://www.tonypa.pri.ee/vectors/tut05.html
 function Vector2D.intersect(p0, v0, p1, v1)
   local det <const> = v0:perp_dot(v1)
-  if det == 0.0 then
+  if math.abs(det) <= Vector2D.PARALLEL_TOLERANCE then
     return nil, nil
   end
   local v <const> = Vector2D.new(Vector2D.from_points(p0, p1))
