@@ -43,8 +43,8 @@ end
 
 function Vector2D.from_points(a, b)
   local v <const> = Vector2D.new()
-  local ax <const> , ay <const> = a:unpack()
-  local bx <const> , by <const> = b:unpack()
+  local ax <const>, ay <const> = a:unpack()
+  local bx <const>, by <const> = b:unpack()
   v:assign(bx - ax, by - ay)
   return v
 end
