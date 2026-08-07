@@ -55,8 +55,6 @@ local COLORS <const> = {
 local PALETTE <const> = Palette.new(COLORS)
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
-local CANVAS <const> = Canvas.default()
-local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 local POOL <const> = Pool.new(1) -- Only one timer at a time, please!
 
@@ -64,11 +62,15 @@ local STEPS <const> = 64
 
 local DEFAULT_DAMPING <const> = 1.0
 
+-- TODO: can be `<const>`?
 local Main = Class.define()
 
-function Main:__ctor()
-  self.x_size = WIDTH / STEPS
-  self.y_size = HEIGHT / STEPS
+function Main:__ctor(canvas)
+  self.canvas = canvas
+  self.width, self.height = canvas:image():size()
+
+  self.x_size = self.width / STEPS
+  self.y_size = self.height / STEPS
   self.windy = false
   self.damping = DEFAULT_DAMPING
   self.timer = nil
@@ -154,7 +156,9 @@ function Main:update(delta_time)
     end)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = self.canvas
+
   canvas:clear(0)
 
   local w = self.x_size
@@ -170,7 +174,7 @@ function Main:render(canvas, _)
   canvas:push()
     canvas:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-    canvas:write(WIDTH, 0, FONT, string.format("D: %.2f", self.damping), "right")
+    canvas:write(self.width, 0, FONT, string.format("D: %.2f", self.damping), "right")
   canvas:pop()
 end
 
