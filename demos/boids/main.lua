@@ -87,7 +87,10 @@ end
 --     end)
 -- end
 
-function Main:__ctor()
+function Main:__ctor(canvas)
+  self.canvas = canvas
+  self.width, self.height = canvas:image():size()
+
   self.objects = {}
 
   for _ = 1, BOIDS do
@@ -125,7 +128,9 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = self.canvas
+
   canvas:clear(0)
 
   for _, object in ipairs(self.objects) do
@@ -135,7 +140,7 @@ function Main:render(canvas, _)
   canvas:push()
     canvas:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-    canvas:write(WIDTH, 0, FONT, string.format("#%d objects", #self.objects), "right")
+    canvas:write(self.width, 0, FONT, string.format("#%d objects", #self.objects), "right")
   canvas:pop()
 end
 
