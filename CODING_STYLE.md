@@ -365,6 +365,18 @@ Custom binary files are stored in a way that network-byte-order is (i.e. big-end
 
 ## Lua FFI
 
+### Object Constructors
+
+Since there's no straight native support for object orientation in Lua, everyone ends up cooking his own personal flavour of OOP approach.
+
+While it's common practice (and basically the most natural way) to leverage the `__index` meta-method and meta-tables for that purpose, there's no strict policy on how to approach that. For example there's not a strict policy on how the constructor should be named.
+
+In our codebase we developed an helper module for that purpose (see, `tofu/core/class.lua`). Also, the `LuaX` support library follows the same principle. The idea, specifically, is to have a overloaded `new()` method to create new instances.
+
+However, while perfectly coherent this might end up being a bit "obscure" in terms of remembering the precise signature (number of arguments, types, and order) especially when different signatures have a fairly different outcome (e.g. create image from file vs. from a sized array of bytes). To solve this, we also USUALLY offer specific `from_XXX()` static methods that, internally, call the constructors.
+
+Basically, the `new()` methods and somehow "private".
+
 ### Stack Cleaning Policies
 
 When a function exposes in its signature the idiomatic `int nup` argument to indicate the amount of upvalues passed to the callee we adopt the *callee clears the stack* policy. This is the usual Lua way of doing it and it means that in the following situation
@@ -383,7 +395,7 @@ when the `process_words()` function returns the stack will be cleared of the fou
 
 When implementing Lua OO code from within C we are classifying (and declaring) the methods in the following order:
 
-* `constructors/destructors`: this class includes, typically the `new(...)` and `__gc(...)` methods (although the second one is formally a metamethod). However, any additional "creational" method will be include, such as `from_XXX(...)` or `as_XXX(...)`.
+* `constructors/destructors`: this class includes, typically the `new(...)` and `__gc(...)` methods (although the second one is formally a metamethod). However, any additional "creational" methods will be included, such as `from_XXX(...)` or `as_XXX(...)`.
 * `metamethods`: any `__call(...)`, `__index()`, `__len(...)`, and others will appear in this section. Despite being a metamethod, `__gc(...)` is included in the previous section as it is more related to the object lifecycle than to the actual behaviour.
 * `getters/setters`: we are referring to getters and setters when talking about a single overridden method that, according to the call, act as an access or as a mutator. Usually they have to form `XXX_v_v()`, indicating that both the arguments and the return values are overridden.
 * `accessors`: these are methods that gives insight of the internal state of the object *without changing it*, for example an `is_XXX()` method.
@@ -395,7 +407,7 @@ When implementing Lua OO code from within C we are classifying (and declaring) t
 
 This should be used anytime it feels suitable. However it is advised to keep it for the less time critical functions/methods.
 
-As an example, we kept the `Image.peek()` and `Image.poke()` methods separated and avoided an overloaded `Image.pixel()` method that bot gets and sets a pixel. This ensures faster access times.
+As an example, we kept the `Image.peek()` and `Image.poke()` methods separated and avoided an overloaded `Image.pixel()` method that both gets and sets a pixel. This ensures faster access times.
 
 ### Enumerations
 
