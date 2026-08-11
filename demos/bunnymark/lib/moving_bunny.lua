@@ -45,7 +45,7 @@ local GRAVITY = 981
 local X_DAMPENING = 0.95
 local Y_DAMPENING = 0.85
 
-function Bunny:__ctor(bank, width, height)
+function Bunny:__ctor(canvas, bank, width, height)
   local cw, ch = bank:size(CELL_ID)
 
   self.min_x = 0
@@ -53,6 +53,7 @@ function Bunny:__ctor(bank, width, height)
   self.max_x = width - cw
   self.max_y = height - ch
 
+  self.canvas = canvas
   self.bank = bank
   self.x = (self.max_x - self.min_x) / 2 -- Spawn in the top-center part of the screen.
   self.y = (self.max_y - self.min_y) / 8
@@ -88,8 +89,8 @@ function Bunny:update(delta_time)
   end
 end
 
-function Bunny:render(canvas)
-  canvas:sprite(self.x, self.y, self.bank, CELL_ID)
+function Bunny:render()
+  self.canvas:sprite(self.x, self.y, self.bank, CELL_ID)
 end
 
 return Bunny
