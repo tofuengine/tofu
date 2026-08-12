@@ -37,12 +37,12 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Grid2D = require("tofu.util.grid2d")
+local Controller = require("tofu.input.controller")
 local Pool = require("tofu.timers.pool")
 
 local COLORS <const> = {

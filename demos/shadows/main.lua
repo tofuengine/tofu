@@ -37,13 +37,13 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
-local Controller = require("tofu.input.controller")
 local Cursor = require("tofu.input.cursor")
 local Bank = require("tofu.graphics.bank")
 local Display = require("tofu.graphics.display")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Controller = require("tofu.input.controller")
 
 local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})

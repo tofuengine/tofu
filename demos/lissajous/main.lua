@@ -37,10 +37,10 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
+--local Bank = require("tofu.graphics.bank")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
---local Bank = require("tofu.graphics.bank")
 local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Controller = require("tofu.input.controller")

@@ -38,11 +38,11 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local Math = require("tofu.core.math")
 local System = require("tofu.core.system")
-local Controller = require("tofu.input.controller")
 local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Palette = require("tofu.graphics.palette")
 local Font = require("tofu.graphics.font")
+local Controller = require("tofu.input.controller")
 
 local PALETTE <const> = Palette.default("pico-8-ext")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
