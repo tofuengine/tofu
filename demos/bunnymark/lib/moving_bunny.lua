@@ -45,7 +45,7 @@ local GRAVITY = 981
 local X_DAMPENING = 0.95
 local Y_DAMPENING = 0.85
 
-function Bunny:__ctor(canvas, bank, width, height)
+function Bunny:__ctor(bank, canvas, width, height)
   local cw, ch = bank:size(CELL_ID)
 
   self.min_x = 0

@@ -113,13 +113,15 @@ function Map:update(delta_time)
 end
 
 function Map:draw(canvas)
-  canvas:push()
+  local state <const> = canvas:state() -- TODO: pre-declare in the header
+
+  state:push()
   for _, camera in pairs(self.cameras) do
     camera:pre_draw(canvas)
     camera:draw(canvas)
     camera:post_draw(canvas)
   end
-  canvas:pop()
+  state:pop()
 end
 
 function Map:__tostring()

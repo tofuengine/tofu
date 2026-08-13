@@ -50,6 +50,8 @@ local StaticBunny = require("lib/static_bunny")
 local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 
 local INITIAL_BUNNIES = 65536
@@ -58,10 +60,7 @@ local MAX_BUNNIES = 131072
 
 local Main = Class.define()
 
-function Main:__ctor(canvas)
-  self.canvas = canvas
-  self.width, self.height = canvas:image():size()
-
+function Main:__ctor()
   self.bunnies = {}
   self.bank = Bank.from_image("assets/bunnies.img", "assets/bunnies.sheet")
   self.speed = 1.0
@@ -70,7 +69,7 @@ function Main:__ctor(canvas)
 
   local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(canvas, self.bank, self.width, self.height))
+    table.insert(self.bunnies, Bunny.new(self.bank, CANVAS, WIDTH, HEIGHT))
   end
 end
 
@@ -86,7 +85,7 @@ function Main:handle_input()
     if CONTROLLER:is_pressed("start") then
     local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.canvas, self.bank, self.width, self.height))
+      table.insert(self.bunnies, Bunny.new(self.bank, CANVAS, WIDTH, HEIGHT))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
@@ -119,20 +118,21 @@ function Main:update(delta_time)
 end
 
 function Main:render(_)
-  local canvas <const> = self.canvas
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
 
   canvas:clear(0)
 
   for _, bunny in ipairs(self.bunnies) do
-    bunny:render()
+    bunny:render(canvas)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(0, 8, FONT, string.format("%d/%d HEAP", System.heap('k')))
-    canvas:write(self.width, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
-  canvas:pop()
+    canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
+  state:pop()
 end
 
 return Main

@@ -124,7 +124,10 @@ local function draw_cursor(canvas, x, y, size, color)
   canvas:line(x - size, y, x + size, y, color)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   self.grid:scan(function(column, row, value)
@@ -136,10 +139,10 @@ function Main:render(canvas, _)
   local cx, cy = CURSOR:position()
   draw_cursor(canvas, cx, cy, 2, CURSOR)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

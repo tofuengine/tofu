@@ -135,7 +135,10 @@ function Main:update(_)
   --print(">", min, max)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   local scale = 255 / (self.max - self.min)
@@ -144,10 +147,10 @@ function Main:render(canvas, _)
       return math.tointeger((v - self.min) * scale)
     end)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("FPS: %d (%s, %d)", System.fps(), NOISES[self.current], self.frequency))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

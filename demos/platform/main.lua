@@ -288,7 +288,10 @@ function Main:update(delta_time)
   Display.program(program)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(50)
 
   local x, y = (WIDTH - 16) * 0.5, HEIGHT * 0.5
@@ -310,13 +313,13 @@ function Main:render(canvas, _)
     end
   end
 
-  canvas:push()
+  state:push()
   for _, flake in ipairs(self.snow) do
-    canvas:shift(0, flake.color)
+    state:shift(0, flake.color)
     local scale = 1--flake.z * 0.5
     canvas:sprite(flake.x, flake.y + delta_y, self.pixies, 0, scale, scale, flake.angle, 0.5, 0.5)
   end
-  canvas:pop()
+  state:pop()
 
 --[[
   local t = System.time()
@@ -332,10 +335,10 @@ function Main:render(canvas, _)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
 ]]
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
-  canvas:pop()
+  state:pop()
 
 --  local a, b, c, d = System.stats()
 --  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)

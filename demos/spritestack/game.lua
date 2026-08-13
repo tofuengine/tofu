@@ -138,18 +138,21 @@ function Game:update(delta_time)
   end
 end
 
-function Game:render(canvas, _)
+function Game:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   for _, sprite in ipairs(self.sprites) do
     sprite:render(canvas)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
-  canvas:pop()
+  state:pop()
 end
 
 return Game

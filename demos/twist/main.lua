@@ -70,7 +70,10 @@ end
 function Main:update(_)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   local time = System.time() * 7.5
@@ -85,10 +88,10 @@ function Main:render(canvas, _)
     y = y + ch
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

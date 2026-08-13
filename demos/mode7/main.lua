@@ -143,7 +143,10 @@ function Main:update(delta_time)
   self.xform:offset(-self.x, -self.y)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(self.background)
 
 --  canvas:rectangle("fill", 0, 0, WIDTH, HEIGHT * 0.25, 21)
@@ -155,12 +158,12 @@ function Main:render(canvas, _)
   canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(WIDTH, 0, FONT, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
     canvas:write(WIDTH, HEIGHT, FONT, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

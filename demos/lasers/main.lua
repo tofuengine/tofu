@@ -150,7 +150,10 @@ function Main:update(_) -- delta_time
   self.lines = lines
 end
 
-function Main:render(canvas, _) -- ratio
+function Main:render(_) -- ratio
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   for _, line in ipairs(self.lines) do
@@ -159,10 +162,10 @@ function Main:render(canvas, _) -- ratio
 
   canvas:square("fill", self.c.x - 1, self.c.y - 1, 3, FOREGROUND)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

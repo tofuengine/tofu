@@ -58,7 +58,7 @@ function Main:update(delta_time)
   self.game:update(delta_time)
 end
 
-function Main:render(canvas, ratio)
+function Main:render(ratio)
   self.game:render(canvas, ratio)
 end
 

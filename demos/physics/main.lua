@@ -122,18 +122,21 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   for _, bunny in ipairs(self.bunnies) do
     bunny:render(canvas)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

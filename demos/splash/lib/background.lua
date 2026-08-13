@@ -74,10 +74,12 @@ function Background:update(_)
 end
 
 function Background:render(canvas)
+  local state <const> = canvas:state() -- TODO: pre-declare in the header
+
   canvas:clear(BACKGROUND_INDEX)
 
 --[[
-  self.canvas:push()
+  self.state:push()
   local x, y = 0, 0
   local dy = 0
   local message = '* T O F U - E N G I N E '
@@ -94,20 +96,20 @@ function Background:render(canvas)
       if char_height > max_char_height then
         max_char_height = char_height
       end
-      canvas:shift(FONT_INDEX, colours[(i + offset) % #colours + 1])
+      state:shift(FONT_INDEX, colours[(i + offset) % #colours + 1])
       self.font:write(c, x + dx, y + dy)
       dx = dx + char_width
     end
     dy = dy + char_height
   end
-  self.canvas:pop()
+  self.state:pop()
 --]]
   local width, _ = canvas:image():size()
 
-  canvas:push()
-    canvas:bank(Display.PALETTE_BANK_1)
+  state:push()
+    state:bank(Display.PALETTE_BANK_1)
     canvas:write(width, 0, self.font, string.format("%d FPS", System.fps()), "right", "top")
-  canvas:pop()
+  state:pop()
 end
 
 return Background

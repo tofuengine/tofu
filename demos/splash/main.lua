@@ -85,7 +85,9 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+
   for _, object in ipairs(self.objects) do
     object:render(canvas)
   end

@@ -140,22 +140,25 @@ function Main:update(delta_time)
   Display.program(program)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
-  canvas:push()
-    canvas:shift(0, 1)
+  state:push()
+    state:shift(0, 1)
     local t = self.time
     local y = math.sin(t * 0.5) * HEIGHT * 0.125 + HEIGHT * 0.25
     canvas:write(0, y, BIG_FONT, "TOFU ENGINE")
-  canvas:pop()
+  state:pop()
 
   canvas:sprite(self.x, self.y, self.bank, 12, 4, 4, 0)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

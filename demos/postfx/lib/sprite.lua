@@ -45,7 +45,7 @@ local Sprite = Class.define()
 local PADDING = 16
 local STEP = (2.0 * math.pi) / 32.0
 
-function Sprite:__ctor(canvas, bank, index)
+function Sprite:__ctor(bank, index, canvas, width, height)
   self.bank = bank
 
   self.angle = STEP * index -- (2.0 * Num.pi) random.float() * MAX_ANGLE
@@ -55,13 +55,10 @@ function Sprite:__ctor(canvas, bank, index)
 
   self.id = math.random(0, 11)
 
-  local image = canvas:image()
-  local width, height = image:size()
-
-  self.CENTER_X = width / 2
-  self.CENTER_Y = (height - 64) / 2
-  self.X_AMPLITUDE = (width / 2) - PADDING
-  self.Y_AMPLITUDE = ((height - 64) / 2) - PADDING
+  self.CENTER_X = WIDTH / 2
+  self.CENTER_Y = (HEIGHT - 64) / 2
+  self.X_AMPLITUDE = (WIDTH / 2) - PADDING
+  self.Y_AMPLITUDE = ((HEIGHT - 64) / 2) - PADDING
 end
 
 function Sprite:update(delta_time)

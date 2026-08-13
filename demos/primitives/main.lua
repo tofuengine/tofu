@@ -87,7 +87,10 @@ function Main:update(_) -- delta_time
   self:handle_input()
 end
 
-function Main:render(canvas, _) -- ratio
+function Main:render(_) -- ratio
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   if self.mode == 0 then
@@ -122,12 +125,12 @@ function Main:render(canvas, _) -- ratio
     local y2 = ((math.sin(System.time() * 0.123) + 1.0) * 0.5) * HEIGHT
     canvas:triangle("fill", x0, y0, x1, y1, x2, y2, 2)
     canvas:triangle("line", x0, y0, x1, y1, x2, y2, 7)
-    canvas:push()
-      canvas:shift(1, 15)
+    state:push()
+      state:shift(1, 15)
       canvas:write(x0, y0, FONT, "v0", "center", "middle")
       canvas:write(x1, y1, FONT, "v1", "center", "middle")
       canvas:write(x2, y2, FONT, "v2", "center", "middle")
-    canvas:pop()
+    state:pop()
   elseif self.mode == 4 then
     local x = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * WIDTH
     local y = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * HEIGHT
@@ -169,11 +172,11 @@ function Main:render(canvas, _) -- ratio
     canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(WIDTH, 0, FONT, string.format("mode: %d", self.mode), "right")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

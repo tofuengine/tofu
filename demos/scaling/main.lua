@@ -113,7 +113,10 @@ function Main:update(delta_time)
   self.y = self.y + self.y_speed * delta_time
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(45)
 
   local x, y = self.x, self.y
@@ -122,12 +125,12 @@ function Main:render(canvas, _)
       self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
     canvas:write(WIDTH, HEIGHT, FONT, string.format("S:%.2f X:%s Y:%s",
       self.scale, self.flip_x, self.flip_y), "right", "bottom")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

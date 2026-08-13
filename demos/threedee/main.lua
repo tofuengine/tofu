@@ -126,7 +126,10 @@ function Main:update(delta_time)
   self.scene:update(delta_time)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(59)
 
   local camera <const> = self.camera
@@ -134,11 +137,11 @@ function Main:render(canvas, _)
   self.background:render(canvas)
   self.scene:render(canvas)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(0, 10, FONT, string.format("%.3f %.3f %.3f", camera.field_of_view, camera.near, camera.far))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

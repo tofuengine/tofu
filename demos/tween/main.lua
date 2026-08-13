@@ -99,7 +99,10 @@ function Main:_evaluate(t)
   return math.min(math.max(y, 0.0), 1.0)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   local ratio = self:_evaluate(System.time()) -- The waves have values in the range [-1, +1].
@@ -110,15 +113,15 @@ function Main:render(canvas, _)
   local y = area.y
   for index, tweener in ipairs(self.tweeners) do
     local x = area.x + area.width * tweener(ratio)
-    canvas:shift(5, 1 + (index % 15))
+    state:shift(5, 1 + (index % 15))
     canvas:sprite(x, y, self.bank, index % 7)
     y = y + ch
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

@@ -79,7 +79,9 @@ function Main:update(delta_time)
   self.pool:update(delta_time)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+
   canvas:clear(0)
 
   --local x = X.new()

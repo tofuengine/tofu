@@ -104,22 +104,25 @@ function Main:update(delta_time)
   self.cursor.x, self.cursor.y = CURSOR:position()
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
 --  local time = System.time()
 
   canvas:copy(self.background)
 
-  canvas:push()
+  state:push()
     canvas:sprite(self.position.x, self.position.y, self.bank, 0)
     canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)
-  canvas:pop()
+  state:pop()
 end
 
 return Main

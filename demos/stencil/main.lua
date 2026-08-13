@@ -70,7 +70,7 @@ function Main:__ctor()
   self.mode = 0
   self.limit = 64
 
-  --  canvas:transparent(0, false)
+  --  state:transparent(0, false)
 end
 
 function Main:init()
@@ -104,7 +104,10 @@ function Main:update(_)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   canvas:copy(self.bottom)
@@ -118,11 +121,11 @@ function Main:render(canvas, _)
   --   end, canvas)
   canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%.1f FPS", System.fps()))
     canvas:write(0, 8, FONT, string.format("M: %d, T: %d", self.mode, self.threshold))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

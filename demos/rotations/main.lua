@@ -118,7 +118,10 @@ function Main:update(delta_time)
   self.anchor = math.min(1.0, math.max(0.0, self.anchor + self.anchor_speed * delta_time))
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(45)
 
   for _ = 1, 1 do
@@ -128,12 +131,12 @@ function Main:render(canvas, _)
       self.anchor, self.anchor)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
     canvas:write(WIDTH, HEIGHT, FONT, string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
       "right", "bottom")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

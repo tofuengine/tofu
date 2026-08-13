@@ -49,8 +49,8 @@ local bump = require("lib/bump")
 local PALETTE <const> = Palette.default("famicube")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
--- local CANVAS <const> = Canvas.default()
--- local WIDTH, HEIGHT <const> = CANVAS:image():size()
+local CANVAS <const> = Canvas.default()
+local WIDTH, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 
 local LIFE <const> = 2.0
@@ -167,16 +167,19 @@ function Main:draw_player(canvas)
   _box(canvas, self.player, 0, 255, 0)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   self:draw_blocks(canvas)
   self:draw_player(canvas)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
- canvas:pop()
+ state:pop()
 end
 
 return Main

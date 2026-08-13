@@ -98,6 +98,8 @@ function Background:update(_)
 end
 
 function Background:render(canvas)
+  local state <const> = canvas:state() -- TODO: pre-declare in the header
+
   local camera <const> = self.camera
   local x <const> = camera.x
   local far <const> = camera.far + camera.z
@@ -113,12 +115,12 @@ function Background:render(canvas)
   h = h - (15 - camera.y // 16)
   local wy = y - h
   local offset_x <const> = camera.x // 4
-  canvas:push()
+  state:push()
   canvas:clipping(0, wy, width, h) -- Clip to limit the skyline "under" the road.
   for wx = 0, width, w do
     canvas:tile(wx, wy, self.skyline, 0, offset_x, 0)
   end
-  canvas:pop()
+  state:pop()
 
   -- Render the "road"
   local _, _, _, sx0, sy0 = camera:project(-100, 0.0, far)

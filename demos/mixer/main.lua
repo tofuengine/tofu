@@ -144,7 +144,9 @@ function Main:update(_)
   self:handle_input()
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+
   canvas:clear(0)
 
   local x, y = 0, 0

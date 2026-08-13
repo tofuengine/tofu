@@ -48,6 +48,8 @@ local Cursor = require("tofu.input.cursor")
 local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 local CURSOR <const> = Cursor.default()
 
@@ -67,10 +69,7 @@ local INDICES <const> = {
 
 local Main = Class.define()
 
-function Main:__ctor(canvas)
-  self.canvas = canvas
-  self.width, self.height = canvas:image():size()
-
+function Main:__ctor()
   self.bank = Bank.from_image("assets/sheet.img", 12, 12)
   self.down = {}
   self.scale = {}
@@ -122,7 +121,8 @@ local function draw_trigger(canvas, cx, cy, radius, magnitude)
 end
 
 function Main:render(_)
-  local canvas <const> = self.canvas
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
 
   canvas:clear(0)
 
@@ -130,7 +130,7 @@ function Main:render(_)
 
   local cw, ch = self.bank:size(Bank.NIL)
 
-  local x, y = (self.width - #IDS * cw) * 0.5, (self.height - ch) * 0.5
+  local x, y = (WIDTH - #IDS * cw) * 0.5, (HEIGHT - ch) * 0.5
   for index, id in ipairs(IDS) do
     local dy = math.sin(t * 2.5 + x * 0.5) * ch
     if self.down[id] then
@@ -147,7 +147,7 @@ function Main:render(_)
     x = x + cw
   end
 
-  local cy = self.height * 0.5
+  local cy = HEIGHT * 0.5
   local lx, ly, la, lm = CONTROLLER:stick("left")
   local rx, ry, ra, rm = CONTROLLER:stick("right")
   draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, CONTROLLER:is_down("lt"))
@@ -165,12 +165,12 @@ function Main:render(_)
   canvas:line(mx, my - 3, mx, my - 1, index)
   canvas:line(mx, my + 1, mx, my + 3, index)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-    canvas:write(self.width, self.height, FONT, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+    canvas:write(WIDTH, HEIGHT, FONT, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
       "right", "bottom")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

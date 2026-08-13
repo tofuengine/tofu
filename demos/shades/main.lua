@@ -97,7 +97,10 @@ function Main:update(_)
   self:handle_input()
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   local image <const> = canvas:image()
@@ -110,32 +113,32 @@ function Main:render(canvas, _)
     end
   end
 
-  canvas:push()
-  canvas:transparent(0, false)
+  state:push()
+  state:transparent(0, false)
   if self.mode == 0 then
     for i = 0, STEPS - 1 do
       local y = self.height * i
-      canvas:shift(self.lut[i])
+      state:shift(self.lut[i])
       canvas:blit(0, y, image, 0, y, WIDTH, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
-      canvas:shift(self.lut[i])
+      state:shift(self.lut[i])
       canvas:blit(i, 0, image, i, 0, 1, HEIGHT)
       canvas:blit(WIDTH - 1 - i, 0, image, WIDTH - 1 - i, 0, 1, HEIGHT)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
-    canvas:shift(self.lut[index])
+    state:shift(self.lut[index])
     canvas:blit(0, 0, image, 0, 0, WIDTH, HEIGHT / 2)
   end
-  canvas:pop()
+  state:pop()
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

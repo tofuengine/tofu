@@ -126,7 +126,10 @@ function Main:update(delta_time)
   self.map:update(delta_time)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   self.map:draw(canvas)
@@ -135,10 +138,10 @@ function Main:render(canvas, _)
   local x, y = camera:to_screen(self.player.x, self.player.y)
   canvas:rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

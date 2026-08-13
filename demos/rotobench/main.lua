@@ -91,7 +91,10 @@ end
 function Main:update(_)
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(45)
 
   for _, sprite in ipairs(self.sprites) do
@@ -103,10 +106,10 @@ function Main:render(canvas, _)
       sprite.pivot, sprite.pivot)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", math.floor(System.fps() + 0.5)))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

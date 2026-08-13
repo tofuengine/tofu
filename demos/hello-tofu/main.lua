@@ -108,12 +108,12 @@ function Main:update(_)
   self:handle_input()
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t <const> = System.time()
 
   -- Get a reference to the off-screen canvas (i.e. the the virtual-screen).
-  local offscreen <const> = self.canvas
+  local offscreen <const> = CANVAS
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
   local image <const> = offscreen:image()

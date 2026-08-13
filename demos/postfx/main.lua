@@ -50,7 +50,7 @@ local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
-local WIDTH <const>, _ <const> = CANVAS:image():size()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local CONTROLLER <const> = Controller.default()
 
 local LITTER_SIZE = 64
@@ -75,7 +75,7 @@ end
 function Main:handle_input()
   if CONTROLLER:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.sprites, Sprite.new(Canvas.default(), self.bank, #self.sprites))
+      table.insert(self.sprites, Sprite.new(self.bank, #self.sprites, CANVAS, WIDTH, HEIGHT))
     end
   elseif CONTROLLER:is_pressed("left") then
     self.speed = self.speed * 0.5
@@ -101,18 +101,21 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   for _, sprite in pairs(self.sprites) do
     sprite:render(canvas)
   end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
     canvas:write(WIDTH, 0, FONT, string.format("#%d sprites", #self.sprites), "right")
-  canvas:pop()
+  state:pop()
 end
 
 return Main

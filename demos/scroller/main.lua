@@ -140,7 +140,10 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   local x <const> = WIDTH * 0.5
@@ -153,18 +156,18 @@ function Main:render(canvas, _)
   -- as the transparency is handler with the alpha-bit. So, we need to remap the
   -- font palette index to the one we used in the program to emulate the gradient
   -- through the copperlist.
-  canvas:push()
-    canvas:shift(0, FONT_INDEX)
+  state:push()
+    state:shift(0, FONT_INDEX)
     for i = 0, lines_to_render do
       local index <const> = self.current + i
       canvas:write(x, y + i * FONT_HEIGHT, FONT, LINES[index], "center", "top")
     end
-  canvas:pop()
+  state:pop()
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

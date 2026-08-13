@@ -216,7 +216,10 @@ function Main:update(delta_time)
   end
 end
 
-function Main:render(canvas, _)
+function Main:render(_)
+  local canvas <const> = CANVAS
+  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+
   canvas:clear(0)
 
   self.grid:scan(function(column, row, value)
@@ -233,21 +236,21 @@ function Main:render(canvas, _)
 
     if self.state == "game-over" then
       local points <const> = (self.length - INITIAL_LENGTH) * 10
-      canvas:push()
-        canvas:shift(0, 1)
+      state:push()
+        state:shift(0, 1)
         canvas:write(WIDTH * 0.5, HEIGHT * 0.25, FONT,
           "GAME OVER", "center", "middle", 4, 4)
         canvas:write(WIDTH * 0.5, HEIGHT * 0.50, FONT,
           string.format("Your final score is %d", points), "center", "middle", 2, 2)
         canvas:write(WIDTH * 0.5, HEIGHT * 0.75, FONT,
           "-- press start --", "center", "middle", 2, 2)
-      canvas:pop()
+      state:pop()
     end
 
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 
 return Main

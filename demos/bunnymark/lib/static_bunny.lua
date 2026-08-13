@@ -41,7 +41,7 @@ local Bunny = Class.define()
 
 local CELL_ID = 0
 
-function Bunny:__ctor(canvas, bank, width, height)
+function Bunny:__ctor(bank, canvas, width, height)
   local cw, ch = bank:size(CELL_ID)
 
   local min_x = cw

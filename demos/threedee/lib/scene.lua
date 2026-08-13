@@ -272,21 +272,23 @@ local function _draw_entity(canvas, entity, bank, font)
 end
 
 function Scene:render(canvas)
+  local state <const> = canvas:state() -- TODO: pre-declare in the header
+
   local bank <const> = self.bank
   local lut <const> = self.lut
   local entities <const> = self.visibles
 
-  canvas:push()
+  state:push()
   local fog_depth = nil
   for i = 1, #entities do
     local entity = entities[i]
     if fog_depth ~= entity.fog_depth then -- Minimize palette shifting calls.
       fog_depth = entity.fog_depth
-      canvas:shift(lut[fog_depth])
+      state:shift(lut[fog_depth])
     end
     _draw_entity(canvas, entity, bank)
   end
-  canvas:pop()
+  state:pop()
 end
 
 return Scene
