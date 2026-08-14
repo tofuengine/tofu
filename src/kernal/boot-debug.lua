@@ -54,7 +54,7 @@ function Boot:__ctor()
     ["splash"] = {
       enter = function(me)
           local Splash <const> = require("splash")
-          me.splash = Splash.new(CANVAS)
+          me.splash = Splash.new()
         end,
       leave = function(_)
         end,
@@ -82,7 +82,7 @@ function Boot:__ctor()
           end
 
           local Main <const> = require("main") -- Lazy require, to trap and display errors in the constructor!
-          me.main = Main.new(CANVAS)
+          me.main = Main.new()
         end,
       leave = function(me)
           if me.profile then
@@ -114,7 +114,7 @@ function Boot:__ctor()
     ["failure"] = {
       enter = function(me, message)
           local Panic <const> = require("panic")
-          me.panic = Panic.new(CANVAS)
+          me.panic = Panic.new()
           me.panic:set_message(message)
         end,
       leave = function(_)

@@ -36,16 +36,13 @@ SOFTWARE.
 ]]--
 
 local Class <const> = require("tofu.core.class")
-local Canvas <const> = require("tofu.graphics.canvas")
 
 local Main <const> = require("main")
-
-local CANVAS <const> = Canvas.default()
 
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Boot:__ctor()
-  self.main = Main.new(CANVAS)
+  self.main = Main.new()
 end
 
 function Boot:init()
