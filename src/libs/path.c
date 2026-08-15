@@ -211,8 +211,8 @@ bool path_is_normalized(const char *path) // I.e. it doesn't contains current/re
 {
     return !_starts_with(path, PLATFORM_PATH_CURRENT_SZ)
         && !_starts_with(path, PLATFORM_PATH_PARENT_SZ)
-        && !strstr(path, PLATFORM_PATH_SEPARATOR_SZ "." PLATFORM_PATH_SEPARATOR_SZ)
-        && !strstr(path, PLATFORM_PATH_SEPARATOR_SZ ".." PLATFORM_PATH_SEPARATOR_SZ);
+        && !strstr(path, PLATFORM_PATH_SEPARATOR_SZ PLATFORM_PATH_CURRENT_SZ)
+        && !strstr(path, PLATFORM_PATH_SEPARATOR_SZ PLATFORM_PATH_PARENT_SZ);
 }
 
 void path_split(const char *path, char *folder, char *file)

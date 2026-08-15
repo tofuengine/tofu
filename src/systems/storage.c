@@ -517,14 +517,23 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
 
 FS_Handle_t *Storage_open(Storage_t *storage, const char *name)
 {
+    if (path_is_absolute(name) || !path_is_normalized(name)) {
+        LOG_E("path `%s` is not allowed (only relative non-parent paths are permitted in sandbox mode)", name);
+        goto error_exit;
+    }
+
     FS_Handle_t *handle = FS_open(storage->context, name);
     if (!handle) {
-        return NULL;
+        goto error_exit;
     }
+
 #if defined(TOFU_STORAGE_LEAK_CHECK)
     arrpush(storage->handles, handle);
 #endif  /* defined(TOFU_STORAGE_LEAK_CHECK) */
     return handle;
+
+error_exit:
+    return NULL;    
 }
 
 void Storage_close(Storage_t *storage, FS_Handle_t *handle)
