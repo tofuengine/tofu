@@ -260,6 +260,8 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 
 ### Graphics
 
+* [ ] Full anchor support for sprite drawing (anchor is already supported).
+* [ ] Copperlist-driven blitting also for canvas-to-canvas operations.
 * [ ] Adding image manipulation features (e.g. `image:replace()`) for faster optimizations.
 * [ ] Move to full GPU use (beware of the diamond-exit-rule and ensure pixel-perfect positioning).
 * [ ] Adopt another (more simple to merge into) pixel font.
