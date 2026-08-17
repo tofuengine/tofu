@@ -37,11 +37,10 @@ SOFTWARE.
 
 local Class <const> = require("tofu.core.class")
 
-local Main <const> = require("main")
-
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Boot:__ctor()
+  local Main <const> = require("main") -- Lazy load.
   self.main = Main.new()
 end
 
