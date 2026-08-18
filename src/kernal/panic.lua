@@ -37,12 +37,16 @@ SOFTWARE.
 
 local Class <const> = require("tofu.core.class")
 local System <const> = require("tofu.core.system")
+local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
 local Palette <const> = require("tofu.graphics.palette")
 local Font <const> = require("tofu.graphics.font")
 
 local PALETTE <const> = Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 
 local TITLE <const> = {
     "Software Failure.",
@@ -66,9 +70,7 @@ local Panic <const> = Class.define()
 --   return lines
 -- end
 
-function Panic:__ctor(canvas)
-  self.canvas = canvas
-  self.state = canvas:state()
+function Panic:__ctor()
 end
 
 function Panic:init()
@@ -82,8 +84,8 @@ function Panic:update(_)
 end
 
 function Panic:render(_)
-  local canvas = self.canvas
-  local state = self.state
+  local canvas <const> = CANVAS
+  local state <const> = STATE
 
   canvas:clear(BACKGROUND_INDEX)
 

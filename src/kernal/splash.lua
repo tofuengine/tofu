@@ -37,9 +37,13 @@ SOFTWARE.
 
 local Class <const> = require("tofu.core.class")
 local System <const> = require("tofu.core.system")
+local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
 local Palette <const> = require("tofu.graphics.palette")
 
+local CANVAS <const> = Canvas.default()
+local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 local PALETTE <const> = Palette.default('pico-8')
 
 local COLORS <const> = PALETTE:size()
@@ -52,10 +56,7 @@ local DURATION <const> = 1.0
 
 local Splash <const> = Class.define()
 
-function Splash:__ctor(canvas)
-  self.canvas = canvas
-  self.state = canvas:state()
-  self.width, self.height = canvas:image():size()
+function Splash:__ctor()
 end
 
 function Splash:init()
@@ -69,7 +70,7 @@ function Splash:update(_)
 end
 
 function Splash:render(_)
-  local canvas = self.canvas
+  local canvas = CANVAS
 
   canvas:clear(BACKGROUND_INDEX)
 
@@ -81,8 +82,8 @@ function Splash:render(_)
     progress = AMOUNT - math.ceil(step)
   end
 
-  local width = self.width / COLORS
-  local height = self.height / COLORS
+  local width = WIDTH / COLORS -- TODO: this can be precomputed
+  local height = HEIGHT / COLORS
 
   local y = 0
   for i = 0, COLORS - 1 do
