@@ -490,6 +490,7 @@ local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 -- ... omissis...
 ```
 
@@ -514,14 +515,22 @@ end
 In the rendering callback, we will activate the second palette (bank #1) to draw the debug text, while the first palette (bank #0) will be used for the game graphics. For example:
 
 ```lua
-function Main:render(_, _)
+function Main:render(_)
   -- ... omissis...
-  canvas:push()
-    canvas:bank(1)
+  state:push()
+    state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-  canvas:pop()
+  state:pop()
 end
 ```
+
+### Canvas Reference
+
+The canvas reference is never passed by the game engine, in the callbacks, as a formal argument. The underlying idea is that in the callbacks we are passing only the arguments/values that change over time (e.g. delta-time, ratio). The canvas never changes during the game execution, so it's not convenient to occupy/waste a call-stack slot (with all the book-keeping behind) for nothing.
+
+It's more versatile for any script that needs to access it to get a reference to it with the `Canvas.default()` method. This, for example, can be achieved in the script header part (see above).
+
+Of course, internal game scripts can behave differently and pass and use the `Canvas` reference (and any other, such as the `State`) as required.
 
 ### Image Assets Policies
 
