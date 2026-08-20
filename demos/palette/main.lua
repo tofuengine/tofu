@@ -52,6 +52,7 @@ local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 local FONT <const> = Font.default()
 local CONTROLLER <const> = Controller.default()
 --local DISPLAY <const> = Display.default()
@@ -75,7 +76,7 @@ function Main:__ctor()
   self.clipping = false
   self.noise = Noise.new("simplex", 1234, 0.02)
 
-  local state = self.canvas:state()
+  local state <const> = STATE
   state:clipping(0, 0, 32, 32)
   state:remember("clipping")
 end
@@ -132,7 +133,7 @@ function Main:handle_input()
     self.mode = (self.mode + 1) % 10
   elseif CONTROLLER:is_pressed("x") then
     self.clipping = not self.clipping
-    local state = self.canvas:state()
+    local state <const> = STATE
     if self.clipping then
       state:clipping(32, 32, 64, 64)
     else
@@ -155,7 +156,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
-  local state <const> = canvas:state()
+  local state <const> = STATE
 
   canvas:clear(0)
 

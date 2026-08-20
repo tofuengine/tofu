@@ -51,6 +51,7 @@ local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 
 local Main <const> = Class.define()
 
@@ -87,6 +88,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
+  local state <const> = STATE
 
   for _, object in ipairs(self.objects) do
     object:render(canvas)

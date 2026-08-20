@@ -44,6 +44,7 @@ local Pool = require("tofu.timers.pool")
 local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
+local STATE <const> = CANVAS:state()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 
 local Main = Class.define()

@@ -128,7 +128,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
-  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+  local state <const> = STATE
 
   canvas:clear(0)
 

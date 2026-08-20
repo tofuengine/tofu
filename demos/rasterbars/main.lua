@@ -51,6 +51,7 @@ local FONT <const> = Font.default()
 local BIG_FONT <const> = Font.default("32x64")
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 local Main <const> = Class.define()
@@ -142,7 +143,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
-  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+  local state <const> = STATE
 
   canvas:clear(0)
 

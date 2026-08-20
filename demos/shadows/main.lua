@@ -48,6 +48,7 @@ local Controller = require("tofu.input.controller")
 local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 local CURSOR <const> = Cursor.default()
 
@@ -106,7 +107,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
-  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+  local state <const> = STATE
 
   canvas:clear(0)
 

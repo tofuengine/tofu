@@ -57,6 +57,7 @@ local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 local POOL <const> = Pool.new(1) -- Only one timer at a time, please!
 
@@ -157,7 +158,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
-  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+  local state <const> = STATE
 
   canvas:clear(0)
 

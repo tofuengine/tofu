@@ -48,6 +48,7 @@ local PALETTE <const> = Palette.new({{ 0, 0, 0 }, { 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 local SOURCES <const> = {

@@ -51,6 +51,7 @@ local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local HALF_WIDTH <const>, HALF_HEIGHT <const> = WIDTH * 0.5, HEIGHT * 0.5
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 -- See: https://en.wikipedia.org/wiki/Lissajous_curve
@@ -112,7 +113,7 @@ end
 
 function Main:render(_)
   local canvas <const> = CANVAS
-  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
+  local state <const> = STATE
 
   -- **************************************
   -- *** CANVAS NEEDS NOT TO BE CLEARED ***
