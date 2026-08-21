@@ -70,8 +70,6 @@ local MIN_DISTANCE <const> = 8
 local Main = Class.define()
 
 function Main:__ctor()
-  CANVAS:transparent(0, false)
-
   self.colors = {
       PALETTE:match( 15,  15,  15),
       PALETTE:match( 31,  31,  31),
