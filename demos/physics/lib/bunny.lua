@@ -71,9 +71,7 @@ end
 function Bunny:update(_)
 end
 
-function Bunny:render(canvas)
-  local state <const> = CANVAS:state() -- TODO: pre-declare in the header
-
+function Bunny:render(canvas, state)
   local x, y = self.body:position()
   local _, ch = self.bank:size(CELL_ID)
   local angle = self.body:angle()
