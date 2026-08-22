@@ -73,9 +73,7 @@ end
 function Background:update(_)
 end
 
-function Background:render(canvas)
-  local state <const> = canvas:state() -- TODO: pre-declare in the header
-
+function Background:render(canvas, state)
   canvas:clear(BACKGROUND_INDEX)
 
 --[[

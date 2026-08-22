@@ -56,7 +56,7 @@ end
 function Logo:update(_)
 end
 
-function Logo:render(canvas)
+function Logo:render(canvas, _)
   -- TODO: generate the outline w/ 4 offsetted blits.
   local t = System.time()
 

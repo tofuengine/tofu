@@ -94,7 +94,7 @@ function Stars:update(delta_time)
   end
 end
 
-function Stars:render(canvas)
+function Stars:render(canvas, _)
   for _, star in ipairs(self.pool) do
     canvas:sprite(star.x, star.y, self.bank, star.cell_id, star.scale, star.scale, star.rotation)
   end

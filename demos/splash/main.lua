@@ -91,7 +91,7 @@ function Main:render(_)
   local state <const> = STATE
 
   for _, object in ipairs(self.objects) do
-    object:render(canvas)
+    object:render(canvas, state)
   end
 end
 

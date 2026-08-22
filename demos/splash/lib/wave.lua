@@ -60,11 +60,11 @@ function Wave:update(delta_time)
   self.oscillator:advance(delta_time * period)
 end
 
-function Wave:render(canvas)
   local canvas_width, _ = canvas:image():size()
   local stripe_width, stripe_height = self.stripe:size()
   local span = stripe_height * 0.25
   for i = 0, canvas_width, stripe_width do
+function Wave:render(canvas, _)
     local dy = self.oscillator(i * 0.0005) * span
     canvas:blit(i, dy, self.stripe)
   end
