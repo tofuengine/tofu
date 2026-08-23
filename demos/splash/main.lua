@@ -66,13 +66,14 @@ function Main:__ctor()
     }
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")
-  self.music:looped(true)
-  self.music:play()
 end
 
 function Main:init()
   Display.palette(PALETTE, Display.PALETTE_BANK_0)
   Display.palette(PALETTE_FONT, Display.PALETTE_BANK_1)
+
+  self.music:looped(true)
+  self.music:play()
 end
 
 function Main:deinit()
