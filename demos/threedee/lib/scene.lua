@@ -271,9 +271,7 @@ local function _draw_entity(canvas, entity, bank, font)
   end
 end
 
-function Scene:render(canvas)
-  local state <const> = canvas:state() -- TODO: pre-declare in the header
-
+function Scene:render(canvas, state)
   local bank <const> = self.bank
   local lut <const> = self.lut
   local entities <const> = self.visibles

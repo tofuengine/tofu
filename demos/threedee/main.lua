@@ -135,8 +135,8 @@ function Main:render(_)
 
   local camera <const> = self.camera
 
-  self.background:render(canvas)
-  self.scene:render(canvas)
+  self.background:render(canvas, state)
+  self.scene:render(canvas, state)
 
   state:push()
     state:bank(1)

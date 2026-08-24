@@ -97,9 +97,7 @@ function Background:update(_)
   Display.program(program)
 end
 
-function Background:render(canvas)
-  local state <const> = canvas:state() -- TODO: pre-declare in the header
-
+function Background:render(canvas, state)
   local camera <const> = self.camera
   local x <const> = camera.x
   local far <const> = camera.far + camera.z
