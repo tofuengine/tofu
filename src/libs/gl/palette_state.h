@@ -45,10 +45,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Differently from Pico-8 and similar systems, no palette indices are set to
+// TRANSPARENT initially. This is due to the fact that we rely on pixel-based
+// transparency (i.e. the alpha-bit) and not on palette-based transparency.
+//
+// Of course, additional palette-based transparency can be set by the user to
+// achieve special effects.
+
 typedef struct GL_Palette_State_s {
     // This LUT dictates how to treat each palette index during drawing.
     // It is a precomputed combination of `flags` and `shifting` into a single
-    // `uint8_t` value. The idea is to have a single look-up and avoid
+    // `uint16_t` value. The idea is to have a single look-up and avoid
     // multiple memory accesses per pixel during drawing with a single access.
     //
     // The layout is as follows:
@@ -62,10 +69,21 @@ typedef struct GL_Palette_State_s {
     // a single LUT access (and not by testing the alpha-bit).
     //
     // An additional optimization is achieved by keep distinct (but synched)
-    // LUTs, one for each bank. This saves the cost of rebaking all the LUT.
+    // LUTs, one for each bank. This saves the cost of re-baking all the LUT.
     // However, when a single pixel transparency/shifting is changed we need
     // to apply the change to every bank LUT.
+    //
+    // Note: synching is optional and can be disabled by defining
+    //       `TOFU_GRAPHICS_PALETTE_BANK_LUT_SYNC`.
     uint16_t map[GL_PALETTE_MAX_BANKS][GL_PALETTE_AVAILABLE_COLORS];
+
+    // TODO: while having separate and distinct LUTs for each bank is a good
+    //       optimization, it is also a waste of memory (for the additional
+    //       2D array entries and since we need `uint16_t` as a basic type). We
+    //       could have a single LUT and bake it on-the-fly when the bank is
+    //       changed. This would save memory, but would cost a bit of CPU time
+    //       when changing bank. We need to evaluate the trade-off between memory
+    //       and CPU time.
 
     uint8_t bank;
 } GL_Palette_State_t;
