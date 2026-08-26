@@ -112,9 +112,7 @@ function Map:update(delta_time)
   end
 end
 
-function Map:draw(canvas)
-  local state <const> = canvas:state() -- TODO: pre-declare in the header
-
+function Map:draw(canvas, state)
   state:push()
   for _, camera in pairs(self.cameras) do
     camera:pre_draw(canvas)

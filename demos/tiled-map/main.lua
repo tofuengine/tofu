@@ -132,7 +132,7 @@ function Main:render(_)
 
   canvas:clear(0)
 
-  self.map:draw(canvas)
+  self.map:draw(canvas, state)
 
   local camera = self.map:camera_from_id("right")
   local x, y = camera:to_screen(self.player.x, self.player.y)
