@@ -43,7 +43,9 @@ local Image <const> = require("tofu.graphics.image")
 
 local Wave <const> = Class.define()
 
-function Wave:__ctor(_, _, _, pool)
+function Wave:__ctor(width, height, _, pool)
+  self.canvas_width, self.canvas_height = width, height
+
   self.stripe = Image.new("assets/images/stripes.img")
   self.tweener = Tweener.new("linear", 5)
   self.oscillator = Oscillator.new("sine", 0.75)
@@ -53,6 +55,8 @@ function Wave:__ctor(_, _, _, pool)
       self.period_current = self.period_next
       self.period_next = math.random() + 0.5
     end)
+
+  self.stripe_width, self.stripe_height = self.stripe:size()
 end
 
 function Wave:update(delta_time)
@@ -60,11 +64,9 @@ function Wave:update(delta_time)
   self.oscillator:advance(delta_time * period)
 end
 
-  local canvas_width, _ = canvas:image():size()
-  local stripe_width, stripe_height = self.stripe:size()
-  local span = stripe_height * 0.25
-  for i = 0, canvas_width, stripe_width do
 function Wave:render(canvas, _)
+  local span = self.stripe_height * 0.25
+  for i = 0, self.canvas_width, self.stripe_width do
     local dy = self.oscillator(i * 0.0005) * span
     canvas:blit(i, dy, self.stripe)
   end
