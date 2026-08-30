@@ -77,9 +77,10 @@ function Main:render(_)
   local t = System.time()
 
   -- Convert the time to an integer, then instruct the engine that color `15` need to be
-  -- remapped to color `index`.
+  -- remapped to color `index`. We need to get a reference to the canvas state to do that.
   local index = tonumber(t) % 16
-  canvas:shift(15, index)
+  local state = canvas:state()
+  state:shift(15, index)
 
   -- Clear the virtual-screen with default background color (i.e. palette color #0).
   canvas:clear(0)

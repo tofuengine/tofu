@@ -81,7 +81,7 @@ function Main:render(_)
 
   -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.
-  local canvas_width, canvas_height = self.canvas:size()
+  local canvas_width, canvas_height = canvas:size()
   local text_width, text_height = self.font:size(MESSAGE)
   local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 

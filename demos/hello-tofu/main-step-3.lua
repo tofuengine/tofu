@@ -81,7 +81,7 @@ function Main:render(_)
 
   -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.
-  local canvas_width, canvas_height = self.canvas:size()
+  local canvas_width, canvas_height = canvas:size()
   local text_width, text_height = self.font:size(MESSAGE)
   local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
@@ -100,9 +100,10 @@ function Main:render(_)
 
     -- Convert the time to an integer (speeding it up a bit) and get a different
     -- colour for each character. Then instruct the engine that colour `15` need to be
-    -- remapped to colour `index`.
+    -- remapped to colour `index`. We need to get a reference to the canvas state to do that.
     local index = (tonumber(t * 5) + i) % 16
-    canvas:shift(15, index)
+    local state = canvas:state()
+    state:shift(15, index)
 
     -- Draw the i-th character, accounting for vertical offset.
     self.font:write(c, x + dx, y + dy)
