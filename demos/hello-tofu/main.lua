@@ -60,7 +60,7 @@ local MESSAGE <const> = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Create a new canvas with the default image size.
-  self.canvas = Canvas.from_image(WIDTH, HEIGHT)
+  self.offscreen = Canvas.from_image(WIDTH, HEIGHT)
 
   -- Load a custom 8x8 font from file.
   -- Please note that, as default, palette colour `0` is set as transparent. This
@@ -109,11 +109,13 @@ function Main:update(_)
 end
 
 function Main:render(_)
+  local canvas <const> = CANVAS
+
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t <const> = System.time()
 
   -- Get a reference to the off-screen canvas (i.e. the the virtual-screen).
-  local offscreen <const> = CANVAS
+  local offscreen <const> = self.offscreen
 
   -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
   local image <const> = offscreen:image()
@@ -125,10 +127,10 @@ function Main:render(_)
   local text_width <const>, text_height <const> = self.font:size(MESSAGE)
   local x <const>, y <const> = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
-  canvas:image():clear(3)
-
   -- Scan the message text one char at time. We need the current char index in order
-  -- to change color for each character.
+  -- to change color for each character, by means of the canvas state (i.e. palette remapping).
+  local state <const> = offscreen:state()
+
   for i = 1, #MESSAGE do
     -- Get the i-th string character.
     local c <const> = MESSAGE:sub(i, i)
@@ -144,7 +146,7 @@ function Main:render(_)
     -- colour for each character. Then instruct the engine that colour `15` need to be
     -- remapped to colour `index`.
     local index <const> = (tonumber(t * 5) + i) % 16
-    offscreen:shift(1, index)
+    state:shift(1, index)
 
     -- Draw the i-th character, accounting for vertical offset.
     offscreen:write(x + dx, y + dy, self.font, c)
@@ -153,6 +155,7 @@ function Main:render(_)
   offscreen:write(0, 0, self.font_digits, "9876543210")
 
   -- Transfer to the virtual-screen canvas through transformation.
+  canvas:image():clear(3)
   canvas:xform(image, self.xform)
 end
 
