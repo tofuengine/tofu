@@ -117,14 +117,14 @@ void modules_initialize(lua_State *L, const void *userdatas[])
             { "tofu.graphics.state", state_loader },
             { "tofu.graphics.xform", xform_loader },
             { "tofu.input.controller", controller_loader },
-            { "tofu.input.cursor", cursor_loader },
+            { "tofu.input.cursor", cursor_loader }, // FIXME: rename to `mouse`
             { "tofu.input.keyboard", keyboard_loader },
             { "tofu.io.file", file_loader },
             { "tofu.io.storage", storage_loader },
             { "tofu.physics.body", body_loader },
             { "tofu.physics.world", world_loader },
             { "tofu.sound.source", source_loader },
-            { "tofu.sound.speakers", speakers_loader }, // FIXME: find a better name.
+            { "tofu.sound.speakers", speakers_loader }, // FIXME: rename to `mixer`
             { "tofu.util.grid2d", grid2d_loader },
             { "tofu.util.vector2d", vector2d_loader },
             { NULL, NULL }

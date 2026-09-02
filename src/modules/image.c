@@ -223,6 +223,7 @@ static int image_new_1s_1o(lua_State *L)
     return 1;
 }
 
+// TODO: add a three arguments version of the constructor, passing WxH and string-encoded byte data
 static int image_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)

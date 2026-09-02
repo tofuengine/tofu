@@ -61,6 +61,8 @@ local SOURCES <const> = {
   { name = "assets/mods/turrican_iii.xm", type = "module" }
 }
 
+-- TODO: create a new mixer demo, with mouse input.
+
 local Main = Class.define()
 
 function Main:__ctor()

@@ -52,7 +52,7 @@
 #define GL_PROCESSOR_MAX_COLORS (GL_PALETTE_MAX_COLORS * GL_PALETTE_MAX_BANKS)
 
 typedef struct GL_Processor_State_s {
-    GL_Color_t palette[GL_PROCESSOR_MAX_COLORS];
+    GL_Color_t palette[GL_PROCESSOR_MAX_COLORS]; // TODO: combine the shift-palette into a single table? Is shift even worth?
     GL_Pixel_t shifting[GL_PROCESSOR_MAX_COLORS];
     GL_Program_t *program;
 } GL_Processor_State_t;
