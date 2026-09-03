@@ -103,7 +103,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [Glad](https://gen.glad.sh/) v2.0.8
 * [GLFW](https://www.glfw.org/) v3.4.0
 * [libxmp](https://xmp.sourceforge.net/) v4.6.3
-* [Lua](https://lua.org/) v5.5.0
+* [Lua](https://lua.org/) v5.5.1
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.25
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
@@ -260,7 +260,7 @@ Follows a brief (and incomplete) list of additional features somewhen in the fut
 
 ### Graphics
 
-* [ ] Full anchor support for sprite drawing (anchor is already supported).
+* [ ] Full anchor support for sprite drawing (rotation pivot is already supported).
 * [ ] Copperlist-driven blitting also for canvas-to-canvas operations.
 * [ ] Adding image manipulation features (e.g. `image:replace()`) for faster optimizations.
 * [ ] Move to full GPU use (beware of the diamond-exit-rule and ensure pixel-perfect positioning).
