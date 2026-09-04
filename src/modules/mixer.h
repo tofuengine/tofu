@@ -35,11 +35,11 @@
  * SOFTWARE.
  */
 
-#ifndef TOFU_MODULES_SPEAKERS_H
-#define TOFU_MODULES_SPEAKERS_H
+#ifndef TOFU_MODULES_MIXER_H
+#define TOFU_MODULES_MIXER_H
 
 #include <lua/lua.h>
 
-extern int speakers_loader(lua_State *L);
+extern int mixer_loader(lua_State *L);
 
-#endif  /* TOFU_MODULES_SPEAKERS_H */
+#endif  /* TOFU_MODULES_MIXER_H */

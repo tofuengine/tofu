@@ -40,7 +40,7 @@ local Log <const> = require("tofu.core.log")
 local System <const> = require("tofu.core.system")
 local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
-local Speakers <const> = require("tofu.sound.speakers")
+local Mixer <const> = require("tofu.sound.mixer")
 
 local INITIAL_STATE <const> = "splash"
 
@@ -159,7 +159,7 @@ function Boot:render(ratio)
 end
 
 function Boot:reinit_system()
-  Speakers.halt() -- Stop all sounds sources.
+  Mixer.halt() -- Stop all sounds sources.
 
   Display.reset()
 
