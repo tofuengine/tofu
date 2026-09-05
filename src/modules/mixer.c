@@ -49,7 +49,7 @@ static int mixer_gain_v_v(lua_State *L);
 static int mixer_mix_v_v(lua_State *L);
 static int mixer_pan_2nn_0(lua_State *L);
 static int mixer_balance_2nn_0(lua_State *L);
-static int mixer_halt_0_0(lua_State *L);
+static int mixer_stop_all_0_0(lua_State *L);
 
 int mixer_loader(lua_State *L)
 {
@@ -63,7 +63,7 @@ int mixer_loader(lua_State *L)
             { "pan", mixer_pan_2nn_0 },
             { "balance", mixer_balance_2nn_0 },
             // -- operations --
-            { "halt", mixer_halt_0_0 },
+            { "stop_all", mixer_stop_all_0_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -234,7 +234,7 @@ static int mixer_balance_2nn_0(lua_State *L)
     return 0;
 }
 
-static int mixer_halt_0_0(lua_State *L)
+static int mixer_stop_all_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
