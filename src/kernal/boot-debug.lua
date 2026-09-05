@@ -159,7 +159,7 @@ function Boot:render(ratio)
 end
 
 function Boot:reinit_system()
-  Mixer.halt() -- Stop all sounds sources.
+  Mixer.stop_all() -- Stop all sounds sources.
 
   Display.reset()
 
