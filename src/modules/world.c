@@ -230,10 +230,12 @@ static int world_add_2oo_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
     const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     int index = hmgeti(self->entries, body);
     if (index != -1) {
         luaL_error(L, "body %p already in world %p", body, self);
     }
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
 
     cpSpace *space = self->space;
     cpSpaceAddBody(space, body->body);
@@ -256,10 +258,12 @@ static int world_remove_2oo_0(lua_State *L)
     World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
     const Body_Object_t *body = (const Body_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_BODY);
 
+#if defined(TOFU_CORE_DEFENSIVE_CHECKS)
     int index = hmgeti(self->entries, body);
     if (index == -1) {
         luaL_error(L, "body %p not in world %p", body, self);
     }
+#endif  /* defined(TOFU_CORE_DEFENSIVE_CHECKS) */
     World_Object_Entry_t *entry = &self->entries[index];
 
     cpSpace *space = self->space;
