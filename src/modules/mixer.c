@@ -241,7 +241,7 @@ static int mixer_stop_all_0_0(lua_State *L)
 
     Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
 
-    Audio_halt(audio);
+    Audio_untrack_all(audio);
 
     return 0;
 }

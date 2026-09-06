@@ -354,12 +354,13 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
     ma_mutex_unlock(&audio->driver.lock);
 }
 
-void Audio_halt(Audio_t *audio)
+void Audio_untrack_all(Audio_t *audio)
 {
     ma_mutex_lock(&audio->driver.lock);
-    SL_context_halt(audio->context);
-    LOG_D("all tracked sources halted for context %p", audio->context);
+    SL_context_untrack_all(audio->context);
+    LOG_D("all tracked sources removed from context %p", audio->context);
     ma_mutex_unlock(&audio->driver.lock);
+}
 
 bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
 {

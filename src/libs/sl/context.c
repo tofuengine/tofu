@@ -159,7 +159,7 @@ size_t SL_context_count_tracked(const SL_Context_t *context)
     return arrlenu(context->sources);
 }
 
-void SL_context_halt(SL_Context_t *context)
+void SL_context_untrack_all(SL_Context_t *context)
 {
     arrfree(context->sources);
 }
