@@ -52,6 +52,7 @@ static int world_gravity_v_v(lua_State *L);
 static int world_damping_v_v(lua_State *L);
 static int world_add_2oo_0(lua_State *L);
 static int world_remove_2oo_0(lua_State *L);
+static int world_bodies_1o_1t(lua_State *L);
 static int world_clear_1o_0(lua_State *L);
 static int world_update_2on_0(lua_State *L);
 
@@ -65,6 +66,8 @@ int world_loader(lua_State *L)
             // -- getters/setters --
             { "gravity", world_gravity_v_v },
             { "damping", world_damping_v_v },
+            // -- accessors --
+            { "bodies", world_bodies_1o_1t },
             // -- mutators --
             { "add", world_add_2oo_0 },
             { "remove", world_remove_2oo_0 },
@@ -219,6 +222,26 @@ static int world_damping_v_v(lua_State *L)
         LUAX_OVERLOAD_BY_ARITY(world_damping_1o_1n, 1)
         LUAX_OVERLOAD_BY_ARITY(world_damping_2on_0, 2)
     LUAX_OVERLOAD_END
+}
+
+static int world_bodies_1o_1t(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    World_Object_t *self = (World_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WORLD);
+
+    size_t count = hmlenu(self->entries);
+
+    lua_createtable(L, count, 0);
+    for (size_t i = 0; i < count; ++i) {
+        const Body_Object_t *body = &self->entries[i];
+
+        luaX_pushobject(L, body);
+        lua_rawseti(L, -2, (int)(i + 1));
+    }
+
+    return 1;
 }
 
 static int world_add_2oo_0(lua_State *L)
