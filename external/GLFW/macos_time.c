@@ -1,5 +1,5 @@
 //========================================================================
-// GLFW 3.4 macOS - www.glfw.org
+// GLFW 3.5 macOS - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2009-2016 Camilla Löwy <elmindreda@glfw.org>
 //
@@ -26,7 +26,7 @@
 
 #include "internal.h"
 
-#if defined(GLFW_BUILD_COCOA_TIMER)
+#if defined(GLFW_BUILD_MACOS_TIMER)
 
 #include <mach/mach_time.h>
 
@@ -40,7 +40,7 @@ void _glfwPlatformInitTimer(void)
     mach_timebase_info_data_t info;
     mach_timebase_info(&info);
 
-    _glfw.timer.ns.frequency = (info.denom * 1e9) / info.numer;
+    _glfw.timer.macos.frequency = (info.denom * 1e9) / info.numer;
 }
 
 uint64_t _glfwPlatformGetTimerValue(void)
@@ -50,8 +50,8 @@ uint64_t _glfwPlatformGetTimerValue(void)
 
 uint64_t _glfwPlatformGetTimerFrequency(void)
 {
-    return _glfw.timer.ns.frequency;
+    return _glfw.timer.macos.frequency;
 }
 
-#endif // GLFW_BUILD_COCOA_TIMER
+#endif // GLFW_BUILD_MACOS_TIMER
 

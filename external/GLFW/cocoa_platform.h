@@ -1,5 +1,5 @@
 //========================================================================
-// GLFW 3.4 macOS - www.glfw.org
+// GLFW 3.5 Cocoa - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2009-2019 Camilla Löwy <elmindreda@glfw.org>
 //
@@ -272,7 +272,7 @@ EGLenum _glfwGetEGLPlatformCocoa(EGLint** attribs);
 EGLNativeDisplayType _glfwGetEGLNativeDisplayCocoa(void);
 EGLNativeWindowType _glfwGetEGLNativeWindowCocoa(_GLFWwindow* window);
 
-void _glfwGetRequiredInstanceExtensionsCocoa(const char** extensions);
+void _glfwGetRequiredInstanceExtensionsCocoa(char** extensions);
 GLFWbool _glfwGetPhysicalDevicePresentationSupportCocoa(VkInstance instance, VkPhysicalDevice device, uint32_t queuefamily);
 VkResult _glfwCreateWindowSurfaceCocoa(VkInstance instance, _GLFWwindow* window, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
 
@@ -290,8 +290,6 @@ void _glfwSetVideoModeCocoa(_GLFWmonitor* monitor, const GLFWvidmode* desired);
 void _glfwRestoreVideoModeCocoa(_GLFWmonitor* monitor);
 
 float _glfwTransformYCocoa(float y);
-
-void* _glfwLoadLocalVulkanLoaderCocoa(void);
 
 GLFWbool _glfwInitNSGL(void);
 void _glfwTerminateNSGL(void);
