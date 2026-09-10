@@ -45,17 +45,10 @@ void _glfwPlatformFreeModule(void* module)
         dlclose(module);
 }
 
-#if defined(__GNUC__)
- #pragma GCC diagnostic push
- #pragma GCC diagnostic ignored "-Wpedantic"
-#endif
 GLFWproc _glfwPlatformGetModuleSymbol(void* module, const char* name)
 {
-    return (GLFWproc)dlsym(module, name);
+    return dlsym(module, name);
 }
-#if defined(__GNUC__)
- #pragma GCC diagnostic pop
-#endif
 
 #endif // GLFW_BUILD_POSIX_MODULE
 

@@ -1,4 +1,4 @@
-cocoa_joystick.h
 cocoa_platform.h
-cocoa_time.h
+cocoa_joystick.h
+macos_time.h
 posix_thread.h

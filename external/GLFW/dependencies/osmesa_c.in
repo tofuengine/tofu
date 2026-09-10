@@ -1,8 +1,8 @@
 cocoa_init.m
 cocoa_joystick.m
 cocoa_monitor.m
-cocoa_time.c
 cocoa_window.m
 nsgl_context.m
+macos_time.c
 posix_module.c
 posix_thread.c

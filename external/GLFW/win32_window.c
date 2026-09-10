@@ -1,6 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-
 //========================================================================
 // GLFW 3.5 Win32 - www.glfw.org
 //------------------------------------------------------------------------
@@ -2585,4 +2582,3 @@ GLFWAPI HWND glfwGetWin32Window(GLFWwindow* handle)
 
 #endif // _GLFW_WIN32
 
-#pragma GCC diagnostic pop
