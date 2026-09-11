@@ -101,7 +101,7 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [dr_libs](https://github.com/mackron/dr_libs) v0.13.3, v0.7.4, v0.14.5
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1
 * [Glad](https://gen.glad.sh/) v2.0.8
-* [GLFW](https://www.glfw.org/) v3.4.0
+* [GLFW](https://www.glfw.org/) v3.5.1
 * [libxmp](https://xmp.sourceforge.net/) v4.6.3
 * [Lua](https://lua.org/) v5.5.1
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.11.25
