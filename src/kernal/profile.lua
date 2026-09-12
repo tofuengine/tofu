@@ -1,9 +1,10 @@
---[[
-This file is a part of the "profile.lua" library.
-
-MIT License
+--[[!
+profile.lua
 
 Copyright (c) 2015 2dengine LLC
+https://2dengine.com/
+
+MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -94,6 +95,10 @@ function profile.start()
   --   jit.off()
   --   jit.flush()
   -- end
+  if rawget(_G, 'jit') then
+    jit.off()
+    jit.flush()
+  end
   debug.sethook(profile.hooker, "cr")
 end
 
@@ -141,24 +146,28 @@ end
 -- @tparam function b Second function
 -- @treturn boolean True if "a" should rank higher than "b"
 function profile.comp(a, b)
-  local dt = _telapsed[b] - _telapsed[a]
+  local dt = b[4] - a[4]
   if dt == 0 then
-    return _ncalls[b] < _ncalls[a]
+    return b[3] < a[3]
   end
   return dt < 0
 end
 
 --- Generates a report of functions that have been called since the profile was started.
--- Returns the report as a numeric table of rows containing the rank, function label,
--- number of calls, total execution time and source code line number.
+-- Returns the report as a numeric table of rows containing the rank, function label, number of calls, total execution time and source code line number.
 -- @tparam[opt] number limit Maximum number of rows
 -- @tparam[opt] number skip Number of rows to skip from the start
 -- @treturn table Table of rows
 function profile.query(limit, skip)
+function profile.query(limit)
   local t = {}
   for f, n in pairs(_ncalls) do
     if n > 0 then
-      t[#t + 1] = f
+      local dt = 0
+      if _tcalled[f] then
+        dt = clock() - _tcalled[f]
+      end
+      t[#t + 1] = { 0, _labeled[f] or '?', _ncalls[f], _telapsed[f] + dt, _defined[f] }
     end
   end
   table.sort(t, profile.comp)
@@ -172,12 +181,8 @@ function profile.query(limit, skip)
       table.remove(t)
     end
   end
-  for i, f in ipairs(t) do
-    local dt = 0
-    if _tcalled[f] then
-      dt = clock() - _tcalled[f]
-    end
-    t[i] = { i, _labeled[f] or '?', _ncalls[f], _telapsed[f] + dt, _defined[f] }
+  for i = 1, #t do
+    t[i][1] = i
   end
   return t
 end
@@ -211,7 +216,8 @@ function profile.report(n, skip)
     .. "+--------------------------+----------------------------------+ \n"
   local col = " | #   | Function                      | Calls       "
     .. "| Time                     | Code                             | \n"
-
+  local row = " +-----+-------------------------------+-------------+--------------------------+----------------------------------+ \n"
+  local col = " | #   | Function                      | Calls       | Time                     | Code                             | \n"
   local sz = row..col..row
   if #out > 0 then
     sz = sz..' | '..table.concat(out, ' | \n | ')..' | \n'
@@ -219,11 +225,17 @@ function profile.report(n, skip)
   return '\n'..sz..row
 end
 
--- store all internal profiler functions
-for _, v in pairs(profile) do
-  if type(v) == "function" then
-    _internal[v] = true
+--- Excludes a specific function from the reports
+-- @tparam function func Function reference
+function profile.ignore(func)
+  if type(func) == "function" then
+    _internal[func] = true
   end
+end
+
+-- ignore all internal profiler functions
+for _, v in pairs(profile) do
+  profile.ignore(v)
 end
 
 return profile
