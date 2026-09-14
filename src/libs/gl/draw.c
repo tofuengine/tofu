@@ -76,6 +76,9 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
     const GL_Pixel_t replacement = GL_PALETTE_GET_PIXEL(mapped);
+    if (match == replacement) {
+        return;
+    }
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
