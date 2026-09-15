@@ -90,12 +90,10 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         int y = position.y;
 
         GL_Pixel_t *dptr = ddata + y * dwidth + x;
-        while (x >= clipping_region->x0 && *dptr == match) {
+        while (x > clipping_region->x0 && *(dptr - 1) == match) {
             --x;
             --dptr;
         }
-        ++x;
-        ++dptr;
 
         bool above = false;
         bool below = false;
