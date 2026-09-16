@@ -97,28 +97,34 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
         bool above = false;
         bool below = false;
+        const bool has_above = y > clipping_region->y0;
+        const bool has_below = y < clipping_region->y1 - 1;
 
         while (x < clipping_region->x1 && *dptr == match) {
             *dptr = replacement;
 
-            const GL_Pixel_t pixel_above = *(dptr - dskip);
-            if (!above && y > clipping_region->y0 && pixel_above == match) {
-                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
-                arrpush(stack, p);
-                above = true;
-            } else
-            if (above && y > clipping_region->y0 && pixel_above != match) {
-                above = false;
+            if (has_above) {
+                const GL_Pixel_t pixel_above = *(dptr - dskip);
+                if (!above && pixel_above == match) {
+                    const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
+                    arrpush(stack, p);
+                    above = true;
+                } else
+                if (above && pixel_above != match) {
+                    above = false;
+                }
             }
 
-            const GL_Pixel_t pixel_below = *(dptr + dskip);
-            if (!below && y < clipping_region->y1 - 1 && pixel_below == match) {
-                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
-                arrpush(stack, p);
-                below = true;
-            } else
-            if (below && y < clipping_region->y1 - 1 && pixel_below != match) {
-                below = false;
+            if (has_below) {
+                const GL_Pixel_t pixel_below = *(dptr + dskip);
+                if (!below && pixel_below == match) {
+                    const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
+                    arrpush(stack, p);
+                    below = true;
+                } else
+                if (below && pixel_below != match) {
+                    below = false;
+                }
             }
 
             ++x;
