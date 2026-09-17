@@ -235,9 +235,9 @@ static int world_bodies_1o_1t(lua_State *L)
 
     lua_createtable(L, count, 0);
     for (size_t i = 0; i < count; ++i) {
-        const Body_Object_t *body = &self->entries[i];
+        luaX_Reference body = self->entries[i].value; // We created a reference to the tracked body
 
-        luaX_pushobject(L, body);
+        luaX_pushref(L, body);
         lua_rawseti(L, -2, (int)(i + 1));
     }
 
