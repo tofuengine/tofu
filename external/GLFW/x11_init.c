@@ -1,3 +1,7 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 //========================================================================
 // GLFW 3.5 X11 - www.glfw.org
 //------------------------------------------------------------------------
@@ -1619,3 +1623,4 @@ void _glfwTerminateX11(void)
 
 #endif // _GLFW_X11
 
+#pragma GCC diagnostic pop

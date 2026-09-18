@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 //========================================================================
 // GLFW 3.5 X11 - www.glfw.org
 //------------------------------------------------------------------------
@@ -650,3 +653,4 @@ GLFWAPI RROutput glfwGetX11Monitor(GLFWmonitor* handle)
 
 #endif // _GLFW_X11
 
+#pragma GCC diagnostic pop

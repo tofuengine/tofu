@@ -1,3 +1,7 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 //========================================================================
 // GLFW 3.5 - www.glfw.org
 //------------------------------------------------------------------------
@@ -747,3 +751,4 @@ VkResult _glfwCreateWindowSurfaceNull(VkInstance instance,
     return err;
 }
 
+#pragma GCC diagnostic pop

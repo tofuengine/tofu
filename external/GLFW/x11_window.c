@@ -1,3 +1,8 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 //========================================================================
 // GLFW 3.5 X11 - www.glfw.org
 //------------------------------------------------------------------------
@@ -3385,3 +3390,4 @@ GLFWAPI const char* glfwGetX11SelectionString(void)
 
 #endif // _GLFW_X11
 
+#pragma GCC diagnostic pop

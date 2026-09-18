@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 //========================================================================
 // GLFW 3.5 POSIX - www.glfw.org
 //------------------------------------------------------------------------
@@ -52,3 +55,4 @@ GLFWproc _glfwPlatformGetModuleSymbol(void* module, const char* name)
 
 #endif // GLFW_BUILD_POSIX_MODULE
 
+#pragma GCC diagnostic pop

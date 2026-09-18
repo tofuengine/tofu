@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 //========================================================================
 // GLFW 3.5 - www.glfw.org
 //------------------------------------------------------------------------
@@ -1517,3 +1520,4 @@ GLFWAPI uint64_t glfwGetTimerFrequency(void)
     return _glfwPlatformGetTimerFrequency();
 }
 
+#pragma GCC diagnostic pop
