@@ -95,10 +95,6 @@ function profile.start()
   --   jit.off()
   --   jit.flush()
   -- end
-  if rawget(_G, 'jit') then
-    jit.off()
-    jit.flush()
-  end
   debug.sethook(profile.hooker, "cr")
 end
 
@@ -154,12 +150,12 @@ function profile.comp(a, b)
 end
 
 --- Generates a report of functions that have been called since the profile was started.
--- Returns the report as a numeric table of rows containing the rank, function label, number of calls, total execution time and source code line number.
+-- Returns the report as a numeric table of rows containing the rank, function label,
+-- number of calls, total execution time and source code line number.
 -- @tparam[opt] number limit Maximum number of rows
 -- @tparam[opt] number skip Number of rows to skip from the start
 -- @treturn table Table of rows
 function profile.query(limit, skip)
-function profile.query(limit)
   local t = {}
   for f, n in pairs(_ncalls) do
     if n > 0 then
@@ -216,8 +212,6 @@ function profile.report(n, skip)
     .. "+--------------------------+----------------------------------+ \n"
   local col = " | #   | Function                      | Calls       "
     .. "| Time                     | Code                             | \n"
-  local row = " +-----+-------------------------------+-------------+--------------------------+----------------------------------+ \n"
-  local col = " | #   | Function                      | Calls       | Time                     | Code                             | \n"
   local sz = row..col..row
   if #out > 0 then
     sz = sz..' | '..table.concat(out, ' | \n | ')..' | \n'
