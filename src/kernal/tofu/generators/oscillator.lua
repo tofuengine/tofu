@@ -49,14 +49,9 @@ end
 
 function Oscillator:advance(delta_phase)
   local period <const> = self.wave:period()
-  local phase = self.phase + delta_phase
-  while phase >= period do -- Keep constrained in [0, period) in order not to loose precision.
-    phase = phase - period
-  end
-  while phase < 0.0 do
-    phase = phase + period
-  end
-  self.phase = phase
+  -- Keep the phase constrained in [0, period) in order not to loose precision.
+  -- Note: Lua's modulo wraps correctly for both positive and negative phase steps.
+  self.phase = (self.phase + delta_phase) % period
 end
 
 function Oscillator:value(offset)
