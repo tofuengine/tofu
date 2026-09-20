@@ -43,7 +43,6 @@ local Palette <const> = require("tofu.graphics.palette")
 
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
-local STATE <const> = CANVAS:state()
 local PALETTE <const> = Palette.default('pico-8')
 
 local COLORS <const> = PALETTE:size()

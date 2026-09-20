@@ -45,7 +45,7 @@ local Font <const> = require("tofu.graphics.font")
 local PALETTE <const> = Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
-local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
+local WIDTH <const>, _ <const> = CANVAS:image():size()
 local STATE <const> = CANVAS:state()
 
 local TITLE <const> = {
@@ -110,8 +110,7 @@ function Panic:render(_)
 end
 
 function Panic:set_message(message)
-  local width <const>, _ <const> = self.canvas:image():size()
-  local span <const> = width - 2 * MARGIN
+  local span <const> = WIDTH - 2 * MARGIN
 
   local errors <const> = {}
   for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
@@ -123,7 +122,7 @@ function Panic:set_message(message)
   local y = MARGIN + STROKE + MARGIN
   for _, text in ipairs(TITLE) do -- Title lines are centered.
     local lw <const>, lh <const> = FONT:size(text)
-    table.insert(self.lines, { text = text, x = (width - lw) * 0.5, y = y })
+    table.insert(self.lines, { text = text, x = (WIDTH - lw) * 0.5, y = y })
     y = y + lh
   end
   y = y + MARGIN
@@ -131,7 +130,7 @@ function Panic:set_message(message)
   self.rectangle = { -- The rectangle ends here, message follows.
       x = MARGIN,
       y = MARGIN,
-      width = width - MARGIN - MARGIN,
+      width = WIDTH - MARGIN - MARGIN,
       height = y - MARGIN + (STROKE - 1)
     }
 
