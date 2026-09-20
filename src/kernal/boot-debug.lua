@@ -142,22 +142,24 @@ function Boot:init()
 end
 
 function Boot:deinit()
-  -- On close we switch to the `nil` state, which will cause the current one to be exited properly
-  --
-  -- Note: the `xpcall()` code doesn't check if the current state is non `nil` (such as when
-  -- we reach this piece of code). This isn't an issue as after the `Boot:deinit()` method is called
-  -- the application is shut down and not other calls are made.
+  -- On close we switch to the `nil` state, which will cause the current one to be exited properly.
   self:switch(nil)
 end
 
 function Boot:update(delta_time)
   local me <const> = self.state
-  self:call(me.update, me, delta_time)
+  local success <const>, message <const> = self:call(me.update, me, delta_time)
+  if not success then
+    self:handle_failure(message)
+  end
 end
 
 function Boot:render(ratio)
   local me <const> = self.state
-  self:call(me.render, me, ratio)
+  local success <const>, message <const> = self:call(me.render, me, ratio)
+  if not success then
+    self:handle_failure(message)
+  end
 end
 
 function Boot:reinit_system()
@@ -169,35 +171,79 @@ function Boot:reinit_system()
   STATE:reset() -- Reset default canvas from the game state.
 end
 
--- Achtung! Don´t *ever* call `switch()` from within `enter()` or `leave()`
--- ======== methods! It is suggested also to avoid it from `init()` and
--- ======== `deinit()`, unless you really know what you are doing.
-function Boot:switch(id, ...)
+function Boot:transition(id, ...)
   local exiting <const> = self.state
+
+  -- Achtung #1: we set `self.state` to `nil` before calling the `leave()` and `deinit()`
+  --             methods, so that they will be called at most once, even in case they fail
+  --             and the `transition()` method is called again from the error handler.
+  self.state = nil
+
   if exiting then
-    self:call(exiting.deinit, exiting)
-    self:call(exiting.leave, exiting)
+    local success, message = self:call(exiting.deinit, exiting)
+    if not success then
+      return false, message
+    end
+    success, message = self:call(exiting.leave, exiting)
+    if not success then
+      return false, message
+    end
   end
 
-  self:reinit_system() -- Ensure that everything is neutral, as when booted.
-
-  if not id then
-    self.state = nil
-    return
+  local success, message = self:call(self.reinit_system, self) -- Set to neutral, as when booted.
+  if not success then
+    return false, message
   end
-  self.state = self.states[id] -- Store the new state so that `switch()` can work in `enter()` and `init()`.
 
-  local entering <const> = self.state
-  self:call(entering.enter, entering, ...)
-  self:call(entering.init, entering)
+  if not id then -- No state to enter, we are done with the transition.
+    return true
+  end
+
+  local entering <const> = self.states[id]
+  if not entering then
+    return false, string.format("unknown boot state `%s`", id)
+  end
+
+  success, message = self:call(entering.enter, entering, ...)
+  if not success then
+    return false, message
+  end
+  success, message = self:call(entering.init, entering)
+  if not success then
+    return false, message
+  end
+
+  -- Achtung #2: we are storing the new state only after the `enter()` and `init()`
+  --             methods have been called successfully. That way the state is
+  --             guaranteed to be valid. Note that as a consequence we can't call
+  --             `switch()` from within the `enter()` and `init()` methods, since
+  --             the `self.state` is still `nil` at that point. Also a partially
+  --             entered/initialized state won't be cleared and will be left
+  --             dangling in memory (on purpose).
+  self.state = entering
+
+  return true
+end
+
+function Boot:handle_failure(message)
+  Log.error(message)
+
+  local success <const>, failure_message <const> = self:transition("failure", message)
+  if not success then
+    Log.error(failure_message)
+    error(failure_message, 0)
+  end
+end
+
+function Boot:switch(id, ...)
+  local success <const>, message <const> = self:transition(id, ...)
+  if not success then
+    self:handle_failure(message)
+  end
 end
 
 function Boot:call(func, ...)
-  local success <const>, message <const> = xpcall(func, debug.traceback, ...)
-  if not success then
-    Log.error(message) -- Dump to log...
-    self:switch("failure", message) -- ... and pass to the error-state for visualization.
-  end
+  return xpcall(func, debug.traceback, ...)
 end
 
 return Boot.new()
