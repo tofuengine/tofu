@@ -56,7 +56,8 @@ function Boot:__ctor()
           local Splash <const> = require("splash")
           me.splash = Splash.new()
         end,
-      leave = function(_)
+      leave = function(me)
+          me.splash = nil
         end,
       init = function(me)
           me.splash:init()
@@ -117,7 +118,8 @@ function Boot:__ctor()
           me.panic = Panic.new()
           me.panic:set_message(message)
         end,
-      leave = function(_)
+      leave = function(me)
+          me.panic = nil
         end,
       init = function(me)
           me.panic:init()
