@@ -157,7 +157,7 @@ vec4 effect(sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
 	vec2 texcoord = texture_coords;
 #endif
 
-	vec2 texcoordInPixels = texture_coords * u_texture_size;
+	vec2 texcoordInPixels = texcoord * u_texture_size;
 #if defined(SHARPER)
 	vec2 tempCoord = floor(texcoordInPixels) + 0.5;
 	vec2 coord = tempCoord / u_texture_size;
