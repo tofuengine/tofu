@@ -83,18 +83,20 @@ end
 
 function Font:wrap(text, width)
   local lines <const> = {}
-  local line = ""
+  local line = {}
+  local line_width = 0
   for c in text:gmatch(".") do
-    local lw, _ = self:size(line .. c)
-    if lw >= width then
-      table.insert(lines, line)
-      line = c
-    else
-      line = line .. c
+    local character_width <const>, _ <const> = self:size(c)
+    if #line > 0 and line_width + character_width > width then
+      table.insert(lines, table.concat(line))
+      line = {}
+      line_width = 0
     end
+    table.insert(line, c)
+    line_width = line_width + character_width
   end
   if #line > 0 then
-    table.insert(lines, line)
+    table.insert(lines, table.concat(line))
   end
   return lines
 end
