@@ -149,8 +149,8 @@ end
 
 -- helper function
 local function _box(canvas, box, r, g, b)
-  canvas:rectangle('fill', box.x, box.y, box.w, box.h, PALETTE:match(r * 0.5, g * 0.5, b * 0.5))
-  canvas:rectangle('line', box.x, box.y, box.w, box.h, PALETTE:match(r, g, b))
+  canvas:rectangle("fill", box.x, box.y, box.w, box.h, PALETTE:match(r * 0.5, g * 0.5, b * 0.5))
+  canvas:rectangle("line", box.x, box.y, box.w, box.h, PALETTE:match(r, g, b))
 end
 
 function Main:draw_blocks(canvas)

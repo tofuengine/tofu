@@ -93,7 +93,7 @@ end
 function Main:deinit()
 end
 
-local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
+local PROPERTIES <const> = { "play", "stop", "resume", "gain", "pan", "balance", "mix" }
 
 function Main:handle_input()
   if CONTROLLER:is_pressed("a") then

@@ -80,7 +80,7 @@ function Background:render(canvas, state)
   self.state:push()
   local x, y = 0, 0
   local dy = 0
-  local message = '* T O F U - E N G I N E '
+  local message = "* T O F U - E N G I N E "
   local colours = { 0, 5, 6, 10, 7, 23, 6, 5 }
   local offset = 0 -- math.tointeger(t * 17.0)
   local cursor = math.tointeger(t * 5.0)

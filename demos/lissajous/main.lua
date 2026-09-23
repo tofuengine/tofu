@@ -125,7 +125,7 @@ function Main:render(_)
     local x = HALF_WIDTH + math.cos(t * self.a + self.delta) * self.A
     local y = HALF_HEIGHT + math.sin(t * self.b) * self.B
 
-    canvas:blend(x - 8, y - 8, self.bank, 'add')
+    canvas:blend(x - 8, y - 8, self.bank, "add")
   end
   self.age = t
 

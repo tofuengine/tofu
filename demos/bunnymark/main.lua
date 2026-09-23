@@ -131,7 +131,7 @@ function Main:render(_)
   state:push()
     state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
-    canvas:write(0, 8, FONT, string.format("%d/%d HEAP", System.heap('k')))
+    canvas:write(0, 8, FONT, string.format("%d/%d HEAP", System.heap("k")))
     canvas:write(WIDTH, 0, FONT, string.format("#%d bunnies", #self.bunnies), "right")
   state:pop()
 end

@@ -42,7 +42,7 @@ local Camera = Class.define()
 function Camera:__ctor(field_of_view, width, height, near, far)
   self.field_of_view = field_of_view
   self.d = 1.0 / math.tan(field_of_view * 0.5)
-  -- Setting 'd = 1.0' seems like giving the more pleasant visual effect. Also, math is simpler.
+  -- Setting `d = 1.0` seems like giving the more pleasant visual effect. Also, math is simpler.
 
   self.aspect_ratio = width / height
   self.width = width

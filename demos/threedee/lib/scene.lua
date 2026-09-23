@@ -260,7 +260,7 @@ end
 
 local function _draw_entity(canvas, entity, bank, font)
   if DEBUG then
-    canvas:rectangle('line', entity.sx, entity.y, entity.width, entity.height, 15)
+    canvas:rectangle("line", entity.sx, entity.y, entity.width, entity.height, 15)
   end
   canvas:sprite(entity.sx, entity.sy, bank, entity.cell_id, entity.scale, entity.scale)
   if DEBUG then

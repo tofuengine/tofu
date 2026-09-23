@@ -24,7 +24,7 @@ end
 function Obstacle:draw(canvas)
   local position = self.position
 
-  canvas:circle('fill', position.x, position.y, 3, self.color)
+  canvas:circle("fill", position.x, position.y, 3, self.color)
 end
 
 return Obstacle
