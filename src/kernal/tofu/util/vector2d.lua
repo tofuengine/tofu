@@ -79,7 +79,7 @@ function Vector2D.intersect(p0, v0, p1, v1)
   if math.abs(det) <= Vector2D.PARALLEL_TOLERANCE then
     return nil, nil
   end
-  local v <const> = Vector2D.new(Vector2D.from_points(p0, p1))
+  local v <const> = Vector2D.from_points(p0, p1)
   local t0 <const> = v:perp_dot(v1) / det -- ratio for the first ray
   local t1 <const> = v:perp_dot(v0) / det -- ratio for the second ray
   return t0, t1
