@@ -43,11 +43,13 @@ local Palette <const> = require("tofu.graphics.palette")
 
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
-local PALETTE <const> = Palette.default('pico-8')
+local PALETTE <const> = Palette.default("pico-8")
 
 local COLORS <const> = PALETTE:size()
 local AMOUNT <const> = COLORS * 2
 local HALF_AMOUNT <const> = COLORS
+local CELL_WIDTH <const> = WIDTH / COLORS
+local CELL_HEIGHT <const> = HEIGHT / COLORS
 
 local BACKGROUND_INDEX <const> = 0
 
@@ -69,7 +71,7 @@ function Splash:update(_)
 end
 
 function Splash:render(_)
-  local canvas = CANVAS
+  local canvas <const> = CANVAS
 
   canvas:clear(BACKGROUND_INDEX)
 
@@ -81,19 +83,16 @@ function Splash:render(_)
     progress = AMOUNT - math.ceil(step)
   end
 
-  local width = WIDTH / COLORS -- TODO: this can be precomputed
-  local height = HEIGHT / COLORS
-
   local y = 0
   for i = 0, COLORS - 1 do
     local x = 0
-    for j = 0, AMOUNT - 1 do
-      local index = (i + j + progress) % COLORS
-      canvas:rectangle('fill', x, y, width, height, index)
+    for j = 0, COLORS - 1 do
+      local index <const> = (i + j + progress) % COLORS
+      canvas:rectangle("fill", x, y, CELL_WIDTH, CELL_HEIGHT, index)
 
-      x = x + width
+      x = x + CELL_WIDTH
     end
-    y = y + height
+    y = y + CELL_HEIGHT
   end
 end
 
