@@ -109,7 +109,7 @@ local function ipairs(table, check)
       while true do
           i = i + 1
           local v = a[i]
-          if not v then
+          if v == nil then
             return nil, nil
           end
           if not check or check(v) then
@@ -124,7 +124,7 @@ local function reverse_ipairs(table, check)
       while true do
         i = i - 1
         local v = a[i]
-        if not v then
+        if v == nil then
           return nil, nil
         end
         if not check or check(v) then
@@ -137,8 +137,9 @@ end
 local function pairs(table, check)
   return function(t, k)
       while true do
-          local v = next(t, k)
-          if not v then
+          local v
+          k, v = next(t, k)
+          if k == nil then
             return nil, nil
           end
           if not check or check(v) then
