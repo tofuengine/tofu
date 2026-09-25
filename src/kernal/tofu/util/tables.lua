@@ -45,7 +45,7 @@ local function erase_if(t, callback) -- callback(value, key, t)
     end
   end
   for _, k in ipairs(to_be_erased) do
-    table.remove(t, k)
+    t[k] = nil
   end
   return #to_be_erased
 end
