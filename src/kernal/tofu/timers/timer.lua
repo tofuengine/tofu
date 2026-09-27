@@ -51,7 +51,7 @@ function Timer:__ctor(period, repeats, callback, rate)
   self:reset()
 end
 
-function Timer:rate(rate)
+function Timer:set_rate(rate)
   self.rate = rate or 1.0
 end
 
