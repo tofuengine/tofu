@@ -63,6 +63,10 @@ end
 function Bus:emit(event, ...)
   local listeners <const> = self.listeners
   for _, cb in ipairs(listeners[event]) do
+  local registered <const> = listeners[event]
+  if not registered then
+    return
+  end
     cb(...)
   end
 end
