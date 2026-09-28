@@ -110,6 +110,9 @@ end
 local function rotated(array, amount)
   local result <const> = {}
   local length <const> = #array
+  if length == 0 then
+    return result
+  end
   amount = amount % length
   -- Don't bail out for zero amount, since we need to copy the array!
   while amount < 0 do -- fix the amount if negative
@@ -128,6 +131,9 @@ end
 
 local function rotate(array, amount)
   local length <const> = #array
+  if length == 0 then
+    return
+  end
   amount = amount % length
   if amount == 0 then
     return
