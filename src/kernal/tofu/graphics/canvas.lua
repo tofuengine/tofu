@@ -83,20 +83,22 @@ end
 -- result [...] When a function call is the last (or the only) argument to another call,
 -- all results from the first call go as arguments. >>
 function Canvas:write(x, y, font, text, h_align, v_align, scale_x, scale_y)
-  local width <const>, height <const> = font:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
+  if h_align or v_align then
+    local width <const>, height <const> = font:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
-  if h_align == "center" then
-    x = x - tonumber(width * 0.5)
-  elseif h_align == "right" then
-    x = x - width
-  end
-  if v_align == "middle" then
-    y = y - tonumber(height * 0.5)
-  elseif v_align == "bottom" then
-    y = y - height
+    if h_align == "center" then
+      x = x - tonumber(width * 0.5)
+    elseif h_align == "right" then
+      x = x - width
+    end
+    if v_align == "middle" then
+      y = y - tonumber(height * 0.5)
+    elseif v_align == "bottom" then
+      y = y - height
+    end
   end
 
-  -- Scaling is not the usual scenario, so be invert the checking order to
+  -- Scaling is not the usual scenario, so invert the checking order to
   -- avoid the extra checks when not needed (we will enter the first branch
   -- most of the times).
   if not scale_x then
