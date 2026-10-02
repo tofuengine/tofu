@@ -67,7 +67,8 @@ function Bus:emit(event, ...)
     return
   end
 
-  local callbacks <const> = {} -- Create a copy of the registered callbacks to avoid issues if the list is modified during iteration.
+  -- Create a copy of the registered callbacks to avoid issues if the list is modified during iteration.
+  local callbacks <const> = {}
   for index, cb in ipairs(registered) do
     callbacks[index] = cb
   end
