@@ -214,7 +214,7 @@ end
 local function new(length, value)
   local result <const> = {}
   for index = 1, length do
-    result[index] = value or index - 1
+    result[index] = value == nil and index - 1 or value
   end
   return result
 end
