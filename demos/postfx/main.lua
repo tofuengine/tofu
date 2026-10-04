@@ -76,7 +76,7 @@ end
 function Main:handle_input()
   if CONTROLLER:is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.sprites, Sprite.new(self.bank, #self.sprites, CANVAS, WIDTH, HEIGHT))
+      table.insert(self.sprites, Sprite.new(self.bank, #self.sprites, WIDTH, HEIGHT))
     end
   elseif CONTROLLER:is_pressed("left") then
     self.speed = self.speed * 0.5
