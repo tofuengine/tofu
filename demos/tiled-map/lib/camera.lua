@@ -125,14 +125,14 @@ function Camera:update(_)
   -- Override.
 end
 
-function Camera:pre_draw(_)
+function Camera:pre_draw(_, _)
   -- Override.
 end
 
-function Camera:draw(canvas)
+function Camera:draw(canvas, state)
   local scale = self.scale
 
-  canvas:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
+  state:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
 
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
@@ -141,7 +141,7 @@ function Camera:draw(canvas)
   end
 end
 
-function Camera:post_draw(_)
+function Camera:post_draw(_, _)
   -- Override.
 end
 

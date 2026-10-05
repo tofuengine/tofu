@@ -37,6 +37,7 @@ SOFTWARE.
 
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
+local Canvas = require("tofu.graphics.canvas")
 local Display = require("tofu.graphics.display")
 local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
@@ -47,6 +48,8 @@ local Map = require("lib/map")
 local PALETTE <const> = Palette.default("gameboy")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 local CAMERA_SPEED = 128.0

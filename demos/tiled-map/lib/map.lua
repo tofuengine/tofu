@@ -115,9 +115,9 @@ end
 function Map:draw(canvas, state)
   state:push()
   for _, camera in pairs(self.cameras) do
-    camera:pre_draw(canvas)
-    camera:draw(canvas)
-    camera:post_draw(canvas)
+    camera:pre_draw(canvas, state)
+    camera:draw(canvas, state)
+    camera:post_draw(canvas, state)
   end
   state:pop()
 end
