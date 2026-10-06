@@ -114,7 +114,7 @@ function Background:render(canvas, state)
   local wy = y - h
   local offset_x <const> = camera.x // 4
   state:push()
-  canvas:clipping(0, wy, width, h) -- Clip to limit the skyline "under" the road.
+  state:clipping(0, wy, width, h) -- Clip to limit the skyline "under" the road.
   for wx = 0, width, w do
     canvas:tile(wx, wy, self.skyline, 0, offset_x, 0)
   end
