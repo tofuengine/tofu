@@ -50,7 +50,6 @@ local PALETTE <const> = Palette.default("famicube")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
-local WIDTH, HEIGHT <const> = CANVAS:image():size()
 local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
@@ -180,7 +179,7 @@ function Main:render(_)
   state:push()
     state:bank(1)
     canvas:write(0, 0, FONT, string.format("%d FPS", System.fps()))
- state:pop()
+  state:pop()
 end
 
 return Main
