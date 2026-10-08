@@ -57,7 +57,7 @@ local CONTROLLER <const> = Controller.default()
 local CURSOR <const> = Cursor.default()
 
 local SAND <const> = PALETTE:match(255, 255, 0)
-local CURSOR <const> = PALETTE:match(255, 255, 255)
+local WATER <const> = PALETTE:match(255, 255, 255)
 
 -- TODO: this demo is incomplete! Finish it! :D
 
@@ -138,7 +138,7 @@ function Main:render(_)
     end)
 
   local cx, cy = CURSOR:position()
-  draw_cursor(canvas, cx, cy, 2, CURSOR)
+  draw_cursor(canvas, cx, cy, 2, WATER)
 
   state:push()
     state:bank(1)
