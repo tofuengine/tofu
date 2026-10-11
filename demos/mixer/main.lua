@@ -48,17 +48,16 @@ local PALETTE <const> = Palette.new({{ 0, 0, 0 }, { 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
-local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 local SOURCES <const> = {
   { name = "assets/flac/1ch-22050-16.flac", type = "sample" },
-  { name = "assets/flac/2ch-48000-16.flac", type = "music" },
-  { name = "assets/mods/c64_operationwolf.mod", type = "module" },
-  { name = "assets/mods/db_ab.xm", type = "module" },
-  { name = "assets/mods/last_ninja_3.it", type = "module" },
-  { name = "assets/mods/nightbeat-turrican_ii_theme.s3m", type = "module" },
-  { name = "assets/mods/turrican_iii.xm", type = "module" }
+  { name = "assets/mp3/2ch-48000-16.mp3", type = "music" },
+  { name = "assets/mod/c64_operationwolf.mod", type = "module" },
+  { name = "assets/mod/db_ab.xm", type = "module" },
+  { name = "assets/mod/last_ninja_3.it", type = "module" },
+  { name = "assets/mod/nightbeat-turrican_ii_theme.s3m", type = "module" },
+  { name = "assets/mod/turrican_iii.xm", type = "module" }
 }
 
 -- TODO: create a new mixer demo, with mouse input.
