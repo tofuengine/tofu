@@ -40,3 +40,11 @@
 
 #define DR_MP3_IMPLEMENTATION
 #include <dr_libs/dr_mp3.h>
+
+// This method is currently missing from the `drflac.h` library. We are implementing
+// is to wrap the access to the total file length in frames and avoid access
+// to the private field.
+drflac_uint64 drflac_get_pcm_frame_count(drflac *decoder)
+{
+    return decoder->totalPCMFrameCount;
+}

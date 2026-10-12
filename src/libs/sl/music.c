@@ -262,7 +262,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, const 
         goto error_free_decoder;
     }
 
-    music->length_in_frames = music->decoder->totalPCMFrameCount;
+    music->length_in_frames = drmp3_get_pcm_frame_count(music->decoder);
     if (music->length_in_frames == 0) {
         LOG_E("can't create music w/ zero length");
         goto error_deinitialize_decoder;

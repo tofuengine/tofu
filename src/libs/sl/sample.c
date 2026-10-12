@@ -217,7 +217,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, const
         goto error_exit;
     }
 
-    sample->length_in_frames = sample->decoder->totalPCMFrameCount;
+    sample->length_in_frames = drflac_get_pcm_frame_count(sample->decoder);
     if (sample->length_in_frames == 0) {
         LOG_E("can't create sample w/ zero length");
         goto error_close_decoder;

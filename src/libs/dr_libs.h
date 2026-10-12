@@ -42,4 +42,6 @@
 #include <dr_libs/dr_mp3.h>
 #include <miniaudio/miniaudio.h>
 
+extern drflac_uint64 drflac_get_pcm_frame_count(drflac *decoder);
+
 #endif  /* TOFU_LIBS_DR_LIBS_H */
