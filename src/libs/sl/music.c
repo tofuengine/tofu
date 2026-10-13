@@ -131,7 +131,8 @@ static inline bool _produce(Music_t *music)
     music->frames_completed += frames_produced;
 
     if (frames_produced < frames_to_produce && music->frames_completed < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
-        LOG_E("can't read %d bytes (%d read)", frames_to_produce, frames_produced);
+        LOG_E("can't read %d frames (%d read)", frames_to_produce, frames_produced);
+        LOG_E("completed %d frames out of %d", music->frames_completed, music->length_in_frames);
         return false;
     }
 
