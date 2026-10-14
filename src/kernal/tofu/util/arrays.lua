@@ -259,11 +259,16 @@ local function split(array, index)
   return left, right
 end
 
--- Naive implementation of insertion-sort which is stable and uber-efficient when the table is incrementally grown
--- and re-sorted every time (that is, only the last item is eventually moved to the correct place).
--- It's even faster than `table.sort()`.
+-- This is the optimized Cormen-Leiserson-Rivest's implementation of insertion-sort,
+-- which is first and foremost STABLE.
 --
--- Note that's not Cormen-Leiserson-Rivest's optimized version, since it won't work with Lua's `for ...`.
+-- It is also very efficient when the table is incrementally grown and re-sorted
+-- every ofter (that is, only the last item is eventually moved to the correct
+-- place) as it becomes `O(n)` in that case, which is the best we can get for a
+-- comparison-based sorting algorithm.
+--
+-- Note: Lua's `table.sort()` is more efficient on large random datasets *but*
+--       it's NOT STABLE (as it uses quick-sort).
 local function _lower_than(a, b)
   return a < b
 end
@@ -271,12 +276,13 @@ end
 local function sort_range(array, from, to, comparator)
   local lower_than <const> = comparator or _lower_than
   for i = from + 1, to do
-    for j = i, from + 1, -1 do
-      if not lower_than(array[j], array[j - 1]) then -- Preserve stability! Swap only if strictly lower-than!
-        break
-      end
-      array[j - 1], array[j] = array[j], array[j - 1] -- Swap adjacent slots.
+    local value <const> = array[i] -- We pick the current item and slide it down to the correct position, shifting the other items up.
+    local j = i - 1
+    while j >= from and lower_than(value, array[j]) do -- Preserve stability! Shift only if strictly lower-than!
+      array[j + 1] = array[j]
+      j = j - 1
     end
+    array[j + 1] = value
   end
 end
 
