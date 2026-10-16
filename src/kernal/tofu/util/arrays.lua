@@ -276,7 +276,8 @@ end
 local function sort_range(array, from, to, comparator)
   local lower_than <const> = comparator or _lower_than
   for i = from + 1, to do
-    local value <const> = array[i] -- We pick the current item and slide it down to the correct position, shifting the other items up.
+    -- Pick the current item and slide it down to the correct position, shifting the other items up.
+    local value <const> = array[i]
     local j = i - 1
     while j >= from and lower_than(value, array[j]) do -- Preserve stability! Shift only if strictly lower-than!
       array[j + 1] = array[j]
