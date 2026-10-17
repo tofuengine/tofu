@@ -211,7 +211,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
     float x0 = registers[GL_XFORM_REGISTER_X]; float y0 = registers[GL_XFORM_REGISTER_Y];
 
     int scan_line = -1; // Start at -1, since we pre-increment at the beginning of the loop.
-    for (int i = height; i; --i) {
+    for (int i = 0; i < height; ++i) {
         if (table) {
             scan_line += 1;
             if (scan_line == table->scan_line) {
@@ -250,8 +250,8 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
         float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
 #endif  /* !defined(_CLIP_OFFSET) */
 
-        for (int j = width; j; --j) {
-            _DEBUG_PIXEL(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+        for (int j = 0; j < width; ++j) {
+            _DEBUG_PIXEL(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
             int sx = IROUNDF(xp); // Preserve direction, for negative values!
             int sy = IROUNDF(yp);
 
