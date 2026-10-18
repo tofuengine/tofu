@@ -232,23 +232,23 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Context_t *context, GL_Poin
                 }
                 ++table;
             }
-#if defined(_DETACH_XFORM_TABLE)
+#if defined(TOFU_GRAPHICS_XFORM_DETACH_TABLE)
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
             }
-#endif  /* defined(_DETACH_XFORM_TABLE) */
+#endif  /* defined(TOFU_GRAPHICS_XFORM_DETACH_TABLE) */
         }
 
         const float xi = 0.0f - x0;
         const float yi = (float)i - y0;
 
-#if !defined(_CLIP_OFFSET)
+#if !defined(TOFU_GRAPHICS_XFORM_CLIP_OFFSET)
         float xp = (a * xi + b * yi) + x0 + h;
         float yp = (c * xi + d * yi) + y0 + v;
-#else   /* !defined(_CLIP_OFFSET) */
+#else   /* !defined(TOFU_GRAPHICS_XFORM_CLIP_OFFSET) */
         float xp = (a * xi + b * yi) + x0 + fmodf(h, sw); // Clip to avoid cancellation when H/V are large.
         float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
-#endif  /* !defined(_CLIP_OFFSET) */
+#endif  /* !defined(TOFU_GRAPHICS_XFORM_CLIP_OFFSET) */
 
         for (int j = 0; j < width; ++j) {
             _DEBUG_PIXEL(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);

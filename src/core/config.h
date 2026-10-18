@@ -444,6 +444,16 @@
 // could cause infinite wait-loops).
 #define TOFU_GRAPHICS_PROCESSOR_DEFENSIVE_CHECKS
 
+// When defined, the Mode-7 processor will internally detach the table when
+// the end of the HDMA table is reached. This will make the following scanline
+// processing a bit faster, since a faster check is performed.
+#undef  TOFU_GRAPHICS_XFORM_DETACH_TABLE
+
+// When defined, the Mode-7 processor will internally apply an offset to the
+// clipping rectangle, to avoid cancellation when H/V values are large. This
+// is typically not required, 'though.
+#undef  TOFU_GRAPHICS_XFORM_CLIP_OFFSET
+
 // ###################
 // ### Interpreter ###
 // ###################
