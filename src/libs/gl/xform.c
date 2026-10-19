@@ -53,6 +53,13 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 #define _DEBUG_PIXEL(_surface, _x, _y, _index) ((void)0)
 #endif  /* defined(TOFU_GRAPHICS_DEBUG_ENABLED) */
 
+static float _registers_identity[GL_XForm_Registers_t_CountOf] = {
+    0.0f, 0.0f, // No offset
+    1.0f, 0.0f, // Identity matrix.
+    1.0f, 0.0f,
+    0.0f, 0.0f, // No offset
+};
+
 GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
     GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
@@ -65,14 +72,10 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 
     *xform = (GL_XForm_t){
-            .registers = {
-                0.0f, 0.0f, // No offset
-                1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
-                0.0f, 0.0f, // No offset
-            },
-            .wrap = wrap,
-            .table = NULL
+            .wrap = wrap
         };
+
+    GL_xform_identity(xform);
 
     return xform;
 }
@@ -95,6 +98,11 @@ void GL_xform_destroy(GL_XForm_t *xform)
 void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap)
 {
     xform->wrap = wrap;
+}
+
+void GL_xform_identity(GL_XForm_t *xform)
+{
+    memcpy(xform->registers, _registers_identity, sizeof(_registers_identity));
 }
 
 void GL_xform_registers(GL_XForm_t *xform, const GL_XForm_State_Operation_t *operations, size_t count)
