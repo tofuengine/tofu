@@ -143,6 +143,19 @@ static int xform_offset_3onn_0(lua_State *L)
     return 0;
 }
 
+static int xform_matrix_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
+
+    GL_XForm_t *xform = self->xform;
+    GL_xform_identity(xform);
+
+    return 0;
+}
+
 static int xform_matrix_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -224,6 +237,7 @@ static int xform_matrix_7onnnnnn_0(lua_State *L)
 static int xform_matrix_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_BY_ARITY(xform_matrix_1o_0, 1)
         LUAX_OVERLOAD_BY_ARITY(xform_matrix_3onn_0, 3)
         LUAX_OVERLOAD_BY_ARITY(xform_matrix_5onnnn_0, 5)
         LUAX_OVERLOAD_BY_ARITY(xform_matrix_7onnnnnn_0, 7)
