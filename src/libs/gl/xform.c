@@ -56,7 +56,7 @@ static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 static float _registers_identity[GL_XForm_Registers_t_CountOf] = {
     0.0f, 0.0f, // No offset
     1.0f, 0.0f, // Identity matrix.
-    1.0f, 0.0f,
+    0.0f, 1.0f,
     0.0f, 0.0f, // No offset
 };
 
