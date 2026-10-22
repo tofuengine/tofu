@@ -123,6 +123,11 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
     }
 
+    if (!entries || count == 0) {
+        xform->table = NULL;
+        return;
+    }
+
     const GL_XForm_Table_Entry_t *entry = entries;
     for (size_t i = count; i; --i) {
         arrpush(xform->table, *(entry++));
