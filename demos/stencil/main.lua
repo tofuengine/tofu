@@ -38,6 +38,7 @@ SOFTWARE.
 local Class = require("tofu.core.class")
 local System = require("tofu.core.system")
 local Display = require("tofu.graphics.display")
+local Canvas = require("tofu.graphics.canvas")
 local Font = require("tofu.graphics.font")
 local Image = require("tofu.graphics.image")
 local Palette = require("tofu.graphics.palette")
@@ -46,6 +47,8 @@ local Controller = require("tofu.input.controller")
 local PALETTE <const> = Palette.default("6-bit-rgb")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
+local CANVAS <const> = Canvas.default()
+local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 local COMPARATORS <const> = {
