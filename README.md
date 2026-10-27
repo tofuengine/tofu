@@ -96,7 +96,7 @@ For the courious ones, these are the current statistics of the game-engine codeb
 Although I'm used to take pleasure in reinventing the wheel at every possible opportunity, Tofu Engine leverages some *awesome* libraries:
 
 * [2dengine/profile.lua](https://github.com/2dengine/profile.lua)
-* [cglm](https://github.com/recp/cglm) v0.9.6
+* [cglm](https://github.com/recp/cglm) v0.9.7
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
 * [dr_libs](https://github.com/mackron/dr_libs) v0.13.3, v0.7.4, v0.14.5
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) v1.0.1

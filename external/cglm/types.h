@@ -91,6 +91,25 @@ typedef CGLM_ALIGN_MAT    vec4  mat4[4];
 typedef vec2                    mat4x2[4];  /* [col (4), row (2)] */
 typedef vec3                    mat4x3[4];  /* [col (4), row (3)] */
 
+
+/*!
+ * if you have axis order like vec3 orderVec = [0, 1, 2] or [0, 2, 1]...
+ * vector then you can convert it to this enum by doing this:
+ * @code
+ * glm_euler_seq order;
+ * order = orderVec[0] | orderVec[1] << 2 | orderVec[2] << 4;
+ * @endcode
+ * you may need to explicit cast if required
+ */
+typedef enum glm_euler_seq {
+  GLM_EULER_XYZ = 0 << 0 | 1 << 2 | 2 << 4,
+  GLM_EULER_XZY = 0 << 0 | 2 << 2 | 1 << 4,
+  GLM_EULER_YZX = 1 << 0 | 2 << 2 | 0 << 4,
+  GLM_EULER_YXZ = 1 << 0 | 0 << 2 | 2 << 4,
+  GLM_EULER_ZXY = 2 << 0 | 0 << 2 | 1 << 4,
+  GLM_EULER_ZYX = 2 << 0 | 1 << 2 | 0 << 4
+} glm_euler_seq;
+
 /*
   Important: cglm stores quaternion as [x, y, z, w] in memory since v0.4.0 
   it was [w, x, y, z] before v0.4.0 ( v0.3.5 and earlier ). w is real part.
@@ -106,23 +125,35 @@ typedef vec3                    mat4x3[4];  /* [col (4), row (3)] */
 #define GLM_PI_4      0.785398163397448309615660845819875721  /* pi/4        */
 #define GLM_1_PI      0.318309886183790671537767526745028724  /* 1/pi        */
 #define GLM_2_PI      0.636619772367581343075535053490057448  /* 2/pi        */
+#define GLM_TAU       6.283185307179586476925286766559005768  /* tau         */
+#define GLM_TAU_2     GLM_PI                                  /* tau/2       */
+#define GLM_TAU_4     GLM_PI_2                                /* tau/4       */
+#define GLM_1_TAU     0.159154943091895335768883763372514362  /* 1/tau       */
+#define GLM_2_TAU     0.318309886183790671537767526745028724  /* 2/tau       */
 #define GLM_2_SQRTPI  1.12837916709551257389615890312154517   /* 2/sqrt(pi)  */
+#define GLM_SQRTTAU   2.506628274631000502415765284811045253  /* sqrt(tau)   */
 #define GLM_SQRT2     1.41421356237309504880168872420969808   /* sqrt(2)     */
 #define GLM_SQRT1_2   0.707106781186547524400844362104849039  /* 1/sqrt(2)   */
 
-#define GLM_Ef        ((float)GLM_E)
-#define GLM_LOG2Ef    ((float)GLM_LOG2E)
-#define GLM_LOG10Ef   ((float)GLM_LOG10E)
-#define GLM_LN2f      ((float)GLM_LN2)
-#define GLM_LN10f     ((float)GLM_LN10)
-#define GLM_PIf       ((float)GLM_PI)
-#define GLM_PI_2f     ((float)GLM_PI_2)
-#define GLM_PI_4f     ((float)GLM_PI_4)
-#define GLM_1_PIf     ((float)GLM_1_PI)
-#define GLM_2_PIf     ((float)GLM_2_PI)
-#define GLM_2_SQRTPIf ((float)GLM_2_SQRTPI)
-#define GLM_SQRT2f    ((float)GLM_SQRT2)
-#define GLM_SQRT1_2f  ((float)GLM_SQRT1_2)
+#define GLM_Ef         ((float)GLM_E)
+#define GLM_LOG2Ef     ((float)GLM_LOG2E)
+#define GLM_LOG10Ef    ((float)GLM_LOG10E)
+#define GLM_LN2f       ((float)GLM_LN2)
+#define GLM_LN10f      ((float)GLM_LN10)
+#define GLM_PIf        ((float)GLM_PI)
+#define GLM_PI_2f      ((float)GLM_PI_2)
+#define GLM_PI_4f      ((float)GLM_PI_4)
+#define GLM_1_PIf      ((float)GLM_1_PI)
+#define GLM_2_PIf      ((float)GLM_2_PI)
+#define GLM_TAUf       ((float)GLM_TAU)
+#define GLM_TAU_2f     ((float)GLM_TAU_2)
+#define GLM_TAU_4f     ((float)GLM_TAU_4)
+#define GLM_1_TAUf     ((float)GLM_1_TAU)
+#define GLM_2_TAUf     ((float)GLM_2_TAU)
+#define GLM_2_SQRTPIf  ((float)GLM_2_SQRTPI)
+#define GLM_2_SQRTTAUf ((float)GLM_SQRTTAU)
+#define GLM_SQRT2f     ((float)GLM_SQRT2)
+#define GLM_SQRT1_2f   ((float)GLM_SQRT1_2)
 
 /* DEPRECATED! use GLM_PI and friends */
 #define CGLM_PI       GLM_PIf

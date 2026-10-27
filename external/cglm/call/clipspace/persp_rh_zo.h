@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include "../../cglm.h"
+#include "../../common.h"
 
 CGLM_EXPORT
 void
@@ -27,6 +27,10 @@ glmc_perspective_rh_zo(float fovy,
                        float nearVal,
                        float farVal,
                        mat4 dest);
+                       
+CGLM_EXPORT
+void
+glmc_perspective_resize_rh_zo(float aspect, mat4 proj);
 
 CGLM_EXPORT
 void

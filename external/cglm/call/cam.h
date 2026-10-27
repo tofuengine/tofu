@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include "../cglm.h"
+#include "../common.h"
 
 CGLM_EXPORT
 void
@@ -53,11 +53,19 @@ glmc_perspective(float fovy, float aspect, float nearZ, float farZ, mat4 dest);
 
 CGLM_EXPORT
 void
+glmc_perspective_infinite(float fovy, float aspect, float nearZ, mat4 dest);
+
+CGLM_EXPORT
+void
 glmc_persp_move_far(mat4 proj, float deltaFar);
 
 CGLM_EXPORT
 void
 glmc_perspective_default(float aspect, mat4 dest);
+
+CGLM_EXPORT
+void
+glmc_perspective_default_infinite(float aspect, mat4 dest);
 
 CGLM_EXPORT
 void
