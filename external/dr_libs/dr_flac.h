@@ -4865,9 +4865,13 @@ static drflac_bool32 drflac__decode_samples_with_residual(drflac_bs* bs, drflac_
 
     /*
     From the FLAC spec:
+
       The Rice partition order in a Rice-coded residual section must be less than or equal to 8.
+
+    Technically the Rice partition order can be up to 15 because it's stored in 4 bits. dr_flac is
+    supporting the full range up to 15.
     */
-    if (partitionOrder > 8) {
+    if ((blockSize & ((1U << partitionOrder) - 1)) != 0) {
         return DRFLAC_FALSE;
     }
 
@@ -4956,14 +4960,18 @@ static drflac_bool32 drflac__read_and_seek_residual(drflac_bs* bs, drflac_uint32
 
     /*
     From the FLAC spec:
+
       The Rice partition order in a Rice-coded residual section must be less than or equal to 8.
+
+    Technically the Rice partition order can be up to 15 because it's stored in 4 bits. dr_flac is
+    supporting the full range up to 15.
     */
-    if (partitionOrder > 8) {
+    if ((blockSize & ((1U << partitionOrder) - 1)) != 0) {
         return DRFLAC_FALSE;
     }
 
     /* Validation check. */
-    if ((blockSize / (1 << partitionOrder)) <= order) {
+    if ((blockSize / (1 << partitionOrder)) < order) {
         return DRFLAC_FALSE;
     }
 
@@ -5850,8 +5858,8 @@ static drflac_bool32 drflac__seek_to_pcm_frame__brute_force(drflac* pFlac, drfla
                 isMidFrame = DRFLAC_FALSE;
             }
 
-            /* If we are seeking to the end of the file and we've just hit it, we're done. */
-            if (pcmFrameIndex == pFlac->totalPCMFrameCount && runningPCMFrameCount == pFlac->totalPCMFrameCount) {
+            /* The target can be a frame boundary, including EOF when the total frame count is unknown. */
+            if (runningPCMFrameCount == pcmFrameIndex) {
                 return DRFLAC_TRUE;
             }
         }
@@ -5995,9 +6003,16 @@ static drflac_bool32 drflac__seek_to_pcm_frame__binary_search_internal(drflac* p
     drflac_uint64 closestSeekOffsetBeforeTargetPCMFrame = byteRangeLo;
     drflac_uint32 seekForwardThreshold = (pFlac->maxBlockSizeInPCMFrames != 0) ? pFlac->maxBlockSizeInPCMFrames*2 : 4096;
 
-    targetByte = byteRangeLo + (drflac_uint64)(((drflac_int64)((pcmFrameIndex - pFlac->currentPCMFrame) * pFlac->channels * pFlac->bitsPerSample)/8.0f) * DRFLAC_BINARY_SEARCH_APPROX_COMPRESSION_RATIO);
-    if (targetByte > byteRangeHi) {
+    if (byteRangeLo > byteRangeHi || pFlac->currentPCMFrame > pcmFrameIndex) {
+        return DRFLAC_FALSE;
+    }
+
+    /* Clamp the estimated offset before adding the lower bound to avoid wrapping the byte position. */
+    targetByte = (drflac_uint64)(((drflac_int64)((pcmFrameIndex - pFlac->currentPCMFrame) * pFlac->channels * pFlac->bitsPerSample)/8.0f) * DRFLAC_BINARY_SEARCH_APPROX_COMPRESSION_RATIO);
+    if (targetByte > byteRangeHi - byteRangeLo) {
         targetByte = byteRangeHi;
+    } else {
+        targetByte += byteRangeLo;
     }
 
     for (;;) {
@@ -6181,6 +6196,10 @@ static drflac_bool32 drflac__seek_to_pcm_frame__seek_table(drflac* pFlac, drflac
         return DRFLAC_FALSE;
     }
 
+    if (pFlac->pSeekpoints[iClosestSeekpoint].flacFrameOffset > (drflac_uint64)-1 - pFlac->firstFLACFramePosInBytes) {
+        return DRFLAC_FALSE;
+    }
+
 #if !defined(DR_FLAC_NO_CRC)
     /* At this point we should know the closest seek point. We can use a binary search for this. We need to know the total sample count for this. */
     if (pFlac->totalPCMFrameCount > 0) {
@@ -6200,19 +6219,34 @@ static drflac_bool32 drflac__seek_to_pcm_frame__seek_table(drflac* pFlac, drflac
         if (iClosestSeekpoint < pFlac->seekpointCount-1) {
             drflac_uint32 iNextSeekpoint = iClosestSeekpoint + 1;
 
-            /* Basic validation on the seekpoints to ensure they're usable. */
-            if (pFlac->pSeekpoints[iClosestSeekpoint].flacFrameOffset >= pFlac->pSeekpoints[iNextSeekpoint].flacFrameOffset || pFlac->pSeekpoints[iNextSeekpoint].pcmFrameCount == 0) {
-                return DRFLAC_FALSE;    /* The next seekpoint doesn't look right. The seek table cannot be trusted from here. Abort. */
-            }
-
             if (pFlac->pSeekpoints[iNextSeekpoint].firstPCMFrame != (((drflac_uint64)0xFFFFFFFF << 32) | 0xFFFFFFFF)) { /* Make sure it's not a placeholder seekpoint. */
+                /* Basic validation on the seekpoints to ensure they're usable. */
+                if (pFlac->pSeekpoints[iClosestSeekpoint].flacFrameOffset >= pFlac->pSeekpoints[iNextSeekpoint].flacFrameOffset || pFlac->pSeekpoints[iNextSeekpoint].pcmFrameCount == 0) {
+                    return DRFLAC_FALSE;    /* The next seekpoint doesn't look right. The seek table cannot be trusted from here. Abort. */
+                }
+
+                if (pFlac->pSeekpoints[iNextSeekpoint].flacFrameOffset > (drflac_uint64)-1 - pFlac->firstFLACFramePosInBytes) {
+                    return DRFLAC_FALSE;
+                }
+
                 byteRangeHi = pFlac->firstFLACFramePosInBytes + pFlac->pSeekpoints[iNextSeekpoint].flacFrameOffset - 1; /* byteRangeHi must be zero based. */
             }
         }
 
+        if (byteRangeLo > byteRangeHi) {
+            return DRFLAC_FALSE;
+        }
+
         if (drflac__seek_to_byte(&pFlac->bs, pFlac->firstFLACFramePosInBytes + pFlac->pSeekpoints[iClosestSeekpoint].flacFrameOffset)) {
+            /* The cached samples no longer describe the frame at this byte position. */
+            DRFLAC_ZERO_MEMORY(&pFlac->currentFLACFrame, sizeof(pFlac->currentFLACFrame));
+
             if (drflac__read_next_flac_frame_header(&pFlac->bs, pFlac->bitsPerSample, &pFlac->currentFLACFrame.header)) {
                 drflac__get_pcm_frame_range_of_current_flac_frame(pFlac, &pFlac->currentPCMFrame, NULL);
+
+                if (pFlac->currentPCMFrame > pcmFrameIndex) {
+                    return DRFLAC_FALSE;    /* The seekpoint does not precede the target as expected. */
+                }
 
                 if (drflac__seek_to_pcm_frame__binary_search_internal(pFlac, pcmFrameIndex, byteRangeLo, byteRangeHi)) {
                     return DRFLAC_TRUE;
@@ -6311,8 +6345,8 @@ static drflac_bool32 drflac__seek_to_pcm_frame__seek_table(drflac* pFlac, drflac
                 isMidFrame = DRFLAC_FALSE;
             }
 
-            /* If we are seeking to the end of the file and we've just hit it, we're done. */
-            if (pcmFrameIndex == pFlac->totalPCMFrameCount && runningPCMFrameCount == pFlac->totalPCMFrameCount) {
+            /* The target can be a frame boundary, including EOF when the total frame count is unknown. */
+            if (runningPCMFrameCount == pcmFrameIndex) {
                 return DRFLAC_TRUE;
             }
         }
@@ -7680,8 +7714,9 @@ static drflac_bool32 drflac_ogg__seek_to_pcm_frame(drflac* pFlac, drflac_uint64 
     drflac_oggbs* oggbs = (drflac_oggbs*)pFlac->_oggbs;
     drflac_uint64 originalBytePos;
     drflac_uint64 runningGranulePosition;
-    drflac_uint64 runningFrameBytePos;
-    drflac_uint64 runningPCMFrameCount;
+    drflac_uint64 runningFrameBytePos = 0;
+    drflac_uint64 runningPCMFrameCount = 0;
+    drflac_bool32 hasFramePage = DRFLAC_FALSE;
 
     DRFLAC_ASSERT(oggbs != NULL);
 
@@ -7700,14 +7735,9 @@ static drflac_bool32 drflac_ogg__seek_to_pcm_frame(drflac* pFlac, drflac_uint64 
             return DRFLAC_FALSE;   /* Never did find that sample... */
         }
 
-        runningFrameBytePos = oggbs->currentBytePos - drflac_ogg__get_page_header_size(&oggbs->currentPageHeader) - oggbs->pageDataSize;
-        if (oggbs->currentPageHeader.granulePosition >= pcmFrameIndex) {
-            break; /* The sample is somewhere in the previous page. */
-        }
-
         /*
-        At this point we know the sample is not in the previous page. It could possibly be in this page. For simplicity we
-        disregard any pages that do not begin a fresh packet.
+        Keep a page where decoding can start. The page containing the target might begin with a continued packet,
+        in which case we must start at an earlier page so the complete FLAC frame is available.
         */
         if ((oggbs->currentPageHeader.headerType & 0x01) == 0) {    /* <-- Is it a fresh page? */
             if (oggbs->currentPageHeader.segmentTable[0] >= 2) {
@@ -7716,11 +7746,20 @@ static drflac_bool32 drflac_ogg__seek_to_pcm_frame(drflac* pFlac, drflac_uint64 
                 firstBytesInPage[1] = oggbs->pageData[1];
 
                 if ((firstBytesInPage[0] == 0xFF) && (firstBytesInPage[1] & 0xFC) == 0xF8) {    /* <-- Does the page begin with a frame's sync code? */
-                    runningGranulePosition = oggbs->currentPageHeader.granulePosition;
+                    runningFrameBytePos = oggbs->currentBytePos - drflac_ogg__get_page_header_size(&oggbs->currentPageHeader) - oggbs->pageDataSize;
+                    runningPCMFrameCount = runningGranulePosition;
+                    hasFramePage = DRFLAC_TRUE;
                 }
-
-                continue;
             }
+        }
+
+        /* A page with no completed packets has no granule position. */
+        if (oggbs->currentPageHeader.granulePosition != (drflac_uint64)-1) {
+            if (hasFramePage && oggbs->currentPageHeader.granulePosition >= pcmFrameIndex) {
+                break;
+            }
+
+            runningGranulePosition = oggbs->currentPageHeader.granulePosition;
         }
     }
 
@@ -7741,7 +7780,6 @@ static drflac_bool32 drflac_ogg__seek_to_pcm_frame(drflac* pFlac, drflac_uint64 
     At this point we'll be sitting on the first byte of the frame header of the first frame in the page. We just keep
     looping over these frames until we find the one containing the sample we're after.
     */
-    runningPCMFrameCount = runningGranulePosition;
     for (;;) {
         /*
         There are two ways to find the sample and seek past irrelevant frames:
@@ -7776,8 +7814,8 @@ static drflac_bool32 drflac_ogg__seek_to_pcm_frame(drflac* pFlac, drflac_uint64 
 
         pcmFrameCountInThisFrame = (lastPCMFrameInFLACFrame - firstPCMFrameInFLACFrame) + 1;
 
-        /* If we are seeking to the end of the file and we've just hit it, we're done. */
-        if (pcmFrameIndex == pFlac->totalPCMFrameCount && (runningPCMFrameCount + pcmFrameCountInThisFrame) == pFlac->totalPCMFrameCount) {
+        /* The target can be a frame boundary, including EOF when the total frame count is unknown. */
+        if ((runningPCMFrameCount + pcmFrameCountInThisFrame) == pcmFrameIndex) {
             drflac_result result = drflac__decode_flac_frame(pFlac);
             if (result == DRFLAC_SUCCESS) {
                 pFlac->currentPCMFrame = pcmFrameIndex;
@@ -11942,8 +11980,8 @@ DRFLAC_API drflac_bool32 drflac_seek_to_pcm_frame(drflac* pFlac, drflac_uint64 p
         drflac_bool32 wasSuccessful = DRFLAC_FALSE;
         drflac_uint64 originalPCMFrame = pFlac->currentPCMFrame;
 
-        /* Clamp the sample to the end. */
-        if (pcmFrameIndex > pFlac->totalPCMFrameCount) {
+        /* Clamp the sample to the end only when the length is known. */
+        if (pFlac->totalPCMFrameCount != 0 && pcmFrameIndex > pFlac->totalPCMFrameCount) {
             pcmFrameIndex = pFlac->totalPCMFrameCount;
         }
 
@@ -11951,19 +11989,19 @@ DRFLAC_API drflac_bool32 drflac_seek_to_pcm_frame(drflac* pFlac, drflac_uint64 p
         if (drflac__is_current_flac_frame_valid(pFlac)) {
             if (pcmFrameIndex > pFlac->currentPCMFrame) {
                 /* Forward. */
-                drflac_uint32 offset = (drflac_uint32)(pcmFrameIndex - pFlac->currentPCMFrame);
+                drflac_uint64 offset = pcmFrameIndex - pFlac->currentPCMFrame;
                 if (pFlac->currentFLACFrame.pcmFramesRemaining > offset) {
-                    pFlac->currentFLACFrame.pcmFramesRemaining -= offset;
+                    pFlac->currentFLACFrame.pcmFramesRemaining -= (drflac_uint32)offset;
                     pFlac->currentPCMFrame = pcmFrameIndex;
                     return DRFLAC_TRUE;
                 }
             } else {
                 /* Backward. */
-                drflac_uint32 offsetAbs = (drflac_uint32)(pFlac->currentPCMFrame - pcmFrameIndex);
+                drflac_uint64 offsetAbs = pFlac->currentPCMFrame - pcmFrameIndex;
                 drflac_uint32 currentFLACFramePCMFrameCount = pFlac->currentFLACFrame.header.blockSizeInPCMFrames;
                 drflac_uint32 currentFLACFramePCMFramesConsumed = currentFLACFramePCMFrameCount - pFlac->currentFLACFrame.pcmFramesRemaining;
                 if (currentFLACFramePCMFramesConsumed > offsetAbs) {
-                    pFlac->currentFLACFrame.pcmFramesRemaining += offsetAbs;
+                    pFlac->currentFLACFrame.pcmFramesRemaining += (drflac_uint32)offsetAbs;
                     pFlac->currentPCMFrame = pcmFrameIndex;
                     return DRFLAC_TRUE;
                 }
@@ -12003,10 +12041,11 @@ DRFLAC_API drflac_bool32 drflac_seek_to_pcm_frame(drflac* pFlac, drflac_uint64 p
         if (wasSuccessful) {
             pFlac->currentPCMFrame = pcmFrameIndex;
         } else {
-            /* Seek failed. Try putting the decoder back to it's original state. */
-            if (drflac_seek_to_pcm_frame(pFlac, originalPCMFrame) == DRFLAC_FALSE) {
+            /* Reset the stream before recovery because a failed seek may have moved it without updating currentPCMFrame. */
+            drflac__seek_to_first_frame(pFlac);
+            if (originalPCMFrame != 0 && drflac_seek_to_pcm_frame(pFlac, originalPCMFrame) == DRFLAC_FALSE) {
                 /* Failed to seek back to the original PCM frame. Fall back to 0. */
-                drflac_seek_to_pcm_frame(pFlac, 0);
+                drflac__seek_to_first_frame(pFlac);
             }
         }
 
