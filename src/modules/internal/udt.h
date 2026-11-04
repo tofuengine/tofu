@@ -82,6 +82,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_CANVAS,
+    OBJECT_TYPE_DISPLAY,
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_IMAGE,
     OBJECT_TYPE_PALETTE,
@@ -148,6 +149,10 @@ typedef struct Palette_Object_s {
 typedef struct Program_Object_s {
     GL_Program_t *program;
 } Program_Object_t;
+
+typedef struct Display_Object_s { // FIXME: rename `Display_Object_s` to `Screen_Object_s`? Or `Display_t` to `Video_t` (in accordance with `Audio_t` and `Input_t`)?
+    Display_t *display;
+} Display_Object_t;
 
 typedef struct Canvas_Object_s {
     GL_Context_t *context;

@@ -27,28 +27,35 @@
 #include "internal/udt.h"
 
 #include <core/config.h>
+#define _LOG_TAG "display"
+#include <libs/log.h>
 #include <libs/stb.h>
 #include <systems/display.h>
 
-static int display_size_0_2nn(lua_State *L);
-static int display_palette_2oN_0(lua_State *L);
-static int display_offset_2NN_0(lua_State *L);
+static int display_new_0_1o(lua_State *L);
+static int display_gc_1o_0(lua_State *L);
+static int display_size_1o_2nn(lua_State *L);
+static int display_palette_3ooN_0(lua_State *L);
+static int display_offset_3oNN_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
-static int display_program_1O_0(lua_State *L);
-static int display_reset_0_0(lua_State *L);
+static int display_program_2oO_0(lua_State *L);
+static int display_reset_1o_0(lua_State *L);
 
 int display_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
+            { "new", display_new_0_1o },
+            { "__gc", display_gc_1o_0 },
             // -- static getters/setters --
-            { "size", display_size_0_2nn },
+            { "size", display_size_1o_2nn },
             // -- static mutators --
-            { "palette", display_palette_2oN_0 },
-            { "offset", display_offset_2NN_0 },
+            { "palette", display_palette_3ooN_0 },
+            { "offset", display_offset_3oNN_0 },
             { "shift", display_shift_v_0 },
-            { "program", display_program_1O_0 },
-            { "reset", display_reset_0_0 },
+            { "program", display_program_2oO_0 },
+            { "reset", display_reset_1o_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -71,58 +78,95 @@ int display_loader(lua_State *L)
         });
 }
 
-static int display_size_0_2nn(lua_State *L)
+static int display_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Display_t *display = (const Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
+    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
+    if (!display) {
+        return luaL_error(L, "can't create display object: no display available");
+    }
 
+    Display_Object_t *self = (Display_Object_t *)udt_newobject(L, sizeof(Display_Object_t), &(Display_Object_t){
+            .display = display
+        }, OBJECT_TYPE_DISPLAY);
+
+    LOG_D("display %p allocated", self);
+
+    return 1;
+}
+
+static int display_gc_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+
+    LOG_D("display %p finalized", self);
+
+    return 0;
+}
+
+static int display_size_1o_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+
+    const Display_t *display = self->display;
     GL_Size_t size = Display_get_virtual_size(display);
+
     lua_pushinteger(L, (lua_Integer)size.width);
     lua_pushinteger(L, (lua_Integer)size.height);
 
     return 2;
 }
 
-static int display_palette_2oN_0(lua_State *L)
+static int display_palette_3ooN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
-    size_t bank = LUAX_OPTIONAL_UNSIGNED(L, 2, GL_PALETTE_DEFAULT_BANK);
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_PALETTE);
+    size_t bank = LUAX_OPTIONAL_UNSIGNED(L, 3, GL_PALETTE_DEFAULT_BANK);
 
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
+    Display_t *display = self->display;
     Display_set_palette(display, palette->palette, bank);
 
     return 0;
 }
 
-static int display_offset_2NN_0(lua_State *L)
+static int display_offset_3oNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int x = LUAX_OPTIONAL_INTEGER(L, 1, 0);
-    int y = LUAX_OPTIONAL_INTEGER(L, 2, 0);
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+    int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
+    int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
 
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
+    Display_t *display = self->display;
     Display_set_offset(display, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
 
-static int display_shift_1T_0(lua_State *L)
+static int display_shift_2oT_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    int shift_table = LUAX_OPTIONAL_TABLE(L, 1, -1);
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+    int shift_table = LUAX_OPTIONAL_TABLE(L, 2, -1);
 
     GL_Pixel_t *from = NULL;
     GL_Pixel_t *to = NULL;
@@ -140,8 +184,7 @@ static int display_shift_1T_0(lua_State *L)
         }
     }
 
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
+    Display_t *display = self->display;
     Display_set_shifting(display, from, to, count);
 
     arrfree(from);
@@ -150,17 +193,18 @@ static int display_shift_1T_0(lua_State *L)
     return 0;
 }
 
-static int display_shift_2nn_0(lua_State *L)
+static int display_shift_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 1);
-    GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_UNSIGNED(L, 2);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_UNSIGNED(L, 3);
 
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
+    Display_t *display = self->display;
     Display_set_shifting(display, &from, &to, 1);
 
     return 0;
@@ -169,21 +213,22 @@ static int display_shift_2nn_0(lua_State *L)
 static int display_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(display_shift_1T_0, 0)
-        LUAX_OVERLOAD_BY_ARITY(display_shift_1T_0, 1)
-        LUAX_OVERLOAD_BY_ARITY(display_shift_2nn_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_2oT_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_2oT_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(display_shift_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
-static int display_program_1O_0(lua_State *L)
+static int display_program_2oO_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 1, OBJECT_TYPE_PROGRAM, NULL);
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
+    const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 2, OBJECT_TYPE_PROGRAM, NULL);
 
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
+    Display_t *display = self->display;
     if (program) {
         Display_set_program(display, program->program);
     } else {
@@ -193,13 +238,14 @@ static int display_program_1O_0(lua_State *L)
     return 0;
 }
 
-static int display_reset_0_0(lua_State *L)
+static int display_reset_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
+    Display_Object_t *self = (Display_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_DISPLAY);
 
-    Display_t *display = (Display_t *)udt_get_userdata(L, USERDATA_DISPLAY);
-
+    Display_t *display = self->display;
     Display_reset(display);
 
     return 0;
