@@ -42,6 +42,7 @@ local Display <const> = require("tofu.graphics.display")
 local Palette <const> = require("tofu.graphics.palette")
 local Font <const> = require("tofu.graphics.font")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
@@ -74,7 +75,7 @@ function Panic:__ctor()
 end
 
 function Panic:init()
-  Display.palette(PALETTE)
+  DISPLAY:palette(PALETTE)
 end
 
 function Panic:deinit()

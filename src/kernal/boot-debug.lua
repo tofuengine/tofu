@@ -44,6 +44,7 @@ local Mixer <const> = require("tofu.sound.mixer")
 
 local INITIAL_STATE <const> = "splash"
 
+local DISPLAY <const> = Display.default()
 local CANVAS <const> = Canvas.default()
 local STATE <const> = CANVAS:state()
 
@@ -165,7 +166,7 @@ end
 function Boot:reinit_system()
   Mixer.stop_all() -- Stop all sounds sources.
 
-  Display.reset()
+  DISPLAY:reset()
 
   STATE:pop() -- Discard all saved states, if any.
   STATE:reset() -- Reset default canvas from the game state.
