@@ -240,6 +240,8 @@ same name won't share the same guard definition.
 We also (might) define the `FILE_H_INCLUDED` macro as it is useful anytime we need to test if a core header file is included
 (e.g. `config.h` or `platform.h`).
 
+> This is the only case in which we allow for the `#ifndef` directive to be used without the `defined()` operator. Every other case should use it for consistency and clarity.
+
 ## Pre-increments/post-increments
 
 The pre-/post-increment operators are permitted and suggested, as long as the are used for some real shortcut/benefit in the code without adding unnecessary complexity or (indirectly) obfuscating the code.
@@ -449,6 +451,28 @@ We have extended the support for this kind of "split implementation", however, a
 
 Another commodity for the hybrid module design is the *post-load initialization method*. Imaging you are creating an object with some userdata/metatable pair. Since the Lua module part is loaded and interpreted *before* the userdata and metatable are created, you won't be able to reference anything natively defined (for example, to create a method alias). The solution for that is the `Module.__init()` method, which is called (if present) at the end of the module loading process to enable some Lua-side initialization.
 
+### Return Values
+
+In the C implementation of a getter method (or, more in general, when a method returns a value) the return values are pushed onto the stack in the last statements of the function, just before the `return` statement.
+
+The statements that pushes the values to the stack are grouped together and separated from the rest of the code with a blank line. This is to highlight the return values and make them more visible.
+
+Example:
+
+```c
+static int _module_get_value(lua_State *L)
+{
+    // ... omissis ...
+
+    const object_t *object = get_object_from_anywhere();
+
+    lua_pushinteger(L, (lua_Integer)object->id);
+    lua_pushinteger(L, (lua_Integer)object->count);
+
+    return 2;
+}
+```
+
 ## Lua Code
 
 ## Coding Style
@@ -485,6 +509,7 @@ local Vector2D = require("tofu.util.vector2d")
 local Boid = require("lib.boid")
 local Rules = require("lib.rules")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -496,7 +521,7 @@ local STATE <const> = CANVAS:state()
 
 ### Palette Setup
 
-As a common guideline, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display.palette()` method.
+As a common guideline, the initial palette is declared as `<const>` immutable variable at the beginning of the main script file. Then, it's initially setup/configured in the `Main:init()` method, by calling the `Display:palette()` method.
 
 > Achtung! Don't use the main class constructor to setup the initial palette. The constructor of the class should be used only to initialize the game internal structure/objects. Of course, 'though, it will work flawlessly anyway. :)
 
@@ -507,8 +532,9 @@ Following the snippet above, a potential initialization of a game can be the fol
 
 ```lua
 function Main:init()
-  Display.palette(PALETTE, 0)
-  Display.palette(PALETTE_FONT, 1)
+  local display <const> = Display.default()
+  display:palette(PALETTE, 0)
+  display:palette(PALETTE_FONT, 1)
 end
 ```
 
