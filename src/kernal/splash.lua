@@ -41,6 +41,7 @@ local Canvas <const> = require("tofu.graphics.canvas")
 local Display <const> = require("tofu.graphics.display")
 local Palette <const> = require("tofu.graphics.palette")
 
+local DISPLAY <const> = Display.default()
 local CANVAS <const> = Canvas.default()
 local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local PALETTE <const> = Palette.default("pico-8")
@@ -61,7 +62,7 @@ function Splash:__ctor()
 end
 
 function Splash:init()
-  Display.palette(PALETTE)
+  DISPLAY:palette(PALETTE)
 end
 
 function Splash:deinit()
