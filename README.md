@@ -109,6 +109,8 @@ Although I'm used to take pleasure in reinventing the wheel at every possible op
 * [spleen](https://github.com/fcambus/spleen) v1.9.3
 * [Stefan Gustavson's noise library](https://github.com/stegu/perlin-noise.git)
 * [stb](https://github.com/nothings/stb) revision w/ date `20240213`
+* [stb](https://github.com/nothings/stb) revision w/ date `20240213`
+* [libfix32](https://github.com/MarcoLizza/libfix32) v0.3.0
 
 ## Inspirations
 
