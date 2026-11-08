@@ -46,6 +46,7 @@ local Controller = require("tofu.input.controller")
 
 local Sprite = require("lib/sprite")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -66,8 +67,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, 0)
-  Display.palette(PALETTE_FONT, 1)
+  DISPLAY:palette(PALETTE, 0)
+  DISPLAY:palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()

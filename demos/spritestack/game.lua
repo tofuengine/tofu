@@ -48,6 +48,7 @@ local Controller = require("tofu.input.controller")
 
 local Sprite = require("lib/sprite")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("pico-8-ext")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -80,8 +81,8 @@ function Game:__ctor()
 end
 
 function Game:init()
-  Display.palette(PALETTE)
-  Display.palette(PALETTE_FONT, 1)
+  DISPLAY:palette(PALETTE)
+  DISPLAY:palette(PALETTE_FONT, 1)
 end
 
 function Game:deinit()

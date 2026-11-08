@@ -48,6 +48,7 @@ local Arrays = require("tofu.util.arrays")
 
 require("preload")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("pico-8")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
@@ -55,7 +56,6 @@ local WIDTH <const>, HEIGHT <const> = CANVAS:image():size()
 local STATE <const> = CANVAS:state()
 local FONT <const> = Font.default()
 local CONTROLLER <const> = Controller.default()
---local DISPLAY <const> = Display.default()
 --local AUDIO <const> = Audio.default()
 
 local AMOUNT <const> = 16
@@ -86,7 +86,7 @@ function Main:init()
   -- transparency) to use index #1, to avoid continuous shifting.
   self.bank:image():remap({ [0] = 1 })
 
-  Display.palette(PALETTE_FONT, 1) -- Bank 1 is reserved for the font
+  DISPLAY:palette(PALETTE_FONT, 1) -- Bank 1 is reserved for the font
   self:_change_palette(PALETTE)
 end
 
@@ -113,7 +113,7 @@ function Main:_change_palette(palette)
   end
   self.shifting = shifting
 
-  Display.palette(palette)
+  DISPLAY:palette(palette)
 end
 
 function Main:handle_input()

@@ -50,6 +50,7 @@ local Vector2D = require("tofu.util.vector2d")
 
 local Animation = require("lib/animation")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -139,8 +140,8 @@ end
 function Main:init()
   -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
   local palette <const> = Palette.new(_extra_half_brite(PALETTE, { 31, 127, 63 }, 0.5))
-  Display.palette(palette, 0)
-  Display.palette(PALETTE_FONT, 1)
+  DISPLAY:palette(palette, 0)
+  DISPLAY:palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -216,10 +217,10 @@ function Main:update(delta_time)
     self.shake_time = self.shake_time * 0.5
     if self.shake_time < 0.01 then
       self.shake_time = 0
-      Display.offset(0, 0)
+      DISPLAY:offset(0, 0)
     else
       local t = System.time()
-      Display.offset(math.sin(t * 77 + 31) * 3, math.sin(t * 123 + 43) * 3)
+      DISPLAY:offset(math.sin(t * 77 + 31) * 3, math.sin(t * 123 + 43) * 3)
     end
   end
 
@@ -286,7 +287,7 @@ function Main:update(delta_time)
     local d = - 1 - (math.sin(t * 2.5 + i * 0.25) * math.cos(t * 3.5 + i * 0.75) + 1)
     program:modulo(width * math.tointeger(d))
   end
-  Display.program(program)
+  DISPLAY:program(program)
 end
 
 function Main:render(_)
@@ -328,9 +329,9 @@ function Main:render(_)
   local amount = height - mid
   for i = 0, amount - 1 do
       canvas:process(function(_, _, _, to)
---        local ar, ag, ab = Display.get(from)
+--        local ar, ag, ab = DISPLAY:get(from)
         local ar, ag, ab = 31, 127, 63
-        local br, bg, bb = Display.get(to)
+        local br, bg, bb = DISPLAY:get(to)
         local r, g, b = (ar + br) * 0.5, (ag + bg) * 0.5, (ab + bb) * 0.5
         return self.palette:match(r, g, b)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)

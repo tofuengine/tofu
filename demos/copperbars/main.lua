@@ -43,6 +43,7 @@ local Font = require("tofu.graphics.font")
 local Palette = require("tofu.graphics.palette")
 local Program = require("tofu.graphics.program")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("famicube")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -82,8 +83,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, 0)
-  Display.palette(PALETTE_FONT, 1)
+  DISPLAY:palette(PALETTE, 0)
+  DISPLAY:palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()
@@ -94,7 +95,7 @@ function Main:update(_)
   local y = math.sin(t) * HEIGHT * 0.25 + HEIGHT * 0.5
   self.program:wait(0, y - SHADES, 2)
 
-  Display.program(self.program)
+  DISPLAY:program(self.program)
 end
 
 function Main:render(_)

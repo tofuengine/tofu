@@ -51,7 +51,8 @@ local MESSAGE = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
-  Display.palette(Palette.default("pico-8"))
+  local display <const> = Display.default()
+  display:palette(Palette.default("pico-8"))
 
   -- Load a custom 8x8 font from file.
   -- Please note that, as default, palette colour `0` is set as transparent. This

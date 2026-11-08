@@ -45,6 +45,7 @@ local Palette = require("tofu.graphics.palette")
 local Controller = require("tofu.input.controller")
 local Grid2D = require("tofu.util.grid2d")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.new(128)
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -73,8 +74,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, 0)
-  Display.palette(PALETTE_FONT, 1)
+  DISPLAY:palette(PALETTE, 0)
+  DISPLAY:palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()

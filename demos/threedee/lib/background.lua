@@ -42,6 +42,8 @@ local Program = require("tofu.graphics.program")
 
 local config = require("config")
 
+local DISPLAY <const> = Display.default()
+
 local RUMBLE_LENGTH <const> = config.scene.ground.rumble_length
 
 local SKY <const> = {
@@ -94,7 +96,7 @@ end
 function Background:update(_)
   local program = self.program
   _compile_program(program, self.camera, self.index)
-  Display.program(program)
+  DISPLAY:program(program)
 end
 
 function Background:render(canvas, state)

@@ -44,6 +44,7 @@ local Palette = require("tofu.graphics.palette")
 local Controller = require("tofu.input.controller")
 local Source = require("tofu.sound.source")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.new({{ 0, 0, 0 }, { 0, 255, 0 }})
 local FONT <const> = Font.default()
 local CANVAS <const> = Canvas.default()
@@ -86,7 +87,7 @@ function Main:init()
   -- that we can have a black background! :D
   FONT:remap({ [0] = 1 })
 
-  Display.palette(PALETTE)
+  DISPLAY:palette(PALETTE)
 end
 
 function Main:deinit()

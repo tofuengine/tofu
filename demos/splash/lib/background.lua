@@ -43,6 +43,8 @@ local Program <const> = require("tofu.graphics.program")
 
 local Background <const> = Class.define()
 
+local DISPLAY <const> = Display.default()
+
 -- We use the last palette color conveniently to create a rasterbar-like
 -- gradient effect.
 local BACKGROUND_INDEX <const> = 127
@@ -66,7 +68,7 @@ function Background:__ctor(_, height, palette, pool)
         })
 --      program:wait(0, height - (quarter_height // 2) - 1)
 --      program:modulo(-width * 4)
-      Display.program(program)
+      DISPLAY:program(program)
     end)
 end
 

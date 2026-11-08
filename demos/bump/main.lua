@@ -46,6 +46,7 @@ local Controller = require("tofu.input.controller")
 
 local bump = require("lib/bump")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("famicube")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.default()
@@ -88,8 +89,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, 0) -- Bank #0 is reserved for the sprites
-  Display.palette(PALETTE_FONT, 1) -- Bank #1 is reserved for the font
+  DISPLAY:palette(PALETTE, 0) -- Bank #0 is reserved for the sprites
+  DISPLAY:palette(PALETTE_FONT, 1) -- Bank #1 is reserved for the font
 end
 
 function Main:deinit()

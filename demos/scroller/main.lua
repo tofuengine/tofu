@@ -48,6 +48,7 @@ local SPEED_IN_PIXELS_PER_SECOND <const> = -16.0
 local FONT_HEIGHT <const> = 8
 local FONT_WIDTH <const> = 8
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("famicube")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local FONT <const> = Font.from_image("assets/images/font-8x8.img", FONT_WIDTH, FONT_HEIGHT)
@@ -106,7 +107,7 @@ function Main:__ctor()
     local v = math.tointeger(255.0 * ratio)
     program:color(FONT_INDEX, v, v, v)
   end
-  Display.program(program)
+  DISPLAY:program(program)
 
   self.offset = HEIGHT
   self.current = 1
@@ -114,8 +115,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, 0)
-  Display.palette(PALETTE_FONT, 1)
+  DISPLAY:palette(PALETTE, 0)
+  DISPLAY:palette(PALETTE_FONT, 1)
 end
 
 function Main:deinit()

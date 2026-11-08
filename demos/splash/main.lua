@@ -47,6 +47,7 @@ local Logo <const> = require("lib/logo")
 local Stars <const> = require("lib/stars")
 local Wave <const> = require("lib/wave")
 
+local DISPLAY <const> = Display.default()
 local PALETTE <const> = Palette.default("nes")
 local PALETTE_FONT <const> = Palette.new({{ 0, 255, 0 }})
 local CANVAS <const> = Canvas.default()
@@ -69,8 +70,8 @@ function Main:__ctor()
 end
 
 function Main:init()
-  Display.palette(PALETTE, Display.PALETTE_BANK_0)
-  Display.palette(PALETTE_FONT, Display.PALETTE_BANK_1)
+  DISPLAY:palette(PALETTE, Display.PALETTE_BANK_0)
+  DISPLAY:palette(PALETTE_FONT, Display.PALETTE_BANK_1)
 
   self.music:looped(true)
   self.music:play()
