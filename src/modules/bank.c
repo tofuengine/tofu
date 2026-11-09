@@ -176,6 +176,7 @@ static int bank_size_4onNN_2nn(lua_State *L)
 
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cell = cell_id == GL_CELL_NIL ? sheet->cells : &sheet->cells[cell_id]; // If `GL_CELL_NIL` pick the first one.
+
     lua_pushinteger(L, (lua_Integer)((float)cell->width * fabsf(scale_x)));
     lua_pushinteger(L, (lua_Integer)((float)cell->height * fabsf(scale_y)));
 

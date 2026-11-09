@@ -301,6 +301,7 @@ static int math_finvsqrt_1n_1n(lua_State *L)
     float x = LUAX_NUMBER(L, 1);
 
     const float y = _Q_rsqrt(x);
+
     lua_pushnumber(L, (lua_Number)y);
 
     return 1;

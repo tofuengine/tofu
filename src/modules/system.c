@@ -176,6 +176,7 @@ static int system_time_1S_1n(lua_State *L)
         case 'm': { time = (float)state->time / 60.0f; } break;
         case 's': { time = (float)state->time; } break;
     }
+
     lua_pushnumber(L, (lua_Number)time);
 
     return 1;
@@ -209,6 +210,7 @@ static int system_uptime_0_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
+
     lua_pushnumber(L, (lua_Number)state->time);
 
     return 1;
@@ -223,6 +225,7 @@ static int system_fps_0_1n(lua_State *L)
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
+
     lua_pushinteger(L, (lua_Integer)stats->fps);
 
     return 1;
@@ -238,6 +241,7 @@ static int system_stats_0_4nnnn(lua_State *L)
 
     const Environment_State_t *state = Environment_get_state(environment);
     const Environment_Stats_t *stats = &state->stats;
+
     lua_pushnumber(L, (lua_Number)stats->times[0]);
     lua_pushnumber(L, (lua_Number)stats->times[1]);
     lua_pushnumber(L, (lua_Number)stats->times[2]);
@@ -272,6 +276,7 @@ static int system_heap_1S_2nn(lua_State *L)
         case 'k': { vm_usage = (float)stats->vm_memory_usage / 1024.0f; } break;
         case 'b': { vm_usage = (float)stats->vm_memory_usage; } break;
     }
+
     lua_pushnumber(L, (lua_Number)usage);
     lua_pushnumber(L, (lua_Number)vm_usage);
 
@@ -287,6 +292,7 @@ static int system_active_0_1b(lua_State *L)
     const Environment_t *environment = (const Environment_t *)udt_get_userdata(L, USERDATA_ENVIRONMENT);
 
     const Environment_State_t *state = Environment_get_state(environment);
+
     lua_pushboolean(L, state->is_active);
 
     return 1;

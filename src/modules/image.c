@@ -258,6 +258,7 @@ static int image_size_1o_2nn(lua_State *L)
     const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
 
     const GL_Surface_t *surface = self->surface;
+
     lua_pushinteger(L, (lua_Integer)surface->width);
     lua_pushinteger(L, (lua_Integer)surface->height);
 
@@ -272,6 +273,7 @@ static int image_center_1o_2nn(lua_State *L)
     const Image_Object_t *self = (const Image_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_IMAGE);
 
     const GL_Surface_t *surface = self->surface;
+
     lua_pushinteger(L, (lua_Integer)(surface->width / 2));
     lua_pushinteger(L, (lua_Integer)(surface->height / 2));
 

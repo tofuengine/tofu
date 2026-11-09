@@ -165,6 +165,7 @@ static int noise_seed_1o_1n(lua_State *L)
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
     const float seed = self->seed;
+
     lua_pushnumber(L, (lua_Number)seed);
 
     return 1;
@@ -200,6 +201,7 @@ static int noise_frequency_1o_1n(lua_State *L)
     const Noise_Object_t *self = (const Noise_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_NOISE);
 
     const float frequency = self->frequency;
+
     lua_pushnumber(L, (lua_Number)frequency);
 
     return 1;

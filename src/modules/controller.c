@@ -216,6 +216,7 @@ static int controller_stick_2oe_4nnnn(lua_State *L)
     Input_Controller_Sticks_t id = (Input_Controller_Sticks_t)LUAX_ENUM(L, 2, _sticks);
 
     const Input_Controller_Stick_t stick = Input_controller_get_stick(self->controller, id);
+
     lua_pushnumber(L, (lua_Number)stick.x);
     lua_pushnumber(L, (lua_Number)stick.y);
     lua_pushnumber(L, (lua_Number)stick.angle);
@@ -232,6 +233,7 @@ static int controller_triggers_1o_2nn(lua_State *L)
     const Controller_Object_t *self = (const Controller_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CONTROLLER);
 
     const Input_Controller_Triggers_t triggers = Input_controller_get_triggers(self->controller);
+
     lua_pushnumber(L, (lua_Number)triggers.left);
     lua_pushnumber(L, (lua_Number)triggers.right);
 

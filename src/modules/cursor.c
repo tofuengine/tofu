@@ -117,6 +117,7 @@ static int cursor_position_1o_2nn(lua_State *L)
     const Cursor_Object_t *self = (const Cursor_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CURSOR);
 
     const Input_Position_t position = Input_cursor_get_position(self->cursor);
+
     lua_pushinteger(L, (lua_Integer)position.x);
     lua_pushinteger(L, (lua_Integer)position.y);
 
