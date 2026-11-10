@@ -54,7 +54,7 @@ local STATE <const> = CANVAS:state()
 local CONTROLLER <const> = Controller.default()
 
 local function square(canvas, x, y, s, r, g, b)
---  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
+--  local index = PALETTE:match(r * 255.0, g * 255.0, b * 255.0)
   local index = math.floor(math.min(1.0, r * g + b) * 15)
   canvas:square("fill", x, y, s, index)
 end
