@@ -1,4 +1,4 @@
-// stb_connected_components - v0.96 - public domain connected components on grids
+// stb_connected_components - v0.97 - public domain connected components on grids
 //                                                 http://github.com/nothings/stb
 //
 // Finds connected components on 2D grids for testing reachability between
@@ -37,6 +37,7 @@
 //
 // CHANGELOG
 //
+//    0.97  (2026-11-08)  Fix bug for width != height
 //    0.96  (2019-03-04)  Fix warnings
 //    0.95  (2016-10-16)  Bugfix if multiple clumps in one cluster connect to same clump in another
 //    0.94  (2016-04-17)  Bugfix & optimize worst case (checkerboard & random)
@@ -927,7 +928,7 @@ static void stbcc__build_clumps_for_cluster(stbcc_grid *g, int cx, int cy)
       }
    }
 
-   for (i=1; i < STBCC__CLUSTER_SIZE_Y-1; ++i) {
+   for (i=1; i < STBCC__CLUSTER_SIZE_X-1; ++i) {
       j = 0;
       if (STBCC__MAP_OPEN(g, x+i, y+j)) {
          stbcc__tinypoint p = stbcc__incluster_find(&cbi, i,j);

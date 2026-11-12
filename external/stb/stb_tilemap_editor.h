@@ -1,4 +1,4 @@
-// stb_tilemap_editor.h - v0.42 - Sean Barrett - http://nothings.org/stb
+// stb_tilemap_editor.h - v0.43 - Sean Barrett - http://nothings.org/stb
 // placed in the public domain - not copyrighted - first released 2014-09
 //
 // Embeddable tilemap editor for C/C++
@@ -3520,7 +3520,7 @@ static void stbte__tile_in_palette(stbte_tilemap *tm, int x, int y, int slot)
    switch (stbte__ui.event) {
       case STBTE__paint:
          stbte__draw_rect(x,y,x+tm->palette_spacing_x-1,y+tm->palette_spacing_x-1, STBTE_COLOR_TILEPALETTE_BACKGROUND);
-         STBTE_DRAW_TILE(x,y,id, slot == tm->cur_tile,0);
+         STBTE_DRAW_TILE(x,y,t->id, slot == tm->cur_tile,0);
          if (slot == tm->cur_tile)
             stbte__draw_frame_delayed(x-1,y-1,x+tm->palette_spacing_x,y+tm->palette_spacing_y, STBTE_COLOR_TILEPALETTE_OUTLINE);
          break;
@@ -4113,7 +4113,26 @@ void stbte_tick(stbte_tilemap *tm, float dt)
 
 void stbte_mouse_sdl(stbte_tilemap *tm, const void *sdl_event, float xs, float ys, int xo, int yo)
 {
-#ifdef _SDL_H
+#if defined(SDL_h_) /* SDL3 */
+   SDL_Event *event = (SDL_Event *) sdl_event;
+   SDL_Keymod km = SDL_GetModState();
+   int shift = (km & SDL_KMOD_LCTRL) || (km & SDL_KMOD_RCTRL);
+   int scrollkey = 0 != SDL_GetKeyboardState(NULL)[SDL_SCANCODE_SPACE];
+   switch (event->type) {
+      case SDL_EVENT_MOUSE_MOTION:
+         stbte_mouse_move(tm, (int) (xs*event->motion.x+xo), (int) (ys*event->motion.y+yo), shift, scrollkey);
+         break;
+      case SDL_EVENT_MOUSE_BUTTON_UP:
+         stbte_mouse_button(tm, (int) (xs*event->button.x+xo), (int) (ys*event->button.y+yo), event->button.button != SDL_BUTTON_LEFT, 0, shift, scrollkey);
+         break;
+      case SDL_EVENT_MOUSE_BUTTON_DOWN:
+         stbte_mouse_button(tm, (int) (xs*event->button.x+xo), (int) (ys*event->button.y+yo), event->button.button != SDL_BUTTON_LEFT, 1, shift, scrollkey);
+         break;
+      case SDL_EVENT_MOUSE_WHEEL:
+         stbte_mouse_wheel(tm, stbte__ui.mx, stbte__ui.my, event->wheel.y);
+         break;
+   }
+#elif defined(_SDL_H) /* SDL1 */ || defined(_SDL_h_) /* SDL2 */
    SDL_Event *event = (SDL_Event *) sdl_event;
    SDL_Keymod km = SDL_GetModState();
    int shift = (km & KMOD_LCTRL) || (km & KMOD_RCTRL);

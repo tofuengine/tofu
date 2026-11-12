@@ -1,6 +1,13 @@
 /* stbhw - v0.7 -  http://nothings.org/gamedev/herringbone
    Herringbone Wang Tile Generator - Sean Barrett 2014 - public domain
 
+=========================================
+
+NO SECURITY GUARANTEE -- DO NOT USE THIS ON UNTRUSTED IMAGE FILES
+
+This library does no checking of anything, meaning an attacker
+could use it for arbitrary purposes. It's meant to be used offline.
+
 == LICENSE ==============================
 
 This software is dual-licensed to the public domain and under the following
@@ -365,6 +372,8 @@ STBHW_EXTERN const char *stbhw_get_last_error(void)
 //  using the same code, they are locked in sync and we don't
 //  need to try to do more sophisticated parsing of edge color
 //  markup or something.
+
+struct stbhw__process;
 
 typedef void stbhw__process_rect(struct stbhw__process *p, int xpos, int ypos,
                                  int a, int b, int c, int d, int e, int f);
@@ -876,6 +885,8 @@ STBHW_EXTERN int stbhw_build_tileset_from_image(stbhw_tileset *ts, unsigned char
    unsigned char header[9];
    stbhw_config c = { 0 };
    stbhw__process p = { 0 };
+   if (w < 3)
+      return 0;
 
    // extract binary header
 

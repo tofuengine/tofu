@@ -1,4 +1,4 @@
-// stb_easy_font.h - v1.1 - bitmap font for 3D rendering - public domain
+// stb_easy_font.h - v1.2 - bitmap font for 3D rendering - public domain
 // Sean Barrett, Feb 2015
 //
 //    Easy-to-deploy,
@@ -71,6 +71,7 @@
 //
 // VERSION HISTORY
 //
+//   (2026-11-08)  1.2   fix incorrect initializer
 //   (2020-02-02)  1.1   make everything static so can compile it in more than one src file
 //   (2017-01-15)  1.0   space character takes same space as numbers; fix bad spacing of 'f'
 //   (2016-01-22)  0.7   width() supports multiline text; add height()
@@ -202,7 +203,7 @@ static int stb_easy_font_print(float x, float y, char *text, unsigned char color
     float start_x = x;
     int offset = 0;
 
-    stb_easy_font_color c = { 255,255,255,255 }; // use structure copying to avoid needing depending on memcpy()
+    stb_easy_font_color c = { { 255,255,255,255 } }; // use structure copying to avoid needing depending on memcpy()
     if (color) { c.c[0] = color[0]; c.c[1] = color[1]; c.c[2] = color[2]; c.c[3] = color[3]; }
 
     while (*text && offset < vbuf_size) {
