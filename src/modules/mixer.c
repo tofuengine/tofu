@@ -44,26 +44,31 @@
 #include <libs/log.h>
 #include <systems/audio.h>
 
+static int mixer_new_0_1o(lua_State *L);
+static int mixer_gc_1o_0(lua_State *L);
 static int mixer_volume_v_v(lua_State *L);
 static int mixer_gain_v_v(lua_State *L);
 static int mixer_mix_v_v(lua_State *L);
-static int mixer_pan_2nn_0(lua_State *L);
-static int mixer_balance_2nn_0(lua_State *L);
-static int mixer_stop_all_0_0(lua_State *L);
+static int mixer_pan_3onn_0(lua_State *L);
+static int mixer_balance_3onn_0(lua_State *L);
+static int mixer_stop_all_1o_0(lua_State *L);
 
 int mixer_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
+            // -- constructors/destructors --
+            { "new", mixer_new_0_1o },
+            { "__gc", mixer_gc_1o_0 },
             // -- getters/setters --
             { "volume", mixer_volume_v_v },
             { "gain", mixer_gain_v_v },
             { "mix", mixer_mix_v_v },
             // -- mutators --
-            { "pan", mixer_pan_2nn_0 },
-            { "balance", mixer_balance_2nn_0 },
+            { "pan", mixer_pan_3onn_0 },
+            { "balance", mixer_balance_3onn_0 },
             // -- operations --
-            { "stop_all", mixer_stop_all_0_0 },
+            { "stop_all", mixer_stop_all_1o_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -72,26 +77,61 @@ int mixer_loader(lua_State *L)
         });
 }
 
-static int mixer_volume_0_1n(lua_State *L)
+static int mixer_new_0_1o(lua_State *L) // TODO: find a way to "hide" the mixer `new` constructor, so that the user can't create a new mixer object (since there is only one mixer per audio device).
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Audio_t *audio = (const Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    if (!audio) {
+        return luaL_error(L, "can't create mixer object: no audio available");
+    }
+
+    Mixer_Object_t *self = (Mixer_Object_t *)udt_newobject(L, sizeof(Mixer_Object_t), &(Mixer_Object_t){
+            .audio = audio
+        }, OBJECT_TYPE_MIXER);
+
+    LOG_D("mixer %p allocated", self);
+
+    return 1;
+}
+
+static int mixer_gc_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+
+    LOG_D("mixer %p finalized", self);
+
+    return 0;
+}
+
+static int mixer_volume_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+
+    const Audio_t *audio = self->audio;
 
     lua_pushnumber(L, (lua_Number)Audio_get_volume(audio));
 
     return 1;
 }
 
-static int mixer_volume_1n_0(lua_State *L)
+static int mixer_volume_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    float volume = LUAX_NUMBER(L, 1);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    float volume = LUAX_NUMBER(L, 2);
 
-    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Audio_t *audio = self->audio;
 
     Audio_set_volume(audio, volume);
 
@@ -101,35 +141,39 @@ static int mixer_volume_1n_0(lua_State *L)
 static int mixer_volume_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(mixer_volume_0_1n, 0)
-        LUAX_OVERLOAD_BY_ARITY(mixer_volume_1n_0, 1)
+        LUAX_OVERLOAD_BY_ARITY(mixer_volume_1o_1n, 1)
+        LUAX_OVERLOAD_BY_ARITY(mixer_volume_2on_0, 2)
     LUAX_OVERLOAD_END
 }
 
-static int mixer_gain_1n_1n(lua_State *L)
+static int mixer_gain_2on_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
 
-    const Audio_t *audio = (const Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    const Audio_t *audio = self->audio;
 
     lua_pushnumber(L, (lua_Number)Audio_get_gain(audio, group_id));
 
     return 1;
 }
 
-static int mixer_gain_2nn_0(lua_State *L)
+static int mixer_gain_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
-    float gain = LUAX_NUMBER(L, 2);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
+    float gain = LUAX_NUMBER(L, 3);
 
-    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Audio_t *audio = self->audio;
 
     Audio_set_gain(audio, group_id, gain);
     LOG_D("group #%d gain is %.f", group_id, gain);
@@ -140,19 +184,21 @@ static int mixer_gain_2nn_0(lua_State *L)
 static int mixer_gain_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(mixer_gain_1n_1n, 1)
-        LUAX_OVERLOAD_BY_ARITY(mixer_gain_2nn_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(mixer_gain_2on_1n, 2)
+        LUAX_OVERLOAD_BY_ARITY(mixer_gain_3onn_0, 3)
     LUAX_OVERLOAD_END
 }
 
-static int mixer_mix_1n_4nnnn(lua_State *L)
+static int mixer_mix_2on_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
 
-    const Audio_t *audio = (const Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    const Audio_t *audio = self->audio;
 
     SL_Mix_t mix = Audio_get_mix(audio, group_id);
 
@@ -164,22 +210,24 @@ static int mixer_mix_1n_4nnnn(lua_State *L)
     return 4;
 }
 
-static int mixer_mix_5nnnnn_0(lua_State *L)
+static int mixer_mix_6onnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
-    float left_to_left = LUAX_NUMBER(L, 2);
-    float left_to_right = LUAX_NUMBER(L, 3);
-    float right_to_left = LUAX_NUMBER(L, 4);
-    float right_to_right = LUAX_NUMBER(L, 5);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
+    float left_to_left = LUAX_NUMBER(L, 3);
+    float left_to_right = LUAX_NUMBER(L, 4);
+    float right_to_left = LUAX_NUMBER(L, 5);
+    float right_to_right = LUAX_NUMBER(L, 6);
 
-    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Audio_t *audio = self->audio;
 
     Audio_set_mix(audio, group_id, (SL_Mix_t){
             .left_to_left = left_to_left,
@@ -195,21 +243,23 @@ static int mixer_mix_5nnnnn_0(lua_State *L)
 static int mixer_mix_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_BY_ARITY(mixer_mix_1n_4nnnn, 1)
-        LUAX_OVERLOAD_BY_ARITY(mixer_mix_5nnnnn_0, 5)
+        LUAX_OVERLOAD_BY_ARITY(mixer_mix_2on_4nnnn, 2)
+        LUAX_OVERLOAD_BY_ARITY(mixer_mix_6onnnnn_0, 6)
     LUAX_OVERLOAD_END
 }
 
-static int mixer_pan_2nn_0(lua_State *L)
+static int mixer_pan_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
-    float pan = LUAX_NUMBER(L, 2);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
+    float pan = LUAX_NUMBER(L, 3);
 
-    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Audio_t *audio = self->audio;
 
     Audio_set_pan(audio, group_id, pan);
     LOG_D("group #%d pan is %.f", group_id, pan);
@@ -217,16 +267,18 @@ static int mixer_pan_2nn_0(lua_State *L)
     return 0;
 }
 
-static int mixer_balance_2nn_0(lua_State *L)
+static int mixer_balance_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group_id = LUAX_UNSIGNED(L, 1);
-    float balance = LUAX_NUMBER(L, 2);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    size_t group_id = LUAX_UNSIGNED(L, 2);
+    float balance = LUAX_NUMBER(L, 3);
 
-    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Audio_t *audio = self->audio;
 
     Audio_set_balance(audio, group_id, balance);
     LOG_D("group #%d balance is %.f", group_id, balance);
@@ -234,12 +286,14 @@ static int mixer_balance_2nn_0(lua_State *L)
     return 0;
 }
 
-static int mixer_stop_all_0_0(lua_State *L)
+static int mixer_stop_all_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
 
-    Audio_t *audio = (Audio_t *)udt_get_userdata(L, USERDATA_AUDIO);
+    Mixer_Object_t *self = (Mixer_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_MIXER);
+    Audio_t *audio = self->audio;
 
     Audio_untrack_all(audio);
 

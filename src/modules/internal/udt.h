@@ -45,6 +45,7 @@
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
+#include <systems/audio.h>
 #include <systems/display.h>
 #include <systems/input.h>
 
@@ -101,6 +102,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_BODY,
     OBJECT_TYPE_WORLD,
     // Sound
+    OBJECT_TYPE_MIXER,
     OBJECT_TYPE_SOURCE,
     // Util
     OBJECT_TYPE_GRID,
@@ -297,6 +299,10 @@ typedef struct World_Object_s {
     cpSpace *space;
     World_Object_Entry_t *entries;
 } World_Object_t;
+
+typedef struct Mixer_Object_s {
+    Audio_t *audio;
+} Mixer_Object_t;
 
 typedef struct Source_Object_s {
     FS_Handle_t *handle;
