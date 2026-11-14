@@ -54,7 +54,7 @@ static int image_size_1o_2nn(lua_State *L);
 static int image_center_1o_2nn(lua_State *L);
 static int image_peek_3onn_1n(lua_State *L);
 static int image_poke_4onnn_0(lua_State *L);
-static int image_clear_2oN_0(lua_State *L);
+static int image_clear_2on_0(lua_State *L);
 static int image_remap_2ot_0(lua_State *L);
 //static int image_grab(lua_State *L);
 
@@ -71,7 +71,7 @@ int image_loader(lua_State *L)
             { "peek", image_peek_3onn_1n },
             // -- mutators --
             { "poke", image_poke_4onnn_0 },
-            { "clear", image_clear_2oN_0 },
+            { "clear", image_clear_2on_0 },
             // -- operations --
             { "remap", image_remap_2ot_0 },
             { NULL, NULL }
@@ -316,7 +316,7 @@ static int image_poke_4onnn_0(lua_State *L)
     return 0;
 }
 
-static int image_clear_2oN_0(lua_State *L)
+static int image_clear_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

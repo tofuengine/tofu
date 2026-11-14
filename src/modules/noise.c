@@ -43,28 +43,28 @@
 #define _LOG_TAG "noise"
 #include <libs/log.h>
 
-static int noise_new_1eNN_1o(lua_State *L);
+static int noise_new_3eNN_1o(lua_State *L);
 static int noise_gc_1o_0(lua_State *L);
 static int noise_type_v_v(lua_State *L);
 static int noise_seed_v_v(lua_State *L);
 static int noise_frequency_v_v(lua_State *L);
-static int noise_generate_3onNN_1n(lua_State *L);
+static int noise_generate_4onNN_1n(lua_State *L);
 
 int noise_loader(lua_State *L)
 {
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
-            { "new", noise_new_1eNN_1o },
+            { "new", noise_new_3eNN_1o },
             { "__gc", noise_gc_1o_0 },
             // -- metamethods --
-            { "__call", noise_generate_3onNN_1n }, // Call metamethod, mapped to `generate(...)`.
+            { "__call", noise_generate_4onNN_1n }, // Call metamethod, mapped to `generate(...)`.
             // -- getters/setters --
             { "type", noise_type_v_v },
             { "seed", noise_seed_v_v },
             { "frequency", noise_frequency_v_v },
             // -- operations --
-            { "generate", noise_generate_3onNN_1n },
+            { "generate", noise_generate_4onNN_1n },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -85,7 +85,7 @@ static const Noise_Function_t _functions[Noise_Types_t_CountOf] = {
     noise_cellular
 };
 
-static int noise_new_1eNN_1o(lua_State *L)
+static int noise_new_3eNN_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
@@ -229,7 +229,7 @@ static int noise_frequency_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int noise_generate_3onNN_1n(lua_State *L)
+static int noise_generate_4onNN_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

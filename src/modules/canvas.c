@@ -51,7 +51,7 @@ static int canvas_gc_1o_0(lua_State *L);
 static int canvas_image_1o_1o(lua_State *L);
 static int canvas_clear_2on_0(lua_State *L);
 static int canvas_erase_3onB_0(lua_State *L);
-static int canvas_fill_4onnnB_0(lua_State *L);
+static int canvas_fill_5onnnB_0(lua_State *L);
 static int canvas_point_4onnn_0(lua_State *L);
 static int canvas_hline_5onnnn_0(lua_State *L);
 static int canvas_vline_5onnnn_0(lua_State *L);
@@ -87,7 +87,7 @@ int canvas_loader(lua_State *L)
             // -- operations --
             { "clear", canvas_clear_2on_0 }, // canvas only
             { "erase", canvas_erase_3onB_0 },
-            { "fill", canvas_fill_4onnnB_0 },
+            { "fill", canvas_fill_5onnnB_0 },
             { "point", canvas_point_4onnn_0 }, // primitives
             { "hline", canvas_hline_5onnnn_0 },
             { "vline", canvas_vline_5onnnn_0 },
@@ -205,7 +205,7 @@ static int canvas_erase_3onB_0(lua_State *L)
     return 0;
 }
 
-static int canvas_fill_4onnnB_0(lua_State *L)
+static int canvas_fill_5onnnB_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

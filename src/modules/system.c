@@ -47,7 +47,7 @@ static int system_date_2SS_1s(lua_State *L);
 static int system_uptime_0_1n(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-static int system_stats_0_4nnnn(lua_State *L);
+static int system_stats_0_5nnnnn(lua_State *L);
 #endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
 static int system_heap_1S_2nn(lua_State *L);
@@ -73,7 +73,7 @@ int system_loader(lua_State *L)
             { "uptime", system_uptime_0_1n },
             { "fps", system_fps_0_1n },
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-            { "stats", system_stats_0_4nnnn },
+            { "stats", system_stats_0_5nnnnn },
 #endif  /* defined(TOFU_ENGINE_PERFORMANCE_STATISTICS) */
 #if defined(TOFU_ENGINE_HEAP_STATISTICS)
             { "heap", system_heap_1S_2nn },
@@ -232,7 +232,7 @@ static int system_fps_0_1n(lua_State *L)
 }
 
 #if defined(TOFU_ENGINE_PERFORMANCE_STATISTICS)
-static int system_stats_0_4nnnn(lua_State *L)
+static int system_stats_0_5nnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END

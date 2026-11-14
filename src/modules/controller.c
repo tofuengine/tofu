@@ -45,7 +45,7 @@
 #include <libs/log.h>
 #include <systems/input.h>
 
-static int controller_from_id_1n_1o(lua_State *L);
+static int controller_from_id_1N_1o(lua_State *L);
 static int controller_gc_1o_0(lua_State *L);
 static int controller_is_available_1o_1b(lua_State *L);
 static int controller_is_down_2oe_1b(lua_State *L);
@@ -61,7 +61,7 @@ int controller_loader(lua_State *L)
     return udt_newmodule(L,
         (const struct luaL_Reg[]){
             // -- constructors/destructors --
-            { "from_id", controller_from_id_1n_1o },
+            { "from_id", controller_from_id_1N_1o },
             { "__gc", controller_gc_1o_0 },
             // -- accessors --
             { "is_available", controller_is_available_1o_1b },
@@ -79,7 +79,7 @@ int controller_loader(lua_State *L)
         });
 }
 
-static int controller_from_id_1n_1o(lua_State *L)
+static int controller_from_id_1N_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)

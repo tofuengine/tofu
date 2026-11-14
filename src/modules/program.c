@@ -57,7 +57,7 @@ static int program_offset_3onN_0(lua_State *L);
 static int program_color_6onnnnN_0(lua_State *L);
 static int program_shift_v_0(lua_State *L);
 static int program_gradient_4ontN_0(lua_State *L);
-static int program_palette_5onntN_0(lua_State *L);
+static int program_palette_5otnnN_0(lua_State *L);
 // TODO: add program `merging`
 // TODO: add some helper functions to populate the program.
 
@@ -80,7 +80,7 @@ int program_loader(lua_State *L)
             { "shift", program_shift_v_0 },
             // -- operations --
             { "gradient", program_gradient_4ontN_0 },
-            { "palette", program_palette_5onntN_0 },
+            { "palette", program_palette_5otnnN_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -376,7 +376,7 @@ static int program_gradient_4ontN_0(lua_State *L)
     return 0;
 }
 
-static int program_palette_5onntN_0(lua_State *L)
+static int program_palette_5otnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

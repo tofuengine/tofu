@@ -53,7 +53,7 @@ static int palette_peek_2on_3nnn(lua_State *L);
 static int palette_poke_5onnnn_0(lua_State *L);
 static int palette_lerp_5onnnN_0(lua_State *L);
 static int palette_merge_6ononnB_0(lua_State *L);
-static int palette_resize_2on(lua_State *L);
+static int palette_resize_2on_0(lua_State *L);
 static int palette_match_4onnn_1n(lua_State *L);
 static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
 
@@ -72,7 +72,7 @@ int palette_loader(lua_State *L)
             { "poke", palette_poke_5onnnn_0 },
             { "lerp", palette_lerp_5onnnN_0 },
             { "merge", palette_merge_6ononnB_0 },
-            { "resize", palette_resize_2on },
+            { "resize", palette_resize_2on_0 },
             // -- operations --
             { "match", palette_match_4onnn_1n },
             // -- static operations --
@@ -196,7 +196,7 @@ static int palette_new_1o_1o(lua_State *L)
     return 1;
 }
 
-static int palette_new_3n_1o(lua_State *L)
+static int palette_new_3nnn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -240,7 +240,7 @@ static int palette_new_v_1o(lua_State *L)
         LUAX_OVERLOAD_BY_TYPES(palette_new_1n_1o, LUA_TNUMBER)
         LUAX_OVERLOAD_BY_TYPES(palette_new_1t_1o, LUA_TTABLE)
         LUAX_OVERLOAD_BY_TYPES(palette_new_1o_1o, LUA_TOBJECT)
-        LUAX_OVERLOAD_BY_ARITY(palette_new_3n_1o, 3)
+        LUAX_OVERLOAD_BY_ARITY(palette_new_3nnn_1o, 3)
     LUAX_OVERLOAD_END
 }
 
@@ -401,7 +401,7 @@ static int palette_merge_6ononnB_0(lua_State *L)
     return 0;
 }
 
-static int palette_resize_2on(lua_State *L)
+static int palette_resize_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)

@@ -236,11 +236,11 @@ static int tweener_easing_1o_1s(lua_State *L)
     return 1;
 }
 
-static int tweener_easing_2os_0(lua_State *L)
+static int tweener_easing_2oe_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TENUM)
     LUAX_SIGNATURE_END
     Tweener_Object_t *self = (Tweener_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_TWEENER);
     Easing_Types_t easing = (Easing_Types_t)LUAX_ENUM(L, 2, _easing_types);
@@ -255,7 +255,7 @@ static int tweener_easing_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_BY_ARITY(tweener_easing_1o_1s, 1)
-        LUAX_OVERLOAD_BY_ARITY(tweener_easing_2os_0, 2)
+        LUAX_OVERLOAD_BY_ARITY(tweener_easing_2oe_0, 2)
     LUAX_OVERLOAD_END
 }
 
