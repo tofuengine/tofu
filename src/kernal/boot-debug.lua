@@ -47,6 +47,7 @@ local INITIAL_STATE <const> = "splash"
 local DISPLAY <const> = Display.default()
 local CANVAS <const> = Canvas.default()
 local STATE <const> = CANVAS:state()
+local MIXER <const> = Mixer.default()
 
 local Boot <const> = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
@@ -164,7 +165,7 @@ function Boot:render(ratio)
 end
 
 function Boot:reinit_system()
-  Mixer.stop_all() -- Stop all sounds sources.
+  MIXER:stop_all() -- Stop all sounds sources.
 
   DISPLAY:reset()
 
