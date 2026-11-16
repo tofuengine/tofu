@@ -139,8 +139,8 @@ static const Easing_Function_t _easing_functions[Easing_Types_t_CountOf] = {
     easing_back_in,
     easing_back_out,
     easing_back_in_out,
-    easing_bounce_out,
     easing_bounce_in,
+    easing_bounce_out,
     easing_bounce_in_out
 };
 

@@ -57,8 +57,8 @@ extern float easing_elastic_in_out(float p);
 extern float easing_back_in(float p);
 extern float easing_back_out(float p);
 extern float easing_back_in_out(float p);
-extern float easing_bounce_out(float p);
 extern float easing_bounce_in(float p);
+extern float easing_bounce_out(float p);
 extern float easing_bounce_in_out(float p);
 
 #endif  /* TOFU_LIBS_EASING_H */

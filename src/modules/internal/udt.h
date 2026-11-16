@@ -213,8 +213,8 @@ typedef enum Easing_Types_e {
     EASING_TYPE_BACK_IN,
     EASING_TYPE_BACK_OUT,
     EASING_TYPE_BACK_IN_OUT,
-    EASING_TYPE_BOUNCE_OUT,
     EASING_TYPE_BOUNCE_IN,
+    EASING_TYPE_BOUNCE_OUT,
     EASING_TYPE_BOUNCE_IN_OUT,
     Easing_Types_t_CountOf
 } Easing_Types_t;
