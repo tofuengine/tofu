@@ -99,7 +99,7 @@ static int storage_inject_3ssS_0(lua_State *L)
     }
 
     if (!injected) {
-        return luaL_error(L, "can't inject data `%.16s` as `%s`", data, name);
+        return luaL_error(L, "can't inject data `%.16s` (%d bytes) as `%s`", data.data, data.size, name);
     }
 
     return 0;

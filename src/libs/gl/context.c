@@ -243,7 +243,7 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index, bool transp
 void GL_context_set_bank(GL_Context_t *context, size_t bank)
 {
     if (bank > GL_PALETTE_LAST_BANK) {
-        LOG_W("palette bank %u out of range, skipping bank setting", bank);
+        LOG_W("palette bank %lu out of range, skipping bank setting", bank);
         return;
     }
 

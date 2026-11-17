@@ -194,7 +194,7 @@ static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream, size_t size)
             .size = size
         };
 
-    LOG_T("handle %p initialized (size is %u bytes)", handle, size);
+    LOG_T("handle %p initialized (size is %lu bytes)", handle, size);
 }
 
 static void _std_handle_dtor(FS_Handle_t *handle)

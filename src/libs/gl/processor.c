@@ -121,7 +121,7 @@ void GL_processor_set_palette(GL_Processor_t *processor, const GL_Color_t *palet
     GL_Color_t *dst = processor->state.palette + bank * GL_PALETTE_MAX_COLORS;
     GL_palette_copy(dst, palette);
 #if defined(TOFU_CORE_VERBOSE_DEBUG)
-    LOG_D("palette copied to bank %u", bank);
+    LOG_D("palette copied to bank %lu", bank);
 #endif  /* defined(TOFU_CORE_VERBOSE_DEBUG) */
 }
 

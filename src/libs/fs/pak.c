@@ -268,7 +268,7 @@ static FILE *_find_entry(const Pak_Mount_t *pak_mount, const char *name, Pak_Ent
     entry->size = bytes_ui32le(header.size);
 
 #if defined(TOFU_FILE_DEBUG_ENABLED)
-    LOG_T("entry `%s` w/ size %u located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
+    LOG_T("entry `%s` w/ size %lu located at offset %d in archive `%s`", name, entry->size, entry->offset, pak_mount->path);
 #endif  /* defined(TOFU_FILE_DEBUG_ENABLED) */
 
     return stream;

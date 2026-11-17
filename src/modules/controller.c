@@ -90,14 +90,14 @@ static int controller_from_id_1N_1o(lua_State *L)
 
     Input_Controller_t *controller = Input_get_controller(input, id);
     if (!controller) {
-        return luaL_error(L, "can't find controller `%u`", id);
+        return luaL_error(L, "can't find controller `%lu`", id);
     }
 
     Controller_Object_t *self = (Controller_Object_t *)udt_newobject(L, sizeof(Controller_Object_t), &(Controller_Object_t){
             .controller = controller,
         }, OBJECT_TYPE_CONTROLLER);
 
-    LOG_D("controller %p allocated w/ controller %p for id `%u`", self, controller, id);
+    LOG_D("controller %p allocated w/ controller %p for id `%lu`", self, controller, id);
 
     return 1;
 }
