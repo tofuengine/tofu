@@ -65,6 +65,20 @@ int storage_loader(lua_State *L)
         });
 }
 
+typedef enum _Mode_e {
+    MODE_ASCII85,
+    MODE_BASE64,
+    MODE_RAW,
+    _Mode_t_CountOf
+} _Mode_t;
+
+static const char *_modes[_Mode_t_CountOf + 1] = {
+    "ascii85",
+    "base64",
+    "raw",
+    NULL
+};
+
 static int storage_inject_3ssS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -74,21 +88,21 @@ static int storage_inject_3ssS_0(lua_State *L)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
     luaX_String data = LUAX_LSTRING(L, 2);
-    const char *mode = LUAX_OPTIONAL_STRING(L, 3, "base64");
+    _Mode_t mode = (_Mode_t)LUAX_OPTIONAL_ENUM(L, 3, _modes, MODE_BASE64);
 
     Storage_t *storage = (Storage_t *)udt_get_userdata(L, USERDATA_STORAGE);
 
     bool injected;
-    switch (mode[0]) {
-        case 'a': {
+    switch (mode) {
+        case MODE_ASCII85: {
             injected = Storage_inject_ascii85(storage, name, data.data, data.size);
             break;
         }
-        case 'b': {
+        case MODE_BASE64: {
             injected = Storage_inject_base64(storage, name, data.data, data.size);
             break;
         }
-        case 'r': {
+        case MODE_RAW: {
             injected = Storage_inject_raw(storage, name, data.data, data.size);
             break;
         }
