@@ -206,7 +206,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
         printf("  %d/%d: type=%s", positive, negative, type_name);
         switch (type) {
             case LUA_TBOOLEAN:
-                printf("\t%s", lua_toboolean(L, i) ? "true" : "false");
+                printf("\t%s", lua_toboolean(L, positive) ? "true" : "false");
                 break;
             case LUA_TLIGHTUSERDATA:
                 printf("\t%p", lua_topointer(L, positive));
