@@ -94,7 +94,7 @@ int luaX_toenum(lua_State *L, int idx, const char **ids)
         return luaL_error(L, "value at argument #%d is null", idx);
     }
     for (int i = 0; ids[i]; ++i) {
-        if (strcmp(value, ids[i]) == 0) {
+        if (strcasecmp(value, ids[i]) == 0) {
             return i;
         }
     }
