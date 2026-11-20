@@ -395,30 +395,38 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
     interpreter->age += delta_time;
 
+    bool result;
+
     LUAX_STACK_BEGIN(interpreter->state)
     lua_pushnumber(interpreter->state, (lua_Number)delta_time);
-    if (_method_call(interpreter->state, ENTRY_POINT_METHOD_UPDATE, 1, 0) != LUA_OK) {
-        return false;
-    }
+    result = _method_call(interpreter->state, ENTRY_POINT_METHOD_UPDATE, 1, 0) == LUA_OK;
     LUAX_STACK_END(interpreter->state, 0)
 
-    return true;
+    return result;
 }
 
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     // TODO: pass the default `Canvas` instance?
+    bool result;
+
     LUAX_STACK_BEGIN(interpreter->state)
     lua_pushnumber(interpreter->state, (lua_Number)ratio);
-    return _method_call(interpreter->state, ENTRY_POINT_METHOD_RENDER, 1, 0) == LUA_OK;
+    result = _method_call(interpreter->state, ENTRY_POINT_METHOD_RENDER, 1, 0) == LUA_OK;
     LUAX_STACK_END(interpreter->state, 0)
+
+    return result;
 }
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
+    bool result;
+
     LUAX_STACK_BEGIN(interpreter->state)
-    return _raw_call(interpreter->state, nargs, nresults) == LUA_OK;
+    result = _raw_call(interpreter->state, nargs, nresults) == LUA_OK;
     LUAX_STACK_END(interpreter->state, 0)
+
+    return result;
 }
 
 bool Interpreter_collect(const Interpreter_t *interpreter)
